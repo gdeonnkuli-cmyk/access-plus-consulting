@@ -106,7 +106,7 @@ function useModules(){
   const[mods,sMods]=useState([]);const[loading,sL]=useState(true);
   useEffect(()=>{
     const unsub=onSnapshot(collection(db,"modules"),(snap)=>{
-      const data=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.ordre||0)-(b.ordre||0));
+      const data=snap.docs.map(d=>expandMod({id:d.id,...d.data()})).sort((a,b)=>(a.ordre||0)-(b.ordre||0));
       sMods(data);sL(false);
     });
     return unsub;
@@ -138,8 +138,9 @@ const saveProgress=async(uid,modId,score)=>{
 };
 const saveModule=async(mod)=>{
   const{id,...data}=mod;
-  if(id&&id.length>4){await setDoc(doc(db,"modules",id),data,{merge:true});}
-  else{const ref_=doc(collection(db,"modules"));await setDoc(ref_,data);}
+  const flat=flattenMod(data);
+  if(id&&id.length>4){await setDoc(doc(db,"modules",id),flat,{merge:true});}
+  else{const ref_=doc(collection(db,"modules"));await setDoc(ref_,flat);}
 };
 const deleteModule=async(id)=>{await deleteDoc(doc(db,"modules",id));};
 const saveVideo=async(vid)=>{
@@ -183,6 +184,16 @@ const SEED_MODS=[
    ex:{ti:"Travaux de clôture",en:"BOMA SA clôture au 31/12/2024. Effectuez les régularisations et proposez une affectation du résultat.",tv:["1. Passez les écritures de régularisation.","2. Calculez le résultat de l'exercice.","3. Identifiez les postes de régularisation au bilan.","4. Affectation : réserve légale 5%, dividendes 60%, RAN le reste."],dn:[{a:"Loyer d'avance (janv. 2025)",b:"180 000"},{a:"Intérêts courus à recevoir",b:"45 000"},{a:"Abonnement (janv-mars 2025)",b:"90 000"},{a:"Résultat brut",b:"2 400 000"}],co:"CCA = 270 000 | PIAN = 45 000 | Résultat ajusté = 2 175 000 | Réserve légale = 108 750 | Dividendes = 1 305 000 | RAN = 761 250."}},
 ];
 
+const flattenMod=m=>({
+  ...m,
+  q:JSON.stringify(m.q||[]),
+  ex:m.ex?{...m.ex,dn:JSON.stringify(m.ex.dn||[]),tv:JSON.stringify(m.ex.tv||[])}:null,
+});
+const expandMod=m=>({
+  ...m,
+  q:typeof m.q==="string"?JSON.parse(m.q||"[]"):m.q||[],
+  ex:m.ex?{...m.ex,dn:typeof m.ex.dn==="string"?JSON.parse(m.ex.dn||"[]"):m.ex.dn||[],tv:typeof m.ex.tv==="string"?JSON.parse(m.ex.tv||"[]"):m.ex.tv||[]}:m.ex,
+});
 const seedModules=async()=>{
   try{
     const snap=await getDocs(collection(db,"modules"));
@@ -190,7 +201,7 @@ const seedModules=async()=>{
     let count=0;
     for(const m of SEED_MODS){
       const r=doc(collection(db,"modules"));
-      await setDoc(r,m);
+      await setDoc(r,flattenMod(m));
       count++;
     }
     alert(`✅ ${count} modules SYSCOHADA initialisés avec succès dans Firestore !`);
