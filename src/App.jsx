@@ -3,7 +3,7 @@ import{initializeApp}from"firebase/app";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"firebase/auth";
 import{getFirestore,doc,getDoc,setDoc,updateDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
- 
+
 // ── FIREBASE CONFIG ───────────────────────────────────────────────────────────
 const fbApp=initializeApp({
   apiKey:"AIzaSyAO2IfWpqgxFB5jyykCugrxu1fvNRwZMcU",
@@ -17,7 +17,7 @@ const auth=getAuth(fbApp);
 const db=getFirestore(fbApp);
 const storage=getStorage(fbApp);
 const ADM_EMAIL="admin@accessplus.com";
- 
+
 // ── THÈMES ────────────────────────────────────────────────────────────────────
 const TH={
   dark:{n:"Sombre",i:"🌙",bg:"#0C0F19",ca:"#13172A",c2:"#1A1F35",b0:"rgba(255,255,255,.06)",b1:"rgba(255,255,255,.11)",t1:"#F0F3FF",t2:"#8B97BC",t3:"#505A78"},
@@ -28,6 +28,33 @@ const TH={
   purple:{n:"Violet",i:"💜",bg:"#100C1E",ca:"#180E30",c2:"#201244",b0:"rgba(160,100,255,.08)",b1:"rgba(160,100,255,.16)",t1:"#EDE8FF",t2:"#9070C8",t3:"#5E4A88"},
 };
 const ACC={em:"#34D399",emD:"#059669",emBg:"rgba(52,211,153,.10)",emBd:"rgba(52,211,153,.22)",in_:"#818CF8",inD:"#4F46E5",inBg:"rgba(129,140,248,.10)",inBd:"rgba(129,140,248,.22)",wa:"#FBBF24",waBg:"rgba(251,191,36,.10)",waBd:"rgba(251,191,36,.24)",er:"#F87171",erBg:"rgba(248,113,113,.10)",erBd:"rgba(248,113,113,.24)",rd:"#EF4444",rdBg:"rgba(239,68,68,.10)",rdBd:"rgba(239,68,68,.24)"};
+const CARD_PALETTES={
+  dark:[
+    {bg:"rgba(52,211,153,.12)",bd:"rgba(52,211,153,.2)",ac:"#34D399"},
+    {bg:"rgba(129,140,248,.12)",bd:"rgba(129,140,248,.2)",ac:"#818CF8"},
+    {bg:"rgba(251,191,36,.12)",bd:"rgba(251,191,36,.2)",ac:"#FBBF24"},
+    {bg:"rgba(248,113,113,.12)",bd:"rgba(248,113,113,.2)",ac:"#F87171"},
+    {bg:"rgba(96,165,250,.12)",bd:"rgba(96,165,250,.2)",ac:"#60A5FA"},
+    {bg:"rgba(167,139,250,.12)",bd:"rgba(167,139,250,.2)",ac:"#A78BFA"},
+  ],
+  light:[
+    {bg:"#E8FBF3",bd:"#A7F0D0",ac:"#059669"},
+    {bg:"#EEF0FF",bd:"#C7D2FE",ac:"#4F46E5"},
+    {bg:"#FFFBEB",bd:"#FDE68A",ac:"#D97706"},
+    {bg:"#FEF2F2",bd:"#FECACA",ac:"#DC2626"},
+    {bg:"#EFF6FF",bd:"#BFDBFE",ac:"#2563EB"},
+    {bg:"#F5F3FF",bd:"#DDD6FE",ac:"#7C3AED"},
+  ],
+  sepia:[
+    {bg:"#F0FAF5",bd:"#A7D7BC",ac:"#2D7A50"},
+    {bg:"#F3F0FF",bd:"#C9C0F0",ac:"#5B4FC4"},
+    {bg:"#FDF8EC",bd:"#F0DFA0",ac:"#A07820"},
+    {bg:"#FDF0F0",bd:"#F0C0C0",ac:"#B04040"},
+    {bg:"#EFF5FF",bd:"#B8D0F0",ac:"#3060B0"},
+    {bg:"#F5F0FF",bd:"#D0C0F0",ac:"#6040A0"},
+  ],
+};
+const getCardPalette=(tid,idx)=>{const p=CARD_PALETTES[tid]||CARD_PALETTES.dark;return p[idx%p.length];};
 const bK=id=>{const t=TH[id]||TH.dark;return{bg:t.bg,card:t.ca,c2:t.c2,b0:t.b0,b1:t.b1,t1:t.t1,t2:t.t2,t3:t.t3,...ACC};};
 const Ctx=createContext({K:bK("dark"),tid:"dark",setT:()=>{}});
 const useK=()=>useContext(Ctx).K;
@@ -57,7 +84,7 @@ body{background:${K.bg};color:${K.t1};font-family:'Outfit',sans-serif;-webkit-fo
 @media(hover:none){.hv:hover{transform:none;box-shadow:none;}.bt:hover{filter:none;}}
 .nb{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));}
 .mp{padding:18px max(14px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));}`;
- 
+
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const DUR=[{id:"1m",l:"1 mois",j:30},{id:"3m",l:"3 mois",j:90},{id:"6m",l:"6 mois",j:180},{id:"1a",l:"1 an",j:365},{id:"v",l:"À vie",j:36500}];
 const dE=j=>{const d=new Date();d.setDate(d.getDate()+j);return d.toISOString();};
@@ -73,7 +100,7 @@ const icoEl=(ico,col,sz=16)=>{
 };
 const ICOS=["book-2","world","pencil","scale","chart-bar","building-bank","shopping-cart","users","crane","shield","clipboard-list","briefcase","target","microscope","bulb","building","bolt","globe"];
 const pVid=u=>{if(!u)return null;u=u.trim();let m=u.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);if(m)return{t:"yt",id:m[1],src:`https://www.youtube.com/embed/${m[1]}?rel=0`};m=u.match(/vimeo\.com\/(\d+)/);if(m)return{t:"vi",src:`https://player.vimeo.com/video/${m[1]}`};if(u.includes("facebook.com"))return{t:"fb",src:`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(u)}&show_text=false`};if(u.startsWith("http"))return{t:"url",src:u};return null;};
- 
+
 // ── FIREBASE HOOKS ────────────────────────────────────────────────────────────
 function useModules(){
   const[mods,sMods]=useState([]);const[loading,sL]=useState(true);
@@ -103,7 +130,7 @@ function useUsers(){
   },[]);
   return users;
 }
- 
+
 // ── FIRESTORE ACTIONS ─────────────────────────────────────────────────────────
 const saveUserData=async(uid,data)=>{await setDoc(doc(db,"users",uid),data,{merge:true});};
 const saveProgress=async(uid,modId,score)=>{
@@ -121,6 +148,54 @@ const saveVideo=async(vid)=>{
   else{const r=doc(collection(db,"videos"));await setDoc(r,data);}
 };
 const deleteVideo=async(id)=>{await deleteDoc(doc(db,"videos",id));};
+
+// ── SEED MODULES ──────────────────────────────────────────────────────────────
+const SEED_MODS=[
+  {code:"M01",ico:"book-2",col:"#34D399",titre:"Fondements SYSCOHADA",desc:"Zone OHADA · Principes fondamentaux",mat:"SYSCOHADA",on:true,ordre:1,
+   q:[{q:"Combien d'États membres de l'OHADA ?",r:["10","17","21","25"],b:1},{q:"Année de révision du SYSCOHADA ?",r:["2011","2014","2017","2020"],b:2},{q:"N'est PAS un principe comptable ?",r:["Prudence","Continuité","Maximisation","Permanence"],b:2},{q:"Délai dépôt au RCCM ?",r:["2 mois","3 mois","4 mois","6 mois"],b:2},{q:"La permanence des méthodes garantit :",r:["La rentabilité","La comparabilité","Le capital","La liquidité"],b:1}],
+   ex:{ti:"Principes SYSCOHADA",en:"Une entreprise change de méthode d'amortissement sans justification. Analysez les violations et proposez la correction.",tv:["1. Identifiez le principe violé.","2. Expliquez l'impact sur les états financiers.","3. Décrivez la procédure correcte SYSCOHADA.","4. Rédigez la note annexe obligatoire."],dn:[],co:"Violation du principe de permanence des méthodes (art.40 SYSCOHADA). Tout changement doit être exceptionnel, justifié et mentionné en annexe avec impact chiffré."}},
+  {code:"M02",ico:"pencil",col:"#818CF8",titre:"Écriture Comptable",desc:"Débit · Crédit · Journal · Balance",mat:"SYSCOHADA",on:true,ordre:2,
+   q:[{q:"Augmentation d'un actif →",r:["Crédit","Débit","Hors bilan","Annexe"],b:1},{q:"Achat de marchandises à crédit HT :",r:["D601/C521","D601/C401","D401/C601","D521/C401"],b:1},{q:"La balance vérifie :",r:["La rentabilité","Σdébits = Σcrédits","Les stocks","La trésorerie"],b:1},{q:"Vente de marchandises TTC :",r:["D521/C701","D411/C701+4431","D401/C701","D521/C411"],b:1},{q:"Le grand livre regroupe :",r:["Clients uniquement","Tous les comptes","Fournisseurs","Trésorerie"],b:1}],
+   ex:{ti:"Journal et Grand livre",en:"CONGO SA réalise les opérations d'octobre 2024. Journalisez et reportez au compte 521 Banque.",tv:["1. Passez les écritures au journal.","2. Ouvrez le compte 521 Banque.","3. Calculez le solde final.","4. Vérifiez l'équilibre de la balance."],dn:[["02/10","Achat marchd. crédit HT","500 000"],["08/10","Vente TTC (TVA 16%)","708 000"],["15/10","Règlement fournisseur banque","500 000"],["22/10","Encaissement client banque","708 000"],["28/10","Loyer payé banque","120 000"]],co:"Solde 521 débiteur final : 88 000 CDF. Débits (708 000) − Crédits (620 000) = 88 000 CDF."}},
+  {code:"M03",ico:"scale",col:"#FBBF24",titre:"Actif, Passif & Bilan",desc:"9 classes · Structure du bilan SYSCOHADA",mat:"SYSCOHADA",on:true,ordre:3,
+   q:[{q:"Règle fondamentale du bilan :",r:["Actif > Passif","Actif = Passif","Actif < Passif","Aucune règle"],b:1},{q:"Les stocks appartiennent à la classe :",r:["2","3","4","5"],b:1},{q:"Le compte 521 représente :",r:["La caisse","Les effets","La banque","Les clients"],b:2},{q:"Les capitaux propres sont dans :",r:["Actif immobilisé","Actif circulant","Passif Classe 1","Trésorerie"],b:2},{q:"Le passif représente :",r:["Un bien possédé","Une obligation envers les tiers","Un droit","Un actif"],b:1}],
+   ex:{ti:"Bilan SYSCOHADA",en:"Établissez le bilan au 31/12/2024 (système normal) à partir des soldes fournis.",tv:["1. Classez chaque solde actif/passif.","2. Calculez les totaux par masse.","3. Vérifiez Actif = Passif.","4. Calculez les ratios de liquidité."],dn:[["211 Terrains","2 000 000","Dt"],["241 Matériel","1 500 000","Dt"],["2841 Amort.","300 000","Ct"],["31 Stocks","450 000","Dt"],["411 Clients","320 000","Dt"],["521 Banque","180 000","Dt"],["101 Capital","3 000 000","Ct"],["401 Fourn.","150 000","Ct"]],co:"Actif brut = 4 450 000 | Amort. = 300 000 | Actif net = 4 150 000 = Passif (Capital 3 000 000 + Fourn. 150 000 + RAN 1 000 000)."}},
+  {code:"M04",ico:"chart-bar",col:"#34D399",titre:"Charges & Résultat",desc:"Classes 6 & 7 · SIG · Compte de résultat",mat:"SYSCOHADA",on:true,ordre:4,
+   q:[{q:"Le résultat net est égal à :",r:["Actif − Passif","Produits − Charges","CA − Stocks","Charges − Produits"],b:1},{q:"Le compte de ventes de marchandises est :",r:["601","701","401","521"],b:1},{q:"Les charges de personnel sont en :",r:["Classe 60","Classe 64","Classe 66","Classe 67"],b:2},{q:"Si Produits > Charges, on constate :",r:["Une perte","Un bénéfice","Un résultat nul","Un passif"],b:1},{q:"Les dotations aux amortissements sont en :",r:["691","681","791","481"],b:1}],
+   ex:{ti:"SIG et résultat",en:"Calculez les Soldes Intermédiaires de Gestion de KINSHASA TRADE SA pour 2024 et commentez la rentabilité.",tv:["1. Calculez la Marge Brute.","2. Calculez la Valeur Ajoutée.","3. Calculez l'EBE.","4. Calculez le Résultat net.","5. Commentez en 5 lignes."],dn:[["Ventes (701)","12 500 000"],["Achats (601)","7 200 000"],["Var. stocks","−200 000"],["Services ext.","1 100 000"],["Personnel","2 000 000"],["Amortissements","350 000"]],co:"MB = 5 500 000 | VA = 4 400 000 | EBE = 2 220 000 | Résultat exploitation = 1 870 000. Taux de marge nette ≈ 15% — rentabilité correcte."}},
+  {code:"M05",ico:"building-bank",col:"#818CF8",titre:"TVA SYSCOHADA",desc:"Mécanisme · Comptes · Liquidation mensuelle",mat:"SYSCOHADA",on:true,ordre:5,
+   q:[{q:"La TVA collectée est enregistrée au :",r:["44566","4431","4441","44561"],b:1},{q:"La TVA déductible sur achats est au :",r:["4431","4441","44566","44591"],b:2},{q:"La TVA à décaisser est égale à :",r:["Déduc.−Coll.","Coll.+Déduc.","Coll.−Déduc.","Coll.×16%"],b:2},{q:"Un crédit de TVA est enregistré au :",r:["4431","4441","44566","44591"],b:3},{q:"La TVA déductible sur immobilisations est au :",r:["44566","44561","4431","4441"],b:1}],
+   ex:{ti:"TVA SYSCOHADA",en:"MBOKA SARL (assujettie TVA 16%) — comptabilisez les opérations de novembre 2024 et établissez la déclaration.",tv:["1. Enregistrez chaque opération avec TVA.","2. Calculez la TVA collectée.","3. Calculez la TVA déductible.","4. Déterminez TVA à décaisser ou crédit.","5. Passez l'écriture de liquidation."],dn:[["Ventes TTC","1 392 000"],["Achats matières TTC","580 000"],["Achat matériel TTC","464 000"],["Charges div. TTC","232 000"]],co:"TVA coll.(4431)=192 000 | TVA déduc. achats(4441)=80 000 | TVA déduc. immob(44561)=64 000 | TVA à payer=48 000 CDF au compte 44566."}},
+  {code:"M06",ico:"shopping-cart",col:"#FBBF24",titre:"Achats & Règlements",desc:"Factures · Réductions · Effets de commerce",mat:"SYSCOHADA",on:true,ordre:6,
+   q:[{q:"Le rabais est accordé pour :",r:["Fidélité","Paiement anticipé","Défaut de qualité","Volume"],b:2},{q:"L'escompte de règlement est une :",r:["Ch. commerciale","Ch. financière 671","Réduction du capital","Provision"],b:1},{q:"Les effets à recevoir sont au compte :",r:["401","411","412","403"],b:2},{q:"Une lettre de change est tirée par :",r:["Le débiteur","Le créancier","La banque","L'État"],b:1},{q:"Un avoir fournisseur sur achat est enregistré au :",r:["609","701","521","661"],b:0}],
+   ex:{ti:"Effets de commerce",en:"LUMUMBA & Frères vend 2 360 000 CDF TTC à PATRICE SA le 01/11/2024 et tire une LC à 60 jours (escompte 12%/an).",tv:["1. Écriture de vente à crédit.","2. Création de la traite (LC).","3. Remise à l'escompte bancaire.","4. Encaissement à l'échéance.","5. Cas de non-paiement."],dn:[["Valeur LC","2 360 000 CDF"],["Durée","60 jours"],["Taux escompte","12%/an"]],co:"Escompte = 2 360 000 × 12% × 60/360 = 47 200 CDF. D521(2 312 800) + D671(47 200) / C412(2 360 000)."}},
+  {code:"M07",ico:"users",col:"#34D399",titre:"Paie & Personnel",desc:"Bulletin de paie · Cotisations · Écritures",mat:"SYSCOHADA",on:true,ordre:7,
+   q:[{q:"Le salaire net est égal à :",r:["Brut + charges patronales","Brut − retenues salariales","Brut × 16%","Salaire de base"],b:1},{q:"Les rémunérations du personnel sont au :",r:["641","661","421","431"],b:1},{q:"Les cotisations patronales sont enregistrées au :",r:["641","645","664","421"],b:2},{q:"Le paiement du salaire génère :",r:["D661","D421","C521","C431"],b:2},{q:"Le compte 431 représente :",r:["Un actif","Une dette — passif","Une charge","Un produit"],b:1}],
+   ex:{ti:"Bulletin de paie",en:"M. KABILA Jean, salaire de base 1 800 000 CDF. Établissez le bulletin d'octobre 2024 et passez les écritures.",tv:["1. Calculez les retenues salariales.","2. Calculez le salaire net.","3. Calculez les charges patronales.","4. Passez les écritures comptables.","5. Calculez le coût employeur total."],dn:[["Salaire de base","1 800 000"],["Prime transport","80 000"],["Prime rendement","120 000"],["INSS salarial","5% du brut"],["INSS patronal","13% du brut"],["ONEM","0,2% du brut"]],co:"Brut = 2 000 000 | INSS sal. = 100 000 | Net = 1 900 000 | INSS patron. = 260 000 | Coût employeur = 2 264 000 CDF."}},
+  {code:"M08",ico:"crane",col:"#818CF8",titre:"Immobilisations",desc:"Méthodes d'amortissement · Tableau · Cession",mat:"SYSCOHADA",on:true,ordre:8,
+   q:[{q:"L'amortissement linéaire est calculé par :",r:["VO × Durée","VO ÷ Durée","VNC × Taux","VO × Taux dégressif"],b:1},{q:"La dotation aux amortissements est au :",r:["28x","291","681","81"],b:2},{q:"Les terrains s'amortissent-ils ?",r:["Oui, sur 50 ans","Non, sauf exception","Oui, sur 20 ans","Oui, en dégressif"],b:1},{q:"Les logiciels sont enregistrés au :",r:["212","213","215","216"],b:1},{q:"La VNC lors d'une cession est au :",r:["675","81","82","28x"],b:2}],
+   ex:{ti:"Amortissements & Cession",en:"Camion acquis 9 000 000 CDF HT le 01/01/2022 (5 ans linéaire). Cédé le 01/07/2024 pour 5 000 000 CDF.",tv:["1. Établissez le tableau d'amortissement sur 5 ans.","2. Calculez la VNC à la date de cession.","3. Passez la dotation prorata temporis 2024.","4. Passez l'écriture de sortie et de cession.","5. Calculez le résultat de cession."],dn:[["Coût HT","9 000 000"],["Acquisition","01/01/2022"],["Durée","5 ans linéaire"],["Prix cession","5 000 000"],["Date cession","01/07/2024"]],co:"Amort/an = 1 800 000 | Cumul au 01/07/2024 = 4 500 000 | VNC = 4 500 000 | Plus-value = 500 000 CDF (compte 82)."}},
+  {code:"M09",ico:"shield-check",col:"#FBBF24",titre:"Provisions & Dépréciations",desc:"Risques · Dépréciations · Reprises",mat:"SYSCOHADA",on:true,ordre:9,
+   q:[{q:"La provision pour litige est au :",r:["1511","191","151","19"],b:1},{q:"La dépréciation d'une créance est au :",r:["411","491","416","681"],b:1},{q:"On reprend une provision quand :",r:["Chaque mois","Le risque a disparu","Jamais","Chaque année"],b:1},{q:"La dotation aux provisions est en :",r:["Classe 7","Compte 691","Classe 1","Classe 2"],b:1},{q:"La dépréciation des stocks est au :",r:["391","39x","491","291"],b:1}],
+   ex:{ti:"Provisions & Dépréciations",en:"Au 31/12/2024, KINOIS SA identifie trois situations nécessitant des provisions. Comptabilisez et analysez l'impact.",tv:["1. Calculez le montant de chaque provision.","2. Passez les dotations au 31/12/2024.","3. Passez la reprise si le risque disparaît en 2025.","4. Analysez l'impact sur le résultat et le bilan."],dn:[["Client DOUTEUX SA","Créance 800 000 — recouvrement 40%"],["Litige social","Risque estimé à 350 000 CDF"],["Stock obsolète","Coût 200 000 — valeur nette 120 000"]],co:"Dépréc. client = 480 000 (D6912/C491) | Prov. litige = 350 000 (D6911/C191) | Dépréc. stock = 80 000 (D6913/C39x). Impact résultat = −910 000 CDF."}},
+  {code:"M10",ico:"clipboard-list",col:"#34D399",titre:"Clôture & États Financiers",desc:"Régularisations · Affectation · SYSCOHADA",mat:"SYSCOHADA",on:true,ordre:10,
+   q:[{q:"Les charges constatées d'avance sont au :",r:["486","476","487","477"],b:1},{q:"Le TAFIRE est obligatoire pour le système :",r:["Minimal","Allégé","Normal","Tous les systèmes"],b:2},{q:"L'affectation du résultat est décidée par :",r:["Le comptable","L'AGO","Le directeur","L'État"],b:1},{q:"La réserve légale est fixée à :",r:["1%","5%","10%","20%"],b:1},{q:"Les produits constatés d'avance sont au :",r:["476","477","486","487"],b:1}],
+   ex:{ti:"Travaux de clôture",en:"BOMA SA clôture au 31/12/2024. Effectuez les régularisations et proposez une affectation du résultat.",tv:["1. Passez les écritures de régularisation.","2. Calculez le résultat de l'exercice.","3. Identifiez les postes de régularisation au bilan.","4. Affectation : réserve légale 5%, dividendes 60%, RAN le reste."],dn:[["Loyer d'avance (janv. 2025)","180 000"],["Intérêts courus à recevoir","45 000"],["Abonnement (janv-mars 2025)","90 000"],["Résultat brut","2 400 000"]],co:"CCA = 270 000 | PIAN = 45 000 | Résultat ajusté = 2 175 000 | Réserve légale = 108 750 | Dividendes = 1 305 000 | RAN = 761 250."}},
+];
+
+const seedModules=async()=>{
+  try{
+    const snap=await getDocs(collection(db,"modules"));
+    if(snap.size>0){alert(`${snap.size} modules déjà présents dans Firestore. Supprimez-les d'abord si vous souhaitez réinitialiser.`);return;}
+    let count=0;
+    for(const m of SEED_MODS){
+      const r=doc(collection(db,"modules"));
+      await setDoc(r,m);
+      count++;
+    }
+    alert(`✅ ${count} modules SYSCOHADA initialisés avec succès dans Firestore !`);
+  }catch(e){alert("Erreur : "+e.message);}
+};
 const saveLive=async(data)=>{await setDoc(doc(db,"config","live"),data,{merge:true});};
 const uploadPdf=async(modId,file)=>{
   const r=ref(storage,`pdfs/${modId}/${file.name}`);
@@ -133,10 +208,10 @@ const deletePdf=async(modId,name)=>{
   try{await deleteObject(ref(storage,`pdfs/${modId}/${name}`));}catch(e){}
   await deleteDoc(doc(db,"pdfs",modId));
 };
- 
+
 // ── RESPONSIVE ────────────────────────────────────────────────────────────────
 function useW(){const[w,sW]=useState(typeof window!=="undefined"?window.innerWidth:375);useEffect(()=>{const h=()=>sW(window.innerWidth);window.addEventListener("resize",h,{passive:true});return()=>window.removeEventListener("resize",h);},[]);return{mob:w<640};}
- 
+
 // ── UI PRIMITIVES ─────────────────────────────────────────────────────────────
 const Logo=({sm})=>{const K=useK();return <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}><svg width={sm?18:22} height={sm?18:22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg><div><div style={{fontWeight:800,fontSize:sm?12:14,color:K.t1,lineHeight:1}}>Access Plus</div>{!sm&&<div style={{fontSize:8,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>Consulting</div>}</div></div>;};
 const Tg=({c,bg,bd,ch})=>{const K=useK();return <span style={{background:bg||K.c2,color:c||K.t2,border:`1px solid ${bd||K.b0}`,borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:600,fontFamily:"'JetBrains Mono',monospace",whiteSpace:"nowrap"}}>{ch}</span>;};
@@ -149,7 +224,7 @@ function Sheet({title,onClose,children,w=460}){const K=useK();return <div onClic
 function Donut({pct}){const K=useK();const[p,sP]=useState(0);useEffect(()=>{const t=setTimeout(()=>sP(pct),200);return()=>clearTimeout(t);},[pct]);const r=38,c=2*Math.PI*r;return <svg width={84} height={84} viewBox="0 0 84 84" style={{flexShrink:0}}><circle cx={42} cy={42} r={r} fill="none" stroke={K.c2} strokeWidth={7}/><circle cx={42} cy={42} r={r} fill="none" stroke={K.em} strokeWidth={7} strokeDasharray={`${c*p/100} ${c}`} strokeLinecap="round" transform="rotate(-90 42 42)" style={{transition:"stroke-dasharray .8s ease"}}/><text x={42} y={39} textAnchor="middle" fill={K.t1} style={{fontFamily:"'Outfit',sans-serif",fontSize:14,fontWeight:700}}>{p}%</text><text x={42} y={51} textAnchor="middle" fill={K.t3} style={{fontFamily:"'Outfit',sans-serif",fontSize:9}}>global</text></svg>;}
 function Player({url,titre,onClose}){const K=useK();const v=pVid(url);return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 16px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}><span style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"72vw"}}>{titre||"Vidéo"}</span><Btn ch="✕" on={onClose} v="g" sm/></div><div style={{flex:1,background:"#000"}}>{v?<iframe src={v.src} title={titre} style={{width:"100%",height:"100%",border:"none"}} allow="autoplay;encrypted-media;picture-in-picture" allowFullScreen/>:<div style={{color:K.t3,textAlign:"center",padding:40,marginTop:60}}><div style={{fontSize:36,marginBottom:10}}>⚠️</div>URL non supportée.</div>}</div></div>;}
 function PdfV({url,name,onClose}){const K=useK();return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 15px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}><div style={{display:"flex",alignItems:"center",gap:8}}><span>📄</span><div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{name}</div><div style={{color:K.t3,fontSize:10}}>Lecture seule</div></div></div><Btn ch="✕" on={onClose} v="g" sm/></div><iframe src={url} title={name} style={{flex:1,border:"none"}} sandbox="allow-same-origin"/></div>;}
- 
+
 // ── SÉLECTEUR THÈME ───────────────────────────────────────────────────────────
 function ThemePicker({open,onClose}){
   const K=useK();const{tid,setT}=useContext(Ctx);
@@ -166,7 +241,7 @@ function ThemePicker({open,onClose}){
     </div>
   </div>;
 }
- 
+
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 function Auth({onL}){
   const K=useK();const{mob}=useW();
@@ -239,7 +314,7 @@ function Auth({onL}){
     </div>
   </div>;
 }
- 
+
 // ── USER APP ──────────────────────────────────────────────────────────────────
 function UA({uid,onOut}){
   const K=useK();const{mob}=useW();
@@ -269,7 +344,7 @@ function UA({uid,onOut}){
     {vue==="res"&&<Res sc={sc} ok={ok} mods={aMods}/>}
   </>);
 }
- 
+
 function Nav({u,vue,sV,ok,onSub,onOut,live}){
   const K=useK();const{mob}=useW();
   return <nav className="nb" style={{background:`${K.card}ee`,backdropFilter:"blur(14px)",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"space-between",height:52,position:"sticky",top:0,zIndex:99}}>
@@ -288,44 +363,104 @@ function Nav({u,vue,sV,ok,onSub,onOut,live}){
     </div>
   </nav>;
 }
- 
+
 function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,live}){
   const K=useK();const{mob}=useW();const jr=jR(u.dateExpiration);
+  const{tid}=useContext(Ctx);
   const mats=[...new Set(mods.map(m=>m.mat||"Général"))];
   const[fi,sF]=useState("Toutes");
   const fil=fi==="Toutes"?mods:mods.filter(m=>(m.mat||"Général")===fi);
+  const recentMods=mods.filter(m=>pr[m.id]==="done").slice(-3).reverse();
+  const isLight=['light','sepia'].includes(tid);
+
+  // Feature cards
+  const features=[
+    {key:"modules",ico:"book-2",label:"Modules",desc:`${mods.filter(m=>m.on!==false).length} cours disponibles`,action:()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'})},
+    {key:"qcm",ico:"help-circle",label:"QCM",desc:`${Object.keys(sc).length} évaluations passées`,action:()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'})},
+    {key:"videos",ico:"video",label:"Vidéos",desc:`${vids.length} vidéos disponibles`,action:onVid},
+    {key:"live",ico:"broadcast",label:"Direct",desc:live.on?"Cours en cours":"Prochain cours live",action:onVid},
+  ];
+
   return <div style={{animation:"up .3s ease"}}>
-    {!ok&&<div style={{background:u.abonnement==="expiré"?K.erBg:K.waBg,border:`1px solid ${u.abonnement==="expiré"?K.erBd:K.waBd}`,borderRadius:10,padding:"10px 13px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:700,fontSize:13,color:u.abonnement==="expiré"?K.er:K.wa,marginBottom:2}}>{u.abonnement==="expiré"?"Accès expiré":"Cours verrouillés"}</div><div style={{fontSize:12,color:K.t3}}>{u.abonnement==="demande"?"Demande en cours.":u.abonnement==="expiré"?"Contactez Access Plus.":"Effectuez le paiement."}</div></div>{u.abonnement!=="demande"&&<Btn ch="Obtenir l'accès" on={onSub} v="w" sm/>}</div>}
-    {ok&&jr<=30&&jr>0&&u.dureeId!=="v"&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:10,padding:"9px 13px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><div style={{fontSize:13,color:K.wa}}>⏰ Expire dans <b>{jr}j</b></div><Btn ch="Renouveler" on={onSub} v="w" sm/></div>}
-    <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:13,padding:mob?"14px":"19px 21px",marginBottom:12}}>
-      <div className="hf">
-        <div style={{flex:1}}>
-          <div style={{fontSize:12,color:K.t3,marginBottom:3}}>Tableau de bord</div>
-          <div style={{fontSize:mob?17:20,fontWeight:900,color:K.t1,marginBottom:4}}>Bonjour, {(u.nom||"").split(" ")[0]} 👋</div>
-          <div style={{fontSize:12,color:K.t3,marginBottom:12,lineHeight:1.5}}>{!ok?"Abonnez-vous pour accéder aux cours.":nd===0?"Commencez votre parcours.":`${nd}/${mods.length} modules complétés.`}</div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {[[`${nd}/${mods.length}`,"Modules",K.em,K.emBd],[`${gp}%`,"Progression",K.in_,K.inBd],[`${mats.length}`,"Matières",K.wa,K.waBd]].map(([v,l,c,bd])=><div key={l} style={{background:K.c2,border:`1px solid ${bd}`,borderRadius:9,padding:"7px 11px"}}><div style={{color:c,fontWeight:800,fontSize:mob?15:17,letterSpacing:"-.5px",lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
-          </div>
+    {/* Alertes */}
+    {!ok&&<div style={{background:u.abonnement==="expiré"?K.erBg:K.waBg,border:`1px solid ${u.abonnement==="expiré"?K.erBd:K.waBd}`,borderRadius:12,padding:"11px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:700,fontSize:13,color:u.abonnement==="expiré"?K.er:K.wa,marginBottom:2}}>{u.abonnement==="expiré"?"Accès expiré":"Cours verrouillés"}</div><div style={{fontSize:12,color:K.t3}}>{u.abonnement==="demande"?"Demande en cours — code sous 24h.":u.abonnement==="expiré"?"Contactez Access Plus.":"Effectuez le paiement."}</div></div>{u.abonnement!=="demande"&&<Btn ch="Obtenir l'accès" on={onSub} v="w" sm/>}</div>}
+    {ok&&jr<=30&&jr>0&&u.dureeId!=="v"&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"9px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><div style={{fontSize:13,color:K.wa}}>⏰ Expire dans <b>{jr}j</b></div><Btn ch="Renouveler" on={onSub} v="w" sm/></div>}
+
+    {/* Bannière principale */}
+    <div style={{background:`linear-gradient(135deg,${K.em}18,${K.in_}10)`,border:`1px solid ${K.emBd}`,borderRadius:16,padding:mob?"18px 16px":"22px 24px",marginBottom:16,position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",top:-20,right:-20,width:100,height:100,borderRadius:"50%",background:`${K.em}10`}}/>
+      <div style={{position:"absolute",bottom:-30,right:30,width:70,height:70,borderRadius:"50%",background:`${K.in_}0D`}}/>
+      <div style={{fontSize:12,color:K.em,fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-star" style={{fontSize:13}}/> Tableau de bord</div>
+      <div style={{fontSize:mob?19:24,fontWeight:900,color:K.t1,marginBottom:4,letterSpacing:"-.3px",lineHeight:1.2}}>Bonjour, {(u.nom||"").split(" ")[0]} 👋</div>
+      <div style={{fontSize:13,color:K.t2,marginBottom:16,lineHeight:1.5}}>{!ok?"Abonnez-vous pour accéder à tous les cours.":nd===0?"Commencez votre parcours de formation.":`${nd}/${mods.length} modules complétés — continuez !`}</div>
+      <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:8,flex:1,flexWrap:"wrap"}}>
+          {[[`${nd}/${mods.length}`,"Modules",K.em],[`${gp}%`,"Progression",K.in_],[`${mats.length}`,"Matières",K.wa]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,backdropFilter:"blur(8px)",borderRadius:10,padding:"8px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
         </div>
-        <Donut pct={gp}/>
+        <div style={{flexShrink:0}}><Donut pct={gp}/></div>
       </div>
     </div>
-    {live.on&&<div onClick={onVid} className="hv" style={{background:K.rdBg,border:`1px solid ${K.rdBd}`,borderRadius:11,padding:"11px 14px",marginBottom:11,cursor:"pointer",display:"flex",alignItems:"center",gap:11}}><span style={{fontSize:18,animation:"blink 1.5s ease-in-out infinite"}}>🔴</span><div style={{flex:1}}><div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:1}}>{live.titre||"Cours en direct"}</div><div style={{fontSize:11,color:K.t3}}>Live · Rejoindre</div></div><Btn ch="▶" v="r" sm sx={{flexShrink:0}}/></div>}
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,flexWrap:"wrap",gap:7}}><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Modules <span style={{color:K.t3,fontWeight:400,fontSize:13}}>({fil.length})</span></div>{!ok&&<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="🔒 Abonnement requis"/>}</div>
-    {mats.length>1&&<div className="tn" style={{gap:6,marginBottom:11,paddingBottom:3}}>{["Toutes",...mats].map(m=><button key={m} onClick={()=>sF(m)} className="bt" style={{background:fi===m?K.c2:"transparent",border:`1px solid ${fi===m?K.b1:K.b0}`,borderRadius:99,padding:"4px 11px",fontSize:11,fontWeight:600,color:fi===m?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{m}</button>)}</div>}
-    <div className="gm">
-      {fil.map((m,i)=>{const f=pr[m.id]==="done",s=sc[m.id],lk=!ok;return <div key={m.id} onClick={()=>lk?onSub():onOpen(m)} className="hv" style={{background:K.card,border:`1px solid ${f?m.col+"44":K.b0}`,borderRadius:11,padding:"12px",cursor:"pointer",position:"relative",overflow:"hidden",animation:`up .3s ease ${i*15}ms both`,opacity:lk?.65:1}}>
-        <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:f?m.col:"transparent"}}/>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:7}}><div style={{width:28,height:28,borderRadius:8,background:f?`${m.col}18`:"rgba(128,128,128,.08)",border:`1px solid ${f?m.col+"33":K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>{lk?<i className="ti ti-lock" style={{fontSize:14,color:K.t3}}/>:icoEl(m.ico,m.col,16)}</div>{f&&s&&<Tg c={s.pct>=60?K.em:K.er} bg={s.pct>=60?K.emBg:K.erBg} bd={s.pct>=60?K.emBd:K.erBd} ch={`${s.pct}%`}/>}</div>
-        <div style={{fontWeight:700,fontSize:12,color:lk?K.t3:K.t1,marginBottom:2,lineHeight:1.3}}>{m.titre}</div>
-        {m.mat&&<div style={{fontSize:10,color:K.in_,marginBottom:4,fontWeight:600}}>{m.mat}</div>}
-        <div style={{fontSize:10,color:K.t3,marginBottom:7}}>{m.q?.length||0}q · 📝{vids.some(v=>v.mid===m.id)?" · 🎬":""}</div>
-        <Bar p={lk?0:f?100:0} col={m.col} h={3}/>
+
+    {/* Bannière live */}
+    {live.on&&<div onClick={onVid} className="hv" style={{background:`linear-gradient(135deg,${K.rdBg},${K.c2})`,border:`1px solid ${K.rdBd}`,borderRadius:13,padding:"13px 16px",marginBottom:14,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}><div style={{width:42,height:42,borderRadius:12,background:K.rdBg,border:`1px solid ${K.rdBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-broadcast" style={{fontSize:20,color:K.rd,animation:"blink 1.5s ease-in-out infinite"}}/></div><div style={{flex:1}}><div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:1}}>{live.titre||"Cours en direct"}</div><div style={{fontSize:11,color:K.t3}}>En cours maintenant · Rejoindre</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
+
+    {/* Cartes fonctionnalités */}
+    <div style={{marginBottom:6}}><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:12}}>Accès rapide</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:16}}>
+      {features.map((f,i)=>{const cp=getCardPalette(tid,i);return <div key={f.key} onClick={f.action} className="hv" style={{background:cp.bg,border:`1px solid ${cp.bd}`,borderRadius:14,padding:"16px 14px",cursor:"pointer",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:-10,right:-10,width:50,height:50,borderRadius:"50%",background:`${cp.ac}15`}}/>
+        <div style={{width:38,height:38,borderRadius:11,background:isLight?"rgba(255,255,255,.8)":K.b1,border:`1px solid ${cp.bd}`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:10}}><i className={"ti ti-"+f.ico} style={{fontSize:19,color:cp.ac}}/></div>
+        <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3}}>{f.label}</div>
+        <div style={{fontSize:11,color:K.t2,lineHeight:1.4,marginBottom:10}}>{f.desc}</div>
+        <div style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,fontWeight:700,color:cp.ac}}><span>Accéder</span><i className="ti ti-arrow-right" style={{fontSize:12}}/></div>
       </div>;})}
+    </div></div>
+
+    {/* Modules */}
+    <div id="modules-section">
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:7}}>
+        <div style={{fontWeight:800,fontSize:14,color:K.t1}}>Modules <span style={{color:K.t3,fontWeight:400,fontSize:13}}>({fil.length})</span></div>
+        {!ok&&<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="🔒 Abonnement requis"/>}
+      </div>
+      {mats.length>1&&<div className="tn" style={{gap:6,marginBottom:11,paddingBottom:3}}>{["Toutes",...mats].map(m=><button key={m} onClick={()=>sF(m)} className="bt" style={{background:fi===m?K.c2:"transparent",border:`1px solid ${fi===m?K.b1:K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:11,fontWeight:600,color:fi===m?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{m}</button>)}</div>}
+      <div className="gm">
+        {fil.map((m,i)=>{
+          const f=pr[m.id]==="done",s=sc[m.id],lk=!ok;
+          const cp=getCardPalette(tid,i);
+          return <div key={m.id} onClick={()=>lk?onSub():onOpen(m)} className="hv"
+            style={{background:f?cp.bg:K.card,border:`1px solid ${f?cp.bd:K.b0}`,borderRadius:13,padding:"13px",cursor:"pointer",position:"relative",overflow:"hidden",animation:`up .3s ease ${i*15}ms both`,opacity:lk?.65:1}}>
+            <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:f?cp.ac:"transparent",borderRadius:"13px 13px 0 0"}}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+              <div style={{width:32,height:32,borderRadius:9,background:f?`${cp.ac}20`:isLight?"rgba(0,0,0,.05)":"rgba(255,255,255,.06)",border:`1px solid ${f?cp.bd:K.b0}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                {lk?<i className="ti ti-lock" style={{fontSize:14,color:K.t3}}/>:icoEl(m.ico,f?cp.ac:m.col,15)}
+              </div>
+              {f&&s&&<Tg c={s.pct>=60?K.em:K.er} bg={s.pct>=60?K.emBg:K.erBg} bd={s.pct>=60?K.emBd:K.erBd} ch={`${s.pct}%`}/>}
+            </div>
+            <div style={{fontWeight:700,fontSize:12,color:lk?K.t3:K.t1,marginBottom:2,lineHeight:1.3}}>{m.titre}</div>
+            {m.mat&&<div style={{fontSize:10,color:f?cp.ac:K.in_,marginBottom:5,fontWeight:600}}>{m.mat}</div>}
+            <div style={{fontSize:10,color:K.t3,marginBottom:8}}>{m.q?.length||0}q{vids.some(v=>v.mid===m.id)?" · 🎬":""}</div>
+            <Bar p={lk?0:f?100:0} col={f?cp.ac:m.col} h={3}/>
+            {!lk&&!f&&<div style={{marginTop:8,fontSize:11,fontWeight:600,color:cp.ac,display:"flex",alignItems:"center",gap:3}}><span>Commencer</span><i className="ti ti-arrow-right" style={{fontSize:11}}/></div>}
+            {f&&<div style={{marginTop:8,fontSize:11,fontWeight:600,color:cp.ac,display:"flex",alignItems:"center",gap:3}}><i className="ti ti-check" style={{fontSize:11}}/><span>Complété</span></div>}
+          </div>;
+        })}
+      </div>
     </div>
+
+    {/* Récents */}
+    {recentMods.length>0&&<div style={{marginTop:18}}>
+      <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10}}>Récemment complétés</div>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {recentMods.map((m,i)=>{const s=sc[m.id];const cp=getCardPalette(tid,i);return <div key={m.id} onClick={()=>onOpen(m)} className="hv" style={{background:cp.bg,border:`1px solid ${cp.bd}`,borderRadius:12,padding:"11px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
+          <div style={{width:36,height:36,borderRadius:10,background:isLight?"rgba(255,255,255,.8)":K.b1,border:`1px solid ${cp.bd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{icoEl(m.ico,cp.ac,16)}</div>
+          <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:13,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div><div style={{fontSize:11,color:K.t2,marginTop:1}}>{m.mat||"SYSCOHADA"}</div></div>
+          {s&&<div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:800,fontSize:15,color:s.pct>=60?K.em:K.er}}>{s.pct}%</div><div style={{fontSize:10,color:K.t3}}>Score</div></div>}
+        </div>;})}
+      </div>
+    </div>}
   </div>;
 }
- 
+
 function SubM({onClose,uid,u}){
   const K=useK();const a=u.abonnement==="demande";
   const ask=async()=>{await saveUserData(uid,{abonnement:"demande",demandeDate:new Date().toLocaleDateString("fr-FR")});onClose();};
@@ -338,7 +473,7 @@ function SubM({onClose,uid,u}){
     </>}
   </Sheet>;
 }
- 
+
 function MV({mod,sc,ok,onQ,onBack,onSub,vids,pdf}){
   const K=useK();const{mob}=useW();
   const[pl,sPl]=useState(null),[pdfO,sPdfO]=useState(false),[corr,sCorr]=useState(false),[exO,sExO]=useState(false);
@@ -374,7 +509,7 @@ function MV({mod,sc,ok,onQ,onBack,onSub,vids,pdf}){
     </div>
   </div>;
 }
- 
+
 function QZ({mod,onDone,onBack}){
   const K=useK();const{mob}=useW();
   const[qi,sQi]=useState(0),[sel,sSel]=useState(null),[conf,sCf]=useState(false),[log,sLog]=useState([]),[fin,sFin]=useState(false);
@@ -396,11 +531,83 @@ function QZ({mod,onDone,onBack}){
     </div>
   </div>;
 }
- 
-function Prog({pr,sc,gp,nd,ok,mods}){const K=useK();const{mob}=useW();return <div style={{maxWidth:640,margin:"0 auto",animation:"up .25s ease"}}><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:3}}>Progression</div><div style={{color:K.t3,fontSize:12,marginBottom:12}}>{nd}/{mods.length} modules · {gp}%</div><div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"11px 15px",marginBottom:11}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{color:K.t2,fontSize:13}}>Global</span><span style={{color:K.em,fontWeight:800,fontFamily:"'JetBrains Mono',monospace"}}>{gp}%</span></div><Bar p={gp} col={K.em} h={5}/></div><div style={{display:"flex",flexDirection:"column",gap:6}}>{mods.map((m,i)=>{const f=pr[m.id]==="done",s=sc[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${f?m.col+"44":K.b0}`,borderRadius:10,padding:"9px 12px",display:"flex",alignItems:"center",gap:9,animation:`up .25s ease ${i*18}ms both`}}><div style={{width:26,height:26,borderRadius:7,background:f?`${m.col}18`:"rgba(128,128,128,.08)",border:`1px solid ${f?m.col+"44":K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>{!ok?<i className="ti ti-lock" style={{fontSize:13,color:K.t3}}/>:icoEl(m.ico,m.col,14)}</div><div style={{flex:1,minWidth:0}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{color:K.t1,fontWeight:600,fontSize:mob?11:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",paddingRight:6}}>{m.titre}</span><span style={{color:f?K.em:K.t3,fontWeight:700,fontSize:10,fontFamily:"'JetBrains Mono',monospace",flexShrink:0}}>{!ok?"—":f?(s?`${s.s}/${s.t}`:"✓"):"—"}</span></div><Bar p={!ok?0:f?100:0} col={m.col} h={3}/></div><Tg c={f?K.em:K.t3} bg={f?K.emBg:K.c2} bd={f?K.emBd:K.b0} ch={!ok?"🔒":f?"Fait":"—"}/></div>;})} </div></div>;}
- 
-function Res({sc,ok,mods}){const K=useK();const{mob}=useW();const att=mods.filter(m=>sc[m.id]),avg=att.length?Math.round(att.reduce((a,m)=>a+sc[m.id].pct,0)/att.length):0,pass=att.filter(m=>sc[m.id].pct>=60).length;return <div style={{maxWidth:640,margin:"0 auto",animation:"up .25s ease"}}><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:3}}>Résultats</div><div style={{color:K.t3,fontSize:12,marginBottom:12}}>{att.length} évaluation{att.length>1?"s":""} · Moy. {avg}%</div>{!ok||att.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"38px",textAlign:"center"}}><div style={{fontSize:28,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>{!ok?"🔒":"📊"}</div><div style={{color:K.t2,fontSize:13,fontWeight:700,marginBottom:3}}>{!ok?"Accès requis":"Aucun résultat"}</div><div style={{color:K.t3,fontSize:12}}>{!ok?"Abonnez-vous.":"Commencez un module !"}</div></div>:<><div className="gs" style={{marginBottom:11}}>{[["Évaluations",att.length,K.t2],["Réussies",pass,K.em],["Moyenne",`${avg}%`,avg>=60?K.em:K.er]].map(([l,v,c])=><div key={l} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:mob?"8px 6px":"10px 12px",textAlign:"center"}}><div style={{color:c,fontWeight:800,fontSize:mob?16:18,letterSpacing:"-.5px",lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}</div>{att.map((m,i)=>{const s=sc[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${s.pct>=60?K.emBd:K.erBd}`,borderRadius:10,padding:"10px 13px",marginBottom:6}}><div style={{display:"flex",alignItems:"center",gap:9,marginBottom:7}}><div style={{width:28,height:28,borderRadius:8,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{icoEl(m.ico,m.col,15)}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{m.mat?` · ${m.mat}`:""}</div></div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:800,fontSize:16,color:s.pct>=60?K.em:K.er,marginBottom:3}}>{s.s}/{s.t}</div><Tg c={s.pct>=60?K.em:K.er} bg={s.pct>=60?K.emBg:K.erBg} bd={s.pct>=60?K.emBd:K.erBd} ch={`${s.pct>=60?"✓":"✗"} ${s.pct}%`}/></div></div><Bar p={s.pct} col={s.pct>=60?K.em:K.er} h={3}/></div>;})}</>}</div>;}
- 
+
+function Prog({pr,sc,gp,nd,ok,mods}){
+  const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
+  const isLight=['light','sepia'].includes(tid);
+  const done=mods.filter(m=>pr[m.id]==="done");
+  const todo=mods.filter(m=>pr[m.id]!=="done");
+  return <div style={{maxWidth:700,margin:"0 auto",animation:"up .25s ease"}}>
+    {/* Header bannière */}
+    <div style={{background:`linear-gradient(135deg,${K.in_}18,${K.em}10)`,border:`1px solid ${K.inBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
+      <div style={{fontSize:12,color:K.in_,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-chart-line" style={{fontSize:13}}/> Progression globale</div>
+      <div style={{fontSize:mob?20:26,fontWeight:900,color:K.t1,marginBottom:4}}>{gp}% accompli</div>
+      <div style={{fontSize:13,color:K.t2,marginBottom:14}}>{nd} module{nd>1?"s":""} terminé{nd>1?"s":""} sur {mods.length}</div>
+      <Bar p={gp} col={K.in_} h={6}/>
+      <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
+        {[[`${nd}`,"Complétés",K.em],[`${mods.length-nd}`,"Restants",K.t3],[`${Object.values(sc).filter(s=>s.pct>=60).length}`,"Réussis",K.in_]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
+      </div>
+    </div>
+
+    {/* Modules complétés */}
+    {done.length>0&&<><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-check-circle" style={{fontSize:16,color:K.em}}/> Complétés ({done.length})</div>
+    <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+      {done.map((m,i)=>{const s=sc[m.id];const cp=getCardPalette(tid,i);return <div key={m.id} style={{background:cp.bg,border:`1px solid ${cp.bd}`,borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,animation:`up .25s ease ${i*15}ms both`}}>
+        <div style={{width:38,height:38,borderRadius:11,background:isLight?"rgba(255,255,255,.8)":K.b1,border:`1px solid ${cp.bd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{icoEl(m.ico,cp.ac,17)}</div>
+        <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:13,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>{m.mat&&<div style={{fontSize:10,color:cp.ac,fontWeight:600,marginTop:1}}>{m.mat}</div>}</div>
+        {s&&<div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:800,fontSize:17,color:s.pct>=60?K.em:K.er}}>{s.pct}%</div><div style={{fontSize:9,color:K.t3}}>Score QCM</div></div>}
+        <i className="ti ti-check-circle" style={{fontSize:18,color:K.em,flexShrink:0}}/>
+      </div>;})}
+    </div></>}
+
+    {/* Modules à faire */}
+    {todo.length>0&&<><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-clock" style={{fontSize:16,color:K.t3}}/> À compléter ({todo.length})</div>
+    <div style={{display:"flex",flexDirection:"column",gap:7}}>
+      {todo.map((m,i)=><div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"11px 14px",display:"flex",alignItems:"center",gap:11,opacity:.75,animation:`up .25s ease ${i*12}ms both`}}>
+        <div style={{width:36,height:36,borderRadius:10,background:K.c2,border:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{!ok?<i className="ti ti-lock" style={{fontSize:14,color:K.t3}}/>:icoEl(m.ico,K.t3,15)}</div>
+        <div style={{flex:1,minWidth:0}}><div style={{fontWeight:600,fontSize:13,color:K.t2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>{m.mat&&<div style={{fontSize:10,color:K.t3,marginTop:1}}>{m.mat}</div>}</div>
+        <div style={{fontSize:11,color:K.t3,flexShrink:0}}>{m.q?.length||0} questions</div>
+      </div>)}
+    </div></>}
+  </div>;
+}
+
+function Res({sc,ok,mods}){
+  const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
+  const isLight=['light','sepia'].includes(tid);
+  const att=mods.filter(m=>sc[m.id]);
+  const avg=att.length?Math.round(att.reduce((a,m)=>a+sc[m.id].pct,0)/att.length):0;
+  const pass=att.filter(m=>sc[m.id].pct>=60).length;
+  const fail=att.filter(m=>sc[m.id].pct<60).length;
+  return <div style={{maxWidth:700,margin:"0 auto",animation:"up .25s ease"}}>
+    {/* Header */}
+    <div style={{background:`linear-gradient(135deg,${K.wa}18,${K.em}10)`,border:`1px solid ${K.waBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
+      <div style={{fontSize:12,color:K.wa,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-trophy" style={{fontSize:13}}/> Tableau des résultats</div>
+      <div style={{fontSize:mob?20:26,fontWeight:900,color:K.t1,marginBottom:4}}>Moyenne : {avg}%</div>
+      <div style={{fontSize:13,color:K.t2,marginBottom:14}}>{att.length} évaluation{att.length>1?"s":""} passée{att.length>1?"s":""}</div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        {[[`${att.length}`,"Évaluations",K.t2],[`${pass}`,"Réussies",K.em],[`${fail}`,"À retravailler",K.er],[`${avg}%`,"Moyenne",avg>=60?K.em:K.er]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
+      </div>
+    </div>
+
+    {!ok||att.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"44px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:10,animation:"fl 3s ease-in-out infinite"}}>{!ok?"🔒":"📊"}</div><div style={{color:K.t2,fontSize:14,fontWeight:700,marginBottom:4}}>{!ok?"Accès requis":"Aucun résultat"}</div><div style={{color:K.t3,fontSize:12}}>{!ok?"Abonnez-vous.":"Commencez un module !"}</div></div>:
+    <div style={{display:"flex",flexDirection:"column",gap:9}}>
+      {att.map((m,i)=>{const s=sc[m.id];const w=s.pct>=60;const cp=getCardPalette(tid,i);return <div key={m.id} style={{background:w?cp.bg:K.card,border:`1px solid ${w?cp.bd:K.erBd}`,borderRadius:13,padding:"14px 16px",animation:`up .25s ease ${i*22}ms both`}}>
+        <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:10}}>
+          <div style={{width:40,height:40,borderRadius:11,background:isLight?w?"rgba(255,255,255,.8)":K.erBg:K.b1,border:`1px solid ${w?cp.bd:K.erBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{icoEl(m.ico,w?cp.ac:K.er,17)}</div>
+          <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace",marginTop:1}}>{m.code}{m.mat?` · ${m.mat}`:""}</div></div>
+          <div style={{textAlign:"right",flexShrink:0}}>
+            <div style={{fontWeight:900,fontSize:22,color:w?cp.ac:K.er,letterSpacing:"-.5px"}}>{s.pct}%</div>
+            <div style={{fontSize:10,color:K.t3}}>{s.s}/{s.t} bonnes</div>
+          </div>
+        </div>
+        <Bar p={s.pct} col={w?cp.ac:K.er} h={4}/>
+        <div style={{marginTop:8,display:"flex",alignItems:"center",gap:6}}>{w?<><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/><span style={{fontSize:12,color:K.em,fontWeight:600}}>{s.pct>=80?"Excellent !":s.pct>=70?"Très bien":"Bien"}</span></>:<><i className="ti ti-alert-circle" style={{fontSize:14,color:K.er}}/><span style={{fontSize:12,color:K.er,fontWeight:600}}>À retravailler</span></>}</div>
+      </div>;})}
+    </div>}
+  </div>;
+}
+
 function VidsPage({ok,onSub,vids,live}){
   const K=useK();const{mob}=useW();const[fi,sF]=useState("tous");const[pl,sPl]=useState(null);
   const fil=fi==="tous"?vids:fi==="gr"?vids.filter(v=>v.gr):fi==="pm"?vids.filter(v=>!v.gr):vids.filter(v=>v.mid===fi);
@@ -418,7 +625,7 @@ function VidsPage({ok,onSub,vids,live}){
     </div>}
   </div>;
 }
- 
+
 // ── ADMIN ─────────────────────────────────────────────────────────────────────
 function AA({onOut}){
   const K=useK();const{mob}=useW();
@@ -436,7 +643,12 @@ function AA({onOut}){
   const tabs=[["d",`Dem.(${nD})`],["a",`Act.(${nA})`],["e",`Exp.(${nE})`],["t",`Tous(${users.length})`],["s","Stats"],["m","📚 Cours"],["v","🎬 Vidéos"],["p","📄 PDF"]];
   const byT={d:dem,a:act,e:exp_,t:fl};
   let CC_LOCAL=users.reduce((mx,u)=>{const n=parseInt((u.activationCode||"").replace("ACC-",""))||0;return Math.max(mx,n);},0);
-  const nC=()=>`ACC-${String(++CC_LOCAL).padStart(3,"0")}`;
+  const nC=()=>{
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code="AP-";
+  for(let i=0;i<8;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+};
   const genC=async(uid,did)=>{
     sSav(true);const d=DUR.find(x=>x.id===did);const code=nC();
     await saveUserData(uid,{activationCode:code,codeValide:false,dureeId:did,dateExpiration:dE(d.j)});
@@ -505,7 +717,7 @@ function AA({onOut}){
       {["d","a","e","t"].includes(tab)&&<><div style={{marginBottom:10}}><input type="text" placeholder="🔍 Rechercher…" defaultValue="" onChange={e=>sQ(e.target.value)} style={{padding:"8px 11px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:13,outline:"none",width:"100%",maxWidth:290,fontFamily:"'Outfit',sans-serif",caretColor:K.em,minHeight:38}} onFocus={e=>e.target.style.borderColor=K.emBd} onBlur={e=>e.target.style.borderColor=K.b0}/></div>{tab==="d"&&nD>0&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:9,padding:"8px 12px",marginBottom:9,fontSize:12,color:K.t2}}>💡 Vérifiez paiement → <b>✓</b> Valider → Durée → Code → <b>✉</b> mail.</div>}<Liste list={byT[tab]||fl} empty="Aucun résultat"/></>}
       {tab==="s"&&<div style={{animation:"up .25s ease"}}><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10}}>Performance modules</div>{users.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"38px",textAlign:"center"}}><div style={{color:K.t3,fontSize:13}}>Aucune donnée.</div></div>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>{mods.map(m=>{const at=users.filter(u=>u.scores?.[m.id]),av=at.length?Math.round(at.reduce((a,u)=>a+u.scores[m.id].pct,0)/at.length):0,pa=at.filter(u=>u.scores[m.id].pct>=60).length;return <div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:"10px 12px"}}><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:7}}><div style={{width:24,height:24,borderRadius:7,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>{icoEl(m.ico,m.col,14)}</div><div><div style={{color:K.t1,fontWeight:700,fontSize:12}}>{m.titre}</div><div style={{color:K.t3,fontSize:9,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}</div></div></div><div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:K.t3,marginBottom:4,fontFamily:"'JetBrains Mono',monospace"}}><span>{at.length} tentatives</span><span>{pa} réussi · {av}%</span></div><Bar p={av} col={m.col} h={3}/></div>;})}</div>}</div>}
       {tab==="m"&&<div style={{animation:"up .25s ease"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Gestion des cours</div><div style={{color:K.t3,fontSize:12,marginTop:2}}>{mods.length} modules · {mods.filter(m=>m.on!==false).length} actifs</div></div><Btn ch="➕ Nouveau" on={()=>{sEM(null);sNM(true);}} sx={{minHeight:38,fontSize:13}}/></div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Gestion des cours</div><div style={{color:K.t3,fontSize:12,marginTop:2}}>{mods.length} modules · {mods.filter(m=>m.on!==false).length} actifs</div></div><div style={{display:"flex",gap:7,flexWrap:"wrap"}}>{mods.length===0&&<Btn ch="🚀 Initialiser SYSCOHADA" on={seedModules} v="i" sx={{minHeight:38,fontSize:12}}/>}<Btn ch="➕ Nouveau" on={()=>{sEM(null);sNM(true);}} sx={{minHeight:38,fontSize:13}}/></div></div>
         {newMod&&<div style={{background:K.card,border:`1px solid ${K.emBd}`,borderRadius:12,padding:"14px",marginBottom:13,maxHeight:"80vh",overflowY:"auto"}}><ModEditor mod={{}} onSave={()=>{sNM(false);}} onCancel={()=>sNM(false)}/></div>}
         {editMod&&<div style={{background:K.card,border:`1px solid ${K.emBd}`,borderRadius:12,padding:"14px",marginBottom:13,maxHeight:"80vh",overflowY:"auto"}}><ModEditor mod={editMod} onSave={()=>{sEM(null);}} onCancel={()=>sEM(null)}/></div>}
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -559,7 +771,7 @@ function AA({onOut}){
     {dm&&<Sheet title="Supprimer ?" onClose={()=>sDm(null)} w={320}><div style={{textAlign:"center",padding:"4px 0"}}><div style={{fontSize:30,marginBottom:7}}>⚠️</div><div style={{color:K.t1,fontWeight:700,fontSize:14,marginBottom:4}}>{users.find(u=>u.uid===dm)?.nom}</div><div style={{color:K.t3,fontSize:12,marginBottom:17}}>Action irréversible.</div><div style={{display:"flex",gap:7,justifyContent:"center"}}><Btn ch="Annuler" on={()=>sDm(null)} v="g" sx={{minHeight:42}}/><Btn ch="Supprimer" on={()=>delU(dm)} v="d" sx={{minHeight:42}}/></div></div></Sheet>}
   </div>;
 }
- 
+
 // ── ROOT ──────────────────────────────────────────────────────────────────────
 export default function App(){
   const[who,sW]=useState(null);const[loading,sL]=useState(true);
