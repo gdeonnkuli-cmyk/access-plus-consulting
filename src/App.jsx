@@ -69,6 +69,12 @@ body{background:${K.bg};color:${K.t1};font-family:'Outfit',sans-serif;-webkit-fo
 @keyframes su{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.2);opacity:1}}
+@keyframes logofl{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.05)}}
+@keyframes dotfl{0%,60%,100%{transform:scale(.5);opacity:.25}30%{transform:scale(1.1);opacity:1}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.18);opacity:1}}
+@keyframes logofl{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.04)}}
+@keyframes dotfl{0%,80%,100%{transform:scale(.6);opacity:.3}40%{transform:scale(1);opacity:1}}
 .hv{transition:transform .2s,box-shadow .2s;cursor:pointer;}.hv:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.3);}.hv:active{transform:scale(.98);}
 .bt{transition:filter .15s,transform .12s;cursor:pointer;}.bt:hover{filter:brightness(1.08);}.bt:active{transform:scale(.96);}
 .gm{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;}
@@ -207,6 +213,31 @@ const seedModules=async()=>{
     alert(`✅ ${count} modules SYSCOHADA initialisés avec succès dans Firestore !`);
   }catch(e){alert("Erreur : "+e.message);}
 };
+const saveDemande=async(d)=>{
+  const r=doc(collection(db,"demandes"));
+  await setDoc(r,{...d,createdAt:Date.now(),statut:"nouveau"});
+};
+const updateDemande=async(id,data)=>{
+  await updateDoc(doc(db,"demandes",id),data);
+};
+const saveStage=async(s)=>{
+  const{id,...data}=s;
+  if(id){await setDoc(doc(db,"stages",id),data,{merge:true});}
+  else{const r=doc(collection(db,"stages"));await setDoc(r,data);}
+};
+const deleteStage=async(id)=>{await deleteDoc(doc(db,"stages",id));};
+const savePlateforme=async(p)=>{
+  const{id,...data}=p;
+  if(id){await setDoc(doc(db,"plateformes",id),data,{merge:true});}
+  else{const r=doc(collection(db,"plateformes"));await setDoc(r,data);}
+};
+const deletePlateforme=async(id)=>{await deleteDoc(doc(db,"plateformes",id));};
+const savePresentation=async(pres)=>{
+  const{id,...data}=pres;
+  if(id){await setDoc(doc(db,"presentations",id),data,{merge:true});}
+  else{const r=doc(collection(db,"presentations"));await setDoc(r,data);}
+};
+const deletePresentation=async(id)=>{await deleteDoc(doc(db,"presentations",id));};
 const saveLive=async(data)=>{await setDoc(doc(db,"config","live"),data,{merge:true});};
 const uploadPdf=async(modId,file)=>{
   const r=ref(storage,`pdfs/${modId}/${file.name}`);
@@ -221,22 +252,175 @@ const deletePdf=async(modId,name)=>{
 };
 
 // ── RESPONSIVE ────────────────────────────────────────────────────────────────
+function useDemandes(){
+  const[demandes,sD]=useState([]);
+  useEffect(()=>{
+    const unsub=onSnapshot(collection(db,"demandes"),(snap)=>{
+      sD(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)));
+    });
+    return unsub;
+  },[]);
+  return demandes;
+}
+function useStages(){
+  const[stages,sS]=useState([]);
+  useEffect(()=>{
+    const unsub=onSnapshot(collection(db,"stages"),(snap)=>{
+      sS(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)));
+    });
+    return unsub;
+  },[]);
+  return stages;
+}
+function usePlateformes(){
+  const[plats,sP]=useState([]);
+  useEffect(()=>{
+    const unsub=onSnapshot(collection(db,"plateformes"),(snap)=>{
+      sP(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.ordre||0)-(b.ordre||0)));
+    });
+    return unsub;
+  },[]);
+  return plats;
+}
+function usePresentations(){
+  const[pres,sP]=useState([]);
+  useEffect(()=>{
+    const unsub=onSnapshot(collection(db,"presentations"),(snap)=>{
+      sP(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.ordre||0)-(b.ordre||0)));
+    });
+    return unsub;
+  },[]);
+  return pres;
+}
 function useW(){const[w,sW]=useState(typeof window!=="undefined"?window.innerWidth:375);useEffect(()=>{const h=()=>sW(window.innerWidth);window.addEventListener("resize",h,{passive:true});return()=>window.removeEventListener("resize",h);},[]);return{mob:w<640};}
 
 // ── UI PRIMITIVES ─────────────────────────────────────────────────────────────
 const Logo=({sm})=>{const K=useK();return <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}><svg width={sm?18:22} height={sm?18:22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg><div><div style={{fontWeight:800,fontSize:sm?12:14,color:K.t1,lineHeight:1}}>Access Plus</div>{!sm&&<div style={{fontSize:8,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>Consulting</div>}</div></div>;};
 const Tg=({c,bg,bd,ch})=>{const K=useK();return <span style={{background:bg||K.c2,color:c||K.t2,border:`1px solid ${bd||K.b0}`,borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:600,fontFamily:"'JetBrains Mono',monospace",whiteSpace:"nowrap"}}>{ch}</span>;};
 const Bar=({p,col,h=4})=>{const K=useK();return <div style={{background:K.b0,borderRadius:99,height:h,overflow:"hidden"}}><div style={{width:`${Math.min(p,100)}%`,height:"100%",background:col||K.em,borderRadius:99,transition:"width .6s ease"}}/></div>;};
-const Spin=()=>{const K=useK();return <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:40}}><div style={{width:28,height:28,borderRadius:"50%",border:`3px solid ${K.b1}`,borderTopColor:K.em,animation:"spin 0.8s linear infinite"}}/></div>;};
+const Spin=()=>{const K=useK();return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:24,background:K.bg}}><div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{position:"absolute",width:70,height:70,borderRadius:"50%",background:`${K.em}14`,animation:"pulse 2s ease-in-out infinite"}}/><div style={{position:"absolute",width:52,height:52,borderRadius:"50%",background:`${K.em}0D`,animation:"pulse 2s ease-in-out infinite .4s"}}/><div style={{width:46,height:46,borderRadius:14,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 8px 24px ${K.emD}55`,animation:"logofl 2.4s ease-in-out infinite"}}><svg width={22} height={22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="rgba(7,18,9,.5)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 2L18 11L10 20" stroke="#071209" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg></div></div><div style={{textAlign:"center"}}><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:6}}>Access Plus</div><div style={{display:"flex",alignItems:"center",gap:5,justifyContent:"center"}}>{[0,1,2].map(i=><span key={i} style={{width:5,height:5,borderRadius:"50%",background:K.em,display:"inline-block",animation:"dotfl 1.4s ease-in-out infinite",animationDelay:`${i*0.22}s`}}/>)}</div></div></div>;};
 function Btn({ch,on,v="p",sm,full,dis,sx}){const K=useK();const M={p:{bg:`linear-gradient(135deg,${K.emD},${K.em})`,col:"#071209",sh:`0 2px 10px ${K.emD}44`},g:{bg:"transparent",col:K.t2,bo:`1px solid ${K.b1}`},d:{bg:K.erBg,col:K.er,bo:`1px solid ${K.erBd}`},w:{bg:K.waBg,col:K.wa,bo:`1px solid ${K.waBd}`},i:{bg:`linear-gradient(135deg,${K.inD},${K.in_})`,col:"#fff",sh:`0 2px 10px ${K.inD}44`},s:{bg:K.c2,col:K.t2,bo:`1px solid ${K.b0}`},r:{bg:K.rdBg,col:K.rd,bo:`1px solid ${K.rdBd}`}}[v]||{};return <button onClick={dis?null:on} className="bt" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,padding:sm?"7px 11px":"10px 17px",borderRadius:9,fontSize:sm?12:13,fontWeight:700,border:M.bo||"none",background:M.bg,color:M.col,boxShadow:M.sh||"none",width:full?"100%":undefined,opacity:dis?.45:1,cursor:dis?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",minHeight:sm?36:40,...sx}}>{ch}</button>;}
 function Inp({lb,rf,type,ph,mono,note,ok,def,rows,val,onChange}){const K=useK();const base={width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:mono?"'JetBrains Mono',monospace":"'Outfit',sans-serif",caretColor:K.em};const fe=e=>{e.target.style.borderColor=K.emBd;if(!rows)e.target.style.background=K.card;};const fb=e=>{e.target.style.borderColor=K.b0;if(!rows)e.target.style.background=K.c2;};const props={onFocus:fe,onBlur:fb};if(val!==undefined){props.value=val;props.onChange=onChange||function(){};}else{props.defaultValue=def||"";}return <div style={{marginBottom:13}}>{lb&&<div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>{lb}</div>}{rows?<textarea ref={rf} rows={rows} placeholder={ph||""} style={{...base,resize:"vertical",lineHeight:1.6,minHeight:44}} {...props}/>:<input ref={rf} type={type||"text"} placeholder={ph||""} style={{...base,minHeight:44,letterSpacing:mono?3:0}} {...props} onKeyDown={ok}/>}{note&&<div style={{color:K.t3,fontSize:11,marginTop:3,lineHeight:1.4}}>{note}</div>}</div>;}
 function Pop({t,m}){const K=useK();if(!m)return null;const s={e:{bg:K.erBg,bd:K.erBd,col:K.er,ic:"⚠"},o:{bg:K.emBg,bd:K.emBd,col:K.em,ic:"✓"}}[t]||{};return <div style={{background:s.bg,border:`1px solid ${s.bd}`,borderRadius:8,color:s.col,fontSize:13,padding:"9px 12px",marginBottom:11,display:"flex",gap:7,lineHeight:1.5,animation:"sc .2s ease"}}><span>{s.ic}</span><span>{m}</span></div>;}
 function Sheet({title,onClose,children,w=460}){const K=useK();return <div onClick={e=>{if(e.target===e.currentTarget)onClose();}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",backdropFilter:"blur(5px)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:999}}><div style={{width:"100%",maxWidth:w,background:K.card,border:`1px solid ${K.b1}`,borderRadius:"16px 16px 0 0",padding:"16px 18px max(16px,env(safe-area-inset-bottom))",maxHeight:"92vh",overflowY:"auto",animation:"su .26s ease"}}><div style={{width:36,height:4,background:K.b1,borderRadius:99,margin:"0 auto 13px"}}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:13}}><div style={{fontWeight:700,fontSize:15,color:K.t1}}>{title}</div><button onClick={onClose} className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:22,cursor:"pointer",lineHeight:1}}>×</button></div>{children}</div></div>;}
 function Donut({pct}){const K=useK();const[p,sP]=useState(0);useEffect(()=>{const t=setTimeout(()=>sP(pct),200);return()=>clearTimeout(t);},[pct]);const r=38,c=2*Math.PI*r;return <svg width={84} height={84} viewBox="0 0 84 84" style={{flexShrink:0}}><circle cx={42} cy={42} r={r} fill="none" stroke={K.c2} strokeWidth={7}/><circle cx={42} cy={42} r={r} fill="none" stroke={K.em} strokeWidth={7} strokeDasharray={`${c*p/100} ${c}`} strokeLinecap="round" transform="rotate(-90 42 42)" style={{transition:"stroke-dasharray .8s ease"}}/><text x={42} y={39} textAnchor="middle" fill={K.t1} style={{fontFamily:"'Outfit',sans-serif",fontSize:14,fontWeight:700}}>{p}%</text><text x={42} y={51} textAnchor="middle" fill={K.t3} style={{fontFamily:"'Outfit',sans-serif",fontSize:9}}>global</text></svg>;}
-function Player({url,titre,onClose}){const K=useK();const v=pVid(url);return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 16px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}><span style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"72vw"}}>{titre||"Vidéo"}</span><Btn ch="✕" on={onClose} v="g" sm/></div><div style={{flex:1,background:"#000"}}>{v?<iframe src={v.src} title={titre} style={{width:"100%",height:"100%",border:"none"}} allow="autoplay;encrypted-media;picture-in-picture" allowFullScreen/>:<div style={{color:K.t3,textAlign:"center",padding:40,marginTop:60}}><div style={{fontSize:36,marginBottom:10}}>⚠️</div>URL non supportée.</div>}</div></div>;}
+function Player({url,titre,onClose,playlist,startIdx=0}){
+  const K=useK();const{mob}=useW();
+  const[idx,sIdx]=useState(startIdx);
+  const[autoPlay,sAuto]=useState(true);
+  const[showPlan,sShowPlan]=useState(!mob);
+  const ifrRef=useRef(null);
+  const list=playlist&&playlist.length>0?playlist:[{url,titre}];
+  const cur=list[idx]||list[0];
+  const v=pVid(cur.url);
+  const hasPrev=idx>0;
+  const hasNext=idx<list.length-1;
+  const go=useCallback(i=>{if(i>=0&&i<list.length)sIdx(i);},[list.length]);
+  // Auto-advance: listen for message from YouTube iframe
+  useEffect(()=>{
+    if(!autoPlay)return;
+    const h=e=>{try{const d=JSON.parse(e.data);if(d.event==="onStateChange"&&d.info===0&&hasNext)setTimeout(()=>go(idx+1),1500);}catch{}};
+    window.addEventListener("message",h);
+    return()=>window.removeEventListener("message",h);
+  },[autoPlay,hasNext,idx,go]);
+  return <div style={{position:"fixed",inset:0,background:"#000",zIndex:1000,display:"flex",flexDirection:"column"}}>
+    {/* Header */}
+    <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0,minHeight:50}}>
+      <button onClick={onClose} className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:20,cursor:"pointer",lineHeight:1,padding:"2px 6px",flexShrink:0}}>✕</button>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cur.titre||"Vidéo"}</div>
+        {list.length>1&&<div style={{color:K.t3,fontSize:10,marginTop:1}}>{idx+1}/{list.length} · {list[idx]?.mat||""}</div>}
+      </div>
+      <div style={{display:"flex",gap:6,flexShrink:0,alignItems:"center"}}>
+        {list.length>1&&<button onClick={()=>sShowPlan(p=>!p)} className="bt" style={{background:showPlan?K.emBg:K.c2,border:`1px solid ${showPlan?K.emBd:K.b0}`,color:showPlan?K.em:K.t3,borderRadius:7,padding:"5px 9px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:30}}>📋 Plan</button>}
+        <button onClick={()=>sAuto(a=>!a)} className="bt" style={{background:autoPlay?K.emBg:K.c2,border:`1px solid ${autoPlay?K.emBd:K.b0}`,color:autoPlay?K.em:K.t3,borderRadius:7,padding:"5px 9px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:30,display:list.length>1?"flex":"none",alignItems:"center",gap:4}}><i className="ti ti-player-skip-forward" style={{fontSize:12}}/>Auto</button>
+      </div>
+    </div>
+    {/* Main content */}
+    <div style={{flex:1,display:"flex",overflow:"hidden"}}>
+      {/* Video */}
+      <div style={{flex:1,background:"#000",position:"relative",display:"flex",flexDirection:"column"}}>
+        <div style={{flex:1,position:"relative"}}>
+          {v?<iframe ref={ifrRef} key={cur.url} src={v.t==="yt"?`${v.src}&enablejsapi=1&autoplay=1`:v.src} title={cur.titre} style={{width:"100%",height:"100%",border:"none",position:"absolute",inset:0}} allow="autoplay;encrypted-media;picture-in-picture" allowFullScreen/>:<div style={{color:K.t3,textAlign:"center",padding:40,position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column"}}><div style={{fontSize:36,marginBottom:10}}>⚠️</div>URL non supportée.</div>}
+        </div>
+        {/* Nav controls */}
+        {list.length>1&&<div style={{background:`${K.card}ee`,backdropFilter:"blur(8px)",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexShrink:0,borderTop:`1px solid ${K.b0}`}}>
+          <button onClick={()=>go(idx-1)} disabled={!hasPrev} className="bt" style={{background:hasPrev?K.c2:"transparent",border:`1px solid ${hasPrev?K.b1:K.b0}`,color:hasPrev?K.t1:K.t3,borderRadius:8,padding:"7px 13px",cursor:hasPrev?"pointer":"default",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,minHeight:36,opacity:hasPrev?1:.4}}>
+            <i className="ti ti-chevron-left" style={{fontSize:14}}/>Précédent
+          </button>
+          <div style={{textAlign:"center"}}>
+            <div style={{display:"flex",gap:5,justifyContent:"center",marginBottom:3}}>
+              {list.slice(Math.max(0,idx-2),idx+3).map((_,i)=>{const realI=Math.max(0,idx-2)+i;return <button key={realI} onClick={()=>go(realI)} className="bt" style={{width:realI===idx?22:8,height:8,borderRadius:99,background:realI===idx?K.em:K.b1,border:"none",padding:0,cursor:"pointer",transition:"all .2s"}}/>;})}
+            </div>
+            <div style={{color:K.t3,fontSize:10}}>{idx+1} / {list.length}</div>
+          </div>
+          <button onClick={()=>go(idx+1)} disabled={!hasNext} className="bt" style={{background:hasNext?K.emBg:"transparent",border:`1px solid ${hasNext?K.emBd:K.b0}`,color:hasNext?K.em:K.t3,borderRadius:8,padding:"7px 13px",cursor:hasNext?"pointer":"default",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,minHeight:36,opacity:hasNext?1:.4}}>
+            Suivant<i className="ti ti-chevron-right" style={{fontSize:14}}/>
+          </button>
+        </div>}
+      </div>
+      {/* Plan sidebar */}
+      {showPlan&&list.length>1&&<div style={{width:mob?"100%":260,background:K.card,borderLeft:`1px solid ${K.b0}`,overflowY:"auto",flexShrink:0,display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"12px 14px",borderBottom:`1px solid ${K.b0}`,flexShrink:0}}>
+          <div style={{fontWeight:800,fontSize:13,color:K.t1,marginBottom:1}}>Plan du cours</div>
+          <div style={{fontSize:11,color:K.t3}}>{list.length} vidéos</div>
+        </div>
+        <div style={{flex:1,overflowY:"auto"}}>
+          {list.map((v,i)=>{const pv=pVid(v.url);const isCur=i===idx;return <div key={i} onClick={()=>{go(i);if(mob)sShowPlan(false);}} className="bt" style={{padding:"10px 14px",borderBottom:`1px solid ${K.b0}`,cursor:"pointer",background:isCur?K.emBg:"transparent",borderLeft:isCur?`3px solid ${K.em}`:"3px solid transparent",display:"flex",gap:9,alignItems:"flex-start"}}>
+            <div style={{width:48,height:32,borderRadius:5,background:K.c2,flexShrink:0,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:null}
+              <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.3)",display:"flex",alignItems:"center",justifyContent:"center"}}><i className={isCur?"ti ti-player-play-filled":"ti ti-player-play"} style={{fontSize:11,color:isCur?K.em:"#fff"}}/></div>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:12,fontWeight:isCur?700:500,color:isCur?K.em:K.t1,lineHeight:1.35,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{v.titre}</div>
+              <div style={{fontSize:10,color:K.t3,marginTop:3}}>{i+1}/{list.length}</div>
+            </div>
+          </div>;})}
+        </div>
+      </div>}
+    </div>
+  </div>;
+}
+
 function PdfV({url,name,onClose}){const K=useK();return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 15px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}><div style={{display:"flex",alignItems:"center",gap:8}}><span>📄</span><div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{name}</div><div style={{color:K.t3,fontSize:10}}>Lecture seule</div></div></div><Btn ch="✕" on={onClose} v="g" sm/></div><iframe src={url} title={name} style={{flex:1,border:"none"}} sandbox="allow-same-origin"/></div>;}
 
 // ── SÉLECTEUR THÈME ───────────────────────────────────────────────────────────
+function PresViewer({url,titre,desc,onClose}){
+  const K=useK();const{mob}=useW();
+  // Detect Google Slides / Canva / generic embed
+  const getEmbedUrl=u=>{
+    if(!u)return null;
+    // Google Slides: convert /pub to /embed or extract embed src
+    let m=u.match(/docs\.google\.com\/presentation\/d\/([^/]+)/);
+    if(m)return `https://docs.google.com/presentation/d/${m[1]}/embed?start=false&loop=false&delayms=3000`;
+    // Canva embed
+    if(u.includes('canva.com'))return u;
+    // Generic iframe src
+    if(u.startsWith('http'))return u;
+    return null;
+  };
+  const embedUrl=getEmbedUrl(url);
+  return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 15px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}>
+      <div style={{display:"flex",alignItems:"center",gap:9}}>
+        <div style={{width:32,height:32,borderRadius:8,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className="ti ti-presentation" style={{fontSize:16,color:K.in_}}/></div>
+        <div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{titre}</div>{desc&&<div style={{color:K.t3,fontSize:10,marginTop:1}}>{desc}</div>}</div>
+      </div>
+      <Btn ch="✕" on={onClose} v="g" sm/>
+    </div>
+    <div style={{flex:1,background:"#1a1a2e",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      {embedUrl
+        ?<iframe src={embedUrl} title={titre} style={{width:"100%",height:"100%",border:"none"}} allowFullScreen/>
+        :<div style={{textAlign:"center",color:K.t3,padding:40}}><div style={{fontSize:40,marginBottom:10}}>⚠️</div><div>URL non supportée.</div><div style={{fontSize:12,marginTop:5}}>Utilisez un lien Google Slides ou Canva.</div></div>
+      }
+    </div>
+    <div style={{background:K.card,borderTop:`1px solid ${K.b0}`,padding:"8px 15px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+      <div style={{fontSize:11,color:K.t3}}>💡 Utilisez les flèches du clavier pour naviguer dans la présentation</div>
+      <a href={url} target="_blank" rel="noreferrer" style={{fontSize:11,color:K.in_,fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}><i className="ti ti-external-link" style={{fontSize:12}}/>Ouvrir dans un nouvel onglet</a>
+    </div>
+  </div>;
+}
+
 function ThemePicker({open,onClose}){
   const K=useK();const{tid,setT}=useContext(Ctx);
   if(!open)return null;
@@ -297,7 +481,7 @@ function Auth({onL}){
   const go=useCallback(()=>step===2?code():tab==="r"?reg():login(),[step,tab,code,reg,login]);
   const hk=useCallback(e=>{if(e.key==="Enter")go();},[go]);
   return <div style={{minHeight:"100vh",background:K.bg,display:"flex",flexDirection:"column",fontFamily:"'Outfit',sans-serif",position:"relative"}}>
-    <style>{mCss(K)}</style><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css"/>
+    <style>{mCss(K)}</style>
     <div style={{position:"fixed",top:-140,left:"50%",transform:"translateX(-50%)",width:460,height:220,background:`radial-gradient(ellipse,${K.em}0D,transparent 70%)`,pointerEvents:"none"}}/>
     <header style={{padding:mob?"14px 15px":"18px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative",zIndex:1}}><Logo/><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Formation en ligne"/></header>
     <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:mob?"10px 14px 22px":"18px",position:"relative",zIndex:1}}>
@@ -332,6 +516,10 @@ function UA({uid,onOut}){
   const[vue,sV]=useState("home"),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[sub,sSub]=useState(false);
   const[uData,sUD]=useState(null),[pdfs,sPdfs]=useState({});
   const{mods,loading:mL}=useModules();
+  const allPres=usePresentations();
+  const allStages=useStages();
+  const allPlats=usePlateformes();
+  const allDemandes=useDemandes();
   const{vids,live}=useVideos();
   useEffect(()=>{
     const unsub=onSnapshot(doc(db,"users",uid),(snap)=>{if(snap.exists())sUD({uid,...snap.data()});});
@@ -339,7 +527,7 @@ function UA({uid,onOut}){
     loadPdfs();
     return unsub;
   },[uid]);
-  if(!uData||mL)return <div style={{minHeight:"100vh",background:K.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><style>{mCss(K)}</style><Spin/></div>;
+  if(!uData||mL)return <div style={{minHeight:"100vh",background:K.bg}}><style>{mCss(K)}</style><Spin/></div>;
   const ok=uData.abonnement==="actif"&&!xp(uData.dateExpiration);
   const aMods=mods.filter(m=>m.on!==false);
   const pr=uData.progress||{},sc=uData.scores||{};
@@ -349,8 +537,11 @@ function UA({uid,onOut}){
   if(quiz)return W(<QZ mod={quiz} onDone={async(s,t)=>{await save(quiz.id,s,t);sQ(null);sM(null);sV("res");}} onBack={()=>sQ(null)}/>);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]}/>);
   return W(<>
-    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} live={live}/>}
+    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} live={live} presCount={allPres.length}/>}
     {vue==="videos"&&<VidsPage ok={ok} onSub={()=>sSub(true)} vids={vids} live={live}/>}
+    {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres}/>
+    }{vue==="stages"&&<StagePage stages={allStages} plats={allPlats} ok={ok}/>
+    }{vue==="services"&&<ServicesPage user={uData}/>}
     {vue==="prog"&&<Prog pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods}/>}
     {vue==="res"&&<Res sc={sc} ok={ok} mods={aMods}/>}
   </>);
@@ -361,7 +552,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live}){
   return <nav className="nb" style={{background:`${K.card}ee`,backdropFilter:"blur(14px)",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"space-between",height:52,position:"sticky",top:0,zIndex:99}}>
     <Logo sm={mob}/>
     <div className="tn" style={{flex:1,margin:"0 7px"}}>
-      {[["home",mob?"🏠":"Accueil"],["videos",live?(mob?<span style={{display:"flex",alignItems:"center",gap:3}}><span style={{width:6,height:6,borderRadius:"50%",background:K.rd,display:"inline-block",animation:"blink 1.5s ease-in-out infinite"}}/>{"🎬"}</span>:"🔴 Vidéos"):(mob?"🎬":"🎬 Vidéos")],["prog",mob?"📈":"Progression"],["res",mob?"🏆":"Résultats"]].map(([k,l])=>(
+      {[["home",mob?"🏠":"Accueil"],["pres",mob?"📊":"Présentations"],["stages",mob?"🎯":"Stages"],["services",mob?"💼":"Services"],["videos",live?(mob?<span style={{display:"flex",alignItems:"center",gap:3}}><span style={{width:6,height:6,borderRadius:"50%",background:K.rd,display:"inline-block",animation:"blink 1.5s ease-in-out infinite"}}/>{"🎬"}</span>:"🔴 Vidéos"):(mob?"🎬":"🎬 Vidéos")],["prog",mob?"📈":"Progression"],["res",mob?"🏆":"Résultats"]].map(([k,l])=>(
         <button key={k} onClick={()=>sV(k)} className="bt" style={{background:vue===k?K.c2:"none",border:"none",cursor:"pointer",padding:"5px 9px",borderRadius:6,fontSize:12,fontWeight:700,color:vue===k?K.t1:K.t3,whiteSpace:"nowrap",minHeight:34,borderBottom:vue===k?`2px solid ${K.em}`:"2px solid transparent"}}>{l}</button>
       ))}
     </div>
@@ -375,7 +566,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live}){
   </nav>;
 }
 
-function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,live}){
+function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,live,presCount=0}){
   const K=useK();const{mob}=useW();const jr=jR(u.dateExpiration);
   const{tid}=useContext(Ctx);
   const mats=[...new Set(mods.map(m=>m.mat||"Général"))];
@@ -388,8 +579,8 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,live}){
   const features=[
     {key:"modules",ico:"book-2",label:"Modules",desc:`${mods.filter(m=>m.on!==false).length} cours disponibles`,action:()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'})},
     {key:"qcm",ico:"help-circle",label:"QCM",desc:`${Object.keys(sc).length} évaluations passées`,action:()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'})},
-    {key:"videos",ico:"video",label:"Vidéos",desc:`${vids.length} vidéos disponibles`,action:onVid},
-    {key:"live",ico:"broadcast",label:"Direct",desc:live.on?"Cours en cours":"Prochain cours live",action:onVid},
+    {key:"pres",ico:"presentation",label:"Présentations",desc:`${presCount||0} support${presCount>1?"s":""} de cours`,action:onPres},
+    {key:"stages",ico:"briefcase",label:"Stages",desc:"Expériences virtuelles",action:onStages},{key:"videos",ico:"video",label:"Vidéos",desc:`${vids.length} vidéos disponibles`,action:onVid},
   ];
 
   return <div style={{animation:"up .3s ease"}}>
@@ -487,10 +678,10 @@ function SubM({onClose,uid,u}){
 
 function MV({mod,sc,ok,onQ,onBack,onSub,vids,pdf}){
   const K=useK();const{mob}=useW();
-  const[pl,sPl]=useState(null),[pdfO,sPdfO]=useState(false),[corr,sCorr]=useState(false),[exO,sExO]=useState(false);
+  const[pl,sPl]=useState(null),[plIdx,sPlIdx]=useState(0),[pdfO,sPdfO]=useState(false),[corr,sCorr]=useState(false),[exO,sExO]=useState(false);
   const ex=mod.ex;
   return <div style={{maxWidth:640,margin:"0 auto",animation:"up .25s ease"}}>
-    {pl&&<Player url={pl.url} titre={pl.titre} onClose={()=>sPl(null)}/>}
+    {pl&&<Player url={pl.url} titre={pl.titre} onClose={()=>{sPl(null);sPlIdx(0);}} playlist={vids.map(v=>({url:v.url,titre:v.titre,gr:v.gr}))} startIdx={plIdx}/>}
     {pdfO&&pdf&&<PdfV url={pdf.url} name={pdf.name} onClose={()=>sPdfO(false)}/>}
     <button onClick={onBack} className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:13,cursor:"pointer",marginBottom:13,padding:"5px 0",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>← Retour</button>
     <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:13,padding:mob?"13px":"18px 20px",marginBottom:10}}>
@@ -498,7 +689,7 @@ function MV({mod,sc,ok,onQ,onBack,onSub,vids,pdf}){
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{[["❓",`${mod.q?.length||0}q`],["📝","Exercice"],vids.length>0?["🎬",`${vids.length} vid.`]:null,pdf?["📄","PDF"]:null].filter(Boolean).map(([ic,v])=><div key={v} style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,padding:"4px 9px",fontSize:11,color:K.t2,display:"flex",alignItems:"center",gap:3}}>{ic} {v}</div>)}</div>
     </div>
     {sc&&ok&&<div style={{background:sc.pct>=60?K.emBg:K.erBg,border:`1px solid ${sc.pct>=60?K.emBd:K.erBd}`,borderRadius:11,padding:"10px 13px",marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{color:K.t2,fontSize:13}}>Dernier résultat</span><span style={{color:sc.pct>=60?K.em:K.er,fontWeight:700,fontSize:13}}>{sc.s}/{sc.t} — {sc.pct}%</span></div><Bar p={sc.pct} col={sc.pct>=60?K.em:K.er} h={4}/></div>}
-    {vids.length>0&&<div style={{background:K.card,border:`1px solid ${K.rdBd}`,borderRadius:12,marginBottom:10,overflow:"hidden"}}><div style={{padding:"11px 13px",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",gap:7}}><span>🎬</span><span style={{fontWeight:700,fontSize:13,color:K.t1}}>Vidéos</span><Tg c={K.rd} bg={K.rdBg} bd={K.rdBd} ch={`${vids.length}`}/></div><div style={{padding:"9px 11px",display:"flex",flexDirection:"column",gap:6}}>{vids.map(v=>{const lk=!v.gr&&!ok;const pv=pVid(v.url);return <div key={v.id} onClick={()=>lk?onSub():sPl({url:v.url,titre:v.titre})} className="bt" style={{display:"flex",alignItems:"center",gap:10,padding:"8px 11px",background:K.c2,borderRadius:9,cursor:"pointer",border:`1px solid ${K.b0}`,opacity:lk?.7:1}}><div style={{width:34,height:26,borderRadius:6,background:"rgba(0,0,0,.3)",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:<span style={{fontSize:12}}>{lk?"🔒":"▶"}</span>}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:12,color:lk?K.t3:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div></div>{v.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}</div>;})} </div></div>}
+    {vids.length>0&&<div style={{background:K.card,border:`1px solid ${K.rdBd}`,borderRadius:12,marginBottom:10,overflow:"hidden"}}><div style={{padding:"11px 13px",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",gap:7}}><span>🎬</span><span style={{fontWeight:700,fontSize:13,color:K.t1}}>Vidéos</span><Tg c={K.rd} bg={K.rdBg} bd={K.rdBd} ch={`${vids.length}`}/></div><div style={{padding:"9px 11px",display:"flex",flexDirection:"column",gap:6}}>{vids.map(v=>{const lk=!v.gr&&!ok;const pv=pVid(v.url);return <div key={v.id} onClick={()=>lk?onSub():(sPlIdx(vids.indexOf(v)),sPl({url:v.url,titre:v.titre}))} className="bt" style={{display:"flex",alignItems:"center",gap:10,padding:"8px 11px",background:K.c2,borderRadius:9,cursor:"pointer",border:`1px solid ${K.b0}`,opacity:lk?.7:1}}><div style={{width:34,height:26,borderRadius:6,background:"rgba(0,0,0,.3)",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:<span style={{fontSize:12}}>{lk?"🔒":"▶"}</span>}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:12,color:lk?K.t3:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div></div>{v.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}</div>;})} </div></div>}
     {ex&&<div style={{background:K.card,border:`1px solid ${exO?K.inBd:K.b0}`,borderRadius:12,marginBottom:10,overflow:"hidden"}}>
       <button onClick={()=>sExO(o=>!o)} className="bt" style={{width:"100%",background:"none",border:"none",cursor:"pointer",padding:"12px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
         <div style={{display:"flex",alignItems:"center",gap:9}}><div style={{width:30,height:30,borderRadius:8,background:ok?K.inBg:"rgba(128,128,128,.08)",border:`1px solid ${ok?K.inBd:K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{ok?"📝":"🔒"}</div><div style={{textAlign:"left"}}><div style={{fontWeight:700,fontSize:13,color:K.t1}}>Exercice pratique</div><div style={{fontSize:11,color:K.t3,marginTop:1}}>{ex.ti}</div></div></div>
@@ -623,7 +814,7 @@ function VidsPage({ok,onSub,vids,live}){
   const K=useK();const{mob}=useW();const[fi,sF]=useState("tous");const[pl,sPl]=useState(null);
   const fil=fi==="tous"?vids:fi==="gr"?vids.filter(v=>v.gr):fi==="pm"?vids.filter(v=>!v.gr):vids.filter(v=>v.mid===fi);
   return <div style={{animation:"up .3s ease"}}>
-    {pl&&<Player url={pl.url} titre={pl.titre} onClose={()=>sPl(null)}/>}
+    {pl&&<Player url={pl.url} titre={pl.titre} onClose={()=>{sPl(null);}} playlist={fil.map(v=>({url:v.url,titre:v.titre,gr:v.gr}))} startIdx={fil.findIndex(v=>v.url===pl.url)}/>}
     {live.on&&<div onClick={()=>ok||live.gr?sPl({url:live.url,titre:live.titre||"Direct"}):onSub()} className="hv" style={{background:K.rdBg,border:`1px solid ${K.rdBd}`,borderRadius:12,padding:"13px 15px",marginBottom:13,cursor:"pointer",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}><span style={{fontSize:20,animation:"blink 1.5s ease-in-out infinite",flexShrink:0}}>🔴</span><div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}><span style={{fontWeight:800,fontSize:14,color:K.t1}}>{live.titre||"Cours en direct"}</span><Tg c={K.rd} bg={K.rdBg} bd={K.rdBd} ch="EN DIRECT"/></div><div style={{fontSize:12,color:K.t3}}>{live.desc||""}</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
     <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:10}}>Vidéothèque {vids.length>0&&<span style={{color:K.t3,fontWeight:400,fontSize:13}}>({vids.length})</span>}</div>
     <div className="tn" style={{gap:6,marginBottom:12,paddingBottom:3}}>{[["tous","Toutes"],["gr","Gratuites"],["pm","Premium"]].map(([k,l])=><button key={k} onClick={()=>sF(k)} className="bt" style={{background:fi===k?K.c2:"transparent",border:`1px solid ${fi===k?K.b1:K.b0}`,borderRadius:99,padding:"4px 10px",fontSize:11,fontWeight:600,color:fi===k?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{l}</button>)}</div>
@@ -638,20 +829,413 @@ function VidsPage({ok,onSub,vids,live}){
 }
 
 // ── ADMIN ─────────────────────────────────────────────────────────────────────
+function PresPage({ok,onSub,pres}){
+  const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
+  const[open,sOpen]=useState(null);
+  const[fi,sF]=useState("Toutes");
+  const isLight=['light','sepia'].includes(tid);
+  const mats=[...new Set(pres.map(p=>p.mat||"Général"))];
+  const fil=fi==="Toutes"?pres:pres.filter(p=>(p.mat||"Général")===fi);
+  return <div style={{animation:"up .3s ease"}}>
+    {open&&<PresViewer url={open.url} titre={open.titre} desc={open.desc} onClose={()=>sOpen(null)}/>}
+    {/* Bannière */}
+    <div style={{background:`linear-gradient(135deg,${K.in_}18,${K.inD}10)`,border:`1px solid ${K.inBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
+      <div style={{fontSize:12,color:K.in_,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-presentation" style={{fontSize:13}}/> Présentations</div>
+      <div style={{fontSize:mob?18:22,fontWeight:900,color:K.t1,marginBottom:4}}>Supports de cours</div>
+      <div style={{fontSize:13,color:K.t2}}>{pres.length} présentation{pres.length>1?"s":""} disponible{pres.length>1?"s":""}</div>
+    </div>
+    {/* Filtres */}
+    {mats.length>1&&<div className="tn" style={{gap:6,marginBottom:12,paddingBottom:3}}>{["Toutes",...mats].map(m=><button key={m} onClick={()=>sF(m)} className="bt" style={{background:fi===m?K.c2:"transparent",border:`1px solid ${fi===m?K.b1:K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:11,fontWeight:600,color:fi===m?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{m}</button>)}</div>}
+    {fil.length===0
+      ?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"44px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>📊</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune présentation</div><div style={{color:K.t3,fontSize:12}}>L'admin n'a pas encore ajouté de présentations.</div></div>
+      :<div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
+        {fil.map((p,i)=>{
+          const lk=!p.gr&&!ok;
+          const cp={bg:K.inBg,bd:K.inBd,ac:K.in_};
+          return <div key={p.id} onClick={()=>lk?onSub():sOpen(p)} className="hv"
+            style={{background:isLight?"#F0F4FF":K.card,border:`1px solid ${lk?K.b0:K.inBd}`,borderRadius:14,overflow:"hidden",cursor:"pointer",opacity:lk?.7:1,animation:`up .3s ease ${i*20}ms both`}}>
+            {/* Header carte */}
+            <div style={{background:`linear-gradient(135deg,${K.in_}22,${K.inD}10)`,padding:"16px 16px 12px",borderBottom:`1px solid ${K.inBd}`}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                <div style={{width:40,height:40,borderRadius:11,background:isLight?"rgba(255,255,255,.8)":K.b1,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className={lk?"ti ti-lock":"ti ti-presentation"} style={{fontSize:18,color:lk?K.t3:K.in_}}/></div>
+                <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                  {p.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}
+                </div>
+              </div>
+              <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3,lineHeight:1.3}}>{p.titre}</div>
+              {p.mat&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={p.mat}/>}
+            </div>
+            {/* Footer carte */}
+            <div style={{padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              {p.desc?<div style={{fontSize:11,color:K.t2,flex:1,marginRight:8,lineHeight:1.4,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{p.desc}</div>:<div style={{flex:1}}/>}
+              {!lk&&<div style={{display:"flex",alignItems:"center",gap:4,fontSize:12,fontWeight:700,color:K.in_,flexShrink:0}}><span>Voir</span><i className="ti ti-arrow-right" style={{fontSize:12}}/></div>}
+              {lk&&<div style={{fontSize:11,color:K.t3}}>🔒 Abonnement</div>}
+            </div>
+          </div>;
+        })}
+      </div>
+    }
+  </div>;
+}
+
+// Plateformes de stages virtuels pré-chargées (seed)
+const SEED_PLATS=[
+  {nom:"The Forage",url:"https://www.theforage.com",logo:"🌾",desc:"Stages virtuels gratuits proposés par les plus grandes entreprises mondiales (Deloitte, KPMG, JP Morgan, BCG...). Programmes de 5 à 6h.",cats:["Finance & Comptabilité","Audit & Contrôle","Banque & Assurance"],gratuit:true,langue:"EN",ordre:1},
+  {nom:"LinkedIn Learning",url:"https://www.linkedin.com/learning",logo:"💼",desc:"Programmes de formation et stages certifiants en finance, comptabilité et droit. Accès via votre profil LinkedIn.",cats:["Finance & Comptabilité","Droit des affaires","Banque & Assurance"],gratuit:false,langue:"FR/EN",ordre:2},
+  {nom:"Coursera",url:"https://www.coursera.org",logo:"🎓",desc:"Cours et stages virtuels des meilleures universités et entreprises (Google, IBM, HEC Paris, Université de Genève).",cats:["Finance & Comptabilité","Audit & Contrôle","Banque & Assurance"],gratuit:false,langue:"FR/EN",ordre:3},
+  {nom:"ACCA Global",url:"https://www.accaglobal.com",logo:"📊",desc:"Stages virtuels et ressources professionnelles pour comptables. Certifications reconnues internationalement.",cats:["Finance & Comptabilité","Audit & Contrôle"],gratuit:false,langue:"EN",ordre:4},
+  {nom:"OHADA Business",url:"https://www.ohada.com",logo:"⚖️",desc:"Ressources juridiques et formations sur le droit OHADA, les affaires en Afrique et le droit des sociétés.",cats:["Droit des affaires"],gratuit:true,langue:"FR",ordre:5},
+  {nom:"Banque de France",url:"https://www.banque-france.fr/fr/publications-et-statistiques/formation",logo:"🏦",desc:"Formations et stages virtuels sur la banque, la finance et la stabilité financière.",cats:["Banque & Assurance","Finance & Comptabilité"],gratuit:true,langue:"FR",ordre:6},
+  {nom:"IFACI",url:"https://www.ifaci.com",logo:"🔍",desc:"Institut Français de l'Audit et du Contrôle Internes — formations certifiantes pour auditeurs et contrôleurs.",cats:["Audit & Contrôle"],gratuit:false,langue:"FR",ordre:7},
+  {nom:"Virtusa Virtual Internship",url:"https://www.virtualsimulator.com",logo:"💻",desc:"Simulations de travail en entreprise pour développer des compétences pratiques en finance et comptabilité.",cats:["Finance & Comptabilité","Audit & Contrôle"],gratuit:true,langue:"EN",ordre:8},
+];
+
+const CAT_COLORS={
+  "Finance & Comptabilité":{bg:"rgba(52,211,153,.12)",bd:"rgba(52,211,153,.25)",ac:"#059669",ic:"chart-bar"},
+  "Droit des affaires":{bg:"rgba(129,140,248,.12)",bd:"rgba(129,140,248,.25)",ac:"#4F46E5",ic:"scale"},
+  "Audit & Contrôle":{bg:"rgba(251,191,36,.12)",bd:"rgba(251,191,36,.25)",ac:"#D97706",ic:"shield-check"},
+  "Banque & Assurance":{bg:"rgba(96,165,250,.12)",bd:"rgba(96,165,250,.25)",ac:"#2563EB",ic:"building-bank"},
+};
+const seedPlateformes=async()=>{
+  try{
+    const snap=await getDocs(collection(db,"plateformes"));
+    if(snap.size>0)return;
+    for(const p of SEED_PLATS){const r=doc(collection(db,"plateformes"));await setDoc(r,p);}
+  }catch(e){console.error(e);}
+};
+
+function StagePage({stages,plats,ok}){
+  const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
+  const[tab,sTab]=useState("offres");
+  const[cat,sCat]=useState("Toutes");
+  const[search,sSearch]=useState("");
+  const isLight=['light','sepia'].includes(tid);
+  const cats=["Toutes","Finance & Comptabilité","Droit des affaires","Audit & Contrôle","Banque & Assurance"];
+
+  const filStages=stages.filter(s=>{
+    const matchCat=cat==="Toutes"||s.cat===cat;
+    const matchSearch=!search||s.titre?.toLowerCase().includes(search.toLowerCase())||s.entreprise?.toLowerCase().includes(search.toLowerCase());
+    return matchCat&&matchSearch;
+  });
+  const filPlats=cat==="Toutes"?plats:plats.filter(p=>p.cats?.includes(cat));
+
+  return <div style={{animation:"up .3s ease"}}>
+    {/* Bannière */}
+    <div style={{background:`linear-gradient(135deg,${K.wa}18,${K.em}10)`,border:`1px solid ${K.waBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
+      <div style={{fontSize:12,color:K.wa,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-briefcase" style={{fontSize:13}}/> Stages Virtuels</div>
+      <div style={{fontSize:mob?18:22,fontWeight:900,color:K.t1,marginBottom:4}}>Développez votre expérience</div>
+      <div style={{fontSize:13,color:K.t2,marginBottom:14}}>Plateformes internationales · Offres structurées · Certifications reconnues</div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        {[[`${plats.length}`,"Plateformes",K.wa],[`${stages.length}`,"Offres",K.em],["4","Catégories",K.in_]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
+      </div>
+    </div>
+
+    {/* Tabs */}
+    <div style={{display:"flex",background:K.c2,borderRadius:10,padding:3,marginBottom:14,gap:2}}>
+      {[["offres","🎯 Offres de stages"],["plats","🌐 Plateformes"]].map(([k,l])=><button key={k} onClick={()=>sTab(k)} className="bt" style={{flex:1,padding:"9px",borderRadius:7,border:"none",fontWeight:700,fontSize:mob?12:13,fontFamily:"'Outfit',sans-serif",cursor:"pointer",background:tab===k?K.card:"transparent",color:tab===k?K.t1:K.t3,minHeight:38,boxShadow:tab===k?"0 1px 4px rgba(0,0,0,.08)":"none"}}>{l}</button>)}
+    </div>
+
+    {/* Filtres catégories */}
+    <div className="tn" style={{gap:6,marginBottom:12,paddingBottom:3}}>
+      {cats.map(c=>{const cc=CAT_COLORS[c];return <button key={c} onClick={()=>sCat(c)} className="bt" style={{background:cat===c?(cc?cc.bg:K.c2):"transparent",border:`1px solid ${cat===c?(cc?cc.bd:K.b1):K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:11,fontWeight:600,color:cat===c?(cc?cc.ac:K.t1):K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28,display:"flex",alignItems:"center",gap:5}}>{cc&&<i className={"ti ti-"+cc.ic} style={{fontSize:12}}/>}{c}</button>;})}
+    </div>
+
+    {/* OFFRES */}
+    {tab==="offres"&&<>
+      <div style={{marginBottom:11}}><input value={search} onChange={e=>sSearch(e.target.value)} placeholder="🔍 Rechercher une offre ou entreprise..." style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,color:K.t1,fontSize:13,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box",minHeight:42,caretColor:K.em}} onFocus={e=>e.target.style.borderColor=K.emBd} onBlur={e=>e.target.style.borderColor=K.b0}/></div>
+      {filStages.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"44px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>🎯</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune offre</div><div style={{color:K.t3,fontSize:12}}>L'admin n'a pas encore posté d'offres de stages.</div></div>
+      :<div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {filStages.map((s,i)=>{
+          const cc=CAT_COLORS[s.cat]||{bg:K.c2,bd:K.b0,ac:K.em,ic:"briefcase"};
+          const exp=s.dateFin&&new Date(s.dateFin)<new Date();
+          return <div key={s.id} style={{background:isLight?cc.bg:K.card,border:`1px solid ${exp?K.b0:cc.bd}`,borderRadius:13,padding:"14px 16px",opacity:exp?.6:1,animation:`up .25s ease ${i*15}ms both`}}>
+            <div style={{display:"flex",alignItems:"flex-start",gap:12,marginBottom:10,flexWrap:"wrap"}}>
+              <div style={{width:44,height:44,borderRadius:12,background:isLight?"rgba(255,255,255,.9)":K.b1,border:`1px solid ${cc.bd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:s.logo?20:16}}>{s.logo||<i className={"ti ti-"+cc.ic} style={{fontSize:20,color:cc.ac}}/>}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3,lineHeight:1.3}}>{s.titre}</div>
+                <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:5}}>
+                  {s.entreprise&&<Tg c={cc.ac} bg={cc.bg} bd={cc.bd} ch={s.entreprise}/>}
+                  {s.cat&&<Tg c={K.t2} bg={K.c2} bd={K.b0} ch={s.cat}/>}
+                  {s.duree&&<Tg c={K.t3} bg="none" bd={K.b0} ch={"⏱ "+s.duree}/>}
+                  {s.gratuit?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Payant"/>}
+                  {exp?<Tg c={K.er} bg={K.erBg} bd={K.erBd} ch="Expiré"/>:s.dateFin?<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch={"📅 "+s.dateFin}/>:null}
+                </div>
+                {s.desc&&<div style={{fontSize:12,color:K.t2,lineHeight:1.5,marginBottom:8}}>{s.desc}</div>}
+                {s.competences&&s.competences.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:8}}>{s.competences.map(c=><span key={c} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,border:`1px solid ${K.b1}`,borderRadius:5,padding:"2px 7px",fontSize:10,color:K.t2}}>{c}</span>)}</div>}
+              </div>
+            </div>
+            <a href={s.url} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:6,background:`linear-gradient(135deg,${cc.ac}22,${cc.ac}11)`,border:`1px solid ${cc.bd}`,borderRadius:8,padding:"8px 14px",color:cc.ac,fontWeight:700,fontSize:12,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}>
+              <i className="ti ti-external-link" style={{fontSize:13}}/>Postuler / Voir l'offre
+            </a>
+          </div>;
+        })}
+      </div>}
+    </>}
+
+    {/* PLATEFORMES */}
+    {tab==="plats"&&<div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
+      {filPlats.map((p,i)=>{
+        const mainCat=p.cats?.[0];const cc=CAT_COLORS[mainCat]||{bg:K.c2,bd:K.b0,ac:K.em,ic:"globe"};
+        return <div key={p.id} style={{background:isLight?cc.bg:K.card,border:`1px solid ${cc.bd}`,borderRadius:14,overflow:"hidden",animation:`up .25s ease ${i*20}ms both`}}>
+          <div style={{padding:"16px 16px 12px",borderBottom:`1px solid ${cc.bd}`}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+              <div style={{width:44,height:44,borderRadius:12,background:isLight?"rgba(255,255,255,.9)":K.b1,border:`1px solid ${cc.bd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{p.logo}</div>
+              <div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:14,color:K.t1}}>{p.nom}</div><div style={{fontSize:10,color:K.t3,marginTop:1}}>🌐 {p.langue||"EN"} · {p.gratuit?"Gratuit":"Payant/Freemium"}</div></div>
+              {p.gratuit?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Freemium"/>}
+            </div>
+            <div style={{fontSize:12,color:K.t2,lineHeight:1.55,marginBottom:10}}>{p.desc}</div>
+            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+              {p.cats?.map(c=>{const ccc=CAT_COLORS[c];return <span key={c} style={{background:ccc?ccc.bg:K.c2,border:`1px solid ${ccc?ccc.bd:K.b0}`,borderRadius:5,padding:"2px 7px",fontSize:10,color:ccc?ccc.ac:K.t2,display:"flex",alignItems:"center",gap:3}}><i className={"ti ti-"+(ccc?ccc.ic:"tag")} style={{fontSize:10}}/>{c}</span>;})}
+            </div>
+          </div>
+          <div style={{padding:"10px 14px"}}>
+            <a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,background:`linear-gradient(135deg,${cc.ac},${cc.ac}CC)`,borderRadius:8,padding:"9px",color:"#fff",fontWeight:700,fontSize:12,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:36}}>
+              <i className="ti ti-external-link" style={{fontSize:13}}/>Accéder à {p.nom}
+            </a>
+          </div>
+        </div>;
+      })}
+    </div>}
+  </div>;
+}
+
+// ── DONNÉES SERVICES ─────────────────────────────────────────────────────────
+const SERVICES=[
+  {
+    id:"compta",
+    ico:"calculator",
+    col:"#34D399",colBg:"rgba(52,211,153,.12)",colBd:"rgba(52,211,153,.25)",
+    titre:"Assistance Comptable",
+    tagline:"Votre comptabilité SYSCOHADA, entre de bonnes mains",
+    desc:"Nous prenons en charge votre comptabilité générale selon les normes SYSCOHADA Révisé : tenue des livres, établissement des états financiers, assistance aux arrêtés de comptes et préparation aux contrôles.",
+    prestations:[
+      "Tenue de comptabilité générale (SYSCOHADA)",
+      "Établissement des états financiers annuels",
+      "Bilan, compte de résultat, TAFIRE",
+      "Assistance aux arrêtés mensuels et trimestriels",
+      "Mise en place du plan comptable adapté",
+      "Formation du personnel comptable interne",
+    ],
+    cibles:["PME","Startups","ONG","Associations","Professions libérales"],
+    badge:"Service phare",badgeCol:"#34D399",
+  },
+  {
+    id:"fiscal",
+    ico:"receipt-tax",
+    col:"#818CF8",colBg:"rgba(129,140,248,.12)",colBd:"rgba(129,140,248,.25)",
+    titre:"Assistance Fiscale",
+    tagline:"Maîtrisez vos obligations fiscales en toute sérénité",
+    desc:"Nos experts vous accompagnent dans la gestion de vos obligations fiscales : déclarations TVA, impôt sur les bénéfices, taxes diverses, et optimisation fiscale dans le respect de la législation en vigueur.",
+    prestations:[
+      "Déclarations TVA mensuelles / trimestrielles",
+      "Déclaration d'impôt sur les bénéfices (IBP)",
+      "Taxes professionnelles et parafiscales",
+      "Assistance lors des contrôles fiscaux",
+      "Optimisation fiscale légale",
+      "Veille sur la réglementation fiscale locale",
+    ],
+    cibles:["Entreprises","Commerçants","Importateurs","Exportateurs"],
+    badge:"Populaire",badgeCol:"#818CF8",
+  },
+  {
+    id:"controle",
+    ico:"chart-dots-3",
+    col:"#FBBF24",colBg:"rgba(251,191,36,.12)",colBd:"rgba(251,191,36,.25)",
+    titre:"Contrôle de Gestion",
+    tagline:"Pilotez votre performance avec des indicateurs fiables",
+    desc:"Nous mettons en place des outils de pilotage adaptés à votre structure : tableaux de bord, budgets prévisionnels, analyse des écarts et reporting périodique pour une prise de décision éclairée.",
+    prestations:[
+      "Mise en place de tableaux de bord de gestion",
+      "Budgets prévisionnels et plans de trésorerie",
+      "Analyse des écarts et commentaires",
+      "Calcul et suivi des coûts de revient",
+      "Reporting mensuel / trimestriel",
+      "Indicateurs clés de performance (KPI)",
+    ],
+    cibles:["Directions générales","Gérants","Investisseurs","Groupes"],
+    badge:"Premium",badgeCol:"#FBBF24",
+  },
+  {
+    id:"formation",
+    ico:"school",
+    col:"#60A5FA",colBg:"rgba(96,165,250,.12)",colBd:"rgba(96,165,250,.25)",
+    titre:"Formation sur Mesure",
+    tagline:"Des formations adaptées à vos équipes et vos besoins",
+    desc:"Nous concevons et animons des formations professionnelles personnalisées en comptabilité SYSCOHADA, fiscalité, contrôle de gestion et droit des affaires OHADA, en présentiel ou en ligne.",
+    prestations:[
+      "Formation SYSCOHADA Révisé pour équipes",
+      "Ateliers pratiques sur cas réels d'entreprise",
+      "Formation en fiscalité locale et OHADA",
+      "Séminaires contrôle de gestion",
+      "Supports pédagogiques inclus",
+      "Certification de participation délivrée",
+    ],
+    cibles:["Équipes comptables","Directions financières","Étudiants","Professionnels"],
+    badge:"Sur mesure",badgeCol:"#60A5FA",
+  },
+];
+
+const WHY=[
+  {ico:"certificate",titre:"Expertise certifiée",desc:"Comptables et contrôleurs financiers certifiés SYSCOHADA avec plus de 10 ans d'expérience terrain."},
+  {ico:"clock",titre:"Réactivité",desc:"Réponse sous 24h, rapports livrés dans les délais convenus."},
+  {ico:"lock",titre:"Confidentialité",desc:"Vos données financières sont traitées avec la plus stricte confidentialité."},
+  {ico:"users",titre:"Accompagnement personnalisé",desc:"Chaque client bénéficie d'un interlocuteur dédié qui connaît son dossier."},
+];
+
+function ServicesPage({user}){
+  const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
+  const isLight=['light','sepia'].includes(tid);
+  const[sel,sSel]=useState(null);
+  const[form,sForm]=useState({nom:"",email:"",tel:"",service:"",message:""});
+  const[sent,sSent]=useState(false);
+  const[sending,sSending]=useState(false);
+  const[err,sErr]=useState("");
+
+  // Pre-fill user info
+  const userNom=user?.nom||"";
+  const userEmail=user?.mail||"";
+
+  const send=async()=>{
+    if(!form.nom||!form.email||!form.service){sErr("Nom, email et service requis.");return;}
+    if(!form.email.includes("@")){sErr("Email invalide.");return;}
+    sSending(true);sErr("");
+    try{
+      await saveDemande({...form,nom:form.nom||userNom,email:form.email||userEmail,source:"plateforme"});
+      sSent(true);
+    }catch(e){sErr("Erreur d'envoi. Réessayez.");}
+    sSending(false);
+  };
+
+  const WA_NUM="+243XXXXXXXXX"; // À remplacer
+  const EMAIL="contact@accessplusconsulting.com";
+
+  return <div style={{animation:"up .3s ease",maxWidth:900,margin:"0 auto"}}>
+    {/* Bannière hero */}
+    <div style={{background:`linear-gradient(135deg,${K.em}20,${K.in_}12)`,border:`1px solid ${K.emBd}`,borderRadius:18,padding:mob?"20px 16px":"30px 32px",marginBottom:20,position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",top:-40,right:-40,width:180,height:180,borderRadius:"50%",background:`${K.em}0A`}}/>
+      <div style={{position:"absolute",bottom:-30,left:20,width:100,height:100,borderRadius:"50%",background:`${K.in_}08`}}/>
+      <div style={{position:"relative",zIndex:1}}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:isLight?"rgba(255,255,255,.7)":K.b0,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 12px",marginBottom:14}}><i className="ti ti-building" style={{fontSize:12,color:K.em}}/><span style={{fontSize:11,color:K.em,fontWeight:700}}>Access Plus Consulting</span></div>
+        <div style={{fontSize:mob?22:30,fontWeight:900,color:K.t1,lineHeight:1.2,marginBottom:10,letterSpacing:"-.5px"}}>Nos Services<br/><span style={{background:`linear-gradient(135deg,${K.em},${K.in_})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Professionnels</span></div>
+        <div style={{fontSize:14,color:K.t2,lineHeight:1.6,marginBottom:18,maxWidth:520}}>Expertise comptable, fiscale et financière au service des entreprises de la zone OHADA. Des solutions sur mesure pour votre croissance.</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <a href={`https://wa.me/${WA_NUM.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,background:`linear-gradient(135deg,#25D366,#128C7E)`,borderRadius:10,padding:"10px 18px",color:"#fff",fontWeight:700,fontSize:13,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-brand-whatsapp" style={{fontSize:16}}/>WhatsApp</a>
+          <a href={`mailto:${EMAIL}`} style={{display:"inline-flex",alignItems:"center",gap:7,background:isLight?"rgba(255,255,255,.8)":K.c2,border:`1px solid ${K.b1}`,borderRadius:10,padding:"10px 18px",color:K.t1,fontWeight:700,fontSize:13,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-mail" style={{fontSize:16}}/>Email</a>
+        </div>
+      </div>
+    </div>
+
+    {/* Grille services */}
+    <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:13,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-briefcase" style={{fontSize:16,color:K.em}}/>Nos offres de services</div>
+    <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(2,1fr)",gap:13,marginBottom:24}}>
+      {SERVICES.map((s,i)=><div key={s.id} className="hv" onClick={()=>sSel(sel?.id===s.id?null:s)}
+        style={{background:isLight?s.colBg:K.card,border:`2px solid ${sel?.id===s.id?s.col:s.colBd}`,borderRadius:16,overflow:"hidden",cursor:"pointer",animation:`up .3s ease ${i*60}ms both`,transition:"border-color .2s"}}>
+        {/* Header */}
+        <div style={{background:`linear-gradient(135deg,${s.col}20,${s.col}08)`,padding:"18px 18px 14px",borderBottom:`1px solid ${s.colBd}`}}>
+          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:10}}>
+            <div style={{width:46,height:46,borderRadius:13,background:isLight?"rgba(255,255,255,.9)":K.b1,border:`1px solid ${s.colBd}`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className={"ti ti-"+s.ico} style={{fontSize:22,color:s.col}}/></div>
+            <span style={{background:s.colBg,border:`1px solid ${s.colBd}`,borderRadius:99,padding:"3px 10px",fontSize:10,fontWeight:700,color:s.col}}>{s.badge}</span>
+          </div>
+          <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:4}}>{s.titre}</div>
+          <div style={{fontSize:12,color:s.col,fontWeight:600,fontStyle:"italic",marginBottom:8}}>{s.tagline}</div>
+          <div style={{fontSize:12,color:K.t2,lineHeight:1.55}}>{s.desc}</div>
+        </div>
+        {/* Prestations (expandable) */}
+        <div style={{padding:"12px 16px"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:sel?.id===s.id?10:0}}>
+            <div style={{fontSize:11,color:K.t3,fontWeight:600,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-list-check" style={{fontSize:12,color:s.col}}/>{s.prestations.length} prestations incluses</div>
+            <i className={"ti ti-chevron-"+(sel?.id===s.id?"up":"down")} style={{fontSize:14,color:K.t3}}/>
+          </div>
+          {sel?.id===s.id&&<div style={{animation:"up .2s ease"}}>
+            {s.prestations.map((p,j)=><div key={j} style={{display:"flex",gap:8,padding:"5px 0",borderBottom:j<s.prestations.length-1?`1px solid ${s.colBd}`:"none"}}>
+              <i className="ti ti-check" style={{fontSize:13,color:s.col,flexShrink:0,marginTop:2}}/>
+              <span style={{fontSize:12,color:K.t1,lineHeight:1.5}}>{p}</span>
+            </div>)}
+            <div style={{marginTop:12}}>
+              <div style={{fontSize:11,color:K.t3,fontWeight:600,marginBottom:6}}>Public cible</div>
+              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{s.cibles.map(c=><span key={c} style={{background:isLight?"rgba(255,255,255,.8)":K.b0,border:`1px solid ${s.colBd}`,borderRadius:5,padding:"2px 8px",fontSize:10,color:s.col,fontWeight:600}}>{c}</span>)}</div>
+            </div>
+            <button onClick={e=>{e.stopPropagation();document.getElementById("contact-form")?.scrollIntoView({behavior:"smooth"});sForm(f=>({...f,service:s.titre}));}} className="bt" style={{width:"100%",marginTop:12,padding:"10px",background:`linear-gradient(135deg,${s.col},${s.col}BB)`,border:"none",borderRadius:9,color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:6,minHeight:38}}>
+              <i className="ti ti-send" style={{fontSize:14}}/>Demander ce service
+            </button>
+          </div>}
+        </div>
+      </div>)}
+    </div>
+
+    {/* Pourquoi nous choisir */}
+    <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:16,padding:mob?"16px":"22px 24px",marginBottom:24}}>
+      <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:4,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-star" style={{fontSize:16,color:K.wa}}/>Pourquoi choisir Access Plus ?</div>
+      <div style={{color:K.t3,fontSize:12,marginBottom:16}}>Notre engagement envers l'excellence et la proximité</div>
+      <div style={{display:"grid",gridTemplateColumns:mob?"1fr 1fr":"repeat(4,1fr)",gap:10}}>
+        {WHY.map((w,i)=><div key={i} style={{background:isLight?K.c2:K.c2,borderRadius:12,padding:"14px 12px",textAlign:"center",border:`1px solid ${K.b0}`}}>
+          <div style={{width:40,height:40,borderRadius:11,background:K.emBg,border:`1px solid ${K.emBd}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px"}}><i className={"ti ti-"+w.ico} style={{fontSize:19,color:K.em}}/></div>
+          <div style={{fontWeight:700,fontSize:12,color:K.t1,marginBottom:4}}>{w.titre}</div>
+          <div style={{fontSize:11,color:K.t3,lineHeight:1.5}}>{w.desc}</div>
+        </div>)}
+      </div>
+    </div>
+
+    {/* Formulaire de contact */}
+    <div id="contact-form" style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:16,padding:mob?"18px 16px":"24px 28px",marginBottom:16}}>
+      <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-message-circle" style={{fontSize:16,color:K.in_}}/>Demande de service</div>
+      <div style={{color:K.t3,fontSize:12,marginBottom:18}}>Remplissez le formulaire — nous vous répondons sous 24h.</div>
+      {sent?<div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:12,padding:"24px",textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:10,animation:"fl 3s ease-in-out infinite"}}>✅</div>
+        <div style={{fontWeight:800,fontSize:16,color:K.t1,marginBottom:4}}>Demande envoyée !</div>
+        <div style={{color:K.t2,fontSize:13,lineHeight:1.6,marginBottom:16}}>Nous avons bien reçu votre demande. Notre équipe vous contactera sous <b>24 heures ouvrables</b>.</div>
+        <button onClick={()=>{sSent(false);sForm({nom:"",email:"",tel:"",service:"",message:""}); }} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"9px 18px",color:K.t2,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Nouvelle demande</button>
+      </div>:<>
+        <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"1fr 1fr",gap:10,marginBottom:10}}>
+          <Inp lb="Nom complet *" val={form.nom||userNom} onChange={e=>sForm(f=>({...f,nom:e.target.value}))} ph="Votre nom"/>
+          <Inp lb="Email *" val={form.email||userEmail} onChange={e=>sForm(f=>({...f,email:e.target.value}))} ph="votre@email.com" type="email"/>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"1fr 1fr",gap:10,marginBottom:10}}>
+          <Inp lb="Téléphone / WhatsApp" val={form.tel} onChange={e=>sForm(f=>({...f,tel:e.target.value}))} ph="+243 XXX XXX XXX"/>
+          <div style={{marginBottom:13}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>Service souhaité *</div>
+            <select value={form.service} onChange={e=>sForm(f=>({...f,service:e.target.value}))} style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:form.service?K.t1:K.t3,fontSize:13,outline:"none",minHeight:44,fontFamily:"'Outfit',sans-serif"}}>
+              <option value="">-- Choisir un service --</option>
+              {SERVICES.map(s=><option key={s.id} value={s.titre}>{s.titre}</option>)}
+              <option value="Autre">Autre / Non listé</option>
+            </select>
+          </div>
+        </div>
+        <Inp lb="Message (optionnel)" val={form.message} onChange={e=>sForm(f=>({...f,message:e.target.value}))} ph="Décrivez votre situation, vos besoins spécifiques..." rows={4}/>
+        {err&&<div style={{background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,color:K.er,fontSize:13,padding:"8px 12px",marginBottom:10,display:"flex",gap:7}}><span>⚠</span><span>{err}</span></div>}
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+          <button onClick={send} disabled={sending} className="bt" style={{flex:1,minWidth:180,padding:"12px",background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:10,color:"#071209",fontWeight:800,fontSize:14,cursor:sending?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:7,minHeight:46,opacity:sending?.7:1}}>
+            <i className="ti ti-send" style={{fontSize:16}}/>{sending?"Envoi en cours…":"Envoyer ma demande"}
+          </button>
+          <a href={`https://wa.me/${WA_NUM.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#25D366,#128C7E)",borderRadius:10,padding:"12px 18px",color:"#fff",fontWeight:700,fontSize:13,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:46}}>
+            <i className="ti ti-brand-whatsapp" style={{fontSize:16}}/>WhatsApp
+          </a>
+          <a href={`mailto:${EMAIL}?subject=Demande de service — ${form.service||"Access Plus"}`} style={{display:"inline-flex",alignItems:"center",gap:6,background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:10,padding:"12px 18px",color:K.in_,fontWeight:700,fontSize:13,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:46}}>
+            <i className="ti ti-mail" style={{fontSize:16}}/>Email
+          </a>
+        </div>
+        <div style={{marginTop:12,padding:"9px 12px",background:K.c2,borderRadius:8,fontSize:11,color:K.t3,display:"flex",alignItems:"center",gap:6}}><i className="ti ti-lock" style={{fontSize:12,color:K.em}}/>Vos informations sont confidentielles et ne seront jamais partagées.</div>
+      </>}
+    </div>
+  </div>;
+}
+
 function AA({onOut}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("d"),[msg,sMsg]=useState({t:"",m:""});
   const[cm,sCm]=useState(null),[vm,sVm]=useState(null),[dm,sDm]=useState(null),[q,sQ]=useState("");
   const[editMod,sEM]=useState(null),[newMod,sNM]=useState(false);
-  const[addVid,sAV]=useState(false),[saving,sSav]=useState(false);
-  const{mods}=useModules();const users=useUsers();const{vids,live}=useVideos();
+  const[addVid,sAV]=useState(false),[saving,sSav]=useState(false),[addPres,sAddPres]=useState(false),[presGr,sPresGr]=useState(true),[addStage,sAddStage]=useState(false),[stageTab,sStageTab]=useState("offres"),[addPlat,sAddPlat]=useState(false);
+  const{mods}=useModules();const users=useUsers();const{vids,live}=useVideos();const allPresAdmin=usePresentations();
+  const allStagesAdmin=useStages();
+  const allPlatsAdmin=usePlateformes();
+  const allDemandesAdmin=useDemandes();
   const[pdfs,sPdfs]=useState({});
   useEffect(()=>{const loadPdfs=async()=>{const snap=await getDocs(collection(db,"pdfs"));const p={};snap.forEach(d=>p[d.id]=d.data());sPdfs(p);};loadPdfs();},[]);
   const fl=users.filter(u=>(u.nom||"").toLowerCase().includes(q.toLowerCase())||(u.mail||"").toLowerCase().includes(q.toLowerCase()));
   const dem=fl.filter(u=>u.abonnement==="demande"),nD=users.filter(u=>u.abonnement==="demande").length;
   const act=fl.filter(u=>u.abonnement==="actif"&&!xp(u.dateExpiration)),nA=users.filter(u=>u.abonnement==="actif"&&!xp(u.dateExpiration)).length;
   const exp_=fl.filter(u=>u.abonnement==="expiré"||(u.abonnement==="actif"&&xp(u.dateExpiration))),nE=users.filter(u=>u.abonnement==="expiré"||(u.abonnement==="actif"&&xp(u.dateExpiration))).length;
-  const tabs=[["d",`Dem.(${nD})`],["a",`Act.(${nA})`],["e",`Exp.(${nE})`],["t",`Tous(${users.length})`],["s","Stats"],["m","📚 Cours"],["v","🎬 Vidéos"],["p","📄 PDF"]];
+  const tabs=[["d",`Dem.(${nD})`],["a",`Act.(${nA})`],["e",`Exp.(${nE})`],["t",`Tous(${users.length})`],["s","Stats"],["m","📚 Cours"],["v","🎬 Vidéos"],["pr","📊 Présentations"],["st","🎯 Stages"],["dm","💼 Demandes"],["p","📄 PDF"]];
   const byT={d:dem,a:act,e:exp_,t:fl};
   let CC_LOCAL=users.reduce((mx,u)=>{const n=parseInt((u.activationCode||"").replace("ACC-",""))||0;return Math.max(mx,n);},0);
   const nC=()=>{
@@ -676,6 +1260,9 @@ function AA({onOut}){
   const mL=u=>{const d=DUR.find(x=>x.id===u.dureeId);window.open(`mailto:${u.mail}?subject=${encodeURIComponent("Access Plus — Code d'accès")}&body=${encodeURIComponent(`Bonjour ${u.nom},\n\nCODE : ${u.activationCode}\nDurée : ${d?.l}\nExpire : ${fD(u.dateExpiration)}\n\n1. Connectez-vous avec ${u.mail}\n2. Cliquez "J'ai un code"\n3. Saisissez : ${u.activationCode}\n\nAccess Plus Consulting`)}`,"_blank");};
   const sc_=s=>s==="actif"?K.em:s==="demande"?K.wa:K.er,sl_=s=>s==="actif"?"Actif":s==="demande"?"Demande":"Inactif";
   const rLU=useRef(),rLT=useRef(),rLD=useRef(),rVU=useRef(),rVT=useRef(),rVD=useRef(),rVM=useRef();
+  const rPT=useRef(),rPU=useRef(),rPD=useRef(),rPM=useRef();
+  const rST=useRef(),rSE=useRef(),rSU=useRef(),rSD=useRef(),rSC=useRef(),rSDur=useRef(),rSDF=useRef(),rSLogo=useRef();
+  const rPN=useRef(),rPUrl=useRef(),rPDesc=useRef(),rPLang=useRef(),rPLogo=useRef();
   const[gr,sGr]=useState(true);
   const saveLiveFn=async()=>{sSav(true);await saveLive({on:live.on,url:rLU.current?.value?.trim()||"",titre:rLT.current?.value?.trim()||"",desc:rLD.current?.value?.trim()||""});sSav(false);sMsg({t:"o",m:"Direct enregistré."});setTimeout(()=>sMsg({t:"",m:""}),2000);};
   const addVidFn=async()=>{const url=rVU.current?.value?.trim()||"",titre=rVT.current?.value?.trim()||"";if(!titre||!url){alert("Titre et URL requis");return;}if(!pVid(url)){alert("URL invalide");return;}sSav(true);await saveVideo({titre,url,desc:rVD.current?.value?.trim()||"",mid:rVM.current?.value||null,gr});sSav(false);sAV(false);[rVU,rVT,rVD].forEach(r=>{if(r.current)r.current.value="";});};
@@ -763,7 +1350,161 @@ function AA({onOut}){
         </div>}
         <div style={{display:"flex",flexDirection:"column",gap:7}}>{vids.map(v=>{const pv=pVid(v.url);return <div key={v.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:46,height:32,borderRadius:6,background:K.c2,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>{pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:14}}>🎬</span>}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div><div style={{display:"flex",alignItems:"center",gap:5,marginTop:2,flexWrap:"wrap"}}>{v.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}{v.mid&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={mods.find(m=>m.id===v.mid)?.code||""}/>}</div></div><Btn ch="🗑" on={async()=>deleteVideo(v.id)} v="d" sm/></div>;})} </div>
       </div>}
-      {tab==="p"&&<div style={{animation:"up .25s ease"}}>
+      {tab==="pr"&&<div style={{animation:"up .25s ease"}}>
+  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}>
+    <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Présentations</div><div style={{color:K.t3,fontSize:12,marginTop:2}}>{allPresAdmin.length} présentation{allPresAdmin.length>1?"s":""}</div></div>
+    <Btn ch="➕ Ajouter" on={()=>sAddPres(p=>!p)} sx={{minHeight:38,fontSize:13}}/>
+  </div>
+  {addPres&&<div style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:12,padding:"14px",marginBottom:13,animation:"sc .2s ease"}}>
+    <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:10}}>Nouvelle présentation</div>
+    <Inp lb="Titre *" rf={rPT} ph="Titre de la présentation"/>
+    <Inp lb="URL *" rf={rPU} ph="https://docs.google.com/presentation/... ou lien Canva" note="Google Slides (lien de publication) · Canva (lien d'intégration) · URL directe"/>
+    <Inp lb="Description" rf={rPD} ph="Résumé du contenu"/>
+    <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>Matière</div><input ref={rPM} placeholder="SYSCOHADA, Droit OHADA..." style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:13,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box",minHeight:44}}/></div>
+    <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:7}}>{[[true,"🆓 Gratuit","Tous"],[false,"💎 Premium","Abonnés"]].map(([val,lb,note])=><div key={String(val)} onClick={()=>sPresGr(val)} style={{flex:1,background:presGr===val?K.inBg:K.c2,border:`1px solid ${presGr===val?K.inBd:K.b0}`,borderRadius:9,padding:"9px 11px",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:12,color:presGr===val?K.in_:K.t1,marginBottom:1}}>{lb}</div><div style={{fontSize:10,color:K.t3}}>{note}</div></div>)}</div></div>
+    <div style={{display:"flex",gap:7}}><Btn ch="Annuler" on={()=>sAddPres(false)} v="g" full/><Btn ch={saving?"…":"➕ Ajouter"} on={async()=>{const titre=rPT.current?.value?.trim()||"";const url=rPU.current?.value?.trim()||"";if(!titre||!url){alert("Titre et URL requis");return;}sSav(true);await savePresentation({titre,url,desc:rPD.current?.value?.trim()||"",mat:rPM.current?.value?.trim()||"",gr:presGr,ordre:Date.now()});sSav(false);sAddPres(false);[rPT,rPU,rPD,rPM].forEach(r=>{if(r.current)r.current.value="";});}} full dis={saving}/></div>
+  </div>}
+  {allPresAdmin.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"38px",textAlign:"center"}}><div style={{fontSize:32,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>📊</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune présentation</div><div style={{color:K.t3,fontSize:12}}>Ajoutez votre première présentation Google Slides ou Canva.</div></div>
+  :<div style={{display:"flex",flexDirection:"column",gap:8}}>{allPresAdmin.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:11,padding:"12px 14px",display:"flex",alignItems:"center",gap:11,flexWrap:"wrap"}}>
+    <div style={{width:38,height:38,borderRadius:10,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-presentation" style={{fontSize:18,color:K.in_}}/></div>
+    <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div><div style={{display:"flex",gap:5,marginTop:3,flexWrap:"wrap"}}>{p.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}{p.mat&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={p.mat}/>}</div></div>
+    <div style={{display:"flex",gap:5,flexShrink:0}}><a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:12}}/>Voir</a><Btn ch="🗑" on={async()=>deletePresentation(p.id)} v="d" sm/></div>
+  </div>)}</div>}
+</div>}
+{tab==="st"&&<div style={{animation:"up .25s ease"}}>
+  {/* Sub-tabs */}
+  <div style={{display:"flex",background:K.c2,borderRadius:9,padding:3,marginBottom:13,gap:2}}>
+    {[["offres","🎯 Offres de stages"],["plats","🌐 Plateformes"]].map(([k,l])=><button key={k} onClick={()=>sStageTab(k)} className="bt" style={{flex:1,padding:"8px",borderRadius:7,border:"none",fontWeight:700,fontSize:12,fontFamily:"'Outfit',sans-serif",cursor:"pointer",background:stageTab===k?K.card:"transparent",color:stageTab===k?K.t1:K.t3,minHeight:36}}>{l}</button>)}
+  </div>
+
+  {/* OFFRES */}
+  {stageTab==="offres"&&<>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}>
+      <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Offres de stages</div><div style={{color:K.t3,fontSize:12,marginTop:2}}>{allStagesAdmin.length} offre{allStagesAdmin.length>1?"s":""}</div></div>
+      <Btn ch="➕ Ajouter une offre" on={()=>sAddStage(p=>!p)} sx={{minHeight:38,fontSize:12}}/>
+    </div>
+    {addStage&&<div style={{background:K.card,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"14px",marginBottom:13,animation:"sc .2s ease"}}>
+      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:10}}>Nouvelle offre de stage</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        <Inp lb="Titre *" rf={rST} ph="Stage Finance Virtuel"/>
+        <Inp lb="Entreprise *" rf={rSE} ph="Deloitte, KPMG..."/>
+      </div>
+      <Inp lb="URL / Lien *" rf={rSU} ph="https://www.theforage.com/..."/>
+      <Inp lb="Description" rf={rSD} ph="Décrivez le stage, objectifs, contenu..." rows={3}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+        <div><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>Catégorie</div><select ref={rSC} style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:12,outline:"none",minHeight:42}}>{["Finance & Comptabilité","Droit des affaires","Audit & Contrôle","Banque & Assurance"].map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+        <Inp lb="Durée" rf={rSDur} ph="5-6h, 2 semaines..."/>
+        <Inp lb="Date fin" ref={rSDF} rf={rSDF} ph="31/12/2025"/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+        <Inp lb="Logo (emoji)" rf={rSLogo} ph="🏦 💼 📊..."/>
+        <div><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:6}}>{[[true,"Gratuit"],[false,"Payant"]].map(([val,lb])=><div key={String(val)} onClick={()=>sStageGr&&null} style={{flex:1,background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"8px",cursor:"pointer",textAlign:"center",fontSize:11,fontWeight:600,color:K.t2}}>{lb}</div>)}</div></div>
+      </div>
+      <div style={{display:"flex",gap:7}}><Btn ch="Annuler" on={()=>sAddStage(false)} v="g" full/><Btn ch={saving?"…":"➕ Publier l'offre"} on={async()=>{
+        const titre=rST.current?.value?.trim()||"";
+        const entreprise=rSE.current?.value?.trim()||"";
+        const url=rSU.current?.value?.trim()||"";
+        if(!titre||!entreprise||!url){alert("Titre, entreprise et URL requis");return;}
+        sSav(true);
+        await saveStage({titre,entreprise,url,desc:rSD.current?.value?.trim()||"",cat:rSC.current?.value||"Finance & Comptabilité",duree:rSDur.current?.value?.trim()||"",dateFin:rSDF.current?.value?.trim()||"",logo:rSLogo.current?.value?.trim()||"",gratuit:true,createdAt:Date.now()});
+        sSav(false);sAddStage(false);
+        [rST,rSE,rSU,rSD,rSDur,rSDF,rSLogo].forEach(r=>{if(r.current)r.current.value="";});
+      }} full dis={saving}/></div>
+    </div>}
+    {allStagesAdmin.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"32px",textAlign:"center"}}><div style={{fontSize:28,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>🎯</div><div style={{color:K.t3,fontSize:13}}>Aucune offre publiée.</div></div>
+    :<div style={{display:"flex",flexDirection:"column",gap:7}}>{allStagesAdmin.map(s=>{const cc=CAT_COLORS[s.cat]||{bg:K.c2,bd:K.b0,ac:K.em,ic:"briefcase"};return <div key={s.id} style={{background:K.card,border:`1px solid ${cc.bd}`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+      <div style={{width:36,height:36,borderRadius:9,background:cc.bg,border:`1px solid ${cc.bd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:s.logo?18:14,flexShrink:0}}>{s.logo||<i className={"ti ti-"+cc.ic} style={{fontSize:16,color:cc.ac}}/>}</div>
+      <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.titre}</div><div style={{display:"flex",gap:5,marginTop:2,flexWrap:"wrap"}}><Tg c={cc.ac} bg={cc.bg} bd={cc.bd} ch={s.entreprise}/><Tg c={K.t3} bg="none" bd={K.b0} ch={s.cat}/></div></div>
+      <div style={{display:"flex",gap:5,flexShrink:0}}><a href={s.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:12}}/>Voir</a><Btn ch="🗑" on={async()=>deleteStage(s.id)} v="d" sm/></div>
+    </div>;})}
+    </div>}
+  </>}
+
+  {/* PLATEFORMES */}
+  {stageTab==="plats"&&<>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}>
+      <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Plateformes</div><div style={{color:K.t3,fontSize:12,marginTop:2}}>{allPlatsAdmin.length} plateforme{allPlatsAdmin.length>1?"s":""}</div></div>
+        {allPlatsAdmin.length===0?<Btn ch="🚀 Charger plateformes" on={async()=>{sSav(true);await seedPlateformes();sSav(false);sMsg({t:"o",m:"8 plateformes chargées !"});setTimeout(()=>sMsg({t:"",m:""}),3000);}} v="i" sx={{minHeight:36,fontSize:12}} dis={saving}/>:<Btn ch="➕ Ajouter" on={()=>sAddPlat(p=>!p)} sx={{minHeight:36,fontSize:12}}/>}
+    </div>
+    {addPlat&&<div style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:12,padding:"14px",marginBottom:13,animation:"sc .2s ease"}}>
+      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:10}}>Nouvelle plateforme</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        <Inp lb="Nom *" rf={rPN} ph="The Forage, Coursera..."/>
+        <Inp lb="Logo (emoji)" rf={rPLogo} ph="🌾 🎓 💼..."/>
+      </div>
+      <Inp lb="URL *" rf={rPUrl} ph="https://www.theforage.com"/>
+      <Inp lb="Description *" rf={rPDesc} ph="Décrivez la plateforme..." rows={2}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+        <Inp lb="Langue" rf={rPLang} ph="FR, EN, FR/EN..."/>
+        <div><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>Catégories</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+          {["Finance & Comptabilité","Droit des affaires","Audit & Contrôle","Banque & Assurance"].map(c=>{
+            const[selCats,sSelCats]=window._platCats||[[],(f)=>{window._platCats=[f(window._platCats?.[0]||[]),window._platCats?.[1]];window._platCatsForce&&window._platCatsForce();}];
+            return null;
+          })}
+          <div style={{fontSize:11,color:K.t3}}>Sélectionnez après création</div>
+        </div></div>
+      </div>
+      <div style={{display:"flex",gap:6,marginBottom:10}}>{[[true,"🆓 Gratuit"],[false,"💎 Freemium"]].map(([val,lb])=><div key={String(val)} style={{flex:1,background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"8px",textAlign:"center",fontSize:11,fontWeight:600,color:K.t2,cursor:"pointer"}}>{lb}</div>)}</div>
+      <div style={{display:"flex",gap:7}}><Btn ch="Annuler" on={()=>sAddPlat(false)} v="g" full/><Btn ch={saving?"…":"➕ Ajouter"} on={async()=>{
+        const nom=rPN.current?.value?.trim()||"";
+        const url=rPUrl.current?.value?.trim()||"";
+        const desc=rPDesc.current?.value?.trim()||"";
+        if(!nom||!url||!desc){alert("Nom, URL et description requis");return;}
+        sSav(true);
+        await savePlateforme({nom,url,desc,logo:rPLogo.current?.value?.trim()||"🌐",langue:rPLang.current?.value?.trim()||"EN",cats:["Finance & Comptabilité"],gratuit:true,ordre:Date.now()});
+        sSav(false);sAddPlat(false);
+        [rPN,rPUrl,rPDesc,rPLang,rPLogo].forEach(r=>{if(r.current)r.current.value="";});
+        sMsg({t:"o",m:"Plateforme ajoutée !"});setTimeout(()=>sMsg({t:"",m:""}),2500);
+      }} full dis={saving}/></div>
+    </div>}
+    {allPlatsAdmin.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"32px",textAlign:"center"}}><div style={{fontSize:28,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>🌐</div><div style={{color:K.t3,fontSize:13,marginBottom:7}}>Aucune plateforme.</div><div style={{color:K.t3,fontSize:11}}>Cliquez "Charger plateformes" pour les 8 plateformes pré-configurées, ou "➕ Ajouter" pour la vôtre.</div></div>
+    :<div style={{display:"flex",flexDirection:"column",gap:7}}>{allPlatsAdmin.map(p=>{const cc=CAT_COLORS[p.cats?.[0]]||{bg:K.c2,bd:K.b0,ac:K.em};return <div key={p.id} style={{background:K.card,border:`1px solid ${cc.bd}`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+      <div style={{width:36,height:36,borderRadius:9,background:cc.bg,border:`1px solid ${cc.bd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{p.logo}</div>
+      <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{p.nom}</div><div style={{fontSize:10,color:K.t3,marginTop:1}}>{p.langue} · {p.gratuit?"Gratuit":"Freemium"}</div></div>
+      <div style={{display:"flex",gap:5,flexShrink:0}}><a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:12}}/>Visiter</a><Btn ch="🗑" on={async()=>deletePlateforme(p.id)} v="d" sm/></div>
+    </div>;})}
+    </div>}
+  </>}
+</div>}
+{tab==="dm"&&<div style={{animation:"up .25s ease"}}>
+  <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3}}>Demandes de services</div>
+  <div style={{color:K.t3,fontSize:12,marginBottom:13}}>{allDemandesAdmin.filter(d=>d.statut==="nouveau").length} nouvelle{allDemandesAdmin.filter(d=>d.statut==="nouveau").length>1?"s":""} · {allDemandesAdmin.length} au total</div>
+  {allDemandesAdmin.length===0
+    ?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"38px",textAlign:"center"}}><div style={{fontSize:32,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>💼</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune demande</div><div style={{color:K.t3,fontSize:12}}>Les demandes des clients apparaîtront ici.</div></div>
+    :<div style={{display:"flex",flexDirection:"column",gap:8}}>
+      {allDemandesAdmin.map((d,i)=>{
+        const isNew=d.statut==="nouveau";
+        const isTraite=d.statut==="traité";
+        const sCol=isNew?K.em:isTraite?K.t3:K.wa;
+        const sBg=isNew?K.emBg:isTraite?K.c2:K.waBg;
+        const sBd=isNew?K.emBd:isTraite?K.b0:K.waBd;
+        return <div key={d.id} style={{background:K.card,border:`1px solid ${isNew?K.emBd:K.b0}`,borderRadius:12,padding:"13px 15px",animation:`up .25s ease ${i*12}ms both`}}>
+          <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:10,flexWrap:"wrap"}}>
+            <div style={{width:38,height:38,borderRadius:10,background:sBg,border:`1px solid ${sBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-user" style={{fontSize:18,color:sCol}}/></div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap",marginBottom:3}}><span style={{fontWeight:800,fontSize:13,color:K.t1}}>{d.nom}</span><span style={{background:sBg,border:`1px solid ${sBd}`,borderRadius:99,padding:"1px 8px",fontSize:10,fontWeight:700,color:sCol}}>{d.statut}</span></div>
+              <div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{d.email}{d.tel?` · ${d.tel}`:""}</div>
+            </div>
+            <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:11,color:K.t3}}>{d.createdAt?new Date(d.createdAt).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"—"}</div></div>
+          </div>
+          <div style={{background:K.c2,borderRadius:9,padding:"8px 11px",marginBottom:10}}>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:d.message?6:0}}>
+              <span style={{background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:5,padding:"2px 8px",fontSize:11,color:K.in_,fontWeight:600}}>{d.service}</span>
+            </div>
+            {d.message&&<div style={{fontSize:12,color:K.t2,lineHeight:1.5,marginTop:5}}>{d.message}</div>}
+          </div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            <a href={`mailto:${d.email}?subject=Re: Votre demande — ${d.service}`} style={{display:"inline-flex",alignItems:"center",gap:5,background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:7,padding:"6px 11px",color:K.in_,fontWeight:700,fontSize:11,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:30}}><i className="ti ti-mail" style={{fontSize:12}}/>Répondre</a>
+            {d.tel&&<a href={`https://wa.me/${d.tel.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(37,211,102,.1)",border:"1px solid rgba(37,211,102,.3)",borderRadius:7,padding:"6px 11px",color:"#25D366",fontWeight:700,fontSize:11,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:30}}><i className="ti ti-brand-whatsapp" style={{fontSize:12}}/>WhatsApp</a>}
+            {isNew&&<Btn ch="✓ Marquer traité" on={async()=>updateDemande(d.id,{statut:"traité"})} v="s" sm/>}
+            {!isNew&&<Btn ch="↩ Rouvrir" on={async()=>updateDemande(d.id,{statut:"nouveau"})} v="g" sm/>}
+          </div>
+        </div>;
+      })}
+    </div>
+  }
+</div>}
+{tab==="p"&&<div style={{animation:"up .25s ease"}}>
         <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3}}>PDF d'exercices</div>
         <div style={{color:K.t3,fontSize:12,marginBottom:13}}>Un PDF par module · Stocké sur Firebase Storage · Lecture seule pour abonnés.</div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{m.ico}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?` · 📄 ${pdf.name}` : " · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
@@ -803,12 +1544,13 @@ export default function App(){
   },[]);
   return <Ctx.Provider value={{K,tid,setT}}>
     <style>{mCss(K)}</style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css"/>
     <ThemePicker open={showTP} onClose={()=>sShowTP(false)}/>
     <button onClick={()=>sShowTP(true)} className="bt"
       style={{position:"fixed",bottom:18,right:18,zIndex:998,width:44,height:44,borderRadius:"50%",background:K.card,border:`1px solid ${K.b1}`,color:K.t2,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 16px rgba(0,0,0,.25)"}}>
       {TH[tid]?.i||"🎨"}
     </button>
-    {loading&&<div style={{minHeight:"100vh",background:K.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><Spin/></div>}
+    {loading&&<Spin/>}
     {!loading&&!who&&<Auth onL={(role,user)=>{sW(role==="__admin__"?{role:"admin",user}:{role:"user",uid:user.uid,user});}}/>}
     {!loading&&who?.role==="admin"&&<AA onOut={async()=>{await signOut(auth);sW(null);}}/>}
     {!loading&&who?.role==="user"&&<UA uid={who.uid} onOut={async()=>{await signOut(auth);sW(null);}}/>}
