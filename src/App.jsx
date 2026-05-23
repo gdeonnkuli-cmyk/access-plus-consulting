@@ -1303,7 +1303,7 @@ function ServicesPage({user}){
     sSending(false);
   };
 
-  const WA_NUM="+243979075970"; // À remplacer
+  const WA_NUM="+243813165403"; // À remplacer
   const EMAIL="contact@accessplusconsulting.com";
 
   return <div style={{animation:"up .3s ease",maxWidth:900,margin:"0 auto"}}>
