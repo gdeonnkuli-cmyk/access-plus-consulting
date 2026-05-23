@@ -1,7 +1,7 @@
 import{useState,useRef,useEffect,useCallback,createContext,useContext}from"react";
 import{initializeApp}from"firebase/app";
-import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"firebase/auth";
-import{getFirestore,doc,getDoc,setDoc,updateDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp}from"firebase/firestore";
+import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup}from"firebase/auth";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
 
 // ── FIREBASE CONFIG ───────────────────────────────────────────────────────────
@@ -17,6 +17,8 @@ const auth=getAuth(fbApp);
 const db=getFirestore(fbApp);
 const storage=getStorage(fbApp);
 const ADM_EMAIL="admin@accessplus.com";
+const googleProvider=new GoogleAuthProvider();
+const facebookProvider=new FacebookAuthProvider();
 
 // ── THÈMES ────────────────────────────────────────────────────────────────────
 const TH={
@@ -89,7 +91,7 @@ body{background:${K.bg};color:${K.t1};font-family:'Outfit',sans-serif;-webkit-fo
 @media(min-width:640px)and(max-width:1024px){.gm{grid-template-columns:repeat(3,1fr);}.gv{grid-template-columns:repeat(2,1fr);}}
 @media(hover:none){.hv:hover{transform:none;box-shadow:none;}.bt:hover{filter:none;}}
 .nb{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));}
-.mp{padding:18px max(14px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));}`;
+.mp{padding:18px max(14px,env(safe-area-inset-right)) max(80px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));}`;
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const DUR=[{id:"1m",l:"1 mois",j:30},{id:"3m",l:"3 mois",j:90},{id:"6m",l:"6 mois",j:180},{id:"1a",l:"1 an",j:365},{id:"v",l:"À vie",j:36500}];
@@ -382,7 +384,85 @@ function Player({url,titre,onClose,playlist,startIdx=0}){
   </div>;
 }
 
-function PdfV({url,name,onClose}){const K=useK();return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 15px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}><div style={{display:"flex",alignItems:"center",gap:8}}><span>📄</span><div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{name}</div><div style={{color:K.t3,fontSize:10}}>Lecture seule</div></div></div><Btn ch="✕" on={onClose} v="g" sm/></div><iframe src={url} title={name} style={{flex:1,border:"none"}} sandbox="allow-same-origin"/></div>;}
+function PdfV({url,name,onClose}){
+  const K=useK();const{mob}=useW();
+  // Sur mobile, les iframes PDF sont souvent bloquées — on utilise Google Docs Viewer en fallback
+  const embedUrl=mob?`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`:url;
+  return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 15px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        <span>📄</span>
+        <div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{name}</div><div style={{color:K.t3,fontSize:10}}>Lecture seule</div></div>
+      </div>
+      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+        <a href={url} target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",gap:4,background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)",borderRadius:7,padding:"5px 9px",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}>
+          <i className="ti ti-external-link" style={{fontSize:12}}/>Ouvrir
+        </a>
+        <Btn ch="✕" on={onClose} v="g" sm/>
+      </div>
+    </div>
+    <iframe
+      src={embedUrl}
+      title={name}
+      style={{flex:1,border:"none",width:"100%"}}
+      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+      allow="fullscreen"
+    />
+  </div>;
+}
+
+// ── POLITIQUE DE CONFIDENTIALITÉ ─────────────────────────────────────────────
+const PRIVACY_VERSION="1.0";
+function PrivacyModal({onClose}){
+  const K=useK();const{mob}=useW();
+  const sections=[
+    {ico:"ti-user",title:"Données collectées",body:"Nous collectons votre nom, adresse email, progression dans les modules, scores aux QCM et date d'inscription. Ces données sont nécessaires au fonctionnement de la plateforme."},
+    {ico:"ti-shield-lock",title:"Utilisation des données",body:"Vos données sont utilisées exclusivement pour : gérer votre accès à la formation, suivre votre progression, vous envoyer votre code d'activation, et améliorer le contenu pédagogique."},
+    {ico:"ti-share",title:"Partage des données",body:"Vos données ne sont jamais vendues ni partagées avec des tiers à des fins commerciales. Elles sont stockées de manière sécurisée sur Firebase (Google Cloud), conforme au RGPD."},
+    {ico:"ti-clock",title:"Durée de conservation",body:"Vos données sont conservées pendant la durée de votre abonnement et 12 mois après expiration. Vous pouvez demander la suppression de votre compte à tout moment."},
+    {ico:"ti-adjustments",title:"Vos droits",body:"Vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : contact@accessplusconsulting.com"},
+    {ico:"ti-brand-google",title:"Connexion sociale",body:"Si vous utilisez la connexion Google ou Facebook, nous récupérons uniquement votre nom et email publics. Aucun autre accès à vos comptes n'est effectué."},
+    {ico:"ti-cookie",title:"Cookies",body:"Nous utilisons uniquement un cookie de session Firebase pour maintenir votre connexion et un cookie de préférence de thème (stocké localement). Aucun cookie publicitaire."},
+    {ico:"ti-mail",title:"Contact",body:"Access Plus Consulting · contact@accessplusconsulting.com · Pour toute question relative à vos données personnelles."},
+  ];
+  return <div onClick={e=>{if(e.target===e.currentTarget)onClose();}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",backdropFilter:"blur(6px)",zIndex:1200,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:mob?"0":"20px 16px"}}>
+    <div style={{width:"100%",maxWidth:560,background:K.card,border:`1px solid ${K.b1}`,borderRadius:mob?"18px 18px 0 0":"18px",maxHeight:"88vh",display:"flex",flexDirection:"column",animation:"su .25s ease",overflow:"hidden"}}>
+      {/* Header */}
+      <div style={{padding:"16px 18px 12px",borderBottom:`1px solid ${K.b0}`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",alignItems:"center",gap:9}}>
+          <div style={{width:34,height:34,borderRadius:10,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className="ti ti-shield-check" style={{fontSize:17,color:K.in_}}/></div>
+          <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Politique de confidentialité</div><div style={{fontSize:10,color:K.t3}}>Access Plus Consulting · v{PRIVACY_VERSION}</div></div>
+        </div>
+        <button onClick={onClose} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:7,width:30,height:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>✕</button>
+      </div>
+      {/* Body scrollable */}
+      <div style={{overflowY:"auto",padding:"14px 18px",flex:1}}>
+        <div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:10,padding:"10px 13px",marginBottom:14,fontSize:12,color:K.t2,lineHeight:1.6}}>
+          <i className="ti ti-info-circle" style={{fontSize:13,color:K.em,verticalAlign:"middle",marginRight:5}}/>
+          En créant un compte sur Access Plus Consulting, vous acceptez que vos données soient traitées conformément à la présente politique.
+        </div>
+        {sections.map((s,i)=><div key={i} style={{marginBottom:13,display:"flex",gap:11,alignItems:"flex-start"}}>
+          <div style={{width:30,height:30,borderRadius:8,background:K.c2,border:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
+            <i className={`ti ${s.ico}`} style={{fontSize:14,color:K.in_}}/>
+          </div>
+          <div>
+            <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:3}}>{s.title}</div>
+            <div style={{fontSize:12,color:K.t2,lineHeight:1.65}}>{s.body}</div>
+          </div>
+        </div>)}
+        <div style={{marginTop:6,padding:"9px 12px",background:K.c2,borderRadius:8,fontSize:10,color:K.t3,textAlign:"center"}}>
+          Dernière mise à jour : mai 2026 · Version {PRIVACY_VERSION}
+        </div>
+      </div>
+      {/* Footer */}
+      <div style={{padding:"12px 18px",borderTop:`1px solid ${K.b0}`,flexShrink:0}}>
+        <button onClick={onClose} className="bt" style={{width:"100%",padding:"11px",background:`linear-gradient(135deg,${ACC.emD},${ACC.em})`,border:"none",borderRadius:9,color:"#071209",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:42}}>
+          J'ai compris ✓
+        </button>
+      </div>
+    </div>
+  </div>;
+}
 
 // ── SÉLECTEUR THÈME ───────────────────────────────────────────────────────────
 function PresViewer({url,titre,desc,onClose}){
@@ -441,16 +521,18 @@ function ThemePicker({open,onClose}){
 function Auth({onL}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("l"),[err,sE]=useState(""),[ok,sO]=useState(""),[busy,sB]=useState(false),[step,sS]=useState(1);
+  const[consent,sConsent]=useState(false),[showPrivacy,sShowPrivacy]=useState(false),[needConsent,sNeedConsent]=useState(false);
   const pm=useRef(null),rN=useRef(),rM=useRef(),rP=useRef(),rP2=useRef(),rC=useRef();
-  const sw=useCallback(t=>{sT(t);sS(1);sE("");sO("");setTimeout(()=>[rN,rM,rP,rP2,rC].forEach(r=>{if(r.current)r.current.value="";}),0);},[]);
+  const sw=useCallback(t=>{sT(t);sS(1);sE("");sO("");sConsent(false);sNeedConsent(false);setTimeout(()=>[rN,rM,rP,rP2,rC].forEach(r=>{if(r.current)r.current.value="";}),0);},[]);
   const reg=useCallback(async()=>{
     const n=rN.current?.value?.trim()||"",m=rM.current?.value?.trim()||"",p=rP.current?.value||"",p2=rP2.current?.value||"";
     sE("");sO("");
     if(n.length<2)return sE("Nom requis");if(!m.includes("@"))return sE("Email invalide");if(p.length<6)return sE("Mot de passe min. 6 caractères");if(p!==p2)return sE("Mots de passe différents");
+    if(!consent)return sE("Vous devez accepter la politique de confidentialité.");
     sB(true);
     try{
       const cred=await createUserWithEmailAndPassword(auth,m,p);
-      await saveUserData(cred.user.uid,{nom:n,mail:m,createdAt:new Date().toLocaleDateString("fr-FR"),abonnement:"aucun",activationCode:null,codeValide:false,demandeDate:null,dureeId:null,dateExpiration:null,progress:{},scores:{}});
+      await saveUserData(cred.user.uid,{nom:n,mail:m,createdAt:new Date().toLocaleDateString("fr-FR"),abonnement:"aucun",activationCode:null,codeValide:false,demandeDate:null,dureeId:null,dateExpiration:null,progress:{},scores:{},consentDate:new Date().toISOString(),consentVersion:PRIVACY_VERSION});
       sO("Compte créé !");setTimeout(()=>sw("l"),1100);
     }catch(e){sE(e.code==="auth/email-already-in-use"?"Email déjà utilisé.":e.message);}
     sB(false);
@@ -470,13 +552,34 @@ function Auth({onL}){
   const code=useCallback(async()=>{
     const c=rC.current?.value?.trim()||"";sE("");if(!c)return sE("Entrez votre code");
     try{
-      const snap=await getDoc(doc(db,"users",pm.current));
-      if(!snap.exists())return sE("Utilisateur introuvable.");
-      const u=snap.data();
+      const q_=query(collection(db,"users"),where("mail","==",pm.current));
+      const snap=await getDocs(q_);
+      if(snap.empty)return sE("Utilisateur introuvable.");
+      const userDoc=snap.docs[0];const u=userDoc.data();
       if(u.activationCode!==c)return sE("Code incorrect.");
-      await updateDoc(doc(db,"users",pm.current),{abonnement:"actif",codeValide:true});
-      sO("✓ Accès débloqué !");setTimeout(()=>onL(pm.current,auth.currentUser),700);
+      await updateDoc(doc(db,"users",userDoc.id),{abonnement:"actif",codeValide:true});
+      sO("✓ Accès débloqué !");setTimeout(()=>onL(userDoc.id,auth.currentUser),700);
     }catch(e){sE(e.message);}
+  },[onL]);
+  const socialLogin=useCallback(async(provider)=>{
+    sE("");sO("");sB(true);
+    try{
+      const cred=await signInWithPopup(auth,provider);
+      const user=cred.user;
+      if(user.email===ADM_EMAIL){onL("__admin__",user);return;}
+      const snap=await getDoc(doc(db,"users",user.uid));
+      if(!snap.exists()){
+        if(!consent){sNeedConsent(true);await signOut(auth);sB(false);return;}
+        await setDoc(doc(db,"users",user.uid),{nom:user.displayName||user.email.split("@")[0],mail:user.email,createdAt:new Date().toLocaleDateString("fr-FR"),abonnement:"aucun",activationCode:null,codeValide:false,demandeDate:null,dureeId:null,dateExpiration:null,progress:{},scores:{},consentDate:new Date().toISOString(),consentVersion:PRIVACY_VERSION});
+      }else{
+        const u=snap.data();
+        if(u.abonnement==="actif"&&xp(u.dateExpiration)){await updateDoc(doc(db,"users",user.uid),{abonnement:"expiré"});}
+      }
+      onL(user.uid,user);
+    }catch(e){
+      if(e.code!=="auth/popup-closed-by-user")sE("Connexion échouée : "+e.message);
+      sB(false);
+    }
   },[onL]);
   const go=useCallback(()=>step===2?code():tab==="r"?reg():login(),[step,tab,code,reg,login]);
   const hk=useCallback(e=>{if(e.key==="Enter")go();},[go]);
@@ -499,11 +602,49 @@ function Auth({onL}){
           {step===1&&<Inp lb="Email" rf={rM} type="email" ph="vous@exemple.com" ok={hk}/>}
           {step===1&&<Inp lb="Mot de passe" rf={rP} type="password" ph="Min. 6 car." ok={hk}/>}
           {step===1&&tab==="r"&&<Inp lb="Confirmer" rf={rP2} type="password" ph="Répéter" ok={hk}/>}
+          {step===1&&tab==="r"&&<div style={{marginBottom:13}}>
+            <div onClick={()=>sConsent(c=>!c)} style={{display:"flex",alignItems:"flex-start",gap:10,cursor:"pointer",padding:"10px 12px",background:consent?K.emBg:K.c2,border:`1px solid ${consent?K.emBd:K.b0}`,borderRadius:9,transition:"all .15s"}}>
+              <div style={{width:18,height:18,borderRadius:5,border:`2px solid ${consent?K.em:K.b1}`,background:consent?K.em:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1,transition:"all .15s"}}>
+                {consent&&<i className="ti ti-check" style={{fontSize:11,color:"#071209"}}/>}
+              </div>
+              <span style={{fontSize:12,color:K.t2,lineHeight:1.55,flex:1}}>
+                J'ai lu et j'accepte la{" "}
+                <button onClick={e=>{e.stopPropagation();sShowPrivacy(true);}} style={{background:"none",border:"none",color:K.em,fontWeight:700,fontSize:12,cursor:"pointer",padding:0,textDecoration:"underline",fontFamily:"'Outfit',sans-serif"}}>
+                  politique de confidentialité
+                </button>
+                {" "}d'Access Plus Consulting.
+              </span>
+            </div>
+            {needConsent&&<div style={{marginTop:6,fontSize:11,color:K.wa,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-alert-triangle" style={{fontSize:12}}/>Acceptez la politique avant de continuer avec Google ou Facebook.</div>}
+          </div>}
           {step===1&&tab==="l"&&<div style={{textAlign:"right",marginTop:-5,marginBottom:11}}><button onClick={()=>{const m=rM.current?.value?.trim()||"";if(!m.includes("@"))return sE("Saisissez votre email d'abord");pm.current=m;sS(2);sE("");}} className="bt" style={{background:"none",border:"none",color:K.em,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>J'ai un code →</button></div>}
           <Pop t="e" m={err}/><Pop t="o" m={ok}/>
           <Btn ch={busy?"…":step===2?"Valider →":tab==="l"?"Se connecter →":"Créer →"} on={go} full sx={{padding:"12px",fontSize:14,minHeight:46}} dis={busy}/>
           {step===2&&<button onClick={()=>{sS(1);sE("");}} className="bt" style={{width:"100%",marginTop:7,padding:"10px",background:"none",border:`1px solid ${K.b0}`,color:K.t3,borderRadius:8,fontFamily:"'Outfit',sans-serif",fontSize:12,cursor:"pointer",minHeight:40}}>← Retour</button>}
-          {tab==="l"&&step===1&&<div style={{marginTop:11,padding:"7px 10px",background:K.bg,borderRadius:7,border:`1px solid ${K.b0}`,fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:K.t3,lineHeight:1.8}}>admin@accessplus.com</div>}
+          {showPrivacy&&<PrivacyModal onClose={()=>sShowPrivacy(false)}/>}
+          {tab==="r"&&step===1&&<div style={{marginBottom:6,padding:"7px 10px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,fontSize:11,color:K.t3,display:"flex",alignItems:"center",gap:6}}>
+            <i className="ti ti-lock" style={{fontSize:12,color:K.em}}/>Données protégées · Firebase sécurisé · Jamais revendues
+          </div>}
+          {tab==="l"&&step===1&&<>
+            <div style={{display:"flex",alignItems:"center",gap:8,margin:"12px 0"}}>
+              <div style={{flex:1,height:1,background:K.b0}}/>
+              <span style={{fontSize:11,color:K.t3}}>ou continuer avec</span>
+              <div style={{flex:1,height:1,background:K.b0}}/>
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:8}}>
+              <button onClick={()=>socialLogin(googleProvider)} disabled={busy} className="bt"
+                style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:9,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:13,color:K.t1,minHeight:44}}>
+                <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.86l6.08-6.08C34.46 3.05 29.5 1 24 1 14.82 1 7.07 6.48 3.64 14.22l7.08 5.5C12.43 13.72 17.76 9.5 24 9.5z"/><path fill="#4285F4" d="M46.14 24.5c0-1.64-.15-3.22-.42-4.75H24v9h12.46c-.54 2.9-2.18 5.36-4.64 7.01l7.14 5.54C43.27 37.22 46.14 31.28 46.14 24.5z"/><path fill="#FBBC05" d="M10.72 28.28A14.5 14.5 0 0 1 9.5 24c0-1.49.26-2.93.72-4.28l-7.08-5.5A23.93 23.93 0 0 0 0 24c0 3.87.93 7.53 2.57 10.75l8.15-6.47z"/><path fill="#34A853" d="M24 47c5.5 0 10.12-1.82 13.49-4.95l-7.14-5.54C28.57 38.3 26.4 39 24 39c-6.24 0-11.57-4.22-13.28-9.93l-8.15 6.47C6.07 43.48 14.54 47 24 47z"/></svg>
+                Google
+              </button>
+              <button onClick={()=>socialLogin(facebookProvider)} disabled={busy} className="bt"
+                style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",background:"#1877F2",border:"none",borderRadius:9,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:13,color:"#fff",minHeight:44}}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.514c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+                Facebook
+              </button>
+            </div>
+            <div style={{marginTop:3,padding:"7px 10px",background:K.bg,borderRadius:7,border:`1px solid ${K.b0}`,fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:K.t3,lineHeight:1.8}}>admin@accessplus.com</div>
+          </>}
         </div>
       </div>
     </div>
@@ -549,18 +690,74 @@ function UA({uid,onOut}){
 
 function Nav({u,vue,sV,ok,onSub,onOut,live}){
   const K=useK();const{mob}=useW();
-  return <nav className="nb" style={{background:`${K.card}ee`,backdropFilter:"blur(14px)",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"space-between",height:52,position:"sticky",top:0,zIndex:99}}>
-    <Logo sm={mob}/>
-    <div className="tn" style={{flex:1,margin:"0 7px"}}>
-      {[["home",mob?"🏠":"Accueil"],["pres",mob?"📊":"Présentations"],["stages",mob?"🎯":"Stages"],["services",mob?"💼":"Services"],["videos",live?(mob?<span style={{display:"flex",alignItems:"center",gap:3}}><span style={{width:6,height:6,borderRadius:"50%",background:K.rd,display:"inline-block",animation:"blink 1.5s ease-in-out infinite"}}/>{"🎬"}</span>:"🔴 Vidéos"):(mob?"🎬":"🎬 Vidéos")],["prog",mob?"📈":"Progression"],["res",mob?"🏆":"Résultats"]].map(([k,l])=>(
-        <button key={k} onClick={()=>sV(k)} className="bt" style={{background:vue===k?K.c2:"none",border:"none",cursor:"pointer",padding:"5px 9px",borderRadius:6,fontSize:12,fontWeight:700,color:vue===k?K.t1:K.t3,whiteSpace:"nowrap",minHeight:34,borderBottom:vue===k?`2px solid ${K.em}`:"2px solid transparent"}}>{l}</button>
-      ))}
+  const NAV_ITEMS=[
+    {k:"home",   ico:"home-2",        label:"Accueil"},
+    {k:"pres",   ico:"presentation",  label:"Cours"},
+    {k:"stages", ico:"briefcase",     label:"Stages"},
+    {k:"videos", ico:"video",         label:"Vidéos", live:true},
+    {k:"services",ico:"building",     label:"Services"},
+    {k:"prog",   ico:"chart-line",    label:"Progrès"},
+    {k:"res",    ico:"trophy",        label:"Résultats"},
+  ];
+  if(mob){
+    // ── BOTTOM NAV MOBILE ──
+    const visible=NAV_ITEMS.slice(0,5);
+    return <>
+      {/* Top bar mobile : logo + statut + avatar */}
+      <div className="nb" style={{background:`${K.card}f0`,backdropFilter:"blur(16px)",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"space-between",height:50,position:"sticky",top:0,zIndex:99}}>
+        <Logo sm/>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          {ok
+            ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"3px 9px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:10,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ Actif":"✓ Actif"}</span></div>
+            :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:11,fontWeight:800,color:"#071209",cursor:"pointer"}}>Accéder</button>
+          }
+          <div onClick={onOut} style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#071209",fontWeight:800,fontSize:12,cursor:"pointer",flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
+        </div>
+      </div>
+      {/* Bottom nav */}
+      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:99,background:`${K.card}f5`,backdropFilter:"blur(20px)",borderTop:`1px solid ${K.b0}`,display:"flex",alignItems:"center",paddingBottom:"max(6px,env(safe-area-inset-bottom))"}}>
+        {visible.map(({k,ico,label,live:isLive})=>{
+          const active=vue===k;
+          const hasLive=isLive&&live;
+          return <button key={k} onClick={()=>sV(k)} className="bt" style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,padding:"8px 4px 4px",background:"none",border:"none",cursor:"pointer",position:"relative",minHeight:52}}>
+            {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:3,borderRadius:"0 0 3px 3px",background:K.em}}/>}
+            <div style={{position:"relative"}}>
+              <i className={`ti ti-${ico}`} style={{fontSize:20,color:active?K.em:K.t3,display:"block"}}/>
+              {hasLive&&<span style={{position:"absolute",top:-2,right:-4,width:7,height:7,borderRadius:"50%",background:K.rd,border:`1.5px solid ${K.card}`,animation:"blink 1.5s ease-in-out infinite"}}/>}
+            </div>
+            <span style={{fontSize:9,fontWeight:active?800:600,color:active?K.em:K.t3,letterSpacing:.2}}>{label}</span>
+          </button>;
+        })}
+      </div>
+    </>;
+  }
+  // ── DESKTOP NAV ──
+  return <nav className="nb" style={{background:`${K.card}f0`,backdropFilter:"blur(16px)",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",gap:4,height:56,position:"sticky",top:0,zIndex:99}}>
+    <Logo/>
+    <div style={{width:1,height:22,background:K.b0,margin:"0 6px",flexShrink:0}}/>
+    <div className="tn" style={{flex:1,gap:2}}>
+      {NAV_ITEMS.map(({k,ico,label,live:isLive})=>{
+        const active=vue===k;
+        const hasLive=isLive&&live;
+        return <button key={k} onClick={()=>sV(k)} className="bt" style={{display:"flex",alignItems:"center",gap:6,padding:"6px 11px",borderRadius:8,border:"none",cursor:"pointer",background:active?K.c2:"transparent",color:active?K.t1:K.t3,fontWeight:active?700:600,fontSize:12,whiteSpace:"nowrap",minHeight:34,fontFamily:"'Outfit',sans-serif",position:"relative",transition:"background .15s,color .15s"}}>
+          <div style={{position:"relative"}}>
+            <i className={`ti ti-${ico}`} style={{fontSize:15,color:active?K.em:K.t3}}/>
+            {hasLive&&<span style={{position:"absolute",top:-3,right:-4,width:7,height:7,borderRadius:"50%",background:K.rd,border:`1.5px solid ${K.card}`,animation:"blink 1.5s ease-in-out infinite"}}/>}
+          </div>
+          {label}
+          {active&&<div style={{position:"absolute",bottom:0,left:"50%",transform:"translateX(-50%)",width:"60%",height:2,borderRadius:"2px 2px 0 0",background:K.em}}/>}
+        </button>;
+      })}
     </div>
-    <div style={{display:"flex",alignItems:"center",gap:7,flexShrink:0}}>
-      {ok?<div className="hs"><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={u.dureeId==="v"?"♾️":"✓ Actif"}/></div>:<Btn ch={mob?"💳":"Accéder"} on={onSub} v="w" sm/>}
-      <div style={{display:"flex",alignItems:"center",gap:5,padding:"3px 7px 3px 4px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:99,cursor:"pointer"}} onClick={onOut}>
-        <div style={{width:22,height:22,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#071209",fontWeight:800,fontSize:11}}>{(u.nom||"U")[0].toUpperCase()}</div>
-        <span className="hs" style={{color:K.t2,fontSize:12,fontWeight:600}}>{(u.nom||"").split(" ")[0]}</span>
+    <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+      {ok
+        ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 11px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:11,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ À vie":"✓ Actif"}</span></div>
+        :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:800,color:"#071209",cursor:"pointer"}}>Obtenir l'accès</button>
+      }
+      <div onClick={onOut} style={{display:"flex",alignItems:"center",gap:7,padding:"4px 9px 4px 5px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:99,cursor:"pointer"}} className="bt">
+        <div style={{width:26,height:26,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#071209",fontWeight:800,fontSize:11}}>{(u.nom||"U")[0].toUpperCase()}</div>
+        <span style={{color:K.t2,fontSize:12,fontWeight:600}}>{(u.nom||"").split(" ")[0]}</span>
+        <i className="ti ti-chevron-down" style={{fontSize:11,color:K.t3}}/>
       </div>
     </div>
   </nav>;
@@ -1296,7 +1493,7 @@ function AA({onOut}){
         <div style={{marginBottom:8}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:4}}>Titre</div><input value={ex.ti} onChange={e=>sEx(x=>({...x,ti:e.target.value}))} placeholder="Titre de l'exercice" style={{width:"100%",padding:"8px 10px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/></div>
         <div style={{marginBottom:8}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:4}}>Énoncé</div><textarea value={ex.en} onChange={e=>sEx(x=>({...x,en:e.target.value}))} rows={2} placeholder="Situation pratique..." style={{width:"100%",padding:"8px 10px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif",resize:"vertical",boxSizing:"border-box"}}/></div>
         <div style={{marginBottom:8}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}><div style={{color:K.t2,fontSize:12,fontWeight:600}}>Travail</div><Btn ch="+" on={()=>sEx(x=>({...x,tv:[...x.tv,""]}))} sm v="s"/></div>{ex.tv.map((t,i)=><div key={i} style={{display:"flex",gap:5,marginBottom:4}}><input value={t} onChange={e=>{const tv=[...ex.tv];tv[i]=e.target.value;sEx(x=>({...x,tv}));}} placeholder={`Étape ${i+1}`} style={{flex:1,padding:"7px 9px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:6,color:K.t1,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}/><Btn ch="✕" on={()=>sEx(x=>({...x,tv:x.tv.filter((_,j)=>j!==i)}))} v="d" sm/></div>)}</div>
-        <div style={{marginBottom:8}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}><div style={{color:K.t2,fontSize:12,fontWeight:600}}>Données</div><Btn ch="+ Ligne" on={()=>sEx(x=>({...x,dn:[...x.dn,{a:"",b:"",c:""}]}))} sm v="s"/></div>{ex.dn.map((row,i)=><div key={i} style={{display:"flex",gap:4,marginBottom:3,alignItems:"center"}}>{["a","b","c"].map((k,j)=><input key={k} value={row[k]||""} onChange={e=>{const dn=[...ex.dn];dn[i]={...dn[i],[k]:e.target.value};sEx(x=>({...x,dn}));}} placeholder={j===0?"Libellé":j===1?"Valeur":"Unité (opt.)"} style={{flex:1,padding:"6px 8px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:6,color:K.t1,fontSize:11,outline:"none",fontFamily:j>0?"'JetBrains Mono',monospace":"'Outfit',sans-serif"}}/>)}<Btn ch="✕" on={()=>sEx(x=>({...x,dn:x.dn.filter((_,j)=>j!==i)}))} v="d" sm/></div>)}</div>
+        <div style={{marginBottom:8}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}><div style={{color:K.t2,fontSize:12,fontWeight:600}}>Données</div><Btn ch="+ Ligne" on={()=>sEx(x=>({...x,dn:[...x.dn,{a:"",b:"",c:""}]}))}} sm v="s"/></div>{ex.dn.map((row,i)=><div key={i} style={{display:"flex",gap:4,marginBottom:3,alignItems:"center"}}>{["a","b","c"].map((k,j)=><input key={k} value={row[k]||""} onChange={e=>{const dn=[...ex.dn];dn[i]={...dn[i],[k]:e.target.value};sEx(x=>({...x,dn}));}} placeholder={j===0?"Libellé":j===1?"Valeur":"Unité (opt.)"} style={{flex:1,padding:"6px 8px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:6,color:K.t1,fontSize:11,outline:"none",fontFamily:j>0?"'JetBrains Mono',monospace":"'Outfit',sans-serif"}}/>)}<Btn ch="✕" on={()=>sEx(x=>({...x,dn:x.dn.filter((_,j)=>j!==i)}))} v="d" sm/></div>)}</div>
         <div><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:4}}>Corrigé</div><textarea value={ex.co} onChange={e=>sEx(x=>({...x,co:e.target.value}))} rows={2} placeholder="Résultats attendus..." style={{width:"100%",padding:"8px 10px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:11,outline:"none",fontFamily:"'JetBrains Mono',monospace",resize:"vertical",boxSizing:"border-box"}}/></div>
       </div>
       <div style={{display:"flex",gap:8}}><Btn ch="Annuler" on={onCancel} v="g" full/><Btn ch={saving?"Enregistrement…":isNew?"Créer →":"Enregistrer →"} on={save} full dis={saving}/></div>
@@ -1304,10 +1501,66 @@ function AA({onOut}){
   }
   return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
-    <nav className="nb" style={{background:`${K.card}ee`,backdropFilter:"blur(14px)",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"space-between",height:52,position:"sticky",top:0,zIndex:99}}>
-      <Logo sm={mob}/>
-      <div className="tn" style={{flex:1,margin:"0 7px"}}>{tabs.map(([k,l])=><button key={k} onClick={()=>sT(k)} className="bt" style={{background:tab===k?K.c2:"none",border:"none",cursor:"pointer",padding:"5px 8px",borderRadius:6,fontSize:11,fontWeight:700,color:tab===k?K.t1:K.t3,whiteSpace:"nowrap",minHeight:34,borderBottom:tab===k?`2px solid ${K.em}`:"2px solid transparent"}}>{l}</button>)}</div>
-      <div style={{display:"flex",alignItems:"center",gap:7,flexShrink:0}}><Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Admin"/><button onClick={onOut} className="bt" style={{background:"none",border:`1px solid ${K.b0}`,color:K.t3,borderRadius:6,padding:"4px 8px",cursor:"pointer",fontSize:12,minHeight:32}}>⎋</button></div>
+    {/* ── ADMIN NAV ── */}
+    <nav className="nb" style={{background:`${K.card}f2`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99}}>
+      {/* Ligne 1 : logo + badge + déconnexion */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",height:46,paddingLeft:mob?0:4}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <Logo sm={mob}/>
+          <div style={{width:1,height:16,background:K.b0,flexShrink:0}}/>
+          <div style={{display:"flex",alignItems:"center",gap:5,background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:99,padding:"2px 9px"}}>
+            <i className="ti ti-shield-check" style={{fontSize:11,color:K.wa}}/>
+            <span style={{fontSize:10,fontWeight:800,color:K.wa,letterSpacing:.4}}>ADMIN</span>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <div style={{display:"flex",gap:10,alignItems:"center"}}>
+            {[[`${users.length}`,"ti-users",K.t2],[`${nD}`,"ti-clock",K.wa],[`${nA}`,"ti-check-circle",K.em]].map(([v,ic,c])=>(
+              <div key={ic} style={{display:"flex",alignItems:"center",gap:3}}>
+                <i className={`ti ${ic}`} style={{fontSize:12,color:c}}/>
+                <span style={{fontSize:11,fontWeight:700,color:c}}>{v}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{width:1,height:16,background:K.b0}}/>
+          <button onClick={onOut} className="bt" style={{display:"flex",alignItems:"center",gap:5,background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontSize:11,fontWeight:700,minHeight:28,fontFamily:"'Outfit',sans-serif"}}>
+            <i className="ti ti-logout" style={{fontSize:12}}/>
+            {!mob&&"Quitter"}
+          </button>
+        </div>
+      </div>
+      {/* Ligne 2 : onglets avec icônes */}
+      {(()=>{
+        const ADMIN_TABS=[
+          {k:"d",  ico:"ti-clock",         label:`Dem.`,      badge:nD,  bc:K.wa},
+          {k:"a",  ico:"ti-check-circle",  label:"Actifs",    badge:nA,  bc:K.em},
+          {k:"e",  ico:"ti-clock-off",     label:"Expirés",   badge:nE,  bc:K.er},
+          {k:"t",  ico:"ti-users",         label:"Tous",      badge:users.length, bc:K.t2},
+          {k:"s",  ico:"ti-chart-bar",     label:"Stats"},
+          {k:"m",  ico:"ti-book-2",        label:"Cours"},
+          {k:"v",  ico:"ti-video",         label:"Vidéos"},
+          {k:"pr", ico:"ti-presentation",  label:"Présentations"},
+          {k:"st", ico:"ti-briefcase",     label:"Stages"},
+          {k:"dm", ico:"ti-message-circle",label:"Demandes",  badge:allDemandesAdmin.filter(d=>d.statut==="nouveau").length, bc:K.in_},
+          {k:"p",  ico:"ti-file-text",     label:"PDF"},
+        ];
+        return <div className="tn" style={{borderTop:`1px solid ${K.b0}`,gap:1,paddingBottom:2}}>
+          {ADMIN_TABS.map(({k,ico,label,badge,bc})=>{
+            const active=tab===k;
+            return <button key={k} onClick={()=>sT(k)} className="bt"
+              style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",border:"none",cursor:"pointer",
+                background:active?K.c2:"transparent",color:active?K.t1:K.t3,
+                fontWeight:active?700:500,fontSize:11,whiteSpace:"nowrap",
+                fontFamily:"'Outfit',sans-serif",position:"relative",minHeight:34,
+                borderBottom:active?`2px solid ${K.em}`:"2px solid transparent",
+                borderRadius:"6px 6px 0 0",transition:"background .12s,color .12s"}}>
+              <i className={`ti ${ico}`} style={{fontSize:13,color:active?K.em:K.t3}}/>
+              {label}
+              {badge>0&&<span style={{background:bc,color:"#071209",borderRadius:99,fontSize:9,fontWeight:800,padding:"1px 5px",minWidth:16,textAlign:"center",lineHeight:1.4}}>{badge}</span>}
+            </button>;
+          })}
+        </div>;
+      })()}
     </nav>
     <div className="mp" style={{maxWidth:1060,margin:"0 auto"}}>
       {msg.m&&<Pop t={msg.t} m={msg.m}/>}
@@ -1507,7 +1760,7 @@ function AA({onOut}){
 {tab==="p"&&<div style={{animation:"up .25s ease"}}>
         <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3}}>PDF d'exercices</div>
         <div style={{color:K.t3,fontSize:12,marginBottom:13}}>Un PDF par module · Stocké sur Firebase Storage · Lecture seule pour abonnés.</div>
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{m.ico}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?` · 📄 ${pdf.name}` : " · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{icoEl(m.ico,m.col,15)}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?` · 📄 ${pdf.name}` : " · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
           <label className="bt" style={{background:pdf?K.c2:`linear-gradient(135deg,${K.inD},${K.in_})`,color:pdf?K.t2:"#fff",border:pdf?`1px solid ${K.b0}`:"none",borderRadius:8,padding:"7px 11px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:4,minHeight:34}}>
             {saving?"⏳":pdf?"🔄":"📤"}
             <input type="file" accept=".pdf" style={{display:"none"}} onChange={async e=>{const f=e.target.files?.[0];if(!f||f.type!=="application/pdf")return;if(f.size>15*1024*1024){alert("Max 15 Mo");return;}sSav(true);const res=await uploadPdf(m.id,f);sPdfs(p=>({...p,[m.id]:res}));sSav(false);e.target.value="";}}/>
