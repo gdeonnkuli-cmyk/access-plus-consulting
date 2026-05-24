@@ -522,13 +522,15 @@ function Auth({onL}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("l"),[err,sE]=useState(""),[ok,sO]=useState(""),[busy,sB]=useState(false),[step,sS]=useState(1);
   const[consent,sConsent]=useState(false),[showPrivacy,sShowPrivacy]=useState(false),[needConsent,sNeedConsent]=useState(false);
+  const consentRef=useRef(false);
   const pm=useRef(null),rN=useRef(),rM=useRef(),rP=useRef(),rP2=useRef(),rC=useRef();
-  const sw=useCallback(t=>{sT(t);sS(1);sE("");sO("");sConsent(false);sNeedConsent(false);setTimeout(()=>[rN,rM,rP,rP2,rC].forEach(r=>{if(r.current)r.current.value="";}),0);},[]);
+  const toggleConsent=useCallback(()=>{consentRef.current=!consentRef.current;sConsent(consentRef.current);},[]);
+  const sw=useCallback(t=>{sT(t);sS(1);sE("");sO("");consentRef.current=false;sConsent(false);sNeedConsent(false);setTimeout(()=>[rN,rM,rP,rP2,rC].forEach(r=>{if(r.current)r.current.value="";}),0);},[]);
   const reg=useCallback(async()=>{
     const n=rN.current?.value?.trim()||"",m=rM.current?.value?.trim()||"",p=rP.current?.value||"",p2=rP2.current?.value||"";
     sE("");sO("");
     if(n.length<2)return sE("Nom requis");if(!m.includes("@"))return sE("Email invalide");if(p.length<6)return sE("Mot de passe min. 6 caractères");if(p!==p2)return sE("Mots de passe différents");
-    if(!consent)return sE("Vous devez accepter la politique de confidentialité.");
+    if(!consentRef.current)return sE("Vous devez accepter la politique de confidentialité.");
     sB(true);
     try{
       const cred=await createUserWithEmailAndPassword(auth,m,p);
@@ -603,7 +605,7 @@ function Auth({onL}){
           {step===1&&<Inp lb="Mot de passe" rf={rP} type="password" ph="Min. 6 car." ok={hk}/>}
           {step===1&&tab==="r"&&<Inp lb="Confirmer" rf={rP2} type="password" ph="Répéter" ok={hk}/>}
           {step===1&&tab==="r"&&<div style={{marginBottom:13}}>
-            <div onClick={()=>sConsent(c=>!c)} style={{display:"flex",alignItems:"flex-start",gap:10,cursor:"pointer",padding:"10px 12px",background:consent?K.emBg:K.c2,border:`1px solid ${consent?K.emBd:K.b0}`,borderRadius:9,transition:"all .15s"}}>
+            <div onClick={toggleConsent} style={{display:"flex",alignItems:"flex-start",gap:10,cursor:"pointer",padding:"10px 12px",background:consent?K.emBg:K.c2,border:`1px solid ${consent?K.emBd:K.b0}`,borderRadius:9,transition:"all .15s"}}>
               <div style={{width:18,height:18,borderRadius:5,border:`2px solid ${consent?K.em:K.b1}`,background:consent?K.em:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1,transition:"all .15s"}}>
                 {consent&&<i className="ti ti-check" style={{fontSize:11,color:"#071209"}}/>}
               </div>
