@@ -1380,7 +1380,7 @@ function Prog({pr,sc,gp,nd,ok,mods}){
     {label:"Progression",pct:gp,col:K.em},
     {label:"Score moyen",pct:avgScore,col:"#3B82F6"},
     {label:"Meilleur score",pct:bestScore,col:"#F59E0B"},
-  ];const{mob}=useW();const{tid}=useContext(Ctx);
+  ];const{tid}=useContext(Ctx);
   const isLight=['light','sepia'].includes(tid);
   const done=mods.filter(m=>pr[m.id]==="done");
   const todo=mods.filter(m=>pr[m.id]!=="done");
