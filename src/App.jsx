@@ -2309,10 +2309,12 @@ function AA({onOut}){
   for(let i=0;i<8;i++)code+=chars[Math.floor(Math.random()*chars.length)];
   return code;
 };
+  const[lastFoCode,sLastFoCode]=useState({uid:"",code:""});
   const genFormateurCode=async(uid)=>{
     const code=nFC();
     await saveUserData(uid,{formateurCode:code,formateurCodeValide:false});
-    sMsg({t:"o",m:`Code formateur généré : ${code}`});setTimeout(()=>sMsg({t:"",m:""}),6000);
+    sLastFoCode({uid,code});
+    sMsg({t:"o",m:`Code généré !`});setTimeout(()=>sMsg({t:"",m:""}),2000);
   };
   const activateFormateur=async(uid)=>{
     await saveUserData(uid,{role:"formateur",formateurCodeValide:true});
@@ -2693,13 +2695,32 @@ function AA({onOut}){
       })()}
       {/* Inviter */}
       <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:8}}>Inviter un formateur</div>
-      <div style={{background:K.card,border:`1px solid #8B5CF630`,borderRadius:12,padding:"14px"}}>
-        <div style={{fontSize:12,color:K.t2,marginBottom:10,lineHeight:1.6}}>Choisissez un utilisateur inscrit pour lui générer un code FO-. Il devra saisir ce code pour accéder à l'espace formateur.</div>
+      <div style={{background:K.card,border:`1px solid #8B5CF630`,borderRadius:12,padding:"16px"}}>
+        <div style={{fontSize:12,color:K.t2,marginBottom:12,lineHeight:1.6}}>Choisissez un utilisateur inscrit pour lui générer un code FO-. Il devra saisir ce code pour accéder à l'espace formateur.</div>
         <select onChange={e=>{if(e.target.value){genFormateurCode(e.target.value);e.target.value="";}}}
-          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",cursor:"pointer"}}>
+          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",cursor:"pointer",marginBottom:12}}>
           <option value="">Choisir un utilisateur...</option>
           {users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL).map(u=><option key={u.uid} value={u.uid}>{u.nom} ({u.mail})</option>)}
         </select>
+        {/* Code généré — affiché en permanence */}
+        {lastFoCode.code&&<div style={{background:"#8B5CF618",border:"1px solid #8B5CF640",borderRadius:10,padding:"14px",textAlign:"center"}}>
+          <div style={{fontSize:11,color:"#8B5CF6",fontWeight:700,marginBottom:6,letterSpacing:1,textTransform:"uppercase"}}>Code formateur généré</div>
+          <div style={{fontFamily:"monospace",fontSize:22,fontWeight:900,color:"#8B5CF6",letterSpacing:4,marginBottom:8}}>{lastFoCode.code}</div>
+          <div style={{fontSize:11,color:K.t3,marginBottom:10}}>Pour : {users.find(u=>u.uid===lastFoCode.uid)?.nom||""}</div>
+          <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+            <button onClick={()=>navigator.clipboard?.writeText(lastFoCode.code)} className="bt"
+              style={{background:"#8B5CF6",border:"none",color:"#fff",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+              <i className="ti ti-copy" style={{fontSize:12}}/>Copier le code
+            </button>
+            <button onClick={()=>{
+              const u=users.find(x=>x.uid===lastFoCode.uid);
+              if(u)window.open(`mailto:${u.mail}?subject=Code formateur Access Plus&body=Bonjour ${u.nom},%0A%0AVotre code formateur : ${lastFoCode.code}%0A%0A1. Connectez-vous sur access-plus-consulting.vercel.app%0A2. Cliquez "J'ai un code"%0A3. Saisissez : ${lastFoCode.code}%0A%0AAccess Plus Consulting`,"_blank");
+            }} className="bt"
+              style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+              <i className="ti ti-mail" style={{fontSize:12}}/>Envoyer par email
+            </button>
+          </div>
+        </div>}
       </div>
     </div>}
     {tab==="p"&&<div style={{animation:"up .25s ease"}}>
