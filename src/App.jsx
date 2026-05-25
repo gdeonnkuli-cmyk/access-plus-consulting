@@ -297,7 +297,16 @@ function usePresentations(){
 function useW(){const[w,sW]=useState(typeof window!=="undefined"?window.innerWidth:375);useEffect(()=>{const h=()=>sW(window.innerWidth);window.addEventListener("resize",h,{passive:true});return()=>window.removeEventListener("resize",h);},[]);return{mob:w<640};}
 
 // ── UI PRIMITIVES ─────────────────────────────────────────────────────────────
-const Logo=({sm})=>{const K=useK();return <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}><svg width={sm?18:22} height={sm?18:22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg><div><div style={{fontWeight:800,fontSize:sm?12:14,color:K.t1,lineHeight:1}}>Access Plus</div>{!sm&&<div style={{fontSize:8,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>Consulting</div>}</div></div>;};
+const Logo=({sm})=>{const K=useK();return <div style={{display:"flex",alignItems:"center",flexShrink:0}}>
+  <img src="/logo.png" alt="Access Plus Consulting"
+    style={{height:sm?28:36,width:"auto",objectFit:"contain",display:"block"}}
+    onError={e=>{e.target.style.display="none";if(e.target.nextSibling)e.target.nextSibling.style.display="flex";}}
+  />
+  <div style={{display:"none",alignItems:"center",gap:8}}>
+    <svg width={sm?18:22} height={sm?18:22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    <div><div style={{fontWeight:800,fontSize:sm?12:14,color:K.t1,lineHeight:1}}>Access Plus</div>{!sm&&<div style={{fontSize:8,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>Consulting</div>}</div>
+  </div>
+</div>;};
 const Tg=({c,bg,bd,ch})=>{const K=useK();return <span style={{background:bg||K.c2,color:c||K.t2,border:`1px solid ${bd||K.b0}`,borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:600,fontFamily:"'JetBrains Mono',monospace",whiteSpace:"nowrap"}}>{ch}</span>;};
 const Bar=({p,col,h=4})=>{const K=useK();return <div style={{background:K.b0,borderRadius:99,height:h,overflow:"hidden"}}><div style={{width:`${Math.min(p,100)}%`,height:"100%",background:col||K.em,borderRadius:99,transition:"width .6s ease"}}/></div>;};
 const Spin=()=>{const K=useK();return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:24,background:K.bg}}><div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{position:"absolute",width:70,height:70,borderRadius:"50%",background:`${K.em}14`,animation:"pulse 2s ease-in-out infinite"}}/><div style={{position:"absolute",width:52,height:52,borderRadius:"50%",background:`${K.em}0D`,animation:"pulse 2s ease-in-out infinite .4s"}}/><div style={{width:46,height:46,borderRadius:14,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 8px 24px ${K.emD}55`,animation:"logofl 2.4s ease-in-out infinite"}}><svg width={22} height={22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="rgba(7,18,9,.5)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 2L18 11L10 20" stroke="#071209" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg></div></div><div style={{textAlign:"center"}}><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:6}}>Access Plus</div><div style={{display:"flex",alignItems:"center",gap:5,justifyContent:"center"}}>{[0,1,2].map(i=><span key={i} style={{width:5,height:5,borderRadius:"50%",background:K.em,display:"inline-block",animation:"dotfl 1.4s ease-in-out infinite",animationDelay:`${i*0.22}s`}}/>)}</div></div></div>;};
@@ -557,13 +566,10 @@ function LandingPage({onLogin}){
       borderBottom:scrolled?`1px solid ${K.b0}`:"none",
       padding:mob?"10px 16px":"12px 32px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <div style={{width:32,height:32,borderRadius:9,background:`linear-gradient(135deg,#16A34A,#22C55E)`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <i className="ti ti-chevrons-right" style={{fontSize:18,color:"#fff"}}/>
-        </div>
-        <div>
-          <div style={{fontWeight:900,fontSize:15,color:K.t1,lineHeight:1}}>Access Plus</div>
-          <div style={{fontSize:9,color:K.t3,letterSpacing:2,textTransform:"uppercase",lineHeight:1}}>Consulting</div>
-        </div>
+        <img src="/logo.png" alt="Access Plus Consulting"
+          style={{height:36,width:"auto",objectFit:"contain"}}
+          onError={e=>{e.target.style.display="none";}}
+        />
       </div>
       <button onClick={onLogin} className="bt" style={{
         background:`linear-gradient(135deg,#16A34A,#22C55E)`,border:"none",
@@ -589,28 +595,45 @@ function LandingPage({onLogin}){
 
       {/* Badge */}
       <div style={{display:"inline-flex",alignItems:"center",gap:7,background:K.emBg,
-        border:`1px solid ${K.emBd}`,borderRadius:99,padding:"6px 14px",marginBottom:24,animation:"up .5s ease"}}>
+        border:`1px solid ${K.emBd}`,borderRadius:99,padding:"6px 16px",marginBottom:28,animation:"up .5s ease"}}>
         <span style={{width:7,height:7,borderRadius:"50%",background:"#22C55E",display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/>
-        <span style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:.4}}>Plateforme active · SYSCOHADA Révisé</span>
+        <span style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:.4}}>🎓 Formation en ligne · SYSCOHADA Révisé</span>
+      </div>
+
+      {/* Logo hero */}
+      <div style={{marginBottom:20,animation:"up .5s ease .05s both"}}>
+        <img src="/logo.png" alt="Access Plus Consulting"
+          style={{height:mob?50:65,width:"auto",objectFit:"contain",filter:"drop-shadow(0 4px 16px rgba(34,197,94,.25))"}}
+          onError={e=>e.target.style.display="none"}
+        />
       </div>
 
       {/* Titre */}
-      <h1 style={{margin:"0 0 20px",fontSize:mob?"2.2rem":"3.8rem",fontWeight:900,lineHeight:1.1,
-        color:K.t1,letterSpacing:"-1px",maxWidth:700,animation:"up .6s ease .1s both"}}>
-        La formation{" "}
+      <h1 style={{margin:"0 0 16px",fontSize:mob?"1.9rem":"3.4rem",fontWeight:900,lineHeight:1.1,
+        color:K.t1,letterSpacing:"-1px",maxWidth:720,animation:"up .6s ease .1s both"}}>
+        La plateforme de{" "}
         <span style={{background:"linear-gradient(135deg,#16A34A,#22C55E,#4ADE80)",
           WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-          comptable OHADA
+          formation comptable
         </span>
-        {" "}qu'il vous faut
+        {" "}de référence en Afrique
       </h1>
 
       {/* Sous-titre */}
-      <p style={{margin:"0 0 36px",fontSize:mob?14:17,color:K.t2,lineHeight:1.7,
-        maxWidth:560,animation:"up .6s ease .2s both"}}>
-        Modules structurés, QCM interactifs, PDF téléchargeables et vidéos en direct.
-        Tout ce qu'il faut pour maîtriser le plan comptable SYSCOHADA Révisé.
+      <p style={{margin:"0 0 12px",fontSize:mob?14:17,color:K.t2,lineHeight:1.7,
+        maxWidth:580,animation:"up .6s ease .2s both"}}>
+        Maîtrisez le plan comptable <strong style={{color:K.t1}}>SYSCOHADA Révisé</strong> avec des modules structurés,
+        QCM interactifs, PDF téléchargeables et sessions en direct avec votre formateur.
       </p>
+
+      {/* Preuves sociales */}
+      <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:32,flexWrap:"wrap",justifyContent:"center",animation:"up .6s ease .25s both"}}>
+        {[["🎓","Formation certifiante"],["📱","100% en ligne"],["🌍","Adapté OHADA"]].map(([e,l])=>
+          <div key={l} style={{display:"flex",alignItems:"center",gap:6,fontSize:13,color:K.t2,fontWeight:600}}>
+            <span>{e}</span><span>{l}</span>
+          </div>
+        )}
+      </div>
 
       {/* CTA buttons */}
       <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",
@@ -702,11 +725,11 @@ function LandingPage({onLogin}){
     {/* ── CTA FINAL ── */}
     <div style={{padding:mob?"56px 20px":"80px 32px",textAlign:"center"}}>
       <div style={{maxWidth:560,margin:"0 auto"}}>
-        <div style={{width:60,height:60,borderRadius:18,
-          background:"linear-gradient(135deg,#16A34A,#22C55E)",
-          display:"flex",alignItems:"center",justifyContent:"center",
-          margin:"0 auto 20px",boxShadow:"0 8px 24px rgba(34,197,94,.3)"}}>
-          <i className="ti ti-rocket" style={{fontSize:28,color:"#fff"}}/>
+        <div style={{margin:"0 auto 20px",display:"flex",justifyContent:"center"}}>
+          <img src="/logo.png" alt="Access Plus Consulting"
+            style={{height:52,width:"auto",objectFit:"contain",filter:"drop-shadow(0 4px 20px rgba(34,197,94,.3))"}}
+            onError={e=>{e.target.style.display="none";}}
+          />
         </div>
         <h2 style={{margin:"0 0 14px",fontSize:mob?"1.8rem":"2.4rem",
           fontWeight:900,color:K.t1,lineHeight:1.2}}>
