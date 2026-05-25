@@ -942,6 +942,390 @@ function ProgressRing({pct,size=80,stroke=7,col}){
   </svg>;
 }
 
+// ── FORMATEUR APP ─────────────────────────────────────────────────────────────
+function FA({uid,onOut}){
+  const K=useK();const{mob}=useW();
+  const[vue,sV]=useState("home");
+  const[fData,sFD]=useState(null);
+  const[saving,sSav]=useState(false);
+  const[msg,sMsg]=useState({t:"",m:""});
+  const{mods}=useModules();
+  const{vids}=useVideos();
+  const allUsers=useUsers();
+  // Load formateur data
+  useEffect(()=>{
+    const unsub=onSnapshot(doc(db,"users",uid),(snap)=>{if(snap.exists())sFD({uid,...snap.data()});});
+    return unsub;
+  },[uid]);
+
+  if(!fData)return <div style={{minHeight:"100vh",background:K.bg}}><style>{mCss(K)}</style><Spin/></div>;
+
+  // Stats sur les modules créés par ce formateur
+  const myMods=mods.filter(m=>m.createdBy===uid);
+  const myVids=vids.filter(v=>v.createdBy===uid);
+  const myModIds=new Set(myMods.map(m=>m.id));
+  // Apprenants ayant fait au moins 1 module du formateur
+  const myLearners=allUsers.filter(u=>u.progress&&myModIds.size>0&&[...myModIds].some(id=>u.progress[id]));
+  const avgScore=myMods.length>0?Math.round(allUsers.reduce((sum,u)=>{
+    const scores=myMods.map(m=>u.scores?.[m.id]?.pct||0).filter(p=>p>0);
+    return sum+(scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0);
+  },0)/(allUsers.filter(u=>myMods.some(m=>u.scores?.[m.id])).length||1)):0;
+
+  const toast=(t,m)=>{sMsg({t,m});setTimeout(()=>sMsg({t:"",m:""}),3000);};
+
+  // Générer un code de publication
+  const submitContent=async(type,id)=>{
+    sSav(true);
+    await updateDoc(doc(db,type==="mod"?"modules":"videos",id),{status:"pending",submittedBy:uid,submittedAt:new Date().toISOString()});
+    toast("o","Soumis pour validation !");sSav(false);
+  };
+
+  const NAV=[
+    {k:"home",ico:"home-2",label:"Tableau de bord"},
+    {k:"mods",ico:"book-2",label:"Mes modules"},
+    {k:"vids",ico:"video",label:"Mes vidéos"},
+    {k:"stats",ico:"chart-bar",label:"Statistiques"},
+  ];
+
+  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
+    <style>{mCss(K)}</style>
+    {/* Navbar formateur */}
+    <nav className="nb" style={{background:`${K.card}f2`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",height:50,padding:"0 16px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <Logo sm={mob}/>
+          <div style={{width:1,height:16,background:K.b0}}/>
+          <div style={{display:"flex",alignItems:"center",gap:5,background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:99,padding:"2px 10px"}}>
+            <i className="ti ti-school" style={{fontSize:11,color:"#8B5CF6"}}/>
+            <span style={{fontSize:10,fontWeight:800,color:"#8B5CF6",letterSpacing:.4}}>FORMATEUR</span>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:12,color:K.t2,fontWeight:600}}>{(fData.nom||"").split(" ")[0]}</span>
+          <button onClick={onOut} className="bt" style={{display:"flex",alignItems:"center",gap:5,background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
+            <i className="ti ti-logout" style={{fontSize:12}}/>
+            {!mob&&"Quitter"}
+          </button>
+        </div>
+      </div>
+      {/* Sous-nav */}
+      <div className="tn" style={{borderTop:`1px solid ${K.b0}`,gap:1,paddingBottom:2}}>
+        {NAV.map(({k,ico,label})=>{
+          const active=vue===k;
+          return <button key={k} onClick={()=>sV(k)} className="bt"
+            style={{display:"flex",alignItems:"center",gap:5,padding:"6px 12px",border:"none",cursor:"pointer",
+              background:active?K.c2:"transparent",color:active?K.t1:K.t3,
+              fontWeight:active?700:500,fontSize:12,whiteSpace:"nowrap",
+              fontFamily:"'Outfit',sans-serif",borderBottom:active?`2px solid #8B5CF6`:"2px solid transparent",
+              borderRadius:"6px 6px 0 0",minHeight:34}}>
+            <i className={`ti ti-${ico}`} style={{fontSize:13,color:active?"#8B5CF6":K.t3}}/>
+            {label}
+          </button>;
+        })}
+      </div>
+    </nav>
+    <main style={{maxWidth:960,margin:"0 auto",padding:mob?"16px 14px 80px":"20px 24px"}}>
+      {msg.m&&<div style={{background:msg.t==="o"?K.emBg:K.erBg,border:`1px solid ${msg.t==="o"?K.emBd:K.erBd}`,borderRadius:9,padding:"9px 14px",marginBottom:12,fontSize:13,color:msg.t==="o"?K.em:K.er,display:"flex",gap:7}}><i className={`ti ti-${msg.t==="o"?"check":"alert-triangle"}`} style={{fontSize:14}}/>{msg.m}</div>}
+      {ch}
+    </main>
+  </div>;
+
+  // ── HOME ──────────────────────────────────────────────────────────────────
+  if(vue==="home")return W(<div style={{animation:"fadeIn .35s ease"}}>
+    {/* Bannière bienvenue */}
+    <div style={{background:`linear-gradient(135deg,#8B5CF618,#6D28D918)`,border:`1px solid #8B5CF630`,borderRadius:16,padding:"20px 22px",marginBottom:16}}>
+      <div style={{fontSize:12,color:"#8B5CF6",fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:5}}>
+        <i className="ti ti-school" style={{fontSize:13}}/>Espace Formateur
+      </div>
+      <div style={{fontSize:mob?18:22,fontWeight:900,color:K.t1,marginBottom:4}}>Bonjour, {(fData.nom||"").split(" ")[0]} 👋</div>
+      <div style={{fontSize:13,color:K.t2,marginBottom:16}}>Créez du contenu de qualité pour vos apprenants SYSCOHADA.</div>
+      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        {[
+          [`${myMods.length}`,"Modules créés","#8B5CF6"],
+          [`${myVids.length}`,"Vidéos","#3B82F6"],
+          [`${myLearners.length}`,"Apprenants","#22C55E"],
+          [`${avgScore}%`,"Score moyen","#F59E0B"],
+        ].map(([v,l,c])=><div key={l} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:"10px 14px"}}>
+          <div style={{fontWeight:900,fontSize:18,color:c,lineHeight:1}}>{v}</div>
+          <div style={{fontSize:11,color:K.t3,marginTop:3}}>{l}</div>
+        </div>)}
+      </div>
+    </div>
+
+    {/* Actions rapides */}
+    <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:12}}>Actions rapides</div>
+    <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(2,1fr)",gap:12,marginBottom:20}}>
+      {[
+        {ico:"book-plus",col:"#8B5CF6",bg:"#8B5CF618",bd:"#8B5CF630",label:"Créer un module",desc:"Nouveau module avec QCM et contenu",action:()=>sV("mods")},
+        {ico:"video-plus",col:"#3B82F6",bg:"#3B82F618",bd:"#3B82F630",label:"Ajouter une vidéo",desc:"Lien YouTube ou URL de la vidéo",action:()=>sV("vids")},
+        {ico:"chart-bar",col:"#22C55E",bg:"#22C55E18",bd:"#22C55E30",label:"Voir les stats",desc:"Progression et scores de vos apprenants",action:()=>sV("stats")},
+        {ico:"clock",col:"#F59E0B",bg:"#F59E0B18",bd:"#F59E0B30",label:"En attente",desc:`${myMods.filter(m=>m.status==="pending").length} module(s) en validation`,action:()=>sV("mods")},
+      ].map(({ico,col,bg,bd,label,desc,action})=><div key={label} onClick={action} className="hv"
+        style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"16px",cursor:"pointer",display:"flex",gap:14,alignItems:"flex-start"}}>
+        <div style={{width:40,height:40,borderRadius:11,background:bg,border:`1px solid ${bd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <i className={`ti ti-${ico}`} style={{fontSize:19,color:col}}/>
+        </div>
+        <div>
+          <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:3}}>{label}</div>
+          <div style={{fontSize:12,color:K.t2}}>{desc}</div>
+        </div>
+      </div>)}
+    </div>
+
+    {/* Modules récents */}
+    {myMods.length>0&&<>
+      <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10}}>Mes derniers modules</div>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {myMods.slice(0,3).map(m=>{
+          const statusCol={pending:"#F59E0B",approved:"#22C55E",rejected:"#EF4444"}[m.status]||K.t3;
+          const statusLbl={pending:"En attente",approved:"Publié",rejected:"Rejeté"}[m.status]||"Brouillon";
+          return <div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12}}>
+            <div style={{width:36,height:36,borderRadius:9,background:`${statusCol}18`,border:`1px solid ${statusCol}30`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <i className="ti ti-book-2" style={{fontSize:16,color:statusCol}}/>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:700,fontSize:13,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>
+              <div style={{fontSize:11,color:K.t3}}>{m.q?.length||0} questions</div>
+            </div>
+            <div style={{background:`${statusCol}18`,border:`1px solid ${statusCol}30`,borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700,color:statusCol,flexShrink:0}}>{statusLbl}</div>
+          </div>;
+        })}
+      </div>
+    </>}
+  </div>);
+
+  // ── MES MODULES ──────────────────────────────────────────────────────────
+  if(vue==="mods")return W(<FAModules uid={uid} mods={myMods} onSubmit={submitContent} saving={saving} toast={toast}/>);
+
+  // ── MES VIDÉOS ───────────────────────────────────────────────────────────
+  if(vue==="vids")return W(<FAVids uid={uid} vids={myVids} onSubmit={submitContent} saving={saving} toast={toast}/>);
+
+  // ── STATISTIQUES ─────────────────────────────────────────────────────────
+  if(vue==="stats")return W(<FAStats uid={uid} myMods={myMods} allUsers={allUsers}/>);
+
+  return W(<div/>);
+}
+
+// ── MODULES FORMATEUR ─────────────────────────────────────────────────────────
+function FAModules({uid,mods,onSubmit,saving,toast}){
+  const K=useK();const{mob}=useW();
+  const[creating,setCreating]=useState(false);
+  const[form,setForm]=useState({titre:"",mat:"",desc:"",ico:"book-2",col:"#22C55E"});
+  const[questions,setQuestions]=useState([{q:"",opts:["","","",""],ans:0}]);
+  const[savingNew,setSavingNew]=useState(false);
+
+  const addQ=()=>setQuestions(qs=>[...qs,{q:"",opts:["","","",""],ans:0}]);
+  const updQ=(i,field,val)=>setQuestions(qs=>qs.map((q,j)=>j===i?{...q,[field]:val}:q));
+  const updOpt=(i,oi,val)=>setQuestions(qs=>qs.map((q,j)=>j===i?{...q,opts:q.opts.map((o,k)=>k===oi?val:o)}:q));
+
+  const saveModule=async()=>{
+    if(!form.titre.trim())return toast("e","Titre requis");
+    if(questions.some(q=>!q.q.trim()||q.opts.some(o=>!o.trim())))return toast("e","Complétez toutes les questions");
+    setSavingNew(true);
+    try{
+      const id="M"+Date.now();
+      await setDoc(doc(db,"modules",id),{
+        id,titre:form.titre,mat:form.mat||"SYSCOHADA",desc:form.desc,
+        ico:form.ico,col:form.col,on:false,status:"draft",
+        createdBy:uid,createdAt:new Date().toISOString(),
+        q:questions.map(({q,opts,ans})=>({q,o:opts,r:ans}))
+      });
+      toast("o","Module créé ! Soumettez-le pour validation.");
+      setCreating(false);setForm({titre:"",mat:"",desc:"",ico:"book-2",col:"#22C55E"});
+      setQuestions([{q:"",opts:["","","",""],ans:0}]);
+    }catch(e){toast("e",e.message);}
+    setSavingNew(false);
+  };
+
+  if(creating)return <div style={{animation:"fadeIn .3s ease"}}>
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+      <button onClick={()=>setCreating(false)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+        <i className="ti ti-arrow-left" style={{fontSize:13}}/>Retour
+      </button>
+      <div style={{fontWeight:800,fontSize:15,color:K.t1}}>Nouveau module</div>
+    </div>
+    <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"18px",marginBottom:14}}>
+      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:12}}>Informations</div>
+      {[["Titre du module","titre","Fondements SYSCOHADA..."],["Matière","mat","SYSCOHADA Révisé"],["Description courte","desc","Aperçu du module..."]].map(([lb,k,ph])=>
+        <div key={k} style={{marginBottom:10}}>
+          <div style={{fontSize:11,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
+          <input value={form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))}
+            placeholder={ph} style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+        </div>
+      )}
+    </div>
+    <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"18px",marginBottom:14}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:13,color:K.t1}}>Questions QCM ({questions.length})</div>
+        <button onClick={addQ} className="bt" style={{background:"#8B5CF618",border:"1px solid #8B5CF630",color:"#8B5CF6",borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:12,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+          <i className="ti ti-plus" style={{fontSize:12}}/>Question
+        </button>
+      </div>
+      {questions.map((qu,i)=><div key={i} style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px",marginBottom:10}}>
+        <div style={{fontSize:11,color:K.t3,marginBottom:5,fontWeight:600}}>Question {i+1}</div>
+        <input value={qu.q} onChange={e=>updQ(i,"q",e.target.value)} placeholder="Énoncé de la question..."
+          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"8px 10px",color:K.t1,fontSize:12,fontFamily:"'Outfit',sans-serif",marginBottom:8,boxSizing:"border-box"}}/>
+        {qu.opts.map((o,j)=><div key={j} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+          <div onClick={()=>updQ(i,"ans",j)} style={{width:18,height:18,borderRadius:5,border:`2px solid ${qu.ans===j?"#22C55E":K.b1}`,background:qu.ans===j?"#22C55E":"transparent",cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            {qu.ans===j&&<i className="ti ti-check" style={{fontSize:10,color:"#fff"}}/>}
+          </div>
+          <input value={o} onChange={e=>updOpt(i,j,e.target.value)} placeholder={`Option ${j+1}${j===0?" (correcte si cochée)":""}`}
+            style={{flex:1,background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"7px 9px",color:K.t1,fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
+        </div>)}
+      </div>)}
+    </div>
+    <button onClick={saveModule} disabled={savingNew} className="bt"
+      style={{width:"100%",padding:"13px",background:`linear-gradient(135deg,#7C3AED,#8B5CF6)`,border:"none",borderRadius:11,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:46}}>
+      {savingNew?"Enregistrement...":"💾 Enregistrer le module"}
+    </button>
+  </div>;
+
+  return <div style={{animation:"fadeIn .35s ease"}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+      <div style={{fontWeight:800,fontSize:15,color:K.t1}}>Mes modules ({mods.length})</div>
+      <button onClick={()=>setCreating(true)} className="bt" style={{background:`linear-gradient(135deg,#7C3AED,#8B5CF6)`,border:"none",color:"#fff",borderRadius:9,padding:"7px 14px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:6}}>
+        <i className="ti ti-plus" style={{fontSize:14}}/>Nouveau module
+      </button>
+    </div>
+    {!mods.length&&<EmptyState ico="book-2" title="Aucun module créé" desc="Créez votre premier module SYSCOHADA avec QCM intégré."/>}
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {mods.map(m=>{
+        const sc={draft:"Brouillon",pending:"En attente",approved:"Publié",rejected:"Rejeté"}[m.status||"draft"];
+        const cc={draft:K.t3,pending:"#F59E0B",approved:"#22C55E",rejected:"#EF4444"}[m.status||"draft"];
+        return <div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:13,padding:"14px 16px"}}>
+          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:3}}>{m.titre}</div>
+              <div style={{fontSize:12,color:K.t3}}>{m.mat||"SYSCOHADA"} · {m.q?.length||0} questions</div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:7,flexShrink:0}}>
+              <span style={{background:`${cc}18`,border:`1px solid ${cc}30`,borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700,color:cc}}>{sc}</span>
+              {(m.status==="draft"||m.status==="rejected")&&
+                <button onClick={()=>onSubmit("mod",m.id)} disabled={saving} className="bt"
+                  style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
+                  Soumettre
+                </button>
+              }
+            </div>
+          </div>
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
+// ── VIDÉOS FORMATEUR ──────────────────────────────────────────────────────────
+function FAVids({uid,vids,onSubmit,saving,toast}){
+  const K=useK();
+  const[form,setForm]=useState({titre:"",url:"",desc:""});
+  const[savingNew,setSavingNew]=useState(false);
+
+  const saveVid=async()=>{
+    if(!form.titre.trim()||!form.url.trim())return toast("e","Titre et URL requis");
+    setSavingNew(true);
+    try{
+      const id="V"+Date.now();
+      await setDoc(doc(db,"videos",id),{
+        id,titre:form.titre,url:form.url,desc:form.desc,
+        status:"draft",createdBy:uid,createdAt:new Date().toISOString(),gr:false
+      });
+      toast("o","Vidéo ajoutée ! Soumettez-la pour validation.");
+      setForm({titre:"",url:"",desc:""});
+    }catch(e){toast("e",e.message);}
+    setSavingNew(false);
+  };
+
+  return <div style={{animation:"fadeIn .35s ease"}}>
+    <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:14}}>Mes vidéos ({vids.length})</div>
+    {/* Formulaire ajout */}
+    <div style={{background:K.card,border:`1px solid #3B82F630`,borderRadius:14,padding:"18px",marginBottom:16}}>
+      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
+        <i className="ti ti-video-plus" style={{fontSize:15,color:"#3B82F6"}}/>Ajouter une vidéo
+      </div>
+      {[["Titre","titre","Titre de la vidéo"],["URL (YouTube/Drive)","url","https://..."],["Description","desc","Aperçu du contenu..."]].map(([lb,k,ph])=>
+        <div key={k} style={{marginBottom:10}}>
+          <div style={{fontSize:11,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
+          <input value={form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} placeholder={ph}
+            style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+        </div>
+      )}
+      <button onClick={saveVid} disabled={savingNew} className="bt"
+        style={{width:"100%",padding:"11px",background:"linear-gradient(135deg,#1D4ED8,#3B82F6)",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",marginTop:4}}>
+        {savingNew?"Enregistrement...":"+ Ajouter la vidéo"}
+      </button>
+    </div>
+    {/* Liste */}
+    {!vids.length&&<EmptyState ico="video" title="Aucune vidéo ajoutée" desc="Ajoutez des liens YouTube ou Drive pour vos apprenants."/>}
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      {vids.map(v=>{
+        const sc={draft:"Brouillon",pending:"En attente",approved:"Publiée",rejected:"Rejetée"}[v.status||"draft"];
+        const cc={draft:K.t3,pending:"#F59E0B",approved:"#22C55E",rejected:"#EF4444"}[v.status||"draft"];
+        return <div key={v.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12}}>
+          <div style={{width:36,height:36,borderRadius:9,background:"#3B82F618",border:"1px solid #3B82F630",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            <i className="ti ti-video" style={{fontSize:16,color:"#3B82F6"}}/>
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:700,fontSize:13,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div>
+            <div style={{fontSize:11,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.url}</div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+            <span style={{background:`${cc}18`,border:`1px solid ${cc}30`,borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700,color:cc}}>{sc}</span>
+            {(v.status==="draft"||v.status==="rejected")&&
+              <button onClick={()=>onSubmit("vid",v.id)} disabled={saving} className="bt"
+                style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
+                Soumettre
+              </button>
+            }
+          </div>
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
+// ── STATS FORMATEUR ───────────────────────────────────────────────────────────
+function FAStats({uid,myMods,allUsers}){
+  const K=useK();const{mob}=useW();
+  const myModIds=new Set(myMods.map(m=>m.id));
+
+  return <div style={{animation:"fadeIn .35s ease"}}>
+    <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:14}}>Statistiques de vos cours</div>
+    {!myMods.length&&<EmptyState ico="chart-bar" title="Aucune statistique" desc="Créez et publiez des modules pour voir les statistiques de vos apprenants."/>}
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+      {myMods.filter(m=>m.status==="approved"||m.on).map(m=>{
+        const learners=allUsers.filter(u=>u.progress?.[m.id]==="done");
+        const scores=allUsers.map(u=>u.scores?.[m.id]?.pct).filter(p=>p!=null);
+        const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):0;
+        const above80=scores.filter(s=>s>=80).length;
+        return <div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"16px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+            <div style={{width:36,height:36,borderRadius:9,background:"#8B5CF618",border:"1px solid #8B5CF630",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <i className="ti ti-book-2" style={{fontSize:16,color:"#8B5CF6"}}/>
+            </div>
+            <div style={{fontWeight:700,fontSize:14,color:K.t1}}>{m.titre}</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+            {[
+              [learners.length,"Complétés","#22C55E"],
+              [`${avg}%`,"Score moyen","#3B82F6"],
+              [above80,"Score ≥80%","#F59E0B"],
+            ].map(([v,l,c])=><div key={l} style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px",textAlign:"center"}}>
+              <div style={{fontWeight:900,fontSize:18,color:c,lineHeight:1}}>{v}</div>
+              <div style={{fontSize:10,color:K.t3,marginTop:3}}>{l}</div>
+            </div>)}
+          </div>
+          {scores.length>0&&<>
+            <div style={{fontSize:11,color:K.t3,marginTop:10,marginBottom:4}}>Distribution des scores</div>
+            <div style={{height:6,background:K.b0,borderRadius:99,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${avg}%`,background:`linear-gradient(90deg,#3B82F6,#8B5CF6)`,borderRadius:99,transition:"width .6s ease"}}/>
+            </div>
+          </>}
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
 function Auth({onL}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("l"),[err,sE]=useState(""),[ok,sO]=useState(""),[busy,sB]=useState(false),[step,sS]=useState(1);
@@ -969,12 +1353,27 @@ function Auth({onL}){
       const snap=await getDoc(doc(db,"users",cred.user.uid));
       if(!snap.exists()){sE("Profil introuvable.");sB(false);return;}
       const u=snap.data();
+      if(u.role==="formateur"){onL("__formateur__:"+cred.user.uid,cred.user);return;}
       if(u.abonnement==="actif"&&xp(u.dateExpiration)){await updateDoc(doc(db,"users",cred.user.uid),{abonnement:"expiré"});}
       onL(cred.user.uid,cred.user);
     }catch(e){sE(e.code==="auth/invalid-credential"?"Email ou mot de passe incorrect.":e.message);sB(false);}
   },[onL]);
   const code=useCallback(async()=>{
     const c=rC.current?.value?.trim()||"";sE("");if(!c)return sE("Entrez votre code");
+    // Detect formateur code (FO- prefix)
+    if(c.startsWith("FO-")){
+      try{
+        const q_=query(collection(db,"users"),where("mail","==",pm.current));
+        const snap=await getDocs(q_);
+        if(snap.empty)return sE("Utilisateur introuvable.");
+        const userDoc=snap.docs[0];const u=userDoc.data();
+        if(u.formateurCode!==c)return sE("Code formateur incorrect.");
+        await updateDoc(doc(db,"users",userDoc.id),{role:"formateur",formateurCodeValide:true});
+        sO("✓ Accès formateur débloqué !");setTimeout(()=>onL("__formateur__:"+userDoc.id,auth.currentUser),700);
+      }catch(e){sE(e.message);}
+      return;
+    }
+    // Code apprenant standard
     try{
       const q_=query(collection(db,"users"),where("mail","==",pm.current));
       const snap=await getDocs(q_);
@@ -1895,7 +2294,7 @@ function AA({onOut}){
   const dem=fl.filter(u=>u.abonnement==="demande"),nD=users.filter(u=>u.abonnement==="demande").length;
   const act=fl.filter(u=>u.abonnement==="actif"&&!xp(u.dateExpiration)),nA=users.filter(u=>u.abonnement==="actif"&&!xp(u.dateExpiration)).length;
   const exp_=fl.filter(u=>u.abonnement==="expiré"||(u.abonnement==="actif"&&xp(u.dateExpiration))),nE=users.filter(u=>u.abonnement==="expiré"||(u.abonnement==="actif"&&xp(u.dateExpiration))).length;
-  const tabs=[["d",`Dem.(${nD})`],["a",`Act.(${nA})`],["e",`Exp.(${nE})`],["t",`Tous(${users.length})`],["s","Stats"],["m","📚 Cours"],["v","🎬 Vidéos"],["pr","📊 Présentations"],["st","🎯 Stages"],["dm","💼 Demandes"],["p","📄 PDF"]];
+  const tabs=[["d",`Dem.(${nD})`],["a",`Act.(${nA})`],["e",`Exp.(${nE})`],["t",`Tous(${users.length})`],["s","Stats"],["m","📚 Cours"],["v","🎬 Vidéos"],["pr","📊 Présentations"],["st","🎯 Stages"],["dm","💼 Demandes"],["p","📄 PDF"],["fo","🎓 Formateurs"]];
   const byT={d:dem,a:act,e:exp_,t:fl};
   let CC_LOCAL=users.reduce((mx,u)=>{const n=parseInt((u.activationCode||"").replace("ACC-",""))||0;return Math.max(mx,n);},0);
   const nC=()=>{
@@ -1904,6 +2303,29 @@ function AA({onOut}){
   for(let i=0;i<8;i++)code+=chars[Math.floor(Math.random()*chars.length)];
   return code;
 };
+  const nFC=()=>{
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code="FO-";
+  for(let i=0;i<8;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+};
+  const genFormateurCode=async(uid)=>{
+    const code=nFC();
+    await saveUserData(uid,{formateurCode:code,formateurCodeValide:false});
+    sMsg({t:"o",m:`Code formateur généré : ${code}`});setTimeout(()=>sMsg({t:"",m:""}),6000);
+  };
+  const activateFormateur=async(uid)=>{
+    await saveUserData(uid,{role:"formateur",formateurCodeValide:true});
+    sMsg({t:"o",m:"Formateur activé !"});setTimeout(()=>sMsg({t:"",m:""}),3000);
+  };
+  const approveContent=async(type,id)=>{
+    await updateDoc(doc(db,type==="mod"?"modules":"videos",id),{status:"approved",on:true,approvedAt:new Date().toISOString()});
+    sMsg({t:"o",m:"Contenu approuvé et publié !"});setTimeout(()=>sMsg({t:"",m:""}),3000);
+  };
+  const rejectContent=async(type,id,reason)=>{
+    await updateDoc(doc(db,type==="mod"?"modules":"videos",id),{status:"rejected",rejectedAt:new Date().toISOString(),rejectReason:reason||""});
+    sMsg({t:"o",m:"Contenu rejeté."});setTimeout(()=>sMsg({t:"",m:""}),3000);
+  };
   const genC=async(uid,did)=>{
     sSav(true);const d=DUR.find(x=>x.id===did);const code=nC();
     await saveUserData(uid,{activationCode:code,codeValide:false,dureeId:did,dateExpiration:dE(d.j)});
@@ -2220,7 +2642,66 @@ function AA({onOut}){
     </div>
   }
 </div>}
-{tab==="p"&&<div style={{animation:"up .25s ease"}}>
+{tab==="fo"&&<div style={{animation:"fadeIn .35s ease"}}>
+      <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:14,display:"flex",alignItems:"center",gap:7}}>
+        <i className="ti ti-school" style={{fontSize:16,color:"#8B5CF6"}}/>Gestion des formateurs
+      </div>
+      {/* Contenu en attente de validation */}
+      {(()=>{
+        const pendingMods=mods.filter(m=>m.status==="pending");
+        if(!pendingMods.length)return null;
+        return <div style={{marginBottom:20}}>
+          <div style={{fontWeight:700,fontSize:13,color:"#F59E0B",marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
+            <i className="ti ti-clock" style={{fontSize:14}}/>Contenu en attente ({pendingMods.length})
+          </div>
+          {pendingMods.map(m=><div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"13px 15px",marginBottom:8}}>
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:2}}>{m.titre}</div>
+                <div style={{fontSize:11,color:K.t3}}>Par : {users.find(u=>u.uid===m.createdBy)?.nom||m.createdBy} · {m.q?.length||0} questions</div>
+              </div>
+              <div style={{display:"flex",gap:6,flexShrink:0}}>
+                <button onClick={()=>approveContent("mod",m.id)} className="bt"
+                  style={{background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
+                  <i className="ti ti-check" style={{fontSize:12}}/>Approuver
+                </button>
+                <button onClick={()=>rejectContent("mod",m.id)} className="bt"
+                  style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
+                  <i className="ti ti-x" style={{fontSize:12}}/>Rejeter
+                </button>
+              </div>
+            </div>
+          </div>)}
+        </div>;
+      })()}
+      {/* Liste formateurs */}
+      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:10}}>Formateurs actifs</div>
+      {(()=>{
+        const formateurs=users.filter(u=>u.role==="formateur");
+        if(!formateurs.length)return <EmptyState ico="school" title="Aucun formateur" desc="Générez un code FO- pour inviter un formateur."/>;
+        return <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+          {formateurs.map(f=><div key={f.uid} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"13px 15px",display:"flex",alignItems:"center",gap:12}}>
+            <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,#7C3AED,#8B5CF6)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:14,flexShrink:0}}>{(f.nom||"F")[0].toUpperCase()}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:700,fontSize:13,color:K.t1}}>{f.nom}</div>
+              <div style={{fontSize:11,color:K.t3}}>{f.mail} · {mods.filter(m=>m.createdBy===f.uid).length} modules créés</div>
+            </div>
+            {f.formateurCode&&<span style={{background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:7,padding:"3px 8px",fontSize:10,fontWeight:700,color:"#8B5CF6",fontFamily:"monospace",flexShrink:0}}>{f.formateurCode}</span>}
+          </div>)}
+        </div>;
+      })()}
+      {/* Inviter */}
+      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:8}}>Inviter un formateur</div>
+      <div style={{background:K.card,border:`1px solid #8B5CF630`,borderRadius:12,padding:"14px"}}>
+        <div style={{fontSize:12,color:K.t2,marginBottom:10,lineHeight:1.6}}>Choisissez un utilisateur inscrit pour lui générer un code FO-. Il devra saisir ce code pour accéder à l'espace formateur.</div>
+        <select onChange={e=>{if(e.target.value){genFormateurCode(e.target.value);e.target.value="";}}}
+          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",cursor:"pointer"}}>
+          <option value="">Choisir un utilisateur...</option>
+          {users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL).map(u=><option key={u.uid} value={u.uid}>{u.nom} ({u.mail})</option>)}
+        </select>
+      </div>
+    </div>}
+    {tab==="p"&&<div style={{animation:"up .25s ease"}}>
         <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3}}>PDF d'exercices</div>
         <div style={{color:K.t3,fontSize:12,marginBottom:13}}>Un PDF par module · Stocké sur Firebase Storage · Lecture seule pour abonnés.</div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{icoEl(m.ico,m.col,15)}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?` · 📄 ${pdf.name}` : " · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
@@ -2252,7 +2733,11 @@ export default function App(){
       if(user){
         if(user.email===ADM_EMAIL){sW({role:"admin",user});sL(false);return;}
         const snap=await getDoc(doc(db,"users",user.uid));
-        if(snap.exists()){sW({role:"user",uid:user.uid,user});} else sW(null);
+        if(snap.exists()){
+          const d=snap.data();
+          if(d.role==="formateur"){sW({role:"formateur",uid:user.uid,user});}
+          else{sW({role:"user",uid:user.uid,user});}
+        } else sW(null);
       }else{sW(null);}
       sL(false);
     });
@@ -2268,8 +2753,9 @@ export default function App(){
     </button>
     {loading&&<Spin/>}
     {!loading&&!who&&!showAuth&&<LandingPage onLogin={()=>sShowAuth(true)}/>}
-    {!loading&&!who&&showAuth&&<Auth onL={(role,user)=>{sW(role==="__admin__"?{role:"admin",user}:{role:"user",uid:user.uid,user});sShowAuth(false);}}/>}
+    {!loading&&!who&&showAuth&&<Auth onL={(role,user)=>{const r=role==="__admin__"?{role:"admin",user}:role?.startsWith("__formateur__:")?{role:"formateur",uid:role.split(":")[1],user}:{role:"user",uid:user.uid,user};sW(r);sShowAuth(false);}}/>}
     {!loading&&who?.role==="admin"&&<AA onOut={async()=>{await signOut(auth);sW(null);}}/>}
+    {!loading&&who?.role==="formateur"&&<FA uid={who.uid} onOut={async()=>{await signOut(auth);sW(null);}}/>}
     {!loading&&who?.role==="user"&&<UA uid={who.uid} onOut={async()=>{await signOut(auth);sW(null);}}/>}
   </Ctx.Provider>;
 }
