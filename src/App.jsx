@@ -518,19 +518,247 @@ function ThemePicker({open,onClose}){
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
+// ── LANDING PAGE ─────────────────────────────────────────────────────────────
+function LandingPage({onLogin}){
+  const K=useK();const{mob}=useW();
+  const[scrolled,setScrolled]=useState(false);
+  useEffect(()=>{
+    const h=()=>setScrolled(window.scrollY>40);
+    window.addEventListener('scroll',h);return()=>window.removeEventListener('scroll',h);
+  },[]);
+
+  const stats=[
+    {val:"10+",label:"Modules SYSCOHADA",ico:"book-2"},
+    {val:"100%",label:"En ligne, partout",ico:"wifi"},
+    {val:"3",label:"Types de profils",ico:"users"},
+    {val:"24h",label:"Accès après paiement",ico:"bolt"},
+  ];
+  const publics=[
+    {ico:"school",label:"Étudiants",desc:"DCG, BTS, Licence, Master en comptabilité et gestion"},
+    {ico:"briefcase",label:"Professionnels",desc:"Comptables, auditeurs, contrôleurs de gestion"},
+    {ico:"building",label:"Entreprises",desc:"Formation de vos équipes aux normes OHADA"},
+    {ico:"certificate",label:"Candidats",desc:"Préparation aux examens et certifications"},
+  ];
+  const features=[
+    {ico:"book-2",     col:"#22C55E",label:"Modules structurés",  desc:"10 modules SYSCOHADA Révisé organisés par thème, du fondamental à l'avancé."},
+    {ico:"help-circle",col:"#3B82F6",label:"QCM interactifs",     desc:"Évaluez vos connaissances avec des quiz corrigés et des scores détaillés."},
+    {ico:"file-text",  col:"#F59E0B",label:"PDF d'exercices",     desc:"Téléchargez les supports de cours et exercices pratiques par module."},
+    {ico:"presentation",col:"#8B5CF6",label:"Présentations",      desc:"Slides professionnelles téléchargeables pour chaque thème de formation."},
+    {ico:"video",      col:"#EF4444",label:"Vidéos & Direct",     desc:"Replays de cours et sessions live avec votre formateur en temps réel."},
+    {ico:"briefcase",  col:"#06B6D4",label:"Stages virtuels",     desc:"Accédez aux meilleures plateformes de stages et d'expériences pratiques."},
+  ];
+
+  return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif",overflowX:"hidden"}}>
+
+    {/* ── NAVBAR ── */}
+    <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,transition:"all .3s ease",
+      background:scrolled?`${K.card}f0`:"transparent",
+      backdropFilter:scrolled?"blur(20px)":"none",
+      borderBottom:scrolled?`1px solid ${K.b0}`:"none",
+      padding:mob?"10px 16px":"12px 32px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <div style={{width:32,height:32,borderRadius:9,background:`linear-gradient(135deg,#16A34A,#22C55E)`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <i className="ti ti-chevrons-right" style={{fontSize:18,color:"#fff"}}/>
+        </div>
+        <div>
+          <div style={{fontWeight:900,fontSize:15,color:K.t1,lineHeight:1}}>Access Plus</div>
+          <div style={{fontSize:9,color:K.t3,letterSpacing:2,textTransform:"uppercase",lineHeight:1}}>Consulting</div>
+        </div>
+      </div>
+      <button onClick={onLogin} className="bt" style={{
+        background:`linear-gradient(135deg,#16A34A,#22C55E)`,border:"none",
+        borderRadius:9,padding:mob?"8px 16px":"9px 22px",
+        color:"#fff",fontWeight:800,fontSize:13,cursor:"pointer",
+        fontFamily:"'Outfit',sans-serif",boxShadow:"0 4px 14px rgba(34,197,94,.35)"}}>
+        Se connecter →
+      </button>
+    </nav>
+
+    {/* ── HERO ── */}
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",
+      justifyContent:"center",padding:mob?"100px 20px 60px":"120px 32px 80px",
+      position:"relative",textAlign:"center",overflow:"hidden"}}>
+
+      {/* Background decorations */}
+      <div style={{position:"absolute",top:"10%",left:"5%",width:300,height:300,borderRadius:"50%",
+        background:`radial-gradient(circle,#22C55E18,transparent 70%)`,pointerEvents:"none"}}/>
+      <div style={{position:"absolute",bottom:"15%",right:"5%",width:250,height:250,borderRadius:"50%",
+        background:`radial-gradient(circle,#3B82F618,transparent 70%)`,pointerEvents:"none"}}/>
+      <div style={{position:"absolute",top:"40%",right:"15%",width:120,height:120,borderRadius:"50%",
+        background:`radial-gradient(circle,#F59E0B12,transparent 70%)`,pointerEvents:"none"}}/>
+
+      {/* Badge */}
+      <div style={{display:"inline-flex",alignItems:"center",gap:7,background:K.emBg,
+        border:`1px solid ${K.emBd}`,borderRadius:99,padding:"6px 14px",marginBottom:24,animation:"up .5s ease"}}>
+        <span style={{width:7,height:7,borderRadius:"50%",background:"#22C55E",display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/>
+        <span style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:.4}}>Plateforme active · SYSCOHADA Révisé</span>
+      </div>
+
+      {/* Titre */}
+      <h1 style={{margin:"0 0 20px",fontSize:mob?"2.2rem":"3.8rem",fontWeight:900,lineHeight:1.1,
+        color:K.t1,letterSpacing:"-1px",maxWidth:700,animation:"up .6s ease .1s both"}}>
+        La formation{" "}
+        <span style={{background:"linear-gradient(135deg,#16A34A,#22C55E,#4ADE80)",
+          WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
+          comptable OHADA
+        </span>
+        {" "}qu'il vous faut
+      </h1>
+
+      {/* Sous-titre */}
+      <p style={{margin:"0 0 36px",fontSize:mob?14:17,color:K.t2,lineHeight:1.7,
+        maxWidth:560,animation:"up .6s ease .2s both"}}>
+        Modules structurés, QCM interactifs, PDF téléchargeables et vidéos en direct.
+        Tout ce qu'il faut pour maîtriser le plan comptable SYSCOHADA Révisé.
+      </p>
+
+      {/* CTA buttons */}
+      <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",
+        animation:"up .6s ease .3s both",marginBottom:56}}>
+        <button onClick={onLogin} className="bt" style={{
+          background:`linear-gradient(135deg,#16A34A,#22C55E)`,border:"none",
+          borderRadius:12,padding:"14px 28px",color:"#fff",fontWeight:800,
+          fontSize:15,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
+          boxShadow:"0 8px 24px rgba(34,197,94,.4)",minHeight:50}}>
+          Commencer maintenant →
+        </button>
+        <button onClick={onLogin} className="bt" style={{
+          background:"transparent",border:`1.5px solid ${K.b1}`,
+          borderRadius:12,padding:"14px 24px",color:K.t2,fontWeight:700,
+          fontSize:15,cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:50}}>
+          Se connecter
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div style={{display:"grid",gridTemplateColumns:mob?"repeat(2,1fr)":"repeat(4,1fr)",
+        gap:12,maxWidth:640,width:"100%",animation:"up .6s ease .4s both"}}>
+        {stats.map(({val,label,ico})=><div key={label} style={{
+          background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,
+          padding:"16px 12px",textAlign:"center"}}>
+          <i className={`ti ti-${ico}`} style={{fontSize:20,color:"#22C55E",display:"block",marginBottom:6}}/>
+          <div style={{fontWeight:900,fontSize:mob?20:24,color:K.t1,lineHeight:1}}>{val}</div>
+          <div style={{fontSize:11,color:K.t3,marginTop:4,lineHeight:1.3}}>{label}</div>
+        </div>)}
+      </div>
+    </div>
+
+    {/* ── POUR QUI ── */}
+    <div style={{padding:mob?"48px 20px":"64px 32px",maxWidth:900,margin:"0 auto"}}>
+      <div style={{textAlign:"center",marginBottom:40}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:2,
+          textTransform:"uppercase",marginBottom:10}}>Audience</div>
+        <h2 style={{margin:0,fontSize:mob?"1.6rem":"2.2rem",fontWeight:900,color:K.t1}}>
+          Conçu pour vous, où que vous soyez
+        </h2>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(2,1fr)",gap:14}}>
+        {publics.map(({ico,label,desc},i)=><div key={label} style={{
+          background:K.card,border:`1px solid ${K.b0}`,borderRadius:16,
+          padding:"20px",display:"flex",gap:14,alignItems:"flex-start"}}>
+          <div style={{width:44,height:44,borderRadius:12,flexShrink:0,
+            background:["#22C55E18","#3B82F618","#F59E0B18","#8B5CF618"][i],
+            border:`1px solid ${["#22C55E30","#3B82F630","#F59E0B30","#8B5CF630"][i]}`,
+            display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <i className={`ti ti-${ico}`} style={{fontSize:20,color:["#22C55E","#3B82F6","#F59E0B","#8B5CF6"][i]}}/>
+          </div>
+          <div>
+            <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:5}}>{label}</div>
+            <div style={{fontSize:13,color:K.t2,lineHeight:1.55}}>{desc}</div>
+          </div>
+        </div>)}
+      </div>
+    </div>
+
+    {/* ── FONCTIONNALITÉS ── */}
+    <div style={{padding:mob?"48px 20px":"64px 32px",
+      background:K.card,borderTop:`1px solid ${K.b0}`,borderBottom:`1px solid ${K.b0}`}}>
+      <div style={{maxWidth:900,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:40}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:2,
+            textTransform:"uppercase",marginBottom:10}}>Fonctionnalités</div>
+          <h2 style={{margin:0,fontSize:mob?"1.6rem":"2.2rem",fontWeight:900,color:K.t1}}>
+            Tout ce dont vous avez besoin
+          </h2>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(3,1fr)",gap:14}}>
+          {features.map(({ico,col,label,desc})=><div key={label} style={{
+            background:K.bg,border:`1px solid ${K.b0}`,borderRadius:16,padding:"20px",
+            transition:"transform .2s ease,box-shadow .2s ease"}}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow=`0 12px 32px ${col}20`;}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
+            <div style={{width:42,height:42,borderRadius:12,
+              background:`${col}18`,border:`1px solid ${col}30`,
+              display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14}}>
+              <i className={`ti ti-${ico}`} style={{fontSize:20,color:col}}/>
+            </div>
+            <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:6}}>{label}</div>
+            <div style={{fontSize:12,color:K.t2,lineHeight:1.6}}>{desc}</div>
+          </div>)}
+        </div>
+      </div>
+    </div>
+
+    {/* ── CTA FINAL ── */}
+    <div style={{padding:mob?"56px 20px":"80px 32px",textAlign:"center"}}>
+      <div style={{maxWidth:560,margin:"0 auto"}}>
+        <div style={{width:60,height:60,borderRadius:18,
+          background:"linear-gradient(135deg,#16A34A,#22C55E)",
+          display:"flex",alignItems:"center",justifyContent:"center",
+          margin:"0 auto 20px",boxShadow:"0 8px 24px rgba(34,197,94,.3)"}}>
+          <i className="ti ti-rocket" style={{fontSize:28,color:"#fff"}}/>
+        </div>
+        <h2 style={{margin:"0 0 14px",fontSize:mob?"1.8rem":"2.4rem",
+          fontWeight:900,color:K.t1,lineHeight:1.2}}>
+          Prêt à maîtriser SYSCOHADA ?
+        </h2>
+        <p style={{margin:"0 0 32px",fontSize:14,color:K.t2,lineHeight:1.7}}>
+          Rejoignez les apprenants Access Plus Consulting et transformez votre maîtrise de la comptabilité OHADA.
+        </p>
+        <button onClick={onLogin} className="bt" style={{
+          background:`linear-gradient(135deg,#16A34A,#22C55E)`,border:"none",
+          borderRadius:13,padding:"16px 36px",color:"#fff",fontWeight:900,
+          fontSize:16,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
+          boxShadow:"0 8px 28px rgba(34,197,94,.4)",minHeight:54,
+          display:"inline-flex",alignItems:"center",gap:10}}>
+          <i className="ti ti-arrow-right" style={{fontSize:18}}/>
+          Créer mon compte gratuitement
+        </button>
+        <div style={{marginTop:16,fontSize:12,color:K.t3}}>
+          Déjà inscrit ?{" "}
+          <button onClick={onLogin} className="bt" style={{background:"none",border:"none",
+            color:"#22C55E",fontWeight:700,fontSize:12,cursor:"pointer",
+            fontFamily:"'Outfit',sans-serif",padding:0}}>
+            Se connecter →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* ── FOOTER ── */}
+    <div style={{borderTop:`1px solid ${K.b0}`,padding:"20px 32px",
+      display:"flex",alignItems:"center",justifyContent:"space-between",
+      flexWrap:"wrap",gap:10}}>
+      <div style={{fontSize:12,color:K.t3}}>© 2026 Access Plus Consulting · Tous droits réservés</div>
+      <div style={{fontSize:12,color:K.t3,display:"flex",gap:16}}>
+        <span>contact@accessplusconsulting.com</span>
+      </div>
+    </div>
+
+  </div>;
+}
+
 function Auth({onL}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("l"),[err,sE]=useState(""),[ok,sO]=useState(""),[busy,sB]=useState(false),[step,sS]=useState(1);
   const[consent,sConsent]=useState(false),[showPrivacy,sShowPrivacy]=useState(false),[needConsent,sNeedConsent]=useState(false);
-  const consentRef=useRef(false);
   const pm=useRef(null),rN=useRef(),rM=useRef(),rP=useRef(),rP2=useRef(),rC=useRef();
-  const toggleConsent=useCallback(()=>{consentRef.current=!consentRef.current;sConsent(consentRef.current);},[]);
-  const sw=useCallback(t=>{sT(t);sS(1);sE("");sO("");consentRef.current=false;sConsent(false);sNeedConsent(false);setTimeout(()=>[rN,rM,rP,rP2,rC].forEach(r=>{if(r.current)r.current.value="";}),0);},[]);
+  const sw=useCallback(t=>{sT(t);sS(1);sE("");sO("");sConsent(false);sNeedConsent(false);setTimeout(()=>[rN,rM,rP,rP2,rC].forEach(r=>{if(r.current)r.current.value="";}),0);},[]);
   const reg=useCallback(async()=>{
     const n=rN.current?.value?.trim()||"",m=rM.current?.value?.trim()||"",p=rP.current?.value||"",p2=rP2.current?.value||"";
     sE("");sO("");
     if(n.length<2)return sE("Nom requis");if(!m.includes("@"))return sE("Email invalide");if(p.length<6)return sE("Mot de passe min. 6 caractères");if(p!==p2)return sE("Mots de passe différents");
-    if(!consentRef.current)return sE("Vous devez accepter la politique de confidentialité.");
+    if(!consent)return sE("Vous devez accepter la politique de confidentialité.");
     sB(true);
     try{
       const cred=await createUserWithEmailAndPassword(auth,m,p);
@@ -605,7 +833,7 @@ function Auth({onL}){
           {step===1&&<Inp lb="Mot de passe" rf={rP} type="password" ph="Min. 6 car." ok={hk}/>}
           {step===1&&tab==="r"&&<Inp lb="Confirmer" rf={rP2} type="password" ph="Répéter" ok={hk}/>}
           {step===1&&tab==="r"&&<div style={{marginBottom:13}}>
-            <div onClick={toggleConsent} style={{display:"flex",alignItems:"flex-start",gap:10,cursor:"pointer",padding:"10px 12px",background:consent?K.emBg:K.c2,border:`1px solid ${consent?K.emBd:K.b0}`,borderRadius:9,transition:"all .15s"}}>
+            <div onClick={()=>sConsent(c=>!c)} style={{display:"flex",alignItems:"flex-start",gap:10,cursor:"pointer",padding:"10px 12px",background:consent?K.emBg:K.c2,border:`1px solid ${consent?K.emBd:K.b0}`,borderRadius:9,transition:"all .15s"}}>
               <div style={{width:18,height:18,borderRadius:5,border:`2px solid ${consent?K.em:K.b1}`,background:consent?K.em:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1,transition:"all .15s"}}>
                 {consent&&<i className="ti ti-check" style={{fontSize:11,color:"#071209"}}/>}
               </div>
@@ -1456,32 +1684,7 @@ function AA({onOut}){
   const rev=async uid=>{await saveUserData(uid,{abonnement:"expiré",codeValide:false});};
   const ref_=async uid=>{await saveUserData(uid,{abonnement:"aucun"});};
   const delU=async uid=>{await deleteDoc(doc(db,"users",uid));sDm(null);};
-  const EMAILJS_SERVICE="access_plus_service";
-  const EMAILJS_TEMPLATE="template_3v1a6i6";
-  const EMAILJS_KEY="5Fvh3h8xBasE_APDn";
-  const mL=async u=>{
-    const d=DUR.find(x=>x.id===u.dureeId);
-    try{
-      const res=await fetch("https://api.emailjs.com/api/v1.0/email/send",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          service_id:EMAILJS_SERVICE,
-          template_id:EMAILJS_TEMPLATE,
-          user_id:EMAILJS_KEY,
-          template_params:{
-            to_email:u.mail,
-            nom:u.nom||"Apprenant",
-            code:u.activationCode||u.code,
-            duree:d?.l||"—",
-            expiration:fD(u.dateExpiration)
-          }
-        })
-      });
-      if(res.ok){alert(`✅ Email envoyé avec succès à ${u.mail} !`);}
-      else{const t=await res.text();alert(`❌ Erreur d'envoi : ${t}`);}
-    }catch(e){alert(`❌ Erreur réseau : ${e.message}`);}
-  };
+  const mL=u=>{const d=DUR.find(x=>x.id===u.dureeId);window.open(`mailto:${u.mail}?subject=${encodeURIComponent("Access Plus — Code d'accès")}&body=${encodeURIComponent(`Bonjour ${u.nom},\n\nCODE : ${u.activationCode}\nDurée : ${d?.l}\nExpire : ${fD(u.dateExpiration)}\n\n1. Connectez-vous avec ${u.mail}\n2. Cliquez "J'ai un code"\n3. Saisissez : ${u.activationCode}\n\nAccess Plus Consulting`)}`,"_blank");};
   const sc_=s=>s==="actif"?K.em:s==="demande"?K.wa:K.er,sl_=s=>s==="actif"?"Actif":s==="demande"?"Demande":"Inactif";
   const rLU=useRef(),rLT=useRef(),rLD=useRef(),rVU=useRef(),rVT=useRef(),rVD=useRef(),rVM=useRef();
   const rPT=useRef(),rPU=useRef(),rPD=useRef(),rPM=useRef();
@@ -1799,14 +2002,14 @@ function AA({onOut}){
       </div>}
     </div>
     {vm&&<Sheet title="Valider — Choisir la durée" onClose={()=>sVm(null)}><div style={{color:K.t3,fontSize:13,marginBottom:12}}>Paiement confirmé pour <b style={{color:K.t1}}>{users.find(u=>u.uid===vm)?.nom}</b>.</div><div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>{DUR.map(d=><div key={d.id} onClick={()=>genC(vm,d.id)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",cursor:"pointer",minHeight:50}} onMouseEnter={e=>{e.currentTarget.style.borderColor=K.emBd;e.currentTarget.style.background=K.emBg;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=K.b0;e.currentTarget.style.background=K.c2;}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{d.l}</div><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={d.j===36500?"∞":d.j+"j"}/></div></div>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t3,fontSize:12}}>Ou activer directement :</div><Btn ch="⚡ 3 mois" on={()=>actD(vm,"3m")} v="s" sm/></div></Sheet>}
-    {cm&&<Sheet title="Code généré ✅" onClose={()=>sCm(null)} w={400}><div style={{background:K.bg,border:`2px solid ${K.emBd}`,borderRadius:12,padding:"16px",textAlign:"center",marginBottom:11}}><div style={{color:K.t3,fontSize:9,letterSpacing:2,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",marginBottom:7}}>Code d'accès</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:800,fontSize:32,letterSpacing:6,color:K.em,marginBottom:7}}>{cm.code}</div><div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={cm.d?.l||"—"}/><Tg c={K.t3} bg="none" bd={K.b0} ch={fD(dE(cm.d?.j||30))}/></div></div><Btn ch="✉ Envoyer le mail automatiquement" on={()=>mL({...users.find(u=>u.uid===cm.uid),...cm})} v="i" full sx={{padding:"10px",fontSize:13,marginBottom:7,minHeight:42}}/><div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:8,padding:"7px 10px",marginBottom:11,fontSize:12,color:K.t2}}>📨 Le mail est envoyé directement à l apprenant sans ouvrir votre messagerie.</div><Btn ch="Fermer" on={()=>sCm(null)} v="g" full/></Sheet>}
+    {cm&&<Sheet title="Code généré ✅" onClose={()=>sCm(null)} w={400}><div style={{background:K.bg,border:`2px solid ${K.emBd}`,borderRadius:12,padding:"16px",textAlign:"center",marginBottom:11}}><div style={{color:K.t3,fontSize:9,letterSpacing:2,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",marginBottom:7}}>Code d'accès</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:800,fontSize:32,letterSpacing:6,color:K.em,marginBottom:7}}>{cm.code}</div><div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={cm.d?.l||"—"}/><Tg c={K.t3} bg="none" bd={K.b0} ch={fD(dE(cm.d?.j||30))}/></div></div><Btn ch="✉ Envoyer par email" on={()=>mL({...users.find(u=>u.uid===cm.uid),...cm})} v="i" full sx={{padding:"10px",fontSize:13,marginBottom:7,minHeight:42}}/><div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:8,padding:"7px 10px",marginBottom:11,fontSize:12,color:K.t2}}>Ouvre votre messagerie avec le code pré-rédigé.</div><Btn ch="Fermer" on={()=>sCm(null)} v="g" full/></Sheet>}
     {dm&&<Sheet title="Supprimer ?" onClose={()=>sDm(null)} w={320}><div style={{textAlign:"center",padding:"4px 0"}}><div style={{fontSize:30,marginBottom:7}}>⚠️</div><div style={{color:K.t1,fontWeight:700,fontSize:14,marginBottom:4}}>{users.find(u=>u.uid===dm)?.nom}</div><div style={{color:K.t3,fontSize:12,marginBottom:17}}>Action irréversible.</div><div style={{display:"flex",gap:7,justifyContent:"center"}}><Btn ch="Annuler" on={()=>sDm(null)} v="g" sx={{minHeight:42}}/><Btn ch="Supprimer" on={()=>delU(dm)} v="d" sx={{minHeight:42}}/></div></div></Sheet>}
   </div>;
 }
 
 // ── ROOT ──────────────────────────────────────────────────────────────────────
 export default function App(){
-  const[who,sW]=useState(null);const[loading,sL]=useState(true);
+  const[who,sW]=useState(null);const[loading,sL]=useState(true);const[showAuth,sShowAuth]=useState(false);
   const[tid,sTid]=useState(()=>{try{return localStorage.getItem("ap_theme")||"dark";}catch{return"dark";}});
   const[showTP,sShowTP]=useState(false);
   const K=bK(tid);
@@ -1831,7 +2034,8 @@ export default function App(){
       {TH[tid]?.i||"🎨"}
     </button>
     {loading&&<Spin/>}
-    {!loading&&!who&&<Auth onL={(role,user)=>{sW(role==="__admin__"?{role:"admin",user}:{role:"user",uid:user.uid,user});}}/>}
+    {!loading&&!who&&!showAuth&&<LandingPage onLogin={()=>sShowAuth(true)}/>}
+    {!loading&&!who&&showAuth&&<Auth onL={(role,user)=>{sW(role==="__admin__"?{role:"admin",user}:{role:"user",uid:user.uid,user});sShowAuth(false);}}/>}
     {!loading&&who?.role==="admin"&&<AA onOut={async()=>{await signOut(auth);sW(null);}}/>}
     {!loading&&who?.role==="user"&&<UA uid={who.uid} onOut={async()=>{await signOut(auth);sW(null);}}/>}
   </Ctx.Provider>;
