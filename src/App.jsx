@@ -1093,9 +1093,8 @@ function UA({uid,onOut}){
     loadPdfs();
     return unsub;
   },[uid]);
-  if(!uData||mL)return <div style={{minHeight:"100vh",background:K.bg}}><style>{mCss(K)}</style><Spin/></div>;
-  const ok=uData.abonnement==="actif"&&!xp(uData.dateExpiration);
   // Trigger onboarding for brand-new users (no progress, first visit)
+  // Must be BEFORE any conditional return (Rules of Hooks)
   useEffect(()=>{
     if(uData&&Object.keys(uData.progress||{}).length===0&&!uData.onboardingDone){
       const t=setTimeout(()=>sShowOnboarding(true),800);return()=>clearTimeout(t);
@@ -1106,6 +1105,8 @@ function UA({uid,onOut}){
     await updateDoc(doc(db,"users",uid),{onboardingDone:true});
     if(firstMod){sM(firstMod);}
   };
+  if(!uData||mL)return <div style={{minHeight:"100vh",background:K.bg}}><style>{mCss(K)}</style><Spin/></div>;
+  const ok=uData.abonnement==="actif"&&!xp(uData.dateExpiration);
   const aMods=mods.filter(m=>m.on!==false);
   const pr=uData.progress||{},sc=uData.scores||{};
   const nd=aMods.filter(m=>pr[m.id]==="done").length,gp=aMods.length?Math.round(nd/aMods.length*100):0;
