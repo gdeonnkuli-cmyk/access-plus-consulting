@@ -2428,6 +2428,7 @@ function AA({onOut}){
           {k:"st", ico:"ti-briefcase",     label:"Stages"},
           {k:"dm", ico:"ti-message-circle",label:"Demandes",  badge:allDemandesAdmin.filter(d=>d.statut==="nouveau").length, bc:K.in_},
           {k:"p",  ico:"ti-file-text",     label:"PDF"},
+          {k:"fo", ico:"ti-school",          label:"Formateurs", badge:users.filter(u=>u.role==="formateur").length, bc:"#8B5CF6"},
         ];
         return <div className="tn" style={{borderTop:`1px solid ${K.b0}`,gap:1,paddingBottom:2}}>
           {ADMIN_TABS.map(({k,ico,label,badge,bc})=>{
