@@ -77,6 +77,21 @@ body{background:${K.bg};color:${K.t1};font-family:'Outfit',sans-serif;-webkit-fo
 @keyframes pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.18);opacity:1}}
 @keyframes logofl{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.04)}}
 @keyframes dotfl{0%,80%,100%{transform:scale(.6);opacity:.3}40%{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes streak{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+.card-enter{animation:slideUp .35s cubic-bezier(.22,1,.36,1) both}
+.card-enter-1{animation:slideUp .35s cubic-bezier(.22,1,.36,1) .05s both}
+.card-enter-2{animation:slideUp .35s cubic-bezier(.22,1,.36,1) .10s both}
+.card-enter-3{animation:slideUp .35s cubic-bezier(.22,1,.36,1) .15s both}
+.card-enter-4{animation:slideUp .35s cubic-bezier(.22,1,.36,1) .20s both}
+.card-enter-5{animation:slideUp .35s cubic-bezier(.22,1,.36,1) .25s both}
+.page-enter{animation:fadeIn .3s ease both}
+.shimmer{background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.08) 50%,transparent 100%);background-size:200% 100%;animation:shimmer 1.6s infinite}
 .hv{transition:transform .2s,box-shadow .2s;cursor:pointer;}.hv:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.3);}.hv:active{transform:scale(.98);}
 .bt{transition:filter .15s,transform .12s;cursor:pointer;}.bt:hover{filter:brightness(1.08);}.bt:active{transform:scale(.96);}
 .gm{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;}
@@ -771,6 +786,162 @@ function LandingPage({onLogin}){
   </div>;
 }
 
+// ── ONBOARDING ────────────────────────────────────────────────────────────────
+function Onboarding({u,onDone,mods}){
+  const K=useK();const{mob}=useW();
+  const[step,setStep]=useState(0);
+  const steps=[
+    {ico:"rocket",col:"#22C55E",title:`Bienvenue, ${(u.nom||"").split(" ")[0]} ! 🎉`,
+     desc:"Votre espace de formation SYSCOHADA Révisé est prêt. Découvrons ensemble comment en tirer le meilleur."},
+    {ico:"book-2",col:"#3B82F6",title:"10 modules structurés",
+     desc:"Du fondamental à l'avancé — chaque module contient des leçons, QCM et exercices pratiques alignés sur le plan comptable OHADA."},
+    {ico:"chart-line",col:"#8B5CF6",title:"Suivez votre progression",
+     desc:"Votre tableau de bord affiche vos scores, votre progression globale et vos badges de réussite en temps réel."},
+    {ico:"trophy",col:"#F59E0B",title:"Obtenez des badges",
+     desc:"Complétez des modules, atteignez 80%+ aux QCM et débloquez des badges de niveau. Chaque effort est récompensé."},
+  ];
+  const cur=steps[step];
+  const isLast=step===steps.length-1;
+  const firstMod=mods[0];
+
+  return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.8)",backdropFilter:"blur(8px)",
+    zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+    <div style={{width:"100%",maxWidth:440,background:K.card,border:`1px solid ${K.b1}`,
+      borderRadius:20,overflow:"hidden",animation:"popIn .35s cubic-bezier(.22,1,.36,1)"}}>
+
+      {/* Progress bar */}
+      <div style={{height:3,background:K.b0}}>
+        <div style={{height:"100%",background:`linear-gradient(90deg,${K.emD},${K.em})`,
+          width:`${((step+1)/steps.length)*100}%`,transition:"width .4s ease",borderRadius:99}}/>
+      </div>
+
+      {/* Content */}
+      <div style={{padding:mob?"28px 24px":"32px 28px",textAlign:"center"}}>
+        {/* Icon */}
+        <div style={{width:72,height:72,borderRadius:20,margin:"0 auto 20px",
+          background:`${cur.col}18`,border:`1px solid ${cur.col}30`,
+          display:"flex",alignItems:"center",justifyContent:"center",
+          animation:"popIn .4s cubic-bezier(.22,1,.36,1) .1s both"}}>
+          <i className={`ti ti-${cur.ico}`} style={{fontSize:32,color:cur.col}}/>
+        </div>
+
+        <h2 style={{margin:"0 0 12px",fontSize:mob?20:22,fontWeight:900,
+          color:K.t1,lineHeight:1.2,animation:"slideUp .35s ease .15s both"}}>
+          {cur.title}
+        </h2>
+        <p style={{margin:"0 0 28px",fontSize:14,color:K.t2,lineHeight:1.7,
+          animation:"slideUp .35s ease .2s both"}}>
+          {cur.desc}
+        </p>
+
+        {/* Dots */}
+        <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:24}}>
+          {steps.map((_,i)=><div key={i} onClick={()=>setStep(i)}
+            style={{width:i===step?20:6,height:6,borderRadius:99,cursor:"pointer",
+              background:i===step?K.em:K.b1,transition:"all .3s ease"}}/>)}
+        </div>
+
+        {/* Buttons */}
+        <div style={{display:"flex",gap:10,flexDirection:"column"}}>
+          <button onClick={()=>isLast?onDone(firstMod):setStep(s=>s+1)}
+            className="bt" style={{width:"100%",padding:"13px",
+              background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",
+              borderRadius:12,color:"#071209",fontWeight:800,fontSize:14,
+              cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:46,
+              boxShadow:`0 6px 20px ${K.em}35`}}>
+            {isLast?`Commencer ${firstMod?`"${firstMod.titre}"`:""} →`:"Suivant →"}
+          </button>
+          {!isLast&&<button onClick={onDone} className="bt"
+            style={{background:"none",border:"none",color:K.t3,fontSize:13,
+              cursor:"pointer",fontFamily:"'Outfit',sans-serif",padding:"6px"}}>
+            Passer l'introduction
+          </button>}
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ── EMPTY STATE ───────────────────────────────────────────────────────────────
+function EmptyState({ico,title,desc,action,actionLabel}){
+  const K=useK();
+  return <div style={{display:"flex",flexDirection:"column",alignItems:"center",
+    justifyContent:"center",padding:"48px 24px",textAlign:"center",
+    animation:"fadeIn .4s ease"}}>
+    <div style={{width:72,height:72,borderRadius:20,background:K.c2,
+      border:`1px solid ${K.b0}`,display:"flex",alignItems:"center",
+      justifyContent:"center",marginBottom:16,
+      animation:"popIn .4s cubic-bezier(.22,1,.36,1)"}}>
+      <i className={`ti ti-${ico}`} style={{fontSize:30,color:K.t3}}/>
+    </div>
+    <div style={{fontWeight:800,fontSize:16,color:K.t1,marginBottom:8}}>{title}</div>
+    <div style={{fontSize:13,color:K.t2,lineHeight:1.6,maxWidth:280,marginBottom:action?20:0}}>{desc}</div>
+    {action&&<button onClick={action} className="bt" style={{
+      background:`linear-gradient(135deg,${K.emD},K.em)`,
+      border:`1px solid ${K.emBd}`,borderRadius:9,padding:"9px 20px",
+      color:K.em,fontWeight:700,fontSize:13,cursor:"pointer",
+      fontFamily:"'Outfit',sans-serif"}}>
+      {actionLabel}
+    </button>}
+  </div>;
+}
+
+// ── BADGES SYSTÈME ────────────────────────────────────────────────────────────
+const BADGES=[
+  {id:"first",ico:"rocket",label:"Premier pas",desc:"Premier module complété",col:"#22C55E",check:(nd)=>nd>=1},
+  {id:"three",ico:"flame",label:"En feu !",desc:"3 modules complétés",col:"#F59E0B",check:(nd)=>nd>=3},
+  {id:"half",ico:"star",label:"Mi-parcours",desc:"5 modules complétés",col:"#8B5CF6",check:(nd)=>nd>=5},
+  {id:"master",ico:"crown",label:"Maître OHADA",desc:"Tous les modules complétés",col:"#EF4444",check:(nd,total)=>nd>=total&&total>0},
+  {id:"ace",ico:"trophy",label:"As du QCM",desc:"Score ≥ 80% sur un module",col:"#3B82F6",check:(_,__,sc)=>Object.values(sc||{}).some(s=>s?.pct>=80)},
+  {id:"perfect",ico:"circle-check",label:"Perfectionniste",desc:"Score 100% sur un module",col:"#06B6D4",check:(_,__,sc)=>Object.values(sc||{}).some(s=>s?.pct===100)},
+];
+
+function BadgesPanel({nd,total,sc}){
+  const K=useK();
+  const unlocked=BADGES.filter(b=>b.check(nd,total,sc));
+  const locked=BADGES.filter(b=>!b.check(nd,total,sc));
+  return <div style={{marginTop:20}}>
+    <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
+      <i className="ti ti-trophy" style={{fontSize:15,color:"#F59E0B"}}/>
+      Badges <span style={{fontSize:12,fontWeight:400,color:K.t3,marginLeft:4}}>{unlocked.length}/{BADGES.length} débloqués</span>
+    </div>
+    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+      {[...unlocked,...locked].map(b=>{
+        const earned=b.check(nd,total,sc);
+        return <div key={b.id} style={{display:"flex",alignItems:"center",gap:8,
+          background:earned?`${b.col}14`:K.c2,border:`1px solid ${earned?b.col+"33":K.b0}`,
+          borderRadius:10,padding:"8px 12px",opacity:earned?1:.5,
+          transition:"all .2s ease",animation:earned?"popIn .35s ease both":"none"}}>
+          <div style={{width:30,height:30,borderRadius:8,background:earned?`${b.col}20`:K.b0,
+            display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            <i className={`ti ti-${b.ico}`} style={{fontSize:15,color:earned?b.col:K.t3}}/>
+          </div>
+          <div>
+            <div style={{fontWeight:700,fontSize:12,color:earned?K.t1:K.t3,lineHeight:1}}>{b.label}</div>
+            <div style={{fontSize:10,color:K.t3,marginTop:2}}>{b.desc}</div>
+          </div>
+          {earned&&<i className="ti ti-check" style={{fontSize:12,color:b.col,marginLeft:2}}/>}
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
+function ProgressRing({pct,size=80,stroke=7,col}){
+  const K=useK();
+  const r=( size-stroke*2)/2,circ=2*Math.PI*r;
+  const offset=circ-(pct/100)*circ;
+  return <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
+    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={K.b0} strokeWidth={stroke}/>
+    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={col||K.em} strokeWidth={stroke}
+      strokeDasharray={circ} strokeDashoffset={offset}
+      strokeLinecap="round" style={{transition:"stroke-dashoffset .8s cubic-bezier(.22,1,.36,1)"}}/>
+    <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="central"
+      fill={K.t1} fontSize={size*0.22} fontWeight="800" fontFamily="Outfit,sans-serif"
+      style={{transform:"rotate(90deg)",transformOrigin:"50% 50%"}}>{pct}%</text>
+  </svg>;
+}
+
 function Auth({onL}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("l"),[err,sE]=useState(""),[ok,sO]=useState(""),[busy,sB]=useState(false),[step,sS]=useState(1);
@@ -909,6 +1080,7 @@ function UA({uid,onOut}){
   const K=useK();const{mob}=useW();
   const[vue,sV]=useState("home"),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[sub,sSub]=useState(false);
   const[uData,sUD]=useState(null),[pdfs,sPdfs]=useState({});
+  const[showOnboarding,sShowOnboarding]=useState(false);
   const{mods,loading:mL}=useModules();
   const allPres=usePresentations();
   const allStages=useStages();
@@ -923,11 +1095,22 @@ function UA({uid,onOut}){
   },[uid]);
   if(!uData||mL)return <div style={{minHeight:"100vh",background:K.bg}}><style>{mCss(K)}</style><Spin/></div>;
   const ok=uData.abonnement==="actif"&&!xp(uData.dateExpiration);
+  // Trigger onboarding for brand-new users (no progress, first visit)
+  useEffect(()=>{
+    if(uData&&Object.keys(uData.progress||{}).length===0&&!uData.onboardingDone){
+      const t=setTimeout(()=>sShowOnboarding(true),800);return()=>clearTimeout(t);
+    }
+  },[uData]);
+  const doneOnboarding=async(firstMod)=>{
+    sShowOnboarding(false);
+    await updateDoc(doc(db,"users",uid),{onboardingDone:true});
+    if(firstMod){sM(firstMod);}
+  };
   const aMods=mods.filter(m=>m.on!==false);
   const pr=uData.progress||{},sc=uData.scores||{};
   const nd=aMods.filter(m=>pr[m.id]==="done").length,gp=aMods.length?Math.round(nd/aMods.length*100):0;
   const save=async(modId,s,t)=>{await saveProgress(uid,modId,{s,t,pct:Math.round(s/t*100)});};
-  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto"}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}</div>;
+  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}</div>;
   if(quiz)return W(<QZ mod={quiz} onDone={async(s,t)=>{await save(quiz.id,s,t);sQ(null);sM(null);sV("res");}} onBack={()=>sQ(null)}/>);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]}/>);
   return W(<>
@@ -1047,11 +1230,13 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
       <div style={{fontSize:13,color:K.t2,marginBottom:16,lineHeight:1.5}}>{!ok?"Abonnez-vous pour accéder à tous les cours.":nd===0?"Commencez votre parcours de formation.":`${nd}/${mods.length} modules complétés — continuez !`}</div>
       <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
         <div style={{display:"flex",gap:8,flex:1,flexWrap:"wrap"}}>
-          {[[`${nd}/${mods.length}`,"Modules",K.em],[`${gp}%`,"Progression",K.in_],[`${mats.length}`,"Matières",K.wa]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,backdropFilter:"blur(8px)",borderRadius:10,padding:"8px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
+          {[[`${nd}/${mods.length}`,"Modules",K.em],[`${gp}%`,"Progression",K.in_],[`${mats.length}`,"Matières",K.wa]].map(([v,l,c])=><div key={l} className="card-enter" style={{background:isLight?"rgba(255,255,255,.7)":K.b0,backdropFilter:"blur(8px)",borderRadius:10,padding:"8px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
         </div>
-        <div style={{flexShrink:0}}><Donut pct={gp}/></div>
+        <div style={{flexShrink:0}}><ProgressRing pct={gp} size={76} stroke={6} col={K.em}/></div>
       </div>
     </div>
+    {/* Badges */}
+    <BadgesPanel nd={nd} total={mods.length} sc={sc}/>
 
     {/* Bannière live */}
     {live.on&&<div onClick={onVid} className="hv" style={{background:`linear-gradient(135deg,${K.rdBg},${K.c2})`,border:`1px solid ${K.rdBd}`,borderRadius:13,padding:"13px 16px",marginBottom:14,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}><div style={{width:42,height:42,borderRadius:12,background:K.rdBg,border:`1px solid ${K.rdBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-broadcast" style={{fontSize:20,color:K.rd,animation:"blink 1.5s ease-in-out infinite"}}/></div><div style={{flex:1}}><div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:1}}>{live.titre||"Cours en direct"}</div><div style={{fontSize:11,color:K.t3}}>En cours maintenant · Rejoindre</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
@@ -1080,7 +1265,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
           const f=pr[m.id]==="done",s=sc[m.id],lk=!ok;
           const cp=getCardPalette(tid,i);
           return <div key={m.id} onClick={()=>lk?onSub():onOpen(m)} className="hv"
-            style={{background:f?cp.bg:K.card,border:`1px solid ${f?cp.bd:K.b0}`,borderRadius:13,padding:"13px",cursor:"pointer",position:"relative",overflow:"hidden",animation:`up .3s ease ${i*15}ms both`,opacity:lk?.65:1}}>
+            style={{background:f?cp.bg:K.card,border:`1px solid ${f?cp.bd:K.b0}`,borderRadius:13,padding:"13px",cursor:"pointer",position:"relative",overflow:"hidden",animation:`slideUp .4s cubic-bezier(.22,1,.36,1) ${i*40}ms both`,opacity:lk?.65:1,transition:"transform .2s ease,box-shadow .2s ease"}}>
             <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:f?cp.ac:"transparent",borderRadius:"13px 13px 0 0"}}/>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
               <div style={{width:32,height:32,borderRadius:9,background:f?`${cp.ac}20`:isLight?"rgba(0,0,0,.05)":"rgba(255,255,255,.06)",border:`1px solid ${f?cp.bd:K.b0}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -1185,11 +1370,31 @@ function QZ({mod,onDone,onBack}){
 }
 
 function Prog({pr,sc,gp,nd,ok,mods}){
-  const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
+  const K=useK();const{mob}=useW();
+  const total=mods.length;
+  const avgScore=Object.values(sc||{}).length?Math.round(Object.values(sc||{}).reduce((a,s)=>a+(s?.pct||0),0)/Object.values(sc||{}).length):0;
+  const bestScore=Object.values(sc||{}).length?Math.max(...Object.values(sc||{}).map(s=>s?.pct||0)):0;
+  if(!ok)return <EmptyState ico="lock" title="Accès requis" desc="Abonnez-vous pour suivre votre progression et accéder à tous les modules."/>;
+  // Progress rings section
+  const rings=[
+    {label:"Progression",pct:gp,col:K.em},
+    {label:"Score moyen",pct:avgScore,col:"#3B82F6"},
+    {label:"Meilleur score",pct:bestScore,col:"#F59E0B"},
+  ];const{mob}=useW();const{tid}=useContext(Ctx);
   const isLight=['light','sepia'].includes(tid);
   const done=mods.filter(m=>pr[m.id]==="done");
   const todo=mods.filter(m=>pr[m.id]!=="done");
-  return <div style={{maxWidth:700,margin:"0 auto",animation:"up .25s ease"}}>
+  return <div style={{maxWidth:700,margin:"0 auto",animation:"fadeIn .35s ease"}}>
+    {/* Rings de progression */}
+    <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:16,padding:"20px",marginBottom:16,display:"flex",justifyContent:"space-around",alignItems:"center",flexWrap:"wrap",gap:16}}>
+      {rings.map(({label,pct,col})=><div key={label} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
+        <ProgressRing pct={pct} size={72} stroke={6} col={col}/>
+        <div style={{fontSize:11,color:K.t2,fontWeight:600,textAlign:"center"}}>{label}</div>
+      </div>)}
+    </div>
+    {/* Badges */}
+    <BadgesPanel nd={nd} total={total} sc={sc}/>
+    <div style={{marginTop:20}}>
     {/* Header bannière */}
     <div style={{background:`linear-gradient(135deg,${K.in_}18,${K.em}10)`,border:`1px solid ${K.inBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
       <div style={{fontSize:12,color:K.in_,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-chart-line" style={{fontSize:13}}/> Progression globale</div>
@@ -1221,8 +1426,7 @@ function Prog({pr,sc,gp,nd,ok,mods}){
         <div style={{fontSize:11,color:K.t3,flexShrink:0}}>{m.q?.length||0} questions</div>
       </div>)}
     </div></>}
-  </div>;
-}
+  </div></div>;}
 
 function Res({sc,ok,mods}){
   const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
@@ -1263,6 +1467,7 @@ function Res({sc,ok,mods}){
 function VidsPage({ok,onSub,vids,live}){
   const K=useK();const{mob}=useW();const[fi,sF]=useState("tous");const[pl,sPl]=useState(null);
   const fil=fi==="tous"?vids:fi==="gr"?vids.filter(v=>v.gr):fi==="pm"?vids.filter(v=>!v.gr):vids.filter(v=>v.mid===fi);
+  if(!vids.length&&!live.on)return <EmptyState ico="video" title="Aucune vidéo pour le moment" desc="Les vidéos de cours et replays apparaîtront ici dès que votre formateur les publiera."/>;
   return <div style={{animation:"up .3s ease"}}>
     {pl&&<Player url={pl.url} titre={pl.titre} onClose={()=>{sPl(null);}} playlist={fil.map(v=>({url:v.url,titre:v.titre,gr:v.gr}))} startIdx={fil.findIndex(v=>v.url===pl.url)}/>}
     {live.on&&<div onClick={()=>ok||live.gr?sPl({url:live.url,titre:live.titre||"Direct"}):onSub()} className="hv" style={{background:K.rdBg,border:`1px solid ${K.rdBd}`,borderRadius:12,padding:"13px 15px",marginBottom:13,cursor:"pointer",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}><span style={{fontSize:20,animation:"blink 1.5s ease-in-out infinite",flexShrink:0}}>🔴</span><div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}><span style={{fontWeight:800,fontSize:14,color:K.t1}}>{live.titre||"Cours en direct"}</span><Tg c={K.rd} bg={K.rdBg} bd={K.rdBd} ch="EN DIRECT"/></div><div style={{fontSize:12,color:K.t3}}>{live.desc||""}</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
@@ -1280,7 +1485,9 @@ function VidsPage({ok,onSub,vids,live}){
 
 // ── ADMIN ─────────────────────────────────────────────────────────────────────
 function PresPage({ok,onSub,pres}){
-  const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
+  const K=useK();const{mob}=useW();
+  if(!pres.length)return <EmptyState ico="presentation" title="Aucune présentation disponible"
+    desc="Les supports de cours PDF et présentations seront accessibles ici après leur publication."/>;const{tid}=useContext(Ctx);
   const[open,sOpen]=useState(null);
   const[fi,sF]=useState("Toutes");
   const isLight=['light','sepia'].includes(tid);
@@ -1355,7 +1562,9 @@ const seedPlateformes=async()=>{
 };
 
 function StagePage({stages,plats,ok}){
-  const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
+  const K=useK();const{mob}=useW();
+  if(!stages.length&&!plats.length)return <EmptyState ico="briefcase" title="Stages et plateformes à venir"
+    desc="Les offres de stages et plateformes d'expériences virtuelles seront chargées ici très prochainement."/>;const{tid}=useContext(Ctx);
   const[tab,sTab]=useState("offres");
   const[cat,sCat]=useState("Toutes");
   const[search,sSearch]=useState("");
