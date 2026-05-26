@@ -2683,6 +2683,20 @@ function ServicesPage({user}){
 function AA({onOut}){
   const K=useK();const{mob}=useW();
   const{WarningBanner:AAWarn}=useAutoLogout(onOut);
+  const[pendingDocs,setPendingDocs]=useState([]);
+  useEffect(()=>{
+    const unsub=onSnapshot(query(collection(db,"documents"),where("status","==","pending")),
+      snap=>setPendingDocs(snap.docs.map(d=>({id:d.id,...d.data()}))));
+    return unsub;
+  },[]);
+  const approveDoc=async(id)=>{
+    await updateDoc(doc(db,"documents",id),{status:"approved",approvedAt:new Date().toISOString()});
+    sMsg({t:"o",m:"Document approuvé !"});setTimeout(()=>sMsg({t:"",m:""}),3000);
+  };
+  const rejectDoc=async(id)=>{
+    await updateDoc(doc(db,"documents",id),{status:"rejected",rejectedAt:new Date().toISOString()});
+    sMsg({t:"o",m:"Document rejeté."});setTimeout(()=>sMsg({t:"",m:""}),3000);
+  };
   const[tab,sT]=useState("d"),[msg,sMsg]=useState({t:"",m:""});
   const[cm,sCm]=useState(null),[vm,sVm]=useState(null),[dm,sDm]=useState(null),[q,sQ]=useState("");
   const[editMod,sEM]=useState(null),[newMod,sNM]=useState(false);
@@ -3056,22 +3070,8 @@ function AA({onOut}){
       {/* Contenu en attente de validation */}
       {(()=>{
         const pendingMods=mods.filter(m=>m.status==="pending");
-        const[pendingDocs,setPendingDocs]=useState([]);
-        useEffect(()=>{
-          const unsub=onSnapshot(query(collection(db,"documents"),where("status","==","pending")),
-            snap=>setPendingDocs(snap.docs.map(d=>({id:d.id,...d.data()}))));
-          return unsub;
-        },[]);
         const total=pendingMods.length+pendingDocs.length;
         if(!total)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:13,color:K.t3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/>Aucun contenu en attente de validation.</div>;
-        const approveDoc=async(id)=>{
-          await updateDoc(doc(db,"documents",id),{status:"approved",approvedAt:new Date().toISOString()});
-          sMsg({t:"o",m:"Document approuvé !"});setTimeout(()=>sMsg({t:"",m:""}),3000);
-        };
-        const rejectDoc=async(id)=>{
-          await updateDoc(doc(db,"documents",id),{status:"rejected",rejectedAt:new Date().toISOString()});
-          sMsg({t:"o",m:"Document rejeté."});setTimeout(()=>sMsg({t:"",m:""}),3000);
-        };
         const DocTypeInfo={
           "application/pdf":{label:"PDF",ico:"file-text",col:"#EF4444"},
           "application/vnd.openxmlformats-officedocument.presentationml.presentation":{label:"PPT",ico:"presentation",col:"#F59E0B"},
