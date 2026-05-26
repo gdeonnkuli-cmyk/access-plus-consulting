@@ -2179,13 +2179,13 @@ function Prog({pr,sc,gp,nd,ok,mods}){
   const total=mods.length;
   const avgScore=Object.values(sc||{}).length?Math.round(Object.values(sc||{}).reduce((a,s)=>a+(s?.pct||0),0)/Object.values(sc||{}).length):0;
   const bestScore=Object.values(sc||{}).length?Math.max(...Object.values(sc||{}).map(s=>s?.pct||0)):0;
-  if(!ok)return <EmptyState ico="lock" title="Accès requis" desc="Abonnez-vous pour suivre votre progression et accéder à tous les modules."/>;
   // Progress rings section
   const rings=[
     {label:"Progression",pct:gp,col:K.em},
     {label:"Score moyen",pct:avgScore,col:"#3B82F6"},
     {label:"Meilleur score",pct:bestScore,col:"#F59E0B"},
-  ];const{tid}=useContext(Ctx);
+  ];
+  if(!ok)return <EmptyState ico="lock" title="Accès requis" desc="Abonnez-vous pour suivre votre progression et accéder à tous les modules."/>;const{tid}=useContext(Ctx);
   const isLight=['light','sepia'].includes(tid);
   const done=mods.filter(m=>pr[m.id]==="done");
   const todo=mods.filter(m=>pr[m.id]!=="done");
@@ -2291,11 +2291,12 @@ function VidsPage({ok,onSub,vids,live}){
 // ── ADMIN ─────────────────────────────────────────────────────────────────────
 function PresPage({ok,onSub,pres}){
   const K=useK();const{mob}=useW();
-  if(!pres.length)return <EmptyState ico="presentation" title="Aucune présentation disponible"
-    desc="Les supports de cours PDF et présentations seront accessibles ici après leur publication."/>;const{tid}=useContext(Ctx);
+  const{tid}=useContext(Ctx);
   const[open,sOpen]=useState(null);
   const[fi,sF]=useState("Toutes");
   const isLight=['light','sepia'].includes(tid);
+  if(!pres.length)return <EmptyState ico="presentation" title="Aucune présentation disponible"
+    desc="Les supports de cours PDF et présentations seront accessibles ici après leur publication."/>;
   const mats=[...new Set(pres.map(p=>p.mat||"Général"))];
   const fil=fi==="Toutes"?pres:pres.filter(p=>(p.mat||"Général")===fi);
   return <div style={{animation:"up .3s ease"}}>
@@ -2368,12 +2369,13 @@ const seedPlateformes=async()=>{
 
 function StagePage({stages,plats,ok}){
   const K=useK();const{mob}=useW();
-  if(!stages.length&&!plats.length)return <EmptyState ico="briefcase" title="Stages et plateformes à venir"
-    desc="Les offres de stages et plateformes d'expériences virtuelles seront chargées ici très prochainement."/>;const{tid}=useContext(Ctx);
+  const{tid}=useContext(Ctx);
   const[tab,sTab]=useState("offres");
   const[cat,sCat]=useState("Toutes");
   const[search,sSearch]=useState("");
   const isLight=['light','sepia'].includes(tid);
+  if(!stages.length&&!plats.length)return <EmptyState ico="briefcase" title="Stages et plateformes à venir"
+    desc="Les offres de stages et plateformes d'expériences virtuelles seront chargées ici très prochainement."/>;
   const cats=["Toutes","Finance & Comptabilité","Droit des affaires","Audit & Contrôle","Banque & Assurance"];
 
   const filStages=stages.filter(s=>{
