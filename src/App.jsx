@@ -1086,11 +1086,14 @@ function FA({uid,onOut}){
     {k:"home",ico:"home-2",label:"Tableau de bord"},
     {k:"mods",ico:"book-2",label:"Mes modules"},
     {k:"vids",ico:"video",label:"Mes vidéos"},
+    {k:"docs",ico:"files",label:"Documents"},
     {k:"stats",ico:"chart-bar",label:"Statistiques"},
   ];
 
+  const{WarningBanner:FAWarn,reset:resetFATimer}=useAutoLogout(onOut);
   const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
+    {FAWarn&&<FAWarn/>}
     {/* Navbar formateur */}
     <nav className="nb" style={{background:`${K.card}f2`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",height:50,padding:"0 16px"}}>
@@ -1201,6 +1204,9 @@ function FA({uid,onOut}){
 
   // ── MES VIDÉOS ───────────────────────────────────────────────────────────
   if(vue==="vids")return W(<FAVids uid={uid} vids={myVids} onSubmit={submitContent} saving={saving} toast={toast}/>);
+
+  // ── DOCUMENTS ────────────────────────────────────────────────────────────
+  if(vue==="docs")return W(<FADocs uid={uid} toast={toast}/>);
 
   // ── STATISTIQUES ─────────────────────────────────────────────────────────
   if(vue==="stats")return W(<FAStats uid={uid} myMods={myMods} allUsers={allUsers}/>);
@@ -1455,6 +1461,265 @@ function FAStats({uid,myMods,allUsers}){
   </div>;
 }
 
+// ── AUTO-LOGOUT après 20 min d'inactivité ────────────────────────────────────
+const INACTIVITY_MS = 20 * 60 * 1000; // 20 minutes
+
+function useAutoLogout(onLogout) {
+  const K = useK();
+  const timer = useRef(null);
+  const [warning, setWarning] = useState(false); // alerte 2 min avant
+  const warnTimer = useRef(null);
+
+  const reset = useCallback(() => {
+    setWarning(false);
+    clearTimeout(timer.current);
+    clearTimeout(warnTimer.current);
+    // Avertissement 2 min avant déconnexion
+    warnTimer.current = setTimeout(() => setWarning(true), INACTIVITY_MS - 2 * 60 * 1000);
+    // Déconnexion effective
+    timer.current = setTimeout(() => {
+      setWarning(false);
+      onLogout();
+    }, INACTIVITY_MS);
+  }, [onLogout]);
+
+  useEffect(() => {
+    const events = ["mousemove", "keydown", "mousedown", "touchstart", "scroll", "click"];
+    events.forEach(e => window.addEventListener(e, reset, { passive: true }));
+    reset(); // démarrer le timer dès le montage
+    return () => {
+      events.forEach(e => window.removeEventListener(e, reset));
+      clearTimeout(timer.current);
+      clearTimeout(warnTimer.current);
+    };
+  }, [reset]);
+
+  const WarningBanner = warning ? () => {
+    const[secs,setSecs]=useState(120);
+    useEffect(()=>{
+      const iv=setInterval(()=>setSecs(s=>{if(s<=1){clearInterval(iv);return 0;}return s-1;}),1000);
+      return()=>clearInterval(iv);
+    },[]);
+    const mins=Math.floor(secs/60),rem=secs%60;
+    return <div style={{
+      position:"fixed",bottom:mob?70:20,left:"50%",transform:"translateX(-50%)",
+      background:"#1C1917",border:"1px solid #F59E0B40",borderRadius:12,
+      padding:"12px 18px",zIndex:9999,display:"flex",alignItems:"center",gap:12,
+      boxShadow:"0 8px 32px rgba(0,0,0,.5)",animation:"slideUp .3s ease",
+      fontFamily:"'Outfit',sans-serif",maxWidth:360,width:"calc(100% - 32px)"
+    }}>
+      <i className="ti ti-clock-exclamation" style={{fontSize:20,color:"#F59E0B",flexShrink:0}}/>
+      <div style={{flex:1}}>
+        <div style={{fontWeight:700,fontSize:13,color:"#fff",marginBottom:2}}>Déconnexion imminente</div>
+        <div style={{fontSize:12,color:"#A8A29E"}}>Inactivité détectée — déconnexion dans <strong style={{color:"#F59E0B"}}>{mins}:{String(rem).padStart(2,"0")}</strong></div>
+      </div>
+      <button onClick={reset} style={{background:"#F59E0B",border:"none",borderRadius:8,padding:"6px 12px",color:"#1C1917",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",flexShrink:0,whiteSpace:"nowrap"}}>
+        Rester connecté
+      </button>
+    </div>;
+  } : null;
+
+  return { WarningBanner, reset };
+}
+
+// ── DOCUMENTS FORMATEUR ───────────────────────────────────────────────────────
+const DOC_TYPES = {
+  "application/pdf":                    {label:"PDF",         ico:"file-text",    col:"#EF4444"},
+  "application/vnd.ms-powerpoint":      {label:"PowerPoint",  ico:"presentation", col:"#F59E0B"},
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+                                        {label:"PowerPoint",  ico:"presentation", col:"#F59E0B"},
+  "application/msword":                 {label:"Word",        ico:"file-word",    col:"#3B82F6"},
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                                        {label:"Word",        ico:"file-word",    col:"#3B82F6"},
+  "application/vnd.ms-excel":           {label:"Excel",       ico:"file-spreadsheet", col:"#22C55E"},
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                                        {label:"Excel",       ico:"file-spreadsheet", col:"#22C55E"},
+};
+const ACCEPT_DOCS=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx";
+const MAX_SIZE_MB=20;
+
+function FADocs({uid,toast}){
+  const K=useK();const{mob}=useW();
+  const[docs,setDocs]=useState([]);
+  const[uploading,setUploading]=useState(false);
+  const[form,setForm]=useState({titre:"",desc:"",modId:""});
+  const[file,setFile]=useState(null);
+  const[dragOver,setDragOver]=useState(false);
+  const{mods}=useModules();
+  const myMods=mods.filter(m=>m.createdBy===uid);
+
+  useEffect(()=>{
+    const unsub=onSnapshot(
+      query(collection(db,"documents"),where("createdBy","==",uid)),
+      snap=>setDocs(snap.docs.map(d=>({id:d.id,...d.data()})))
+    );
+    return unsub;
+  },[uid]);
+
+  const getFileType=f=>DOC_TYPES[f?.type]||{label:f?.name?.split(".").pop()?.toUpperCase()||"Fichier",ico:"file",col:"#8B5CF6"};
+
+  const handleFile=f=>{
+    if(!f)return;
+    if(f.size>MAX_SIZE_MB*1024*1024){toast("e",`Fichier trop lourd (max ${MAX_SIZE_MB} MB)`);return;}
+    if(!Object.keys(DOC_TYPES).some(t=>f.type===t)&&!ACCEPT_DOCS.split(",").some(ext=>f.name.endsWith(ext.replace(".",".")))){
+      toast("e","Format non supporté — PDF, PPT, PPTX, DOC, DOCX, XLS, XLSX uniquement");return;
+    }
+    setFile(f);
+    if(!form.titre)setForm(fm=>({...fm,titre:f.name.replace(/\.[^/.]+$/,"")}));
+  };
+
+  const uploadDoc=async()=>{
+    if(!file)return toast("e","Choisissez un fichier");
+    if(!form.titre.trim())return toast("e","Titre requis");
+    setUploading(true);
+    try{
+      const id="DOC"+Date.now();
+      const ext=file.name.split(".").pop();
+      const r=ref(storage,`documents/${uid}/${id}.${ext}`);
+      await uploadBytes(r,file);
+      const url=await getDownloadURL(r);
+      await setDoc(doc(db,"documents",id),{
+        id,titre:form.titre,desc:form.desc,
+        url,type:file.type,ext,size:file.size,
+        modId:form.modId||"",
+        status:"draft",createdBy:uid,
+        createdAt:new Date().toISOString(),
+        fileName:file.name,
+      });
+      toast("o","Document uploadé ! Soumettez-le pour validation.");
+      setFile(null);setForm({titre:"",desc:"",modId:""});
+    }catch(e){toast("e",e.message);}
+    setUploading(false);
+  };
+
+  const submitDoc=async(id)=>{
+    await updateDoc(doc(db,"documents",id),{status:"pending",submittedAt:new Date().toISOString()});
+    toast("o","Soumis pour validation !");
+  };
+
+  const statusInfo={
+    draft:   {label:"Brouillon", col:K.t3},
+    pending: {label:"En attente",col:"#F59E0B"},
+    approved:{label:"Publié",    col:"#22C55E"},
+    rejected:{label:"Rejeté",    col:"#EF4444"},
+  };
+
+  return <div style={{animation:"fadeIn .35s ease"}}>
+    <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+      <i className="ti ti-files" style={{fontSize:16,color:"#8B5CF6"}}/>
+      Documents ({docs.length})
+    </div>
+
+    {/* Zone upload */}
+    <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:16,padding:"18px",marginBottom:16}}>
+      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:14,display:"flex",alignItems:"center",gap:7}}>
+        <i className="ti ti-upload" style={{fontSize:14,color:"#8B5CF6"}}/>Uploader un document
+      </div>
+
+      {/* Drop zone */}
+      <label
+        onDragOver={e=>{e.preventDefault();setDragOver(true);}}
+        onDragLeave={()=>setDragOver(false)}
+        onDrop={e=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files[0]);}}
+        style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,
+          padding:"22px 16px",border:`2px dashed ${dragOver?"#8B5CF6":file?"#22C55E":K.b1}`,
+          borderRadius:12,cursor:"pointer",
+          background:dragOver?"#8B5CF608":file?"#22C55E06":K.bg,
+          transition:"all .2s",marginBottom:14}}>
+        <input type="file" accept={ACCEPT_DOCS} style={{display:"none"}}
+          onChange={e=>handleFile(e.target.files[0])}/>
+        {file
+          ?<>
+            <div style={{width:48,height:48,borderRadius:14,background:`${getFileType(file).col}18`,border:`1px solid ${getFileType(file).col}30`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <i className={`ti ti-${getFileType(file).ico}`} style={{fontSize:22,color:getFileType(file).col}}/>
+            </div>
+            <div style={{fontWeight:700,fontSize:13,color:"#22C55E",textAlign:"center"}}>{file.name}</div>
+            <div style={{fontSize:11,color:K.t3}}>{getFileType(file).label} · {(file.size/1024/1024).toFixed(1)} MB</div>
+          </>
+          :<>
+            <i className="ti ti-cloud-upload" style={{fontSize:36,color:K.t3}}/>
+            <div style={{fontWeight:600,fontSize:13,color:K.t2}}>Glissez un fichier ou cliquez pour choisir</div>
+            <div style={{fontSize:11,color:K.t3}}>PDF · PowerPoint · Word · Excel · Max {MAX_SIZE_MB} MB</div>
+            {/* Badges formats */}
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center",marginTop:4}}>
+              {[["file-text","PDF","#EF4444"],["presentation","PPT/PPTX","#F59E0B"],["file-word","DOC/DOCX","#3B82F6"],["file-spreadsheet","XLS/XLSX","#22C55E"]].map(([ico,lbl,col])=>
+                <div key={lbl} style={{display:"flex",alignItems:"center",gap:4,background:`${col}14`,border:`1px solid ${col}25`,borderRadius:6,padding:"3px 8px"}}>
+                  <i className={`ti ti-${ico}`} style={{fontSize:11,color:col}}/>
+                  <span style={{fontSize:10,fontWeight:700,color:col}}>{lbl}</span>
+                </div>
+              )}
+            </div>
+          </>
+        }
+      </label>
+
+      {/* Formulaire */}
+      {[["Titre du document","titre","Fondements SYSCOHADA — Chapitre 1"],["Description (optionnel)","desc","Résumé du contenu..."]].map(([lb,k,ph])=>
+        <div key={k} style={{marginBottom:10}}>
+          <div style={{fontSize:11,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
+          <input value={form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))}
+            placeholder={ph} style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+        </div>
+      )}
+
+      {/* Associer à un module */}
+      {myMods.length>0&&<div style={{marginBottom:12}}>
+        <div style={{fontSize:11,color:K.t3,marginBottom:4,fontWeight:600}}>Associer à un module (optionnel)</div>
+        <select value={form.modId} onChange={e=>setForm(f=>({...f,modId:e.target.value}))}
+          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif"}}>
+          <option value="">Aucun module associé</option>
+          {myMods.map(m=><option key={m.id} value={m.id}>{m.titre}</option>)}
+        </select>
+      </div>}
+
+      <div style={{display:"flex",gap:8}}>
+        {file&&<button onClick={()=>{setFile(null);setForm({titre:"",desc:"",modId:""});}} className="bt"
+          style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:9,padding:"10px 14px",cursor:"pointer",fontSize:12,fontFamily:"'Outfit',sans-serif"}}>
+          Annuler
+        </button>}
+        <button onClick={uploadDoc} disabled={uploading||!file} className="bt"
+          style={{flex:1,padding:"12px",background:file?"linear-gradient(135deg,#7C3AED,#8B5CF6)":"#333",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:13,cursor:file?"pointer":"not-allowed",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
+          {uploading?<><i className="ti ti-loader-2" style={{fontSize:14,animation:"spin .8s linear infinite"}}/>Upload en cours...</>:<><i className="ti ti-upload" style={{fontSize:14}}/>Uploader le document</>}
+        </button>
+      </div>
+    </div>
+
+    {/* Liste des documents */}
+    {!docs.length&&<EmptyState ico="files" title="Aucun document uploadé" desc="Uploadez vos supports PDF, PowerPoint, Word ou Excel pour vos apprenants."/>}
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      {docs.map(d=>{
+        const ft=DOC_TYPES[d.type]||{label:d.ext?.toUpperCase()||"Fichier",ico:"file",col:"#8B5CF6"};
+        const si=statusInfo[d.status||"draft"];
+        return <div key={d.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:13,padding:"13px 15px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{width:40,height:40,borderRadius:11,background:`${ft.col}18`,border:`1px solid ${ft.col}30`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <i className={`ti ti-${ft.ico}`} style={{fontSize:19,color:ft.col}}/>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.titre}</div>
+              <div style={{fontSize:11,color:K.t3,display:"flex",gap:8,alignItems:"center"}}>
+                <span>{ft.label}</span>
+                {d.size&&<span>{(d.size/1024/1024).toFixed(1)} MB</span>}
+                {d.modId&&mods.find(m=>m.id===d.modId)&&<span>· {mods.find(m=>m.id===d.modId)?.titre}</span>}
+              </div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+              <span style={{background:`${si.col}18`,border:`1px solid ${si.col}30`,borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700,color:si.col,whiteSpace:"nowrap"}}>{si.label}</span>
+              {(d.status==="draft"||d.status==="rejected")&&
+                <button onClick={()=>submitDoc(d.id)} className="bt"
+                  style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap"}}>
+                  Soumettre
+                </button>
+              }
+            </div>
+          </div>
+          {d.desc&&<div style={{fontSize:12,color:K.t2,marginTop:8,paddingTop:8,borderTop:`1px solid ${K.b0}`,lineHeight:1.5}}>{d.desc}</div>}
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
 function Auth({onL}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("l"),[err,sE]=useState(""),[ok,sO]=useState(""),[busy,sB]=useState(false),[step,sS]=useState(1);
@@ -1639,7 +1904,8 @@ function UA({uid,onOut}){
   const pr=uData.progress||{},sc=uData.scores||{};
   const nd=aMods.filter(m=>pr[m.id]==="done").length,gp=aMods.length?Math.round(nd/aMods.length*100):0;
   const save=async(modId,s,t)=>{await saveProgress(uid,modId,{s,t,pct:Math.round(s/t*100)});};
-  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}</div>;
+  const{WarningBanner,reset:resetTimer}=useAutoLogout(onOut);
+  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}{WarningBanner&&<WarningBanner/>}</div>;
   if(quiz)return W(<QZ mod={quiz} onDone={async(s,t)=>{await save(quiz.id,s,t);sQ(null);sM(null);sV("res");}} onBack={()=>sQ(null)}/>);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]}/>);
   return W(<>
@@ -2416,6 +2682,7 @@ function ServicesPage({user}){
 
 function AA({onOut}){
   const K=useK();const{mob}=useW();
+  const{WarningBanner:AAWarn}=useAutoLogout(onOut);
   const[tab,sT]=useState("d"),[msg,sMsg]=useState({t:"",m:""});
   const[cm,sCm]=useState(null),[vm,sVm]=useState(null),[dm,sDm]=useState(null),[q,sQ]=useState("");
   const[editMod,sEM]=useState(null),[newMod,sNM]=useState(false);
@@ -2524,6 +2791,7 @@ function AA({onOut}){
   }
   return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
+    {AAWarn&&<AAWarn/>}
     {/* ── ADMIN NAV ── */}
     <nav className="nb" style={{background:`${K.card}f2`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99}}>
       {/* Ligne 1 : logo + badge + déconnexion */}
@@ -2788,29 +3056,72 @@ function AA({onOut}){
       {/* Contenu en attente de validation */}
       {(()=>{
         const pendingMods=mods.filter(m=>m.status==="pending");
-        if(!pendingMods.length)return null;
+        const[pendingDocs,setPendingDocs]=useState([]);
+        useEffect(()=>{
+          const unsub=onSnapshot(query(collection(db,"documents"),where("status","==","pending")),
+            snap=>setPendingDocs(snap.docs.map(d=>({id:d.id,...d.data()}))));
+          return unsub;
+        },[]);
+        const total=pendingMods.length+pendingDocs.length;
+        if(!total)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:13,color:K.t3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/>Aucun contenu en attente de validation.</div>;
+        const approveDoc=async(id)=>{
+          await updateDoc(doc(db,"documents",id),{status:"approved",approvedAt:new Date().toISOString()});
+          sMsg({t:"o",m:"Document approuvé !"});setTimeout(()=>sMsg({t:"",m:""}),3000);
+        };
+        const rejectDoc=async(id)=>{
+          await updateDoc(doc(db,"documents",id),{status:"rejected",rejectedAt:new Date().toISOString()});
+          sMsg({t:"o",m:"Document rejeté."});setTimeout(()=>sMsg({t:"",m:""}),3000);
+        };
+        const DocTypeInfo={
+          "application/pdf":{label:"PDF",ico:"file-text",col:"#EF4444"},
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation":{label:"PPT",ico:"presentation",col:"#F59E0B"},
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document":{label:"Word",ico:"file-word",col:"#3B82F6"},
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{label:"Excel",ico:"file-spreadsheet",col:"#22C55E"},
+        };
         return <div style={{marginBottom:20}}>
           <div style={{fontWeight:700,fontSize:13,color:"#F59E0B",marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
-            <i className="ti ti-clock" style={{fontSize:14}}/>Contenu en attente ({pendingMods.length})
+            <i className="ti ti-clock" style={{fontSize:14}}/>En attente de validation ({total})
           </div>
+          {/* Modules en attente */}
           {pendingMods.map(m=><div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"13px 15px",marginBottom:8}}>
-            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:2}}>{m.titre}</div>
-                <div style={{fontSize:11,color:K.t3}}>Par : {users.find(u=>u.uid===m.createdBy)?.nom||m.createdBy} · {m.q?.length||0} questions</div>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+              <div style={{background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:7,padding:"2px 8px",fontSize:10,fontWeight:700,color:"#8B5CF6"}}>MODULE</div>
+              <div style={{fontWeight:700,fontSize:13,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>
+            </div>
+            <div style={{fontSize:11,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===m.createdBy)?.nom||"—"} · {m.q?.length||0} questions</div>
+            <div style={{display:"flex",gap:6}}>
+              <button onClick={()=>approveContent("mod",m.id)} className="bt"
+                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-check" style={{fontSize:12}}/>Approuver
+              </button>
+              <button onClick={()=>rejectContent("mod",m.id)} className="bt"
+                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-x" style={{fontSize:12}}/>Rejeter
+              </button>
+            </div>
+          </div>)}
+          {/* Documents en attente */}
+          {pendingDocs.map(d=>{
+            const ft=DocTypeInfo[d.type]||{label:d.ext?.toUpperCase()||"Doc",ico:"file",col:"#8B5CF6"};
+            return <div key={d.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"13px 15px",marginBottom:8}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                <div style={{background:`${ft.col}18`,border:`1px solid ${ft.col}30`,borderRadius:7,padding:"2px 8px",fontSize:10,fontWeight:700,color:ft.col}}>{ft.label}</div>
+                <div style={{fontWeight:700,fontSize:13,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.titre}</div>
               </div>
-              <div style={{display:"flex",gap:6,flexShrink:0}}>
-                <button onClick={()=>approveContent("mod",m.id)} className="bt"
-                  style={{background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
+              <div style={{fontSize:11,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===d.createdBy)?.nom||"—"} · {d.size?(d.size/1024/1024).toFixed(1)+" MB":""}</div>
+              {d.desc&&<div style={{fontSize:12,color:K.t2,marginBottom:8,lineHeight:1.5}}>{d.desc}</div>}
+              <div style={{display:"flex",gap:6}}>
+                <button onClick={()=>approveDoc(d.id)} className="bt"
+                  style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
                   <i className="ti ti-check" style={{fontSize:12}}/>Approuver
                 </button>
-                <button onClick={()=>rejectContent("mod",m.id)} className="bt"
-                  style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
+                <button onClick={()=>rejectDoc(d.id)} className="bt"
+                  style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
                   <i className="ti ti-x" style={{fontSize:12}}/>Rejeter
                 </button>
               </div>
-            </div>
-          </div>)}
+            </div>;
+          })}
         </div>;
       })()}
       {/* Liste formateurs */}
