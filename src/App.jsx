@@ -1090,7 +1090,8 @@ function FA({uid,onOut}){
     {k:"stats",ico:"chart-bar",label:"Statistiques"},
   ];
 
-  const{warning:faWarn,reset:resetFATimer}=useAutoLogout(onOut);
+  // const{warning:faWarn,reset:resetFATimer}=useAutoLogout(onOut);
+  const faWarn=false;const resetFATimer=()=>{};
   const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
     <AutoLogoutBanner warning={faWarn} reset={resetFATimer} mob={mob}/>
@@ -1465,7 +1466,6 @@ function FAStats({uid,myMods,allUsers}){
 const INACTIVITY_MS = 20 * 60 * 1000; // 20 minutes
 
 function useAutoLogout(onLogout) {
-  const K = useK();
   const timer = useRef(null);
   const [warning, setWarning] = useState(false); // alerte 2 min avant
   const warnTimer = useRef(null);
@@ -1907,7 +1907,8 @@ function UA({uid,onOut}){
   const pr=uData.progress||{},sc=uData.scores||{};
   const nd=aMods.filter(m=>pr[m.id]==="done").length,gp=aMods.length?Math.round(nd/aMods.length*100):0;
   const save=async(modId,s,t)=>{await saveProgress(uid,modId,{s,t,pct:Math.round(s/t*100)});};
-  const{warning:uaWarn,reset:resetTimer}=useAutoLogout(onOut);
+  // const{warning:uaWarn,reset:resetTimer}=useAutoLogout(onOut);
+  const uaWarn=false;const resetTimer=()=>{};
   const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}<AutoLogoutBanner warning={uaWarn} reset={resetTimer} mob={mob}/></div>;
   if(quiz)return W(<QZ mod={quiz} onDone={async(s,t)=>{await save(quiz.id,s,t);sQ(null);sM(null);sV("res");}} onBack={()=>sQ(null)}/>);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]}/>);
@@ -2184,11 +2185,11 @@ function Prog({pr,sc,gp,nd,ok,mods}){
     {label:"Progression",pct:gp,col:K.em},
     {label:"Score moyen",pct:avgScore,col:"#3B82F6"},
     {label:"Meilleur score",pct:bestScore,col:"#F59E0B"},
-  ];
-  if(!ok)return <EmptyState ico="lock" title="Accès requis" desc="Abonnez-vous pour suivre votre progression et accéder à tous les modules."/>;const{tid}=useContext(Ctx);
+  ];const{tid}=useContext(Ctx);
   const isLight=['light','sepia'].includes(tid);
   const done=mods.filter(m=>pr[m.id]==="done");
   const todo=mods.filter(m=>pr[m.id]!=="done");
+  if(!ok)return <EmptyState ico="lock" title="Accès requis" desc="Abonnez-vous pour suivre votre progression et accéder à tous les modules."/>;
   return <div style={{maxWidth:700,margin:"0 auto",animation:"fadeIn .35s ease"}}>
     {/* Rings de progression */}
     <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:16,padding:"20px",marginBottom:16,display:"flex",justifyContent:"space-around",alignItems:"center",flexWrap:"wrap",gap:16}}>
@@ -2687,7 +2688,8 @@ function ServicesPage({user}){
 
 function AA({onOut}){
   const K=useK();const{mob}=useW();
-  const{warning:aaWarn,reset:resetAATimer}=useAutoLogout(onOut);
+  // const{warning:aaWarn,reset:resetAATimer}=useAutoLogout(onOut);
+  const aaWarn=false;const resetAATimer=()=>{};
   const[pendingDocs,setPendingDocs]=useState([]);
   useEffect(()=>{
     const unsub=onSnapshot(query(collection(db,"documents"),where("status","==","pending")),
