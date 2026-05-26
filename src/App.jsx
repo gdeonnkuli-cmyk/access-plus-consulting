@@ -1090,11 +1090,10 @@ function FA({uid,onOut}){
     {k:"stats",ico:"chart-bar",label:"Statistiques"},
   ];
 
-  // const{warning:faWarn,reset:resetFATimer}=useAutoLogout(onOut);
-  const faWarn=false;const resetFATimer=()=>{};
+  const{warning:faWarn}=useAutoLogout(onOut);
   const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
-    <AutoLogoutBanner warning={faWarn} reset={resetFATimer} mob={mob}/>
+    <AutoLogoutBanner warning={faWarn} mob={mob}/>
     {/* Navbar formateur */}
     <nav className="nb" style={{background:`${K.card}f2`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",height:50,padding:"0 16px"}}>
@@ -1463,38 +1462,38 @@ function FAStats({uid,myMods,allUsers}){
 }
 
 // ── AUTO-LOGOUT après 20 min d'inactivité ────────────────────────────────────
-const INACTIVITY_MS = 20 * 60 * 1000; // 20 minutes
+const INACTIVITY_MS = 20 * 60 * 1000;
+const WARN_MS = 18 * 60 * 1000; // alerte à 18 min
 
 function useAutoLogout(onLogout) {
-  const timer = useRef(null);
-  const [warning, setWarning] = useState(false); // alerte 2 min avant
-  const warnTimer = useRef(null);
-
-  const reset = useCallback(() => {
-    setWarning(false);
-    clearTimeout(timer.current);
-    clearTimeout(warnTimer.current);
-    // Avertissement 2 min avant déconnexion
-    warnTimer.current = setTimeout(() => setWarning(true), INACTIVITY_MS - 2 * 60 * 1000);
-    // Déconnexion effective
-    timer.current = setTimeout(() => {
-      setWarning(false);
-      onLogout();
-    }, INACTIVITY_MS);
-  }, [onLogout]);
+  const [warning, setWarning] = useState(false);
+  const onLogoutRef = useRef(onLogout);
+  onLogoutRef.current = onLogout;
 
   useEffect(() => {
-    const events = ["mousemove", "keydown", "mousedown", "touchstart", "scroll", "click"];
-    events.forEach(e => window.addEventListener(e, reset, { passive: true }));
-    reset(); // démarrer le timer dès le montage
+    let timer = null;
+    let warnTimer = null;
+
+    const reset = () => {
+      setWarning(false);
+      clearTimeout(timer);
+      clearTimeout(warnTimer);
+      warnTimer = setTimeout(() => setWarning(true), WARN_MS);
+      timer = setTimeout(() => { onLogoutRef.current(); }, INACTIVITY_MS);
+    };
+
+    const events = ["mousemove","keydown","mousedown","touchstart","scroll","click"];
+    events.forEach(e => window.addEventListener(e, reset, {passive:true}));
+    reset();
+
     return () => {
       events.forEach(e => window.removeEventListener(e, reset));
-      clearTimeout(timer.current);
-      clearTimeout(warnTimer.current);
+      clearTimeout(timer);
+      clearTimeout(warnTimer);
     };
-  }, [reset]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { warning, reset };
+  return { warning };
 }
 
 // ── DOCUMENTS FORMATEUR ───────────────────────────────────────────────────────
@@ -1695,7 +1694,7 @@ function FADocs({uid,toast}){
   </div>;
 }
 
-function AutoLogoutBanner({warning, reset, mob}){
+function AutoLogoutBanner({warning, mob}){
   const[secs,setSecs]=useState(120);
   useEffect(()=>{
     if(!warning)return;
@@ -1907,9 +1906,8 @@ function UA({uid,onOut}){
   const pr=uData.progress||{},sc=uData.scores||{};
   const nd=aMods.filter(m=>pr[m.id]==="done").length,gp=aMods.length?Math.round(nd/aMods.length*100):0;
   const save=async(modId,s,t)=>{await saveProgress(uid,modId,{s,t,pct:Math.round(s/t*100)});};
-  // const{warning:uaWarn,reset:resetTimer}=useAutoLogout(onOut);
-  const uaWarn=false;const resetTimer=()=>{};
-  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}<AutoLogoutBanner warning={uaWarn} reset={resetTimer} mob={mob}/></div>;
+  const{warning:uaWarn}=useAutoLogout(onOut);
+  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}<AutoLogoutBanner warning={uaWarn} mob={mob}/></div>;
   if(quiz)return W(<QZ mod={quiz} onDone={async(s,t)=>{await save(quiz.id,s,t);sQ(null);sM(null);sV("res");}} onBack={()=>sQ(null)}/>);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]}/>);
   return W(<>
@@ -2688,8 +2686,7 @@ function ServicesPage({user}){
 
 function AA({onOut}){
   const K=useK();const{mob}=useW();
-  // const{warning:aaWarn,reset:resetAATimer}=useAutoLogout(onOut);
-  const aaWarn=false;const resetAATimer=()=>{};
+  const{warning:aaWarn}=useAutoLogout(onOut);
   const[pendingDocs,setPendingDocs]=useState([]);
   useEffect(()=>{
     const unsub=onSnapshot(query(collection(db,"documents"),where("status","==","pending")),
@@ -2812,7 +2809,7 @@ function AA({onOut}){
   }
   return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
-    <AutoLogoutBanner warning={aaWarn} reset={resetAATimer} mob={mob}/>
+    <AutoLogoutBanner warning={aaWarn} mob={mob}/>
     {/* ── ADMIN NAV ── */}
     <nav className="nb" style={{background:`${K.card}f2`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99}}>
       {/* Ligne 1 : logo + badge + déconnexion */}
