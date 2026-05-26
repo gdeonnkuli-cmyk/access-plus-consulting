@@ -408,30 +408,132 @@ function Player({url,titre,onClose,playlist,startIdx=0}){
   </div>;
 }
 
-function PdfV({url,name,onClose}){
+function StarRating({value,onChange,readonly=false,size=20}){
+  const K=useK();
+  const[hover,setHover]=useState(0);
+  return <div style={{display:"flex",gap:3}}>
+    {[1,2,3,4,5].map(i=><i key={i}
+      className={`ti ti-star${(hover||value)>=i?"-filled":""}`}
+      onMouseEnter={()=>!readonly&&setHover(i)}
+      onMouseLeave={()=>!readonly&&setHover(0)}
+      onClick={()=>!readonly&&onChange&&onChange(i)}
+      style={{fontSize:size,color:(hover||value)>=i?"#F59E0B":K.b1,cursor:readonly?"default":"pointer",transition:"color .15s"}}
+    />)}
+  </div>;
+}
+
+function RatingPanel({modId,uid,K,mob}){
+  const[myRating,setMyRating]=useState(0);
+  const[myComment,setMyComment]=useState("");
+  const[ratings,setRatings]=useState([]);
+  const[saving,setSaving]=useState(false);
+  const[submitted,setSubmitted]=useState(false);
+
+  useEffect(()=>{
+    if(!modId)return;
+    // Load all ratings for this module
+    const unsub=onSnapshot(collection(db,`modules/${modId}/ratings`),snap=>{
+      const rs=snap.docs.map(d=>({id:d.id,...d.data()}));
+      setRatings(rs);
+      const mine=rs.find(r=>r.uid===uid);
+      if(mine){setMyRating(mine.note||0);setMyComment(mine.comment||"");setSubmitted(true);}
+    });
+    return unsub;
+  },[modId,uid]);
+
+  const avgRating=ratings.length?Math.round(ratings.reduce((s,r)=>s+(r.note||0),0)/ratings.length*10)/10:0;
+
+  const submitRating=async()=>{
+    if(!myRating)return;
+    setSaving(true);
+    await setDoc(doc(db,`modules/${modId}/ratings`,uid),{
+      uid,note:myRating,comment:myComment,date:new Date().toLocaleDateString("fr-FR")
+    });
+    setSubmitted(true);setSaving(false);
+  };
+
+  return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:12,padding:"14px",marginTop:8}}>
+    {/* Moyenne globale */}
+    {ratings.length>0&&<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,paddingBottom:12,borderBottom:`1px solid ${K.b0}`}}>
+      <div style={{fontWeight:900,fontSize:28,color:"#F59E0B",lineHeight:1}}>{avgRating}</div>
+      <div>
+        <StarRating value={Math.round(avgRating)} readonly size={14}/>
+        <div style={{fontSize:11,color:K.t3,marginTop:3}}>{ratings.length} avis</div>
+      </div>
+    </div>}
+    {/* Ma notation */}
+    <div style={{marginBottom:10}}>
+      <div style={{fontSize:12,fontWeight:700,color:K.t1,marginBottom:8}}>{submitted?"Votre avis":"Notez ce cours"}</div>
+      <StarRating value={myRating} onChange={submitted?null:setMyRating} readonly={submitted} size={24}/>
+    </div>
+    {!submitted&&<>
+      <textarea value={myComment} onChange={e=>setMyComment(e.target.value)}
+        placeholder="Commentaire optionnel..."
+        style={{width:"100%",background:K.card,border:`1px solid ${K.b1}`,borderRadius:8,padding:"8px 10px",color:K.t1,fontSize:12,fontFamily:"'Outfit',sans-serif",resize:"vertical",minHeight:60,boxSizing:"border-box",marginBottom:8}}/>
+      <button onClick={submitRating} disabled={saving||!myRating} className="bt"
+        style={{width:"100%",padding:"10px",background:myRating?"linear-gradient(135deg,#D97706,#F59E0B)":"#333",border:"none",borderRadius:8,color:myRating?"#fff":K.t3,fontWeight:700,fontSize:13,cursor:myRating?"pointer":"not-allowed",fontFamily:"'Outfit',sans-serif"}}>
+        {saving?"Enregistrement...":"⭐ Soumettre mon avis"}
+      </button>
+    </>}
+    {submitted&&<div style={{fontSize:12,color:K.em,display:"flex",alignItems:"center",gap:5,marginTop:6}}>
+      <i className="ti ti-check" style={{fontSize:13}}/>Merci pour votre avis !
+    </div>}
+    {/* Derniers avis */}
+    {ratings.filter(r=>r.comment).length>0&&<div style={{marginTop:12,paddingTop:12,borderTop:`1px solid ${K.b0}`}}>
+      <div style={{fontSize:11,fontWeight:700,color:K.t3,marginBottom:8,textTransform:"uppercase",letterSpacing:.8}}>Avis récents</div>
+      {ratings.filter(r=>r.comment).slice(0,3).map(r=><div key={r.id} style={{marginBottom:8,padding:"8px 10px",background:K.card,borderRadius:8}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:3}}>
+          <StarRating value={r.note} readonly size={11}/>
+          <span style={{fontSize:10,color:K.t3}}>{r.date}</span>
+        </div>
+        <div style={{fontSize:12,color:K.t2,lineHeight:1.5}}>{r.comment}</div>
+      </div>)}
+    </div>}
+  </div>;
+}
+
+function PdfV({url,name,onClose,modId,uid,showRating=false}){
   const K=useK();const{mob}=useW();
-  // Sur mobile, les iframes PDF sont souvent bloquées — on utilise Google Docs Viewer en fallback
-  const embedUrl=mob?`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`:url;
+  const[tab,setTab]=useState("pdf");
+  // Désactiver le clic droit et le raccourci Ctrl+S sur le viewer
+  const blockSave=e=>{if((e.ctrlKey||e.metaKey)&&(e.key==="s"||e.key==="p"))e.preventDefault();};
+  useEffect(()=>{
+    document.addEventListener("keydown",blockSave);
+    return()=>document.removeEventListener("keydown",blockSave);
+  },[]);
+  const embedUrl=`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
   return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 15px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
-        <span>📄</span>
-        <div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{name}</div><div style={{color:K.t3,fontSize:10}}>Lecture seule</div></div>
+        <i className="ti ti-file-text" style={{fontSize:16,color:K.em}}/>
+        <div>
+          <div style={{color:K.t1,fontWeight:700,fontSize:13}}>{name}</div>
+          <div style={{color:K.t3,fontSize:10,display:"flex",alignItems:"center",gap:4}}>
+            <i className="ti ti-lock" style={{fontSize:9}}/>Lecture seule · Non téléchargeable
+          </div>
+        </div>
       </div>
       <div style={{display:"flex",gap:6,alignItems:"center"}}>
-        <a href={url} target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",gap:4,background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)",borderRadius:7,padding:"5px 9px",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}>
-          <i className="ti ti-external-link" style={{fontSize:12}}/>Ouvrir
-        </a>
+        {showRating&&uid&&<button onClick={()=>setTab(t=>t==="pdf"?"rating":"pdf")} className="bt"
+          style={{background:tab==="rating"?"#F59E0B18":"rgba(255,255,255,.08)",border:`1px solid ${tab==="rating"?"#F59E0B30":"rgba(255,255,255,.15)"}`,borderRadius:7,padding:"5px 9px",color:tab==="rating"?"#F59E0B":"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
+          <i className="ti ti-star" style={{fontSize:11}}/>Notes
+        </button>}
         <Btn ch="✕" on={onClose} v="g" sm/>
       </div>
     </div>
-    <iframe
-      src={embedUrl}
-      title={name}
-      style={{flex:1,border:"none",width:"100%"}}
-      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-      allow="fullscreen"
-    />
+    {tab==="pdf"
+      ?<div style={{flex:1,position:"relative",overflow:"hidden"}} onContextMenu={e=>e.preventDefault()}>
+        <iframe src={embedUrl} title={name}
+          style={{width:"100%",height:"100%",border:"none"}}
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+          allow="fullscreen"/>
+      </div>
+      :<div style={{flex:1,overflowY:"auto",padding:mob?"14px":"20px 28px",maxWidth:560,margin:"0 auto",width:"100%"}}>
+        <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:4}}>{name}</div>
+        <div style={{fontSize:12,color:K.t3,marginBottom:12}}>Donnez votre avis sur ce cours</div>
+        <RatingPanel modId={modId} uid={uid} K={K} mob={mob}/>
+      </div>
+    }
   </div>;
 }
 
@@ -1113,6 +1215,8 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
   const[form,setForm]=useState({titre:"",mat:"",desc:"",ico:"book-2",col:"#22C55E"});
   const[questions,setQuestions]=useState([{q:"",opts:["","","",""],ans:0}]);
   const[savingNew,setSavingNew]=useState(false);
+  const[slideFile,setSlideFile]=useState(null);
+  const[slideUploading,setSlideUploading]=useState(false);
 
   const addQ=()=>setQuestions(qs=>[...qs,{q:"",opts:["","","",""],ans:0}]);
   const updQ=(i,field,val)=>setQuestions(qs=>qs.map((q,j)=>j===i?{...q,[field]:val}:q));
@@ -1124,16 +1228,25 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
     setSavingNew(true);
     try{
       const id="M"+Date.now();
+      let slideUrl="";
+      if(slideFile){
+        setSlideUploading(true);
+        const r=ref(storage,`slides/${uid}/${id}.pdf`);
+        await uploadBytes(r,slideFile);
+        slideUrl=await getDownloadURL(r);
+        setSlideUploading(false);
+      }
       await setDoc(doc(db,"modules",id),{
         id,titre:form.titre,mat:form.mat||"SYSCOHADA",desc:form.desc,
         ico:form.ico,col:form.col,on:false,status:"draft",
         createdBy:uid,createdAt:new Date().toISOString(),
+        slideUrl,
         q:questions.map(({q,opts,ans})=>({q,o:opts,r:ans}))
       });
       toast("o","Module créé ! Soumettez-le pour validation.");
       setCreating(false);setForm({titre:"",mat:"",desc:"",ico:"book-2",col:"#22C55E"});
-      setQuestions([{q:"",opts:["","","",""],ans:0}]);
-    }catch(e){toast("e",e.message);}
+      setQuestions([{q:"",opts:["","","",""],ans:0}]);setSlideFile(null);
+    }catch(e){toast("e",e.message);setSlideUploading(false);}
     setSavingNew(false);
   };
 
@@ -1174,9 +1287,25 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
         </div>)}
       </div>)}
     </div>
-    <button onClick={saveModule} disabled={savingNew} className="bt"
+    {/* Upload slides */}
+    <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"18px",marginBottom:14}}>
+      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
+        <i className="ti ti-file-text" style={{fontSize:14,color:"#F59E0B"}}/>Slides PDF (optionnel)
+      </div>
+      <label style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"18px",border:`2px dashed ${slideFile?"#22C55E":K.b1}`,borderRadius:10,cursor:"pointer",background:slideFile?"#22C55E08":K.bg,transition:"all .2s"}}>
+        <input type="file" accept=".pdf" style={{display:"none"}} onChange={e=>setSlideFile(e.target.files[0]||null)}/>
+        <i className={`ti ti-${slideFile?"circle-check":"upload"}`} style={{fontSize:28,color:slideFile?"#22C55E":K.t3}}/>
+        <div style={{fontSize:13,fontWeight:600,color:slideFile?"#22C55E":K.t2}}>{slideFile?slideFile.name:"Cliquez pour choisir un PDF"}</div>
+        <div style={{fontSize:11,color:K.t3}}>PDF uniquement · Max 10 MB</div>
+      </label>
+      {slideFile&&<button onClick={()=>setSlideFile(null)} className="bt"
+        style={{marginTop:8,background:"none",border:"none",color:K.er,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
+        <i className="ti ti-x" style={{fontSize:12}}/>Supprimer
+      </button>}
+    </div>
+    <button onClick={saveModule} disabled={savingNew||slideUploading} className="bt"
       style={{width:"100%",padding:"13px",background:`linear-gradient(135deg,#7C3AED,#8B5CF6)`,border:"none",borderRadius:11,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:46}}>
-      {savingNew?"Enregistrement...":"💾 Enregistrer le module"}
+      {slideUploading?"Upload PDF...":savingNew?"Enregistrement...":"💾 Enregistrer le module"}
     </button>
   </div>;
 
@@ -1514,7 +1643,7 @@ function UA({uid,onOut}){
   if(quiz)return W(<QZ mod={quiz} onDone={async(s,t)=>{await save(quiz.id,s,t);sQ(null);sM(null);sV("res");}} onBack={()=>sQ(null)}/>);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]}/>);
   return W(<>
-    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} live={live} presCount={allPres.length}/>}
+    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} live={live} presCount={allPres.length} uid={uid}/>}
     {vue==="videos"&&<VidsPage ok={ok} onSub={()=>sSub(true)} vids={vids} live={live}/>}
     {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres}/>
     }{vue==="stages"&&<StagePage stages={allStages} plats={allPlats} ok={ok}/>
@@ -1599,9 +1728,10 @@ function Nav({u,vue,sV,ok,onSub,onOut,live}){
   </nav>;
 }
 
-function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,live,presCount=0}){
+function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,live,presCount=0,uid}){
   const K=useK();const{mob}=useW();const jr=jR(u.dateExpiration);
   const{tid}=useContext(Ctx);
+  const[pdfMod,setPdfMod]=useState(null);
   const mats=[...new Set(mods.map(m=>m.mat||"Général"))];
   const[fi,sF]=useState("Toutes");
   const fil=fi==="Toutes"?mods:mods.filter(m=>(m.mat||"Général")===fi);
@@ -1664,7 +1794,8 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
         {fil.map((m,i)=>{
           const f=pr[m.id]==="done",s=sc[m.id],lk=!ok;
           const cp=getCardPalette(tid,i);
-          return <div key={m.id} onClick={()=>lk?onSub():onOpen(m)} className="hv"
+          const hasPdf=m.slideUrl&&m.slideUrl.length>0;
+          return <div key={m.id} className="hv"
             style={{background:f?cp.bg:K.card,border:`1px solid ${f?cp.bd:K.b0}`,borderRadius:13,padding:"13px",cursor:"pointer",position:"relative",overflow:"hidden",animation:`slideUp .4s cubic-bezier(.22,1,.36,1) ${i*40}ms both`,opacity:lk?.65:1,transition:"transform .2s ease,box-shadow .2s ease"}}>
             <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:f?cp.ac:"transparent",borderRadius:"13px 13px 0 0"}}/>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
@@ -1679,10 +1810,15 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
             <Bar p={lk?0:f?100:0} col={f?cp.ac:m.col} h={3}/>
             {!lk&&!f&&<div style={{marginTop:8,fontSize:11,fontWeight:600,color:cp.ac,display:"flex",alignItems:"center",gap:3}}><span>Commencer</span><i className="ti ti-arrow-right" style={{fontSize:11}}/></div>}
             {f&&<div style={{marginTop:8,fontSize:11,fontWeight:600,color:cp.ac,display:"flex",alignItems:"center",gap:3}}><i className="ti ti-check" style={{fontSize:11}}/><span>Complété</span></div>}
+            {m.slideUrl&&!lk&&<button onClick={e=>{e.stopPropagation();setPdfMod(m);}} className="bt"
+              style={{marginTop:6,width:"100%",background:"#F59E0B14",border:"1px solid #F59E0B30",borderRadius:7,padding:"5px 8px",color:"#F59E0B",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+              <i className="ti ti-file-text" style={{fontSize:11}}/>Slides PDF
+            </button>}
           </div>;
         })}
       </div>
     </div>
+    {pdfMod&&<PdfV url={pdfMod.slideUrl} name={pdfMod.titre} onClose={()=>setPdfMod(null)} modId={pdfMod.id} uid={uid} showRating={true}/>}
 
     {/* Récents */}
     {recentMods.length>0&&<div style={{marginTop:18}}>
