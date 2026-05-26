@@ -1,4 +1,4 @@
-import{useState,useRef,useEffect,useCallback,createContext,useContext}from"react";
+import React,{useState,useRef,useEffect,useCallback,createContext,useContext}from"react";
 import{initializeApp}from"firebase/app";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup}from"firebase/auth";
 import{getFirestore,doc,getDoc,setDoc,updateDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where}from"firebase/firestore";
