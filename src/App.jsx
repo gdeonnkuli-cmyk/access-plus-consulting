@@ -1090,10 +1090,10 @@ function FA({uid,onOut}){
     {k:"stats",ico:"chart-bar",label:"Statistiques"},
   ];
 
-  const{WarningBanner:FAWarn,reset:resetFATimer}=useAutoLogout(onOut);
+  const{warning:faWarn,reset:resetFATimer}=useAutoLogout(onOut);
   const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
-    {FAWarn&&<FAWarn/>}
+    <AutoLogoutBanner warning={faWarn} reset={resetFATimer} mob={mob}/>
     {/* Navbar formateur */}
     <nav className="nb" style={{background:`${K.card}f2`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",height:50,padding:"0 16px"}}>
@@ -1494,32 +1494,7 @@ function useAutoLogout(onLogout) {
     };
   }, [reset]);
 
-  const WarningBanner = warning ? () => {
-    const[secs,setSecs]=useState(120);
-    useEffect(()=>{
-      const iv=setInterval(()=>setSecs(s=>{if(s<=1){clearInterval(iv);return 0;}return s-1;}),1000);
-      return()=>clearInterval(iv);
-    },[]);
-    const mins=Math.floor(secs/60),rem=secs%60;
-    return <div style={{
-      position:"fixed",bottom:mob?70:20,left:"50%",transform:"translateX(-50%)",
-      background:"#1C1917",border:"1px solid #F59E0B40",borderRadius:12,
-      padding:"12px 18px",zIndex:9999,display:"flex",alignItems:"center",gap:12,
-      boxShadow:"0 8px 32px rgba(0,0,0,.5)",animation:"slideUp .3s ease",
-      fontFamily:"'Outfit',sans-serif",maxWidth:360,width:"calc(100% - 32px)"
-    }}>
-      <i className="ti ti-clock-exclamation" style={{fontSize:20,color:"#F59E0B",flexShrink:0}}/>
-      <div style={{flex:1}}>
-        <div style={{fontWeight:700,fontSize:13,color:"#fff",marginBottom:2}}>Déconnexion imminente</div>
-        <div style={{fontSize:12,color:"#A8A29E"}}>Inactivité détectée — déconnexion dans <strong style={{color:"#F59E0B"}}>{mins}:{String(rem).padStart(2,"0")}</strong></div>
-      </div>
-      <button onClick={reset} style={{background:"#F59E0B",border:"none",borderRadius:8,padding:"6px 12px",color:"#1C1917",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",flexShrink:0,whiteSpace:"nowrap"}}>
-        Rester connecté
-      </button>
-    </div>;
-  } : null;
-
-  return { WarningBanner, reset };
+  return { warning, reset };
 }
 
 // ── DOCUMENTS FORMATEUR ───────────────────────────────────────────────────────
@@ -1720,6 +1695,34 @@ function FADocs({uid,toast}){
   </div>;
 }
 
+function AutoLogoutBanner({warning, reset, mob}){
+  const[secs,setSecs]=useState(120);
+  useEffect(()=>{
+    if(!warning)return;
+    setSecs(120);
+    const iv=setInterval(()=>setSecs(s=>{if(s<=1){clearInterval(iv);return 0;}return s-1;}),1000);
+    return()=>clearInterval(iv);
+  },[warning]);
+  if(!warning)return null;
+  const mins=Math.floor(secs/60),rem=secs%60;
+  return <div style={{
+    position:"fixed",bottom:mob?70:20,left:"50%",transform:"translateX(-50%)",
+    background:"#1C1917",border:"1px solid #F59E0B40",borderRadius:12,
+    padding:"12px 18px",zIndex:9999,display:"flex",alignItems:"center",gap:12,
+    boxShadow:"0 8px 32px rgba(0,0,0,.5)",animation:"slideUp .3s ease",
+    fontFamily:"'Outfit',sans-serif",maxWidth:360,width:"calc(100% - 32px)"
+  }}>
+    <i className="ti ti-clock-exclamation" style={{fontSize:20,color:"#F59E0B",flexShrink:0}}/>
+    <div style={{flex:1}}>
+      <div style={{fontWeight:700,fontSize:13,color:"#fff",marginBottom:2}}>Déconnexion imminente</div>
+      <div style={{fontSize:12,color:"#A8A29E"}}>Déconnexion dans <strong style={{color:"#F59E0B"}}>{mins}:{String(rem).padStart(2,"0")}</strong></div>
+    </div>
+    <button onClick={reset} style={{background:"#F59E0B",border:"none",borderRadius:8,padding:"6px 12px",color:"#1C1917",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",flexShrink:0}}>
+      Rester connecté
+    </button>
+  </div>;
+}
+
 function Auth({onL}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("l"),[err,sE]=useState(""),[ok,sO]=useState(""),[busy,sB]=useState(false),[step,sS]=useState(1);
@@ -1904,8 +1907,8 @@ function UA({uid,onOut}){
   const pr=uData.progress||{},sc=uData.scores||{};
   const nd=aMods.filter(m=>pr[m.id]==="done").length,gp=aMods.length?Math.round(nd/aMods.length*100):0;
   const save=async(modId,s,t)=>{await saveProgress(uid,modId,{s,t,pct:Math.round(s/t*100)});};
-  const{WarningBanner,reset:resetTimer}=useAutoLogout(onOut);
-  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}{WarningBanner&&<WarningBanner/>}</div>;
+  const{warning:uaWarn,reset:resetTimer}=useAutoLogout(onOut);
+  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}<AutoLogoutBanner warning={uaWarn} reset={resetTimer} mob={mob}/></div>;
   if(quiz)return W(<QZ mod={quiz} onDone={async(s,t)=>{await save(quiz.id,s,t);sQ(null);sM(null);sV("res");}} onBack={()=>sQ(null)}/>);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]}/>);
   return W(<>
@@ -2682,7 +2685,7 @@ function ServicesPage({user}){
 
 function AA({onOut}){
   const K=useK();const{mob}=useW();
-  const{WarningBanner:AAWarn}=useAutoLogout(onOut);
+  const{warning:aaWarn,reset:resetAATimer}=useAutoLogout(onOut);
   const[pendingDocs,setPendingDocs]=useState([]);
   useEffect(()=>{
     const unsub=onSnapshot(query(collection(db,"documents"),where("status","==","pending")),
@@ -2805,7 +2808,7 @@ function AA({onOut}){
   }
   return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
-    {AAWarn&&<AAWarn/>}
+    <AutoLogoutBanner warning={aaWarn} reset={resetAATimer} mob={mob}/>
     {/* ── ADMIN NAV ── */}
     <nav className="nb" style={{background:`${K.card}f2`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99}}>
       {/* Ligne 1 : logo + badge + déconnexion */}
