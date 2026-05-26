@@ -3191,6 +3191,30 @@ function AA({onOut}){
 }
 
 // ── ROOT ──────────────────────────────────────────────────────────────────────
+// ── ERROR BOUNDARY ────────────────────────────────────────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props){super(props);this.state={error:null};}
+  static getDerivedStateFromError(e){return{error:e};}
+  componentDidCatch(e,info){console.error("ErrorBoundary:",e,info);}
+  render(){
+    if(this.state.error){
+      const K_EB={bg:"#0A0F0B",card:"#111812",t1:"#E8F5EA",t2:"#A8C4AC",t3:"#5A7A5E",em:"#22C55E",er:"#EF4444",b0:"rgba(255,255,255,.07)"};
+      return <div style={{minHeight:"100vh",background:K_EB.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:24,fontFamily:"'Outfit',sans-serif"}}>
+        <div style={{maxWidth:420,width:"100%",background:K_EB.card,border:`1px solid ${K_EB.b0}`,borderRadius:16,padding:28,textAlign:"center"}}>
+          <div style={{fontSize:36,marginBottom:16}}>⚠️</div>
+          <div style={{fontWeight:800,fontSize:18,color:K_EB.t1,marginBottom:8}}>Une erreur est survenue</div>
+          <div style={{fontSize:13,color:K_EB.t2,marginBottom:20,lineHeight:1.6}}>{this.state.error?.message||"Erreur inattendue"}</div>
+          <button onClick={()=>window.location.reload()}
+            style={{background:"linear-gradient(135deg,#16A34A,#22C55E)",border:"none",borderRadius:10,padding:"11px 24px",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+            Recharger la page
+          </button>
+        </div>
+      </div>;
+    }
+    return this.props.children;
+  }
+}
+
 export default function App(){
   const[who,sW]=useState(null);const[loading,sL]=useState(true);const[showAuth,sShowAuth]=useState(false);
   const[tid,sTid]=useState(()=>{try{return localStorage.getItem("ap_theme")||"dark";}catch{return"dark";}});
@@ -3223,8 +3247,8 @@ export default function App(){
     {loading&&<Spin/>}
     {!loading&&!who&&!showAuth&&<LandingPage onLogin={()=>sShowAuth(true)}/>}
     {!loading&&!who&&showAuth&&<Auth onL={(role,user)=>{const r=role==="__admin__"?{role:"admin",user}:role?.startsWith("__formateur__:")?{role:"formateur",uid:role.split(":")[1],user}:{role:"user",uid:user.uid,user};sW(r);sShowAuth(false);}}/>}
-    {!loading&&who?.role==="admin"&&<AA onOut={async()=>{await signOut(auth);sW(null);}}/>}
-    {!loading&&who?.role==="formateur"&&<FA uid={who.uid} onOut={async()=>{await signOut(auth);sW(null);}}/>}
-    {!loading&&who?.role==="user"&&<UA uid={who.uid} onOut={async()=>{await signOut(auth);sW(null);}}/>}
+    {!loading&&who?.role==="admin"&&<ErrorBoundary><AA onOut={async()=>{await signOut(auth);sW(null);}}/></ErrorBoundary>}
+    {!loading&&who?.role==="formateur"&&<ErrorBoundary><FA uid={who.uid} onOut={async()=>{await signOut(auth);sW(null);}}/></ErrorBoundary>}
+    {!loading&&who?.role==="user"&&<ErrorBoundary><UA uid={who.uid} onOut={async()=>{await signOut(auth);sW(null);}}/></ErrorBoundary>}
   </Ctx.Provider>;
 }
