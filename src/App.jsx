@@ -2723,13 +2723,13 @@ function AA({onOut}){
   for(let i=0;i<8;i++)code+=chars[Math.floor(Math.random()*chars.length)];
   return code;
 };
+  const[lastFoCode,sLastFoCode]=useState({uid:"",code:""});
   const nFC=()=>{
   const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code="FO-";
   for(let i=0;i<8;i++)code+=chars[Math.floor(Math.random()*chars.length)];
   return code;
 };
-  const[lastFoCode,sLastFoCode]=useState({uid:"",code:""});
   const genFormateurCode=async(uid)=>{
     const code=nFC();
     await saveUserData(uid,{formateurCode:code,formateurCodeValide:false});
