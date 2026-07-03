@@ -661,10 +661,10 @@ function LandingPage({onLogin}){
     {val:"24h",label:"Accès après paiement",ico:"bolt"},
   ];
   const publics=[
+    {ico:"building-store",label:"Entrepreneurs",desc:"Services et accompagnement pour structurer votre activité"},
+    {ico:"user-search",label:"Chercheurs d'emploi",desc:"Renforcez vos compétences pour vous démarquer"},
     {ico:"school",label:"Étudiants",desc:"Tous niveaux, toutes filières"},
     {ico:"briefcase",label:"Professionnels",desc:"Quel que soit votre secteur d'activité"},
-    {ico:"building",label:"Entreprises",desc:"Formation et montée en compétences de vos équipes"},
-    {ico:"certificate",label:"Candidats",desc:"Préparation aux examens et certifications"},
   ];
   const features=[
     {ico:"book-2",     col:"#22C55E",label:"Modules structurés",  desc:"Des modules organisés par thème, du fondamental à l'avancé."},
@@ -716,7 +716,7 @@ function LandingPage({onLogin}){
       <div style={{display:"inline-flex",alignItems:"center",gap:7,background:K.emBg,
         border:`1px solid ${K.emBd}`,borderRadius:99,padding:"6px 16px",marginBottom:28,animation:"up .5s ease"}}>
         <span style={{width:7,height:7,borderRadius:"50%",background:"#22C55E",display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/>
-        <span style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:.4}}>🎓 Plateforme de formation en ligne</span>
+        <span style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:.4}}>🇨🇩 Services et formations en RDC</span>
       </div>
 
       {/* Logo hero */}
@@ -734,21 +734,21 @@ function LandingPage({onLogin}){
         La plateforme de{" "}
         <span style={{background:"linear-gradient(135deg,#16A34A,#22C55E,#4ADE80)",
           WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-          formation professionnelle
+          services et formations
         </span>
-        {" "}de référence en Afrique
+        {" "}en République démocratique du Congo
       </h1>
 
       {/* Sous-titre */}
       <p style={{margin:"0 0 12px",fontSize:mob?14:17,color:K.t2,lineHeight:1.7,
         maxWidth:580,animation:"up .6s ease .2s both"}}>
-        Développez vos compétences avec des <strong style={{color:K.t1}}>modules structurés</strong>, QCM interactifs,
-        tests d'auto-évaluation, PDF téléchargeables et sessions en direct avec vos formateurs.
+        Une référence pour <strong style={{color:K.t1}}>entrepreneurs</strong>, <strong style={{color:K.t1}}>chercheurs d'emploi</strong> et <strong style={{color:K.t1}}>étudiants</strong> :
+        modules structurés, accompagnement professionnel, tests d'auto-évaluation et sessions en direct avec nos experts.
       </p>
 
       {/* Preuves sociales */}
       <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:32,flexWrap:"wrap",justifyContent:"center",animation:"up .6s ease .25s both"}}>
-        {[["🎓","Formation certifiante"],["📱","100% en ligne"],["🌍","Fait pour l'Afrique"]].map(([e,l])=>
+        {[["🎓","Certifiante"],["📱","100% en ligne"],["🇨🇩","Pensée pour la RDC"]].map(([e,l])=>
           <div key={l} style={{display:"flex",alignItems:"center",gap:6,fontSize:13,color:K.t2,fontWeight:600}}>
             <span>{e}</span><span>{l}</span>
           </div>
