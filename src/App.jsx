@@ -683,11 +683,12 @@ function LandingPage({onLogin}){
       backdropFilter:scrolled?"blur(20px)":"none",
       borderBottom:scrolled?`1px solid ${K.b0}`:"none",
       padding:mob?"10px 16px":"12px 32px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <img src="/logo.png" alt="Éco-Campus RDC"
-          style={{height:36,width:"auto",objectFit:"contain"}}
-          onError={e=>{e.target.style.display="none";}}
-        />
+      <div style={{display:"flex",alignItems:"center",gap:9}}>
+        <svg width="24" height="24" viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <div>
+          <div style={{fontWeight:800,fontSize:16,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>
+          <div style={{fontSize:9,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>RDC</div>
+        </div>
       </div>
       <button onClick={onLogin} className="bt" style={{
         background:`linear-gradient(135deg,#16A34A,#22C55E)`,border:"none",
@@ -719,11 +720,12 @@ function LandingPage({onLogin}){
       </div>
 
       {/* Logo hero */}
-      <div style={{marginBottom:20,animation:"up .5s ease .05s both"}}>
-        <img src="/logo.png" alt="Éco-Campus RDC"
-          style={{height:mob?50:65,width:"auto",objectFit:"contain",filter:"drop-shadow(0 4px 16px rgba(34,197,94,.25))"}}
-          onError={e=>e.target.style.display="none"}
-        />
+      <div style={{marginBottom:20,animation:"up .5s ease .05s both",display:"flex",alignItems:"center",justifyContent:"center",gap:12}}>
+        <svg width={mob?32:42} height={mob?32:42} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <div style={{textAlign:"left"}}>
+          <div style={{fontWeight:900,fontSize:mob?24:32,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>
+          <div style={{fontSize:mob?10:12,color:K.t3,letterSpacing:"3px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginTop:3}}>RDC</div>
+        </div>
       </div>
 
       {/* Titre */}
@@ -843,11 +845,12 @@ function LandingPage({onLogin}){
     {/* ── CTA FINAL ── */}
     <div style={{padding:mob?"56px 20px":"80px 32px",textAlign:"center"}}>
       <div style={{maxWidth:560,margin:"0 auto"}}>
-        <div style={{margin:"0 auto 20px",display:"flex",justifyContent:"center"}}>
-          <img src="/logo.png" alt="Éco-Campus RDC"
-            style={{height:52,width:"auto",objectFit:"contain",filter:"drop-shadow(0 4px 20px rgba(34,197,94,.3))"}}
-            onError={e=>{e.target.style.display="none";}}
-          />
+        <div style={{margin:"0 auto 20px",display:"flex",justifyContent:"center",alignItems:"center",gap:10}}>
+          <svg width="30" height="30" viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div style={{textAlign:"left"}}>
+            <div style={{fontWeight:900,fontSize:22,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>
+            <div style={{fontSize:9,color:K.t3,letterSpacing:"2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginTop:3}}>RDC</div>
+          </div>
         </div>
         <h2 style={{margin:"0 0 14px",fontSize:mob?"1.8rem":"2.4rem",
           fontWeight:900,color:K.t1,lineHeight:1.2}}>
