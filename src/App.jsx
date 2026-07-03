@@ -661,13 +661,13 @@ function LandingPage({onLogin}){
     {val:"24h",label:"Accès après paiement",ico:"bolt"},
   ];
   const publics=[
-    {ico:"school",label:"Étudiants",desc:"DCG, BTS, Licence, Master en comptabilité et gestion"},
-    {ico:"briefcase",label:"Professionnels",desc:"Comptables, auditeurs, contrôleurs de gestion"},
-    {ico:"building",label:"Entreprises",desc:"Formation de vos équipes aux normes OHADA"},
+    {ico:"school",label:"Étudiants",desc:"Tous niveaux, toutes filières"},
+    {ico:"briefcase",label:"Professionnels",desc:"Quel que soit votre secteur d'activité"},
+    {ico:"building",label:"Entreprises",desc:"Formation et montée en compétences de vos équipes"},
     {ico:"certificate",label:"Candidats",desc:"Préparation aux examens et certifications"},
   ];
   const features=[
-    {ico:"book-2",     col:"#22C55E",label:"Modules structurés",  desc:"10 modules SYSCOHADA Révisé organisés par thème, du fondamental à l'avancé."},
+    {ico:"book-2",     col:"#22C55E",label:"Modules structurés",  desc:"Des modules organisés par thème, du fondamental à l'avancé."},
     {ico:"help-circle",col:"#3B82F6",label:"QCM interactifs",     desc:"Évaluez vos connaissances avec des quiz corrigés et des scores détaillés."},
     {ico:"file-text",  col:"#F59E0B",label:"PDF d'exercices",     desc:"Téléchargez les supports de cours et exercices pratiques par module."},
     {ico:"presentation",col:"#8B5CF6",label:"Présentations",      desc:"Slides professionnelles téléchargeables pour chaque thème de formation."},
@@ -715,7 +715,7 @@ function LandingPage({onLogin}){
       <div style={{display:"inline-flex",alignItems:"center",gap:7,background:K.emBg,
         border:`1px solid ${K.emBd}`,borderRadius:99,padding:"6px 16px",marginBottom:28,animation:"up .5s ease"}}>
         <span style={{width:7,height:7,borderRadius:"50%",background:"#22C55E",display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/>
-        <span style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:.4}}>🎓 Formation en ligne · SYSCOHADA Révisé</span>
+        <span style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:.4}}>🎓 Plateforme de formation en ligne</span>
       </div>
 
       {/* Logo hero */}
@@ -732,7 +732,7 @@ function LandingPage({onLogin}){
         La plateforme de{" "}
         <span style={{background:"linear-gradient(135deg,#16A34A,#22C55E,#4ADE80)",
           WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-          formation comptable
+          formation professionnelle
         </span>
         {" "}de référence en Afrique
       </h1>
@@ -740,13 +740,13 @@ function LandingPage({onLogin}){
       {/* Sous-titre */}
       <p style={{margin:"0 0 12px",fontSize:mob?14:17,color:K.t2,lineHeight:1.7,
         maxWidth:580,animation:"up .6s ease .2s both"}}>
-        Maîtrisez le plan comptable <strong style={{color:K.t1}}>SYSCOHADA Révisé</strong> avec des modules structurés,
-        QCM interactifs, PDF téléchargeables et sessions en direct avec votre formateur.
+        Développez vos compétences avec des <strong style={{color:K.t1}}>modules structurés</strong>, QCM interactifs,
+        tests d'auto-évaluation, PDF téléchargeables et sessions en direct avec vos formateurs.
       </p>
 
       {/* Preuves sociales */}
       <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:32,flexWrap:"wrap",justifyContent:"center",animation:"up .6s ease .25s both"}}>
-        {[["🎓","Formation certifiante"],["📱","100% en ligne"],["🌍","Adapté OHADA"]].map(([e,l])=>
+        {[["🎓","Formation certifiante"],["📱","100% en ligne"],["🌍","Fait pour l'Afrique"]].map(([e,l])=>
           <div key={l} style={{display:"flex",alignItems:"center",gap:6,fontSize:13,color:K.t2,fontWeight:600}}>
             <span>{e}</span><span>{l}</span>
           </div>
@@ -895,7 +895,7 @@ function Onboarding({u,onDone,mods}){
   const[step,setStep]=useState(0);
   const steps=[
     {ico:"rocket",col:"#22C55E",title:`Bienvenue, ${(u.nom||"").split(" ")[0]} ! 🎉`,
-     desc:"Votre espace de formation SYSCOHADA Révisé est prêt. Découvrons ensemble comment en tirer le meilleur."},
+     desc:"Votre espace de formation est prêt. Découvrons ensemble comment en tirer le meilleur."},
     {ico:"book-2",col:"#3B82F6",title:"10 modules structurés",
      desc:"Du fondamental à l'avancé — chaque module contient des leçons, QCM et exercices pratiques alignés sur le plan comptable OHADA."},
     {ico:"chart-line",col:"#8B5CF6",title:"Suivez votre progression",
