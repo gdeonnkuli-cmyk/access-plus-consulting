@@ -1920,166 +1920,289 @@ function UA({uid,onOut}){
     }{vue==="services"&&<ServicesPage user={uData}/>}
     {vue==="prog"&&<Prog pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods}/>}
     {vue==="res"&&<Res sc={sc} ok={ok} mods={aMods}/>}
-    {vue==="psycho"&&<PsychoPage/>}
+    {vue==="psycho"&&<PsychoPage uid={uid} u={uData}/>}
   </>);
 }
 
 // ══════════════════ PSYCHOTECHNIQUE ══════════════════
-const PSYCHO_CATS=[
-  {id:"num", label:"Suites numériques",   ico:"123",            col:"#34D399"},
-  {id:"log", label:"Suites logiques",     ico:"arrows-shuffle", col:"#60A5FA"},
-  {id:"verb",label:"Raisonnement verbal", ico:"message-2",      col:"#F472B6"},
-  {id:"spat",label:"Logique spatiale",    ico:"cube",           col:"#FBBF24"},
-  {id:"voc", label:"Vocabulaire",         ico:"book",           col:"#A78BFA"},
-  {id:"gram",label:"Grammaire",           ico:"pencil",         col:"#FB923C"},
+const PSY_LEVELS=[
+  {id:"facile",   label:"Facile",         n:10,dur:300,col:"#34D399",ico:"mood-smile"},
+  {id:"moyen",    label:"Moyen",          n:12,dur:420,col:"#60A5FA",ico:"gauge"},
+  {id:"difficile",label:"Difficile",      n:15,dur:600,col:"#FBBF24",ico:"flame"},
+  {id:"tresdiff", label:"Très difficile", n:15,dur:720,col:"#FB923C",ico:"bolt"},
+  {id:"expert",   label:"Expert",         n:20,dur:900,col:"#F87171",ico:"crown"},
 ];
-const PSYCHO_BANK=[
-  {id:"num1",cat:"num",q:"Quel nombre complète la suite ? 2, 4, 6, 8, …",opts:["9","10","12","11"],a:1,exp:"On ajoute 2 à chaque terme : 8 + 2 = 10."},
-  {id:"num2",cat:"num",q:"Quel nombre complète la suite ? 1, 3, 9, 27, …",opts:["54","72","81","63"],a:2,exp:"Chaque terme est multiplié par 3 : 27 × 3 = 81."},
-  {id:"num3",cat:"num",q:"Suite de Fibonacci : 1, 1, 2, 3, 5, 8, …",opts:["11","13","12","10"],a:1,exp:"Chaque terme est la somme des deux précédents : 5 + 8 = 13."},
-  {id:"num4",cat:"num",q:"Quel nombre complète la suite ? 2, 5, 10, 17, 26, …",opts:["35","37","36","38"],a:1,exp:"Ce sont les carrés + 1 : 6² + 1 = 37."},
-  {id:"num5",cat:"num",q:"Quel nombre complète la suite ? 80, 40, 20, 10, …",opts:["6","4","5","8"],a:2,exp:"On divise par 2 à chaque étape : 10 ÷ 2 = 5."},
-  {id:"num6",cat:"num",q:"Quel nombre complète la suite ? 3, 6, 11, 18, 27, …",opts:["36","40","38","34"],a:2,exp:"Les écarts augmentent (+3, +5, +7, +9, +11) : 27 + 11 = 38."},
-  {id:"num7",cat:"num",q:"Quel nombre complète la suite ? 1, 4, 9, 16, 25, …",opts:["30","36","35","49"],a:1,exp:"Ce sont les carrés successifs : 6² = 36."},
-  {id:"num8",cat:"num",q:"Quel nombre complète la suite ? 2, 6, 12, 20, 30, …",opts:["40","42","44","36"],a:1,exp:"Produit n(n+1) : 6 × 7 = 42."},
-  {id:"log1",cat:"log",q:"Quelle lettre complète la suite ? A, C, E, G, …",opts:["H","I","J","F"],a:1,exp:"On saute une lettre à chaque fois : G → I."},
-  {id:"log2",cat:"log",q:"Quelle lettre complète la suite ? B, D, F, H, …",opts:["I","K","J","L"],a:2,exp:"Lettres paires de l'alphabet : H → J."},
-  {id:"log3",cat:"log",q:"Quelle lettre complète la suite ? Z, Y, X, W, …",opts:["U","V","T","S"],a:1,exp:"L'alphabet à l'envers : W → V."},
-  {id:"log4",cat:"log",q:"Quelle lettre complète la suite ? A, B, D, G, K, …",opts:["N","O","P","Q"],a:2,exp:"Les écarts augmentent (+1, +2, +3, +4, +5) : K(11) + 5 = P(16)."},
-  {id:"log5",cat:"log",q:"Quelle paire complète la suite ? AZ, BY, CX, …",opts:["DV","DW","EW","DX"],a:1,exp:"1re lettre en avançant, 2e en reculant : D + W."},
-  {id:"log6",cat:"log",q:"Quel jour complète la suite ? Lundi, Mercredi, Vendredi, …",opts:["Samedi","Dimanche","Jeudi","Mardi"],a:1,exp:"On saute un jour à chaque fois : Vendredi → Dimanche."},
-  {id:"verb1",cat:"verb",q:"Médecin est à Hôpital ce que Professeur est à … ?",opts:["Bureau","École","Maison","Usine"],a:1,exp:"Le médecin travaille à l'hôpital, le professeur à l'école."},
-  {id:"verb2",cat:"verb",q:"Oiseau est à Voler ce que Poisson est à … ?",opts:["Marcher","Nager","Sauter","Courir"],a:1,exp:"L'oiseau se déplace en volant, le poisson en nageant."},
-  {id:"verb3",cat:"verb",q:"Chaud est à Froid ce que Jour est à … ?",opts:["Soleil","Nuit","Matin","Lune"],a:1,exp:"Ce sont des paires de contraires : jour ↔ nuit."},
-  {id:"verb4",cat:"verb",q:"Livre est à Lire ce que Musique est à … ?",opts:["Chanter","Écouter","Danser","Jouer"],a:1,exp:"On lit un livre, on écoute de la musique."},
-  {id:"verb5",cat:"verb",q:"Main est à Gant ce que Pied est à … ?",opts:["Jambe","Chaussette","Sol","Orteil"],a:1,exp:"Le gant couvre la main, la chaussette couvre le pied."},
-  {id:"verb6",cat:"verb",q:"Pilote est à Avion ce que Capitaine est à … ?",opts:["Train","Bateau","Voiture","Vélo"],a:1,exp:"Le pilote conduit l'avion, le capitaine dirige le bateau."},
-  {id:"spat1",cat:"spat",q:"Combien de faces possède un cube ?",opts:["4","6","8","12"],a:1,exp:"Un cube a 6 faces carrées."},
-  {id:"spat2",cat:"spat",q:"Sur un dé classique, la somme de deux faces opposées vaut toujours … ?",opts:["6","7","8","9"],a:1,exp:"1-6, 2-5, 3-4 : la somme est toujours 7."},
-  {id:"spat3",cat:"spat",q:"Combien d'arêtes possède un cube ?",opts:["8","10","12","6"],a:2,exp:"Un cube possède 12 arêtes."},
-  {id:"spat4",cat:"spat",q:"Combien de sommets possède une pyramide à base carrée ?",opts:["4","5","6","8"],a:1,exp:"4 sommets à la base + 1 au sommet = 5."},
-  {id:"spat5",cat:"spat",q:"Dans un miroir, votre main droite apparaît comme votre main … ?",opts:["Droite","Gauche","Les deux","Aucune"],a:1,exp:"Le miroir inverse la gauche et la droite."},
-  {id:"spat6",cat:"spat",q:"Combien de côtés possède un hexagone ?",opts:["5","6","7","8"],a:1,exp:"Un hexagone possède 6 côtés."},
-  {id:"voc1",cat:"voc",q:"Quel est le synonyme de « rapide » ?",opts:["Lent","Véloce","Lourd","Faible"],a:1,exp:"« Véloce » signifie qui va vite."},
-  {id:"voc2",cat:"voc",q:"Quel est le synonyme de « content » ?",opts:["Triste","Heureux","Fâché","Fatigué"],a:1,exp:"« Content » et « heureux » expriment la satisfaction."},
-  {id:"voc3",cat:"voc",q:"Quel est le contraire de « généreux » ?",opts:["Avare","Riche","Gentil","Aimable"],a:0,exp:"« Avare » est le contraire de « généreux »."},
-  {id:"voc4",cat:"voc",q:"Quel est le synonyme de « difficile » ?",opts:["Facile","Ardu","Simple","Léger"],a:1,exp:"« Ardu » signifie difficile, pénible."},
-  {id:"voc5",cat:"voc",q:"Que signifie « éphémère » ?",opts:["Qui dure longtemps","Qui dure peu de temps","Qui est solide","Qui est ancien"],a:1,exp:"« Éphémère » se dit de ce qui dure très peu."},
-  {id:"voc6",cat:"voc",q:"Quel est le contraire de « augmenter » ?",opts:["Grandir","Diminuer","Monter","Ajouter"],a:1,exp:"« Diminuer » est le contraire de « augmenter »."},
-  {id:"gram1",cat:"gram",q:"Complétez : « Les enfants ___ au parc. »",opts:["joue","jouent","joues","jouer"],a:1,exp:"Sujet pluriel « les enfants » → « jouent »."},
-  {id:"gram2",cat:"gram",q:"Complétez : « Elle ___ partie hier. »",opts:["a","est","es","ont"],a:1,exp:"Le verbe « partir » se conjugue avec « être » : elle est partie."},
-  {id:"gram3",cat:"gram",q:"Quel est le pluriel de « cheval » ?",opts:["chevals","chevaux","chevaus","chevales"],a:1,exp:"Les mots en -al font leur pluriel en -aux : chevaux."},
-  {id:"gram4",cat:"gram",q:"Complétez : « Il faut que tu ___ tes devoirs. »",opts:["fais","fait","fasses","faire"],a:2,exp:"« Il faut que » impose le subjonctif : que tu fasses."},
-  {id:"gram5",cat:"gram",q:"Quel est le participe passé du verbe « prendre » ?",opts:["prendu","prit","pris","prendé"],a:2,exp:"Le participe passé de « prendre » est « pris »."},
-  {id:"gram6",cat:"gram",q:"Complétez : « Je ___ au marché ce matin. » (aller, présent)",opts:["vais","vas","va","vont"],a:0,exp:"1re personne du singulier du verbe aller : je vais."},
-  {id:"gram7",cat:"gram",q:"Quel est le féminin de « heureux » ?",opts:["heureuxe","heureuse","heureus","heureue"],a:1,exp:"Les adjectifs en -eux font leur féminin en -euse : heureuse."},
+const PSY_CATS=[
+  {id:"suites",label:"Suites logiques & numériques",ico:"arrows-shuffle",col:"#34D399"},
+  {id:"intel", label:"Jeux d'intelligence",          ico:"bulb",           col:"#60A5FA"},
+  {id:"fig",   label:"Figures",                      ico:"shape",          col:"#FBBF24"},
+  {id:"fr",    label:"Grammaire & vocabulaire",      ico:"language",       col:"#A78BFA"},
+  {id:"ang",   label:"Anglais de base",              ico:"flag",           col:"#FB923C"},
 ];
-const psShuffle=a=>{const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=x[i];x[i]=x[j];x[j]=t;}return x;};
-const PS_COUNT=20, PS_TIME=900;
-const psFmt=s=>`${Math.floor(s/60)}:${String(Math.max(0,s%60)).padStart(2,"0")}`;
+const PSY_BANK=[
+// ───── SUITES (logiques & numériques) ─────
+{id:"su_f1",cat:"suites",niv:"facile",q:"Quel nombre complète la suite ? 5, 10, 15, 20, 25, …",opts:["28","30","35","32"],a:1,exp:"On ajoute 5 à chaque terme : 25 + 5 = 30."},
+{id:"su_f2",cat:"suites",niv:"facile",q:"Quel nombre complète la suite ? 2, 4, 6, 8, 10, …",opts:["11","12","14","13"],a:1,exp:"Suite des nombres pairs : 10 + 2 = 12."},
+{id:"su_f3",cat:"suites",niv:"facile",q:"Quel nombre complète la suite ? 1, 3, 5, 7, 9, …",opts:["10","11","13","12"],a:1,exp:"Suite des nombres impairs : 9 + 2 = 11."},
+{id:"su_f4",cat:"suites",niv:"facile",q:"Quel nombre complète la suite ? 100, 90, 80, 70, …",opts:["65","50","60","55"],a:2,exp:"On retire 10 à chaque terme : 70 − 10 = 60."},
+{id:"su_m1",cat:"suites",niv:"moyen",q:"Quel nombre complète la suite ? 1, 2, 4, 8, 16, …",opts:["24","30","32","20"],a:2,exp:"Chaque terme est multiplié par 2 : 16 × 2 = 32."},
+{id:"su_m2",cat:"suites",niv:"moyen",q:"Quel nombre complète la suite ? 3, 6, 12, 24, …",opts:["36","42","30","48"],a:3,exp:"Chaque terme est multiplié par 2 : 24 × 2 = 48."},
+{id:"su_m3",cat:"suites",niv:"moyen",q:"Quel nombre complète la suite ? 2, 5, 8, 11, 14, …",opts:["16","17","18","20"],a:1,exp:"On ajoute 3 à chaque terme : 14 + 3 = 17."},
+{id:"su_m4",cat:"suites",niv:"moyen",q:"Quel nombre complète la suite ? 1, 4, 9, 16, 25, …",opts:["30","32","49","36"],a:3,exp:"Suite des carrés (1², 2², 3²…) : 6² = 36."},
+{id:"su_d1",cat:"suites",niv:"difficile",q:"Quel nombre complète la suite ? 2, 3, 5, 8, 12, …",opts:["16","18","15","17"],a:3,exp:"Les écarts augmentent de 1 en 1 (+1,+2,+3,+4,+5) : 12+5=17."},
+{id:"su_d2",cat:"suites",niv:"difficile",q:"Quel nombre complète la suite ? 1, 1, 2, 3, 5, 8, …",opts:["11","12","13","14"],a:2,exp:"Suite de Fibonacci : chaque terme est la somme des deux précédents (5+8=13)."},
+{id:"su_d3",cat:"suites",niv:"difficile",q:"Quel nombre complète la suite ? 1, 2, 6, 24, 120, …",opts:["600","640","720","540"],a:2,exp:"Chaque terme est multiplié par le rang suivant (×2,×3,×4,×5,×6) : 120×6=720."},
+{id:"su_d4",cat:"suites",niv:"difficile",q:"Quel nombre complète la suite ? 3, 7, 15, 31, 63, …",opts:["125","124","127","128"],a:2,exp:"Chaque terme = (précédent × 2) + 1 : 63×2+1=127."},
+{id:"su_t1",cat:"suites",niv:"tresdiff",q:"Quel nombre complète la suite ? 1, 4, 9, 16, 25, 36, …",opts:["42","45","48","49"],a:3,exp:"Suite des carrés successifs : 7² = 49."},
+{id:"su_t2",cat:"suites",niv:"tresdiff",q:"Quel nombre complète la suite ? 2, 3, 5, 7, 11, 13, …",opts:["15","16","17","19"],a:2,exp:"Suite des nombres premiers : après 13, le suivant est 17."},
+{id:"su_t3",cat:"suites",niv:"tresdiff",q:"Quel nombre complète la suite ? 1, 8, 27, 64, 125, …",opts:["200","196","210","216"],a:3,exp:"Suite des cubes (1³, 2³, 3³…) : 6³ = 216."},
+{id:"su_t4",cat:"suites",niv:"tresdiff",q:"Quel nombre complète la suite ? 1, 2, 4, 7, 11, 16, …",opts:["20","21","23","22"],a:3,exp:"Les écarts augmentent de 1 (+1,+2,+3,+4,+5,+6) : 16+6=22."},
+{id:"su_e1",cat:"suites",niv:"expert",q:"Quel nombre complète la suite ? 2, 6, 12, 20, 30, 42, …",opts:["54","52","58","56"],a:3,exp:"Formule n(n+1) : 7×8=56 (2=1×2, 6=2×3, 12=3×4…)."},
+{id:"su_e2",cat:"suites",niv:"expert",q:"Quel nombre complète la suite ? 1, 3, 6, 10, 15, 21, …",opts:["27","26","29","28"],a:3,exp:"Nombres triangulaires : on ajoute +2,+3,+4,+5,+6,+7 : 21+7=28."},
+{id:"su_e3",cat:"suites",niv:"expert",q:"Quel nombre complète la suite ? 5, 11, 23, 47, 95, …",opts:["189","192","188","191"],a:3,exp:"Chaque terme = (précédent × 2) + 1 : 95×2+1=191."},
+{id:"su_e4",cat:"suites",niv:"expert",q:"Quel nombre complète la suite ? 2, 3, 7, 16, 32, 57, …",opts:["90","95","88","93"],a:3,exp:"Écarts : +1,+4,+9,+16,+25 (carrés). Après +25 vient +36 : 57+36=93."},
+// ───── JEUX D'INTELLIGENCE ─────
+{id:"in_f1",cat:"intel",niv:"facile",q:"Si tous les chats sont des animaux et que Félix est un chat, alors Félix est…",opts:["un animal","une plante","un objet","un chien"],a:0,exp:"Félix appartient à la catégorie « chat », donc à la catégorie « animal »."},
+{id:"in_f2",cat:"intel",niv:"facile",q:"Marie est plus grande que Julie. Julie est plus grande que Sophie. Qui est la plus petite ?",opts:["Marie","Julie","Sophie","Impossible à dire"],a:2,exp:"Marie > Julie > Sophie, donc Sophie est la plus petite."},
+{id:"in_f3",cat:"intel",niv:"facile",q:"Combien font 2 douzaines ?",opts:["20","24","12","26"],a:1,exp:"Une douzaine = 12, donc 2 douzaines = 24."},
+{id:"in_f4",cat:"intel",niv:"facile",q:"Un train part à 14h et arrive à 16h30. Combien de temps a duré le trajet ?",opts:["2h","2h30","3h","1h30"],a:1,exp:"De 14h à 16h30, il s'écoule 2 heures et 30 minutes."},
+{id:"in_m1",cat:"intel",niv:"moyen",q:"J'ai 3 ans de plus que mon frère. Il a 10 ans. Quel âge ai-je ?",opts:["10 ans","12 ans","13 ans","7 ans"],a:2,exp:"10 + 3 = 13 ans."},
+{id:"in_m2",cat:"intel",niv:"moyen",q:"Si 3 crayons coûtent 6 $, combien coûtent 5 crayons (au même prix unitaire) ?",opts:["8 $","9 $","10 $","12 $"],a:2,exp:"1 crayon = 2 $, donc 5 crayons = 10 $."},
+{id:"in_m3",cat:"intel",niv:"moyen",q:"Paul est plus rapide que Marc. Marc est plus rapide que Julie. Qui est le plus lent ?",opts:["Paul","Marc","Julie","Impossible à dire"],a:2,exp:"Paul > Marc > Julie en rapidité, donc Julie est la plus lente."},
+{id:"in_m4",cat:"intel",niv:"moyen",q:"Un fermier a 10 vaches. Toutes sauf 3 s'échappent. Combien lui en reste-t-il ?",opts:["3","7","10","0"],a:0,exp:"« Toutes sauf 3 » s'échappent signifie qu'il ne reste que ces 3 vaches-là."},
+{id:"in_d1",cat:"intel",niv:"difficile",q:"3 ouvriers construisent un mur en 6 jours. Combien de jours faudra-t-il à 6 ouvriers, au même rythme, pour le même mur ?",opts:["2","3","4","6"],a:1,exp:"3 ouvriers × 6 jours = 18 « jours-ouvrier ». Avec 6 ouvriers : 18 ÷ 6 = 3 jours."},
+{id:"in_d2",cat:"intel",niv:"difficile",q:"Dans 5 ans, j'aurai le double de l'âge que j'avais il y a 5 ans. Quel âge ai-je aujourd'hui ?",opts:["10 ans","15 ans","20 ans","25 ans"],a:1,exp:"Si x est mon âge : x+5 = 2(x−5) → x+5 = 2x−10 → x = 15 ans."},
+{id:"in_d3",cat:"intel",niv:"difficile",q:"Trois amies (Ana, Léa, Zoé) aiment chacune une couleur différente (rouge, bleu, vert). Ana n'aime pas le rouge. Léa n'aime ni le bleu ni le rouge. Quelle est la couleur préférée de Léa ?",opts:["Rouge","Bleu","Vert","Impossible à dire"],a:2,exp:"Léa n'aime ni le bleu ni le rouge : il ne lui reste que le vert."},
+{id:"in_d4",cat:"intel",niv:"difficile",q:"Combien de fois par jour (24h) les aiguilles d'une horloge se superposent-elles exactement ?",opts:["24","22","12","20"],a:1,exp:"Les aiguilles se superposent 22 fois en 24 heures (fait classique d'horlogerie)."},
+{id:"in_t1",cat:"intel",niv:"tresdiff",q:"A fait un travail en 4 heures, B le même travail en 6 heures. En combien de temps le termineront-ils en travaillant ensemble ?",opts:["2h","2h24","2h30","5h"],a:1,exp:"1/4 + 1/6 = 5/12 du travail par heure → temps = 12/5 = 2,4h = 2h24."},
+{id:"in_t2",cat:"intel",niv:"tresdiff",q:"Le père a 4 fois l'âge de son fils. Dans 20 ans, il aura seulement le double de l'âge de son fils. Quel âge a le fils aujourd'hui ?",opts:["5 ans","8 ans","10 ans","15 ans"],a:2,exp:"4x+20 = 2(x+20) → 4x+20 = 2x+40 → 2x = 20 → x = 10 ans."},
+{id:"in_t3",cat:"intel",niv:"tresdiff",q:"Trois personnes (Tom, Ali, Zia) ont chacune un métier différent (médecin, ingénieur, professeur). Tom n'est pas médecin. Ali n'est ni ingénieur ni médecin. Quel est le métier d'Ali ?",opts:["Médecin","Ingénieur","Professeur","Impossible à dire"],a:2,exp:"Ali n'est ni ingénieur ni médecin : il ne lui reste que professeur."},
+{id:"in_t4",cat:"intel",niv:"tresdiff",q:"Un fermier doit traverser une rivière avec un loup, une chèvre et un chou. Le bateau ne transporte que le fermier et un seul élément à la fois. Seuls ensemble, le loup mangerait la chèvre, et la chèvre mangerait le chou. Que doit-il transporter en premier ?",opts:["Le loup","La chèvre","Le chou","Peu importe"],a:1,exp:"Il faut emmener la chèvre en premier : seule, ni le loup-chou (qui ne se menacent pas) ne posent problème."},
+{id:"in_e1",cat:"intel",niv:"expert",q:"A, B et C terminent seuls un travail en 6h, 8h et 12h. Combien de temps mettront-ils en travaillant tous les trois ensemble ?",opts:["2h","2h40","3h","4h"],a:1,exp:"1/6+1/8+1/12 = 9/24 = 3/8 du travail par heure → temps = 8/3 ≈ 2h40."},
+{id:"in_e2",cat:"intel",niv:"expert",q:"La mère a le triple de l'âge de sa fille. Dans 12 ans, elle aura seulement le double de l'âge de sa fille. Quel est l'âge actuel de la fille ?",opts:["8 ans","10 ans","12 ans","15 ans"],a:2,exp:"3x+12 = 2(x+12) → 3x+12 = 2x+24 → x = 12 ans."},
+{id:"in_e3",cat:"intel",niv:"expert",q:"Quatre coureurs : A finit avant B. C finit après D mais avant A. Qui a fini en dernier ?",opts:["A","B","C","D"],a:1,exp:"Ordre déduit : D < C < A < B. Le dernier arrivé est B."},
+{id:"in_e4",cat:"intel",niv:"expert",q:"On lance deux dés à 6 faces. Quelle est la probabilité d'obtenir une somme égale à 7 ?",opts:["1/12","1/6","1/8","1/4"],a:1,exp:"6 combinaisons sur 36 donnent 7 (1-6,2-5,3-4,4-3,5-2,6-1) : 6/36 = 1/6."},
+// ───── FIGURES ─────
+{id:"fi_f1",cat:"fig",niv:"facile",q:"Combien de côtés a un triangle ?",opts:["2","3","4","5"],a:1,exp:"Un triangle possède 3 côtés."},
+{id:"fi_f2",cat:"fig",niv:"facile",q:"Combien de côtés a un carré ?",opts:["3","4","5","6"],a:1,exp:"Un carré possède 4 côtés égaux."},
+{id:"fi_f3",cat:"fig",niv:"facile",q:"Quelle figure complète la suite ? ○ △ ○ △ ○ △ ?",opts:["○","△","▢","◇"],a:0,exp:"La suite alterne cercle puis triangle : après △ vient ○."},
+{id:"fi_f4",cat:"fig",niv:"facile",q:"Combien de sommets (coins) a un carré ?",opts:["3","4","5","6"],a:1,exp:"Un carré a 4 sommets, un à chaque coin."},
+{id:"fi_m1",cat:"fig",niv:"moyen",q:"Combien de faces possède un cube ?",opts:["4","6","8","12"],a:1,exp:"Un cube a 6 faces carrées."},
+{id:"fi_m2",cat:"fig",niv:"moyen",q:"Combien d'arêtes possède un cube ?",opts:["6","8","10","12"],a:3,exp:"Un cube possède 12 arêtes."},
+{id:"fi_m3",cat:"fig",niv:"moyen",q:"Quelle figure complète la suite ? △ △ ▢ △ △ ▢ △ △ ?",opts:["△","▢","○","◇"],a:1,exp:"Le motif se répète par groupes de 3 (△ △ ▢) : le 9ᵉ élément est ▢."},
+{id:"fi_m4",cat:"fig",niv:"moyen",q:"Combien de sommets a une pyramide à base carrée ?",opts:["4","5","6","8"],a:1,exp:"4 sommets à la base + 1 sommet au-dessus = 5."},
+{id:"fi_d1",cat:"fig",niv:"difficile",q:"Combien de diagonales possède un carré ?",opts:["1","2","3","4"],a:1,exp:"Un carré (4 côtés) possède 2 diagonales."},
+{id:"fi_d2",cat:"fig",niv:"difficile",q:"Combien de diagonales possède un hexagone (6 côtés) ?",opts:["6","9","12","15"],a:1,exp:"Formule n(n−3)/2 : 6×3/2 = 9 diagonales."},
+{id:"fi_d3",cat:"fig",niv:"difficile",q:"Une flèche pointe vers le Nord. Elle tourne de 90° dans le sens horaire, puis encore de 90°. Vers où pointe-t-elle maintenant ?",opts:["Nord","Est","Sud","Ouest"],a:2,exp:"Nord +90°=Est, Est +90°=Sud. Elle pointe vers le Sud."},
+{id:"fi_d4",cat:"fig",niv:"difficile",q:"Combien de côtés a un polygone dont la somme des angles intérieurs vaut 540° ?",opts:["4","5","6","7"],a:1,exp:"Formule (n−2)×180=540 → n−2=3 → n=5 côtés (pentagone)."},
+{id:"fi_t1",cat:"fig",niv:"tresdiff",q:"Combien de diagonales possède un octogone (8 côtés) ?",opts:["16","20","24","28"],a:1,exp:"Formule n(n−3)/2 : 8×5/2 = 20 diagonales."},
+{id:"fi_t2",cat:"fig",niv:"tresdiff",q:"Une aiguille pointe sur le 3 (comme sur une horloge). Elle avance de 6 heures dans le sens horaire, puis encore de 3 heures. Sur quel chiffre s'arrête-t-elle ?",opts:["6","9","12","3"],a:2,exp:"3 + 6 = 9, puis 9 + 3 = 12 (modulo 12). Elle s'arrête sur le 12."},
+{id:"fi_t3",cat:"fig",niv:"tresdiff",q:"Combien de faces possède un prisme à base pentagonale (5 côtés) ?",opts:["5","6","7","8"],a:2,exp:"2 bases pentagonales + 5 faces rectangulaires latérales = 7 faces."},
+{id:"fi_t4",cat:"fig",niv:"tresdiff",q:"Un cube est peint en rouge puis découpé en 27 petits cubes égaux (3×3×3). Combien de petits cubes ont exactement 2 faces peintes ?",opts:["6","8","12","24"],a:2,exp:"Ce sont les petits cubes situés sur les arêtes (hors coins) : 12 arêtes × 1 cube = 12."},
+{id:"fi_e1",cat:"fig",niv:"expert",q:"Un cube peint en rouge est découpé en 64 petits cubes égaux (4×4×4). Combien ont exactement 1 face peinte ?",opts:["8","12","24","36"],a:2,exp:"Ce sont les centres de face : 6 faces × (4−2)² = 6×4 = 24."},
+{id:"fi_e2",cat:"fig",niv:"expert",q:"Combien de diagonales possède un décagone (10 côtés) ?",opts:["25","30","35","40"],a:2,exp:"Formule n(n−3)/2 : 10×7/2 = 35 diagonales."},
+{id:"fi_e3",cat:"fig",niv:"expert",q:"Une aiguille part du 12. Elle avance de 5 heures dans le sens horaire, recule de 8 heures, puis avance de 11 heures. Sur quel chiffre s'arrête-t-elle ?",opts:["6","7","8","9"],a:2,exp:"12(0) +5=5, −8=−3≡9, +11=20≡8 (modulo 12). Elle s'arrête sur le 8."},
+{id:"fi_e4",cat:"fig",niv:"expert",q:"Un cube peint en rouge est découpé en 125 petits cubes égaux (5×5×5). Combien n'ont AUCUNE face peinte ?",opts:["8","27","54","64"],a:1,exp:"Ce sont les petits cubes du cœur, invisibles de l'extérieur : (5−2)³ = 3³ = 27."},
+// ───── GRAMMAIRE & VOCABULAIRE ─────
+{id:"fr_f1",cat:"fr",niv:"facile",q:"Quel est le synonyme de « content » ?",opts:["Triste","Joyeux","Fâché","Fatigué"],a:1,exp:"« Content » et « joyeux » expriment tous deux la satisfaction."},
+{id:"fr_f2",cat:"fr",niv:"facile",q:"Quel est le pluriel de « journal » ?",opts:["Journals","Journaux","Journales","Journeaux"],a:1,exp:"Les mots en -al font leur pluriel en -aux : journaux."},
+{id:"fr_f3",cat:"fr",niv:"facile",q:"Quel est le contraire de « grand » ?",opts:["Petit","Gros","Long","Large"],a:0,exp:"« Petit » est l'antonyme direct de « grand »."},
+{id:"fr_f4",cat:"fr",niv:"facile",q:"Complétez : « Les enfants ___ au parc. »",opts:["joue","jouent","joues","jouer"],a:1,exp:"Sujet pluriel « les enfants » → « jouent »."},
+{id:"fr_m1",cat:"fr",niv:"moyen",q:"Quel est le contraire de « généreux » ?",opts:["Avare","Riche","Gentil","Aimable"],a:0,exp:"« Avare » est l'antonyme de « généreux »."},
+{id:"fr_m2",cat:"fr",niv:"moyen",q:"Quel est le synonyme de « rapide » ?",opts:["Lent","Véloce","Lourd","Faible"],a:1,exp:"« Véloce » signifie qui va vite."},
+{id:"fr_m3",cat:"fr",niv:"moyen",q:"Complétez : « Elle ___ partie hier. »",opts:["a","est","es","ont"],a:1,exp:"Le verbe « partir » se conjugue avec « être » : elle est partie."},
+{id:"fr_m4",cat:"fr",niv:"moyen",q:"Quel est le féminin de « heureux » ?",opts:["Heureuxe","Heureuse","Heureus","Heureue"],a:1,exp:"Les adjectifs en -eux font leur féminin en -euse : heureuse."},
+{id:"fr_d1",cat:"fr",niv:"difficile",q:"Quel est le participe passé du verbe « prendre » ?",opts:["Prendu","Prit","Pris","Prendé"],a:2,exp:"Le participe passé de « prendre » est « pris »."},
+{id:"fr_d2",cat:"fr",niv:"difficile",q:"Complétez : « Il faut que tu ___ tes devoirs. »",opts:["fais","fait","fasses","faire"],a:2,exp:"« Il faut que » impose le subjonctif : que tu fasses."},
+{id:"fr_d3",cat:"fr",niv:"difficile",q:"Que signifie « éphémère » ?",opts:["Qui dure longtemps","Qui dure peu de temps","Qui est solide","Qui est ancien"],a:1,exp:"« Éphémère » qualifie ce qui dure très peu de temps."},
+{id:"fr_d4",cat:"fr",niv:"difficile",q:"Complétez correctement : « ___ chiens aboient fort. »",opts:["Leur","Leurs","Leures","Leurres"],a:1,exp:"Devant un nom pluriel, on écrit « leurs » : leurs chiens."},
+{id:"fr_t1",cat:"fr",niv:"tresdiff",q:"Quel est le pluriel de « un travail » ?",opts:["Travails","Travaux","Travaus","Travailles"],a:1,exp:"Les mots en -ail font souvent leur pluriel en -aux : travaux."},
+{id:"fr_t2",cat:"fr",niv:"tresdiff",q:"Complétez : « Je me suis ___ les mains. »",opts:["lavé","lavée","lavés","lavées"],a:0,exp:"Le COD « les mains » est placé après le verbe : le participe reste invariable (lavé)."},
+{id:"fr_t3",cat:"fr",niv:"tresdiff",q:"Que signifie « acrimonie » ?",opts:["Une joie profonde","Une amertume, un ton aigre","Une grande générosité","Un calme absolu"],a:1,exp:"« Acrimonie » désigne une amertume ou une aigreur dans le ton, les propos."},
+{id:"fr_t4",cat:"fr",niv:"tresdiff",q:"Quel est le contraire de « prolixe » (qui parle beaucoup) ?",opts:["Bavard","Laconique","Verbeux","Loquace"],a:1,exp:"« Laconique » signifie qui s'exprime en peu de mots, l'inverse de « prolixe »."},
+{id:"fr_e1",cat:"fr",niv:"expert",q:"Quelle est la nature grammaticale de « que » dans « Je pense que tu as raison » ?",opts:["Pronom relatif","Conjonction de subordination","Adverbe","Préposition"],a:1,exp:"Il introduit une proposition subordonnée complétive : c'est une conjonction de subordination."},
+{id:"fr_e2",cat:"fr",niv:"expert",q:"Complétez avec le bon accord : « Les fleurs que j'ai ___. »",opts:["cueilli","cueillie","cueillis","cueillies"],a:3,exp:"Le COD « que » (=fleurs, féminin pluriel) est placé avant le verbe : accord obligatoire → cueillies."},
+{id:"fr_e3",cat:"fr",niv:"expert",q:"Que signifie l'expression « avoir maille à partir avec quelqu'un » ?",opts:["Être ami intime avec lui","Avoir un différend avec lui","Partager un repas avec lui","Être en vacances avec lui"],a:1,exp:"Cette expression signifie avoir une dispute, un différend avec quelqu'un."},
+{id:"fr_e4",cat:"fr",niv:"expert",q:"Que signifie le mot « pléonasme » ?",opts:["Une figure de style comparant deux choses","Une répétition inutile d'une idée déjà exprimée","Une exagération volontaire","Un jeu de mots"],a:1,exp:"Un pléonasme est une redondance : répéter une idée déjà exprimée (ex : « monter en haut »)."},
+// ───── ANGLAIS DE BASE ─────
+{id:"an_f1",cat:"ang",niv:"facile",q:"Comment dit-on « chat » en anglais ?",opts:["Cat","Dog","Bird","Fish"],a:0,exp:"« Cat » signifie chat en anglais."},
+{id:"an_f2",cat:"ang",niv:"facile",q:"Comment dit-on « merci » en anglais ?",opts:["Please","Thank you","Sorry","Hello"],a:1,exp:"« Thank you » signifie merci."},
+{id:"an_f3",cat:"ang",niv:"facile",q:"Complétez : « I ___ a student. »",opts:["is","are","am","be"],a:2,exp:"À la 1ʳᵉ personne du singulier, le verbe « to be » donne « am »."},
+{id:"an_f4",cat:"ang",niv:"facile",q:"Comment dit-on « rouge » en anglais ?",opts:["Blue","Red","Green","Yellow"],a:1,exp:"« Red » signifie rouge en anglais."},
+{id:"an_m1",cat:"ang",niv:"moyen",q:"Quel est le pluriel de « child » (enfant) en anglais ?",opts:["Childs","Children","Childes","Childrens"],a:1,exp:"Le pluriel irrégulier de « child » est « children »."},
+{id:"an_m2",cat:"ang",niv:"moyen",q:"Complétez : « She ___ to school every day. »",opts:["go","goes","going","gone"],a:1,exp:"À la 3ᵉ personne du singulier au présent simple, on ajoute -es : goes."},
+{id:"an_m3",cat:"ang",niv:"moyen",q:"Comment dit-on « hier » en anglais ?",opts:["Today","Tomorrow","Yesterday","Now"],a:2,exp:"« Yesterday » signifie hier."},
+{id:"an_m4",cat:"ang",niv:"moyen",q:"Quel est le contraire de « big » en anglais ?",opts:["Tall","Small","Wide","Long"],a:1,exp:"« Small » (petit) est l'antonyme de « big » (grand)."},
+{id:"an_d1",cat:"ang",niv:"difficile",q:"Complétez : « I have ___ this book before. » (present perfect de « read »)",opts:["read","readed","reading","reads"],a:0,exp:"Le participe passé de « read » s'écrit « read » (mais se prononce différemment)."},
+{id:"an_d2",cat:"ang",niv:"difficile",q:"Quel est le comparatif de « good » en anglais ?",opts:["Gooder","Better","Best","More good"],a:1,exp:"« Good » a un comparatif irrégulier : « better »."},
+{id:"an_d3",cat:"ang",niv:"difficile",q:"Complétez : « They ___ playing football when it started to rain. »",opts:["was","were","are","is"],a:1,exp:"Sujet pluriel « they » au prétérit continu → « were »."},
+{id:"an_d4",cat:"ang",niv:"difficile",q:"Que signifie l'expression « to give up » ?",opts:["Commencer","Abandonner","Continuer","Réussir"],a:1,exp:"« To give up » signifie abandonner, renoncer."},
+{id:"an_t1",cat:"ang",niv:"tresdiff",q:"Complétez : « I have been living here ___ 2015. »",opts:["for","since","from","during"],a:1,exp:"« Since » s'utilise avec un point de départ précis dans le temps (depuis 2015)."},
+{id:"an_t2",cat:"ang",niv:"tresdiff",q:"Complétez : « If I ___ rich, I would travel the world. »",opts:["am","was","were","be"],a:2,exp:"Dans une hypothèse irréelle (2nd conditionnel), on utilise « were » pour tous les sujets."},
+{id:"an_t3",cat:"ang",niv:"tresdiff",q:"Que signifie le phrasal verb « to look after » ?",opts:["Chercher","S'occuper de","Regarder vers","Admirer"],a:1,exp:"« To look after » signifie s'occuper de, prendre soin de."},
+{id:"an_t4",cat:"ang",niv:"tresdiff",q:"Quelle phrase est correctement construite à la voix passive ?",opts:["The author wrote by the book.","The book was written by the author.","The book is writing by the author.","The author was wrote the book."],a:1,exp:"La voix passive correcte est : « The book was written by the author. »"},
+{id:"an_e1",cat:"ang",niv:"expert",q:"Que signifie l'expression idiomatique « to bite the bullet » ?",opts:["Manger rapidement","Accepter une situation difficile avec courage","Être très précis","Avoir peur"],a:1,exp:"Cette expression signifie affronter une situation difficile avec courage, malgré la douleur."},
+{id:"an_e2",cat:"ang",niv:"expert",q:"Complétez : « By the time we arrived, the movie ___ already ___. »",opts:["had / started","has / started","was / starting","did / start"],a:0,exp:"Une action antérieure à une autre action passée se forme avec le past perfect : had started."},
+{id:"an_e3",cat:"ang",niv:"expert",q:"Laquelle de ces phrases exprime un sens plutôt négatif (pas assez) ?",opts:["I have a few friends.","I have few friends.","I have some friends.","I have many friends."],a:1,exp:"« Few » (sans « a ») a une connotation négative : peu, pas assez. « A few » est positif : quelques-uns."},
+{id:"an_e4",cat:"ang",niv:"expert",q:"Que signifie le phrasal verb « to come across » ?",opts:["Traverser","Tomber sur, rencontrer par hasard","Revenir en arrière","Se rapprocher"],a:1,exp:"« To come across » signifie tomber sur quelque chose ou quelqu'un par hasard."},
+];
+const psyShuffle=a=>{const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=x[i];x[i]=x[j];x[j]=t;}return x;};
+const psyFmt=s=>`${Math.floor(s/60)}:${String(Math.max(0,s%60)).padStart(2,"0")}`;
+const psyRelTime=ts=>{
+  if(!ts?.seconds)return"";
+  const diff=Date.now()/1000-ts.seconds;
+  if(diff<3600)return`il y a ${Math.max(1,Math.round(diff/60))} min`;
+  if(diff<86400)return`il y a ${Math.round(diff/3600)} h`;
+  return`il y a ${Math.round(diff/86400)} j`;
+};
 
-function PsychoPage(){
+function PsychoPage({uid,u}){
   const K=useK();const{mob}=useW();
-  const[phase,sPhase]=useState("cat");   // cat | test | done
-  const[cat,sCat]=useState(null);
-  const[qs,sQs]=useState([]);
-  const[idx,sIdx]=useState(0);
-  const[ans,sAns]=useState([]);
-  const[tLeft,sTLeft]=useState(PS_TIME);
+  const[phase,setPhase]=useState("level");   // level | test | done
+  const[niv,setNiv]=useState(null);
+  const[qs,setQs]=useState([]);
+  const[idx,setIdx]=useState(0);
+  const[ans,setAns]=useState([]);
+  const[tLeft,setTLeft]=useState(0);
+  const[hist,setHist]=useState([]);
+  const[histLoading,setHistLoading]=useState(true);
+  const savedRef=useRef(false);
+
+  useEffect(()=>{
+    let active=true;
+    (async()=>{
+      if(!uid){setHistLoading(false);return;}
+      setHistLoading(true);
+      try{
+        const snap=await getDocs(query(collection(db,"psychoScores"),where("uid","==",uid)));
+        const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+        rows.sort((a,b)=>(b.ts?.seconds||0)-(a.ts?.seconds||0));
+        if(active)setHist(rows.slice(0,5));
+      }catch(e){console.log("psycho hist error",e);}
+      if(active)setHistLoading(false);
+    })();
+    return()=>{active=false;};
+  },[uid,phase]);
+
+  const finish=useCallback(async(finalAns,finalTLeft)=>{
+    if(savedRef.current)return;
+    savedRef.current=true;
+    const lvl=PSY_LEVELS.find(l=>l.id===niv);
+    const sc=qs.reduce((s,q,i)=>s+(finalAns[i]===q.a?1:0),0);
+    const pct=qs.length?Math.round(sc/qs.length*100):0;
+    if(!uid)return;
+    try{
+      const ref=doc(collection(db,"psychoScores"));
+      await setDoc(ref,{uid,nom:u?.nom||"",mail:u?.mail||"",niveau:niv,niveauLabel:lvl?.label||niv,score:sc,total:qs.length,pct,dureeUtilisee:(lvl?.dur||0)-finalTLeft,ts:serverTimestamp()});
+    }catch(e){console.log("psycho save error",e);}
+  },[qs,niv,uid,u]);
 
   useEffect(()=>{
     if(phase!=="test")return;
-    if(tLeft<=0){sPhase("done");return;}
-    const t=setInterval(()=>sTLeft(s=>s-1),1000);
+    if(tLeft<=0){finish(ans,0);setPhase("done");return;}
+    const t=setInterval(()=>setTLeft(s=>s-1),1000);
     return()=>clearInterval(t);
-  },[phase,tLeft]);
+  },[phase,tLeft,ans,finish]);
 
-  const start=cid=>{
-    const pool=cid==="mix"?PSYCHO_BANK:PSYCHO_BANK.filter(q=>q.cat===cid);
-    const picked=psShuffle(pool).slice(0,Math.min(PS_COUNT,pool.length));
-    sCat(cid);sQs(picked);sAns(new Array(picked.length).fill(null));sIdx(0);sTLeft(PS_TIME);sPhase("test");
+  const start=nivId=>{
+    const lvl=PSY_LEVELS.find(l=>l.id===nivId);
+    const pool=psyShuffle(PSY_BANK.filter(q=>q.niv===nivId));
+    const picked=pool.slice(0,Math.min(lvl.n,pool.length));
+    savedRef.current=false;
+    setNiv(nivId);setQs(picked);setAns(new Array(picked.length).fill(null));setIdx(0);setTLeft(lvl.dur);setPhase("test");
   };
-  const pick=oi=>sAns(a=>{const b=a.slice();b[idx]=oi;return b;});
-  const next=()=>{if(idx<qs.length-1)sIdx(idx+1);else sPhase("done");};
-  const prev=()=>{if(idx>0)sIdx(idx-1);};
-  const reset=()=>{sPhase("cat");sCat(null);sQs([]);sIdx(0);sAns([]);sTLeft(PS_TIME);};
+  const pick=oi=>setAns(a=>{const b=a.slice();b[idx]=oi;return b;});
+  const next=()=>{
+    if(idx<qs.length-1){setIdx(idx+1);}
+    else{finish(ans,tLeft);setPhase("done");}
+  };
+  const prev=()=>{if(idx>0)setIdx(idx-1);};
+  const backToLevels=()=>{setPhase("level");setNiv(null);setQs([]);setIdx(0);setAns([]);};
 
   const score=qs.reduce((s,q,i)=>s+(ans[i]===q.a?1:0),0);
   const pct=qs.length?Math.round(score/qs.length*100):0;
-  const catInfo=cid=>PSYCHO_CATS.find(c=>c.id===cid)||{label:"Test mixte",col:K.em,ico:"stack-2"};
+  const curLvl=PSY_LEVELS.find(l=>l.id===niv);
+  const catInfo=cid=>PSY_CATS.find(c=>c.id===cid)||{label:"—",col:K.em};
 
-  // ── ÉCRAN : CHOIX DE CATÉGORIE (tuiles) ──
-  if(phase==="cat")return <div style={{padding:mob?"14px":"24px 0",animation:"fadeIn .35s ease"}}>
+  // ── ÉCRAN : CHOIX DU NIVEAU (tuiles) ──
+  if(phase==="level")return <div style={{padding:mob?"14px":"24px 0",animation:"fadeIn .35s ease"}}>
     <div style={{textAlign:"center",marginBottom:22}}>
       <div style={{display:"inline-flex",alignItems:"center",gap:6,background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:99,padding:"4px 13px",marginBottom:12,fontSize:11,fontWeight:700,color:K.in_,letterSpacing:.5}}>
-        <i className="ti ti-brain" style={{fontSize:13}}/>AUTO-ÉVALUATION
+        <i className="ti ti-brain" style={{fontSize:13}}/>AUTO-ÉVALUATION CHRONOMÉTRÉE
       </div>
       <div style={{fontSize:mob?22:27,fontWeight:900,color:K.t1,marginBottom:6}}>Tests psychotechniques</div>
-      <div style={{fontSize:13,color:K.t2,lineHeight:1.6,maxWidth:440,margin:"0 auto"}}>Entraînez-vous régulièrement · Tests chronométrés · Correction détaillée</div>
+      <div style={{fontSize:13,color:K.t2,lineHeight:1.6,maxWidth:460,margin:"0 auto"}}>Choisissez votre niveau · Suites, intelligence, figures, français, anglais · 5 à 15 minutes</div>
     </div>
 
-    {/* Tuile test mixte (mise en avant) */}
-    <div onClick={()=>start("mix")} className="bt" style={{cursor:"pointer",marginBottom:14,padding:mob?"18px":"22px 24px",borderRadius:16,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",gap:16,boxShadow:`0 10px 30px ${K.emD}44`,position:"relative",overflow:"hidden"}}>
-      <div style={{width:mob?46:54,height:mob?46:54,borderRadius:14,background:"rgba(7,18,9,.18)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-        <i className="ti ti-stack-2" style={{fontSize:mob?24:28,color:"#F5EDD8"}}/>
-      </div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:mob?16:18,fontWeight:900,color:"#F5EDD8"}}>Test complet mixte</div>
-        <div style={{fontSize:12,fontWeight:600,color:"rgba(7,18,9,.7)",marginTop:2}}>20 questions · toutes catégories · 15 min</div>
-      </div>
-      <i className="ti ti-arrow-right" style={{fontSize:22,color:"#F5EDD8",flexShrink:0}}/>
+    {/* Tuiles de niveau */}
+    <div style={{display:"grid",gridTemplateColumns:mob?"1fr 1fr":"repeat(5,1fr)",gap:mob?10:12,marginBottom:26}}>
+      {PSY_LEVELS.map(l=><div key={l.id} onClick={()=>start(l.id)} className="bt" style={{cursor:"pointer",padding:mob?"16px 12px":"20px 14px",borderRadius:14,background:K.card,border:`1px solid ${K.b1}`,textAlign:"center",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:0,left:0,width:"100%",height:3,background:l.col}}/>
+        <div style={{width:40,height:40,borderRadius:11,background:`${l.col}1e`,border:`1px solid ${l.col}44`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px"}}>
+          <i className={`ti ti-${l.ico}`} style={{fontSize:19,color:l.col}}/>
+        </div>
+        <div style={{fontSize:13,fontWeight:800,color:K.t1,marginBottom:6}}>{l.label}</div>
+        <div style={{fontSize:10,color:K.t3,fontWeight:600}}>{Math.round(l.dur/60)} min · {l.n} questions</div>
+      </div>)}
     </div>
 
-    {/* Grille de tuiles par catégorie */}
-    <div style={{display:"grid",gridTemplateColumns:mob?"1fr 1fr":"1fr 1fr 1fr",gap:mob?10:14}}>
-      {PSYCHO_CATS.map(c=>{
-        const n=PSYCHO_BANK.filter(q=>q.cat===c.id).length;
-        return <div key={c.id} onClick={()=>start(c.id)} className="bt" style={{cursor:"pointer",padding:mob?"16px 14px":"20px 18px",borderRadius:14,background:K.card,border:`1px solid ${K.b1}`,transition:"transform .15s,border-color .15s",position:"relative",overflow:"hidden"}}>
-          <div style={{position:"absolute",top:0,left:0,width:"100%",height:3,background:c.col}}/>
-          <div style={{width:44,height:44,borderRadius:12,background:`${c.col}1e`,border:`1px solid ${c.col}44`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12}}>
-            <i className={`ti ti-${c.ico}`} style={{fontSize:22,color:c.col}}/>
+    {/* Matières couvertes */}
+    <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:10,paddingLeft:2}}>Matières mélangées à chaque test</div>
+    <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:26}}>
+      {PSY_CATS.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:6,background:`${c.col}12`,border:`1px solid ${c.col}30`,borderRadius:99,padding:"6px 12px",fontSize:11,fontWeight:700,color:c.col}}>
+        <i className={`ti ti-${c.ico}`} style={{fontSize:13}}/>{c.label}
+      </div>)}
+    </div>
+
+    {/* Historique personnel */}
+    {uid&&<div>
+      <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:10,paddingLeft:2}}>Vos derniers résultats</div>
+      {histLoading?<div style={{fontSize:12,color:K.t3,padding:"10px 2px"}}>Chargement…</div>
+      :hist.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"18px",textAlign:"center",fontSize:12,color:K.t3}}>Aucun test passé pour l'instant. Lancez-vous !</div>
+      :<div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {hist.map(h=>{const lc=PSY_LEVELS.find(l=>l.id===h.niveau)?.col||K.em;return <div key={h.id} style={{display:"flex",alignItems:"center",gap:10,background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"10px 13px"}}>
+          <div style={{width:8,height:8,borderRadius:"50%",background:lc,flexShrink:0}}/>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13,fontWeight:700,color:K.t1}}>{h.niveauLabel||h.niveau}</div>
+            <div style={{fontSize:10,color:K.t3}}>{psyRelTime(h.ts)}</div>
           </div>
-          <div style={{fontSize:14,fontWeight:800,color:K.t1,lineHeight:1.3,marginBottom:4}}>{c.label}</div>
-          <div style={{fontSize:11,color:K.t3,fontWeight:600}}>{n} questions</div>
-        </div>;
-      })}
-    </div>
+          <div style={{fontSize:14,fontWeight:900,color:h.pct>=70?K.em:h.pct>=40?K.wa:K.rd}}>{h.score}/{h.total}</div>
+        </div>;})}
+      </div>}
+    </div>}
   </div>;
 
   // ── ÉCRAN : TEST EN COURS ──
   if(phase==="test"){
     const q=qs[idx];const ci=catInfo(q.cat);const low=tLeft<=60;
     return <div style={{padding:mob?"12px":"22px 0",animation:"fadeIn .3s ease",maxWidth:640,margin:"0 auto"}}>
-      {/* Barre haut : progression + chrono */}
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
         <div style={{flex:1}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:11,fontWeight:700,color:K.t3}}>
-            <span>Question {idx+1} / {qs.length}</span>
+            <span>Question {idx+1} / {qs.length} · {curLvl?.label}</span>
             <span style={{color:ci.col}}>{ci.label}</span>
           </div>
           <Bar p={(idx+1)/qs.length*100} col={ci.col}/>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:6,background:low?K.rdBg:K.c2,border:`1px solid ${low?K.rdBd:K.b0}`,borderRadius:10,padding:"7px 11px",flexShrink:0,animation:low?"blink 1s ease-in-out infinite":"none"}}>
           <i className="ti ti-clock" style={{fontSize:14,color:low?K.rd:K.t2}}/>
-          <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:700,color:low?K.rd:K.t1}}>{psFmt(tLeft)}</span>
+          <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:700,color:low?K.rd:K.t1}}>{psyFmt(tLeft)}</span>
         </div>
       </div>
 
-      {/* Carte question */}
       <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:16,padding:mob?"20px 18px":"26px 24px",marginBottom:14}}>
         <div style={{fontSize:mob?16:18,fontWeight:700,color:K.t1,lineHeight:1.5,marginBottom:20}}>{q.q}</div>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           {q.opts.map((o,oi)=>{
             const sel=ans[idx]===oi;
             return <button key={oi} onClick={()=>pick(oi)} className="bt" style={{display:"flex",alignItems:"center",gap:12,padding:"13px 15px",borderRadius:11,border:`1.5px solid ${sel?ci.col:K.b0}`,background:sel?`${ci.col}18`:K.c2,cursor:"pointer",textAlign:"left",fontFamily:"'Outfit',sans-serif",transition:"all .15s"}}>
-              <div style={{width:26,height:26,borderRadius:"50%",flexShrink:0,border:`1.5px solid ${sel?ci.col:K.b1}`,background:sel?ci.col:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:sel?"#F5EDD8":K.t3}}>{String.fromCharCode(65+oi)}</div>
+              <div style={{width:26,height:26,borderRadius:"50%",flexShrink:0,border:`1.5px solid ${sel?ci.col:K.b1}`,background:sel?ci.col:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:sel?"#071209":K.t3}}>{String.fromCharCode(65+oi)}</div>
               <span style={{fontSize:14,fontWeight:600,color:K.t1}}>{o}</span>
             </button>;
           })}
         </div>
       </div>
 
-      {/* Navigation */}
       <div style={{display:"flex",gap:10}}>
         <button onClick={prev} disabled={idx===0} className="bt" style={{flex:1,padding:"12px",background:"transparent",border:`1px solid ${K.b0}`,borderRadius:10,color:idx===0?K.t3:K.t2,fontFamily:"'Outfit',sans-serif",fontSize:13,fontWeight:700,cursor:idx===0?"default":"pointer",opacity:idx===0?.4:1,minHeight:46}}>← Précédent</button>
         <div style={{flex:2}}><Btn ch={idx<qs.length-1?"Suivant →":"Terminer le test ✓"} on={next} full sx={{padding:"12px",fontSize:14,minHeight:46}}/></div>
@@ -2095,19 +2218,22 @@ function PsychoPage(){
       <div style={{display:"flex",justifyContent:"center",marginBottom:14}}><ProgressRing pct={pct} size={104} stroke={9} col={msgCol}/></div>
       <div style={{fontSize:22,fontWeight:900,color:K.t1,marginBottom:4}}>{score} / {qs.length} bonnes réponses</div>
       <div style={{fontSize:14,fontWeight:700,color:msgCol,marginBottom:2}}>{msg}</div>
-      <div style={{fontSize:12,color:K.t3}}>{catInfo(cat).label} · {psFmt(PS_TIME-tLeft)} utilisées</div>
+      <div style={{fontSize:12,color:K.t3}}>Niveau {curLvl?.label} · {psyFmt((curLvl?.dur||0)-tLeft)} utilisées</div>
     </div>
 
     <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:12,paddingLeft:2}}>Correction détaillée</div>
     <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:18}}>
       {qs.map((q,i)=>{
-        const good=ans[i]===q.a;const given=ans[i];
+        const good=ans[i]===q.a;const given=ans[i];const ci=catInfo(q.cat);
         return <div key={q.id} style={{background:K.card,border:`1px solid ${good?K.emBd:K.rdBd}`,borderRadius:12,padding:"14px 16px"}}>
           <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:8}}>
             <div style={{width:20,height:20,borderRadius:"50%",flexShrink:0,background:good?K.em:K.rd,display:"flex",alignItems:"center",justifyContent:"center",marginTop:1}}>
               <i className={good?"ti ti-check":"ti ti-x"} style={{fontSize:12,color:"#fff"}}/>
             </div>
-            <div style={{fontSize:13,fontWeight:700,color:K.t1,lineHeight:1.4}}>{i+1}. {q.q}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,fontWeight:800,color:ci.col,textTransform:"uppercase",letterSpacing:.5,marginBottom:3}}>{ci.label}</div>
+              <div style={{fontSize:13,fontWeight:700,color:K.t1,lineHeight:1.4}}>{i+1}. {q.q}</div>
+            </div>
           </div>
           <div style={{fontSize:12,color:K.t2,paddingLeft:28,lineHeight:1.6}}>
             {given==null
@@ -2121,8 +2247,8 @@ function PsychoPage(){
     </div>
 
     <div style={{display:"flex",gap:10}}>
-      <button onClick={reset} className="bt" style={{flex:1,padding:"13px",background:"transparent",border:`1px solid ${K.b1}`,borderRadius:11,color:K.t2,fontFamily:"'Outfit',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer",minHeight:46}}>Autres tests</button>
-      <div style={{flex:1}}><Btn ch="↻ Recommencer" on={()=>start(cat)} full sx={{padding:"13px",fontSize:14,minHeight:46}}/></div>
+      <button onClick={backToLevels} className="bt" style={{flex:1,padding:"13px",background:"transparent",border:`1px solid ${K.b1}`,borderRadius:11,color:K.t2,fontFamily:"'Outfit',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer",minHeight:46}}>Autres niveaux</button>
+      <div style={{flex:1}}><Btn ch="↻ Recommencer" on={()=>start(niv)} full sx={{padding:"13px",fontSize:14,minHeight:46}}/></div>
     </div>
   </div>;
 }
