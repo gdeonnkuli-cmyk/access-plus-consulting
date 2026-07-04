@@ -2485,6 +2485,11 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
         </div>;})}
       </div>
     </div>}
+    {showCode&&<Sheet title="🔐 Code d'activation" onClose={()=>sShowCode(false)}>
+      <Inp lb="Code d'activation" rf={rHc} ph="AP-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
+      {hcErr&&<div style={{color:K.er,fontSize:12,marginBottom:10}}>{hcErr}</div>}
+      <Btn ch={hcBusy?"…":"Valider →"} on={submitHomeCode} full dis={hcBusy}/>
+    </Sheet>}
   </div>;
 }
 
@@ -2651,11 +2656,6 @@ function Res({sc,ok,mods}){
         <div style={{marginTop:8,display:"flex",alignItems:"center",gap:6}}>{w?<><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/><span style={{fontSize:12,color:K.em,fontWeight:600}}>{s.pct>=80?"Excellent !":s.pct>=70?"Très bien":"Bien"}</span></>:<><i className="ti ti-alert-circle" style={{fontSize:14,color:K.er}}/><span style={{fontSize:12,color:K.er,fontWeight:600}}>À retravailler</span></>}</div>
       </div>;})}
     </div>}
-    {showCode&&<Sheet title="🔐 Code d'activation" onClose={()=>sShowCode(false)}>
-      <Inp lb="Code d'activation" rf={rHc} ph="AP-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
-      {hcErr&&<div style={{color:K.er,fontSize:12,marginBottom:10}}>{hcErr}</div>}
-      <Btn ch={hcBusy?"…":"Valider →"} on={submitHomeCode} full dis={hcBusy}/>
-    </Sheet>}
   </div>;
 }
 
