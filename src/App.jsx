@@ -190,6 +190,23 @@ const saveModule=async(mod)=>{
   else{const ref_=doc(collection(db,"modules"));await setDoc(ref_,flat);}
 };
 const deleteModule=async(id)=>{await deleteDoc(doc(db,"modules",id));};
+const saveAnnonce=async(an)=>{
+  const{id,...data}=an;
+  if(id&&id.length>4){await setDoc(doc(db,"annonces",id),data,{merge:true});}
+  else{const ref_=doc(collection(db,"annonces"));await setDoc(ref_,{...data,createdAt:Date.now()});}
+};
+const deleteAnnonce=async(id)=>{await deleteDoc(doc(db,"annonces",id));};
+const sendMessage=async({apprenantUid,apprenantNom,from,fromNom,fromRole,texte})=>{
+  const ref_=doc(collection(db,"messages"));
+  await setDoc(ref_,{apprenantUid,apprenantNom,from,fromNom,fromRole,texte,ts:Date.now(),luApprenant:fromRole==="apprenant",luAdmin:fromRole==="admin"});
+};
+const markMsgsRead=async(apprenantUid,side)=>{
+  try{
+    const snap=await getDocs(query(collection(db,"messages"),where("apprenantUid","==",apprenantUid)));
+    const field=side==="apprenant"?"luApprenant":"luAdmin";
+    await Promise.all(snap.docs.filter(d=>!d.data()[field]).map(d=>updateDoc(d.ref,{[field]:true})));
+  }catch(e){console.log("markMsgsRead error",e);}
+};
 const saveVideo=async(vid)=>{
   const{id,...data}=vid;
   if(id){await setDoc(doc(db,"videos",id),data,{merge:true});}
@@ -294,6 +311,27 @@ const deletePdf=async(modId,name)=>{
 };
 
 // ── RESPONSIVE ────────────────────────────────────────────────────────────────
+function useMessages(apprenantUid){
+  const[msgs,sMsgs]=useState([]);
+  useEffect(()=>{
+    if(!apprenantUid){sMsgs([]);return;}
+    const unsub=onSnapshot(query(collection(db,"messages"),where("apprenantUid","==",apprenantUid)),(snap)=>{
+      sMsgs(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.ts||0)-(b.ts||0)));
+    });
+    return unsub;
+  },[apprenantUid]);
+  return msgs;
+}
+function useAllMessages(){
+  const[msgs,sMsgs]=useState([]);
+  useEffect(()=>{
+    const unsub=onSnapshot(collection(db,"messages"),(snap)=>{
+      sMsgs(snap.docs.map(d=>({id:d.id,...d.data()})));
+    });
+    return unsub;
+  },[]);
+  return msgs;
+}
 function useDemandes(){
   const[demandes,sD]=useState([]);
   useEffect(()=>{
@@ -303,6 +341,16 @@ function useDemandes(){
     return unsub;
   },[]);
   return demandes;
+}
+function useAnnonces(){
+  const[annonces,sAn]=useState([]);
+  useEffect(()=>{
+    const unsub=onSnapshot(collection(db,"annonces"),(snap)=>{
+      sAn(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)));
+    });
+    return unsub;
+  },[]);
+  return annonces;
 }
 function useStages(){
   const[stages,sS]=useState([]);
@@ -1943,7 +1991,7 @@ function UA({uid,onOut}){
   const pr=uData.progress||{},sc=uData.scores||{};
   const nd=aMods.filter(m=>pr[m.id]==="done").length,gp=aMods.length?Math.round(nd/aMods.length*100):0;
   const save=async(modId,s,t)=>{await saveProgress(uid,modId,{s,t,pct:Math.round(s/t*100)});};
-  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}<AutoLogoutBanner warning={uaWarn} mob={mob}/></div>;
+  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on} uid={uid}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}<AutoLogoutBanner warning={uaWarn} mob={mob}/></div>;
   if(quiz)return W(<QZ mod={quiz} onDone={async(s,t)=>{await save(quiz.id,s,t);sQ(null);sM(null);sV("res");}} onBack={()=>sQ(null)}/>);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]}/>);
   return W(<>
@@ -1955,6 +2003,7 @@ function UA({uid,onOut}){
     {vue==="prog"&&<Prog pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods}/>}
     {vue==="res"&&<Res sc={sc} ok={ok} mods={aMods}/>}
     {vue==="psycho"&&<PsychoPage uid={uid} u={uData}/>}
+    {vue==="msg"&&<MessagerieApprenant uid={uid} uNom={uData.nom}/>}
   </>);
 }
 
@@ -2287,10 +2336,50 @@ function PsychoPage({uid,u}){
   </div>;
 }
 
-function Nav({u,vue,sV,ok,onSub,onOut,live}){
+function MessagerieApprenant({uid,uNom}){
   const K=useK();const{mob}=useW();
+  const msgs=useMessages(uid);
+  const[texte,sTexte]=useState("");
+  const[sending,sSending]=useState(false);
+  const endRef=useRef();
+  useEffect(()=>{markMsgsRead(uid,"apprenant");},[uid,msgs.length]);
+  useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs.length]);
+  const send=async()=>{
+    const t=texte.trim();if(!t||sending)return;
+    sSending(true);
+    await sendMessage({apprenantUid:uid,apprenantNom:uNom,from:uid,fromNom:uNom,fromRole:"apprenant",texte:t});
+    sTexte("");sSending(false);
+  };
+  return <div style={{maxWidth:700,margin:"0 auto",animation:"up .25s ease",display:"flex",flexDirection:"column",height:mob?"calc(100vh - 130px)":"calc(100vh - 160px)"}}>
+    <div style={{fontWeight:800,fontSize:16,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+      <i className="ti ti-message-circle" style={{fontSize:18,color:K.em}}/>Messagerie — Éco-Campus RDC
+    </div>
+    <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:9,padding:"4px 2px",marginBottom:12}}>
+      {msgs.length===0&&<div style={{textAlign:"center",color:K.t3,fontSize:13,marginTop:40}}>Aucun message. Écrivez-nous si vous avez une question !</div>}
+      {msgs.map(m=>{
+        const mine=m.fromRole==="apprenant";
+        return <div key={m.id} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"78%"}}>
+          <div style={{background:mine?K.em:K.c2,color:mine?"#F5EDD8":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:13,lineHeight:1.5}}>{m.texte}</div>
+          <div style={{fontSize:9,color:K.t3,marginTop:3,textAlign:mine?"right":"left"}}>{mine?"Vous":m.fromNom||"Éco-Campus"} · {new Date(m.ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
+        </div>;
+      })}
+      <div ref={endRef}/>
+    </div>
+    <div style={{display:"flex",gap:8,flexShrink:0}}>
+      <input value={texte} onChange={e=>sTexte(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Écrivez votre message…" style={{flex:1,background:K.c2,border:`1px solid ${K.b0}`,borderRadius:99,padding:"11px 16px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}/>
+      <button onClick={send} disabled={sending||!texte.trim()} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:"50%",width:42,height:42,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",cursor:"pointer",flexShrink:0,opacity:sending||!texte.trim()?.5:1}}>
+        <i className="ti ti-send" style={{fontSize:17}}/>
+      </button>
+    </div>
+  </div>;
+}
+function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
+  const K=useK();const{mob}=useW();
+  const myMsgs=useMessages(uid);
+  const unreadMsg=myMsgs.filter(m=>m.fromRole==="admin"&&!m.luApprenant).length;
   const NAV_ITEMS=[
     {k:"home",   ico:"home-2",        label:"Accueil"},
+    {k:"msg",    ico:"message-circle",label:"Messages", badgeCount:unreadMsg},
     {k:"pres",   ico:"presentation",  label:"Cours"},
     {k:"stages", ico:"briefcase",     label:"Stages"},
     {k:"videos", ico:"video",         label:"Vidéos", live:true},
@@ -2316,7 +2405,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live}){
       </div>
       {/* Bottom nav */}
       <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:99,background:`${K.card}f5`,backdropFilter:"blur(20px)",borderTop:`1px solid ${K.b0}`,display:"flex",alignItems:"center",paddingBottom:"max(6px,env(safe-area-inset-bottom))"}}>
-        {visible.map(({k,ico,label,live:isLive})=>{
+        {visible.map(({k,ico,label,live:isLive,badgeCount})=>{
           const active=vue===k;
           const hasLive=isLive&&live;
           return <button key={k} onClick={()=>sV(k)} className="bt" style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,padding:"8px 4px 4px",background:"none",border:"none",cursor:"pointer",position:"relative",minHeight:52}}>
@@ -2324,6 +2413,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live}){
             <div style={{position:"relative"}}>
               <i className={`ti ti-${ico}`} style={{fontSize:20,color:active?K.em:K.t3,display:"block"}}/>
               {hasLive&&<span style={{position:"absolute",top:-2,right:-4,width:7,height:7,borderRadius:"50%",background:K.rd,border:`1.5px solid ${K.card}`,animation:"blink 1.5s ease-in-out infinite"}}/>}
+              {!!badgeCount&&<span style={{position:"absolute",top:-5,right:-7,minWidth:14,height:14,borderRadius:99,background:K.rd,color:"#fff",fontSize:8,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px",border:`1.5px solid ${K.card}`}}>{badgeCount>9?"9+":badgeCount}</span>}
             </div>
             <span style={{fontSize:9,fontWeight:active?800:600,color:active?K.em:K.t3,letterSpacing:.2}}>{label}</span>
           </button>;
@@ -2336,13 +2426,14 @@ function Nav({u,vue,sV,ok,onSub,onOut,live}){
     <Logo/>
     <div style={{width:1,height:22,background:K.b0,margin:"0 6px",flexShrink:0}}/>
     <div className="tn" style={{flex:1,gap:2}}>
-      {NAV_ITEMS.map(({k,ico,label,live:isLive})=>{
+      {NAV_ITEMS.map(({k,ico,label,live:isLive,badgeCount})=>{
         const active=vue===k;
         const hasLive=isLive&&live;
         return <button key={k} onClick={()=>sV(k)} className="bt" style={{display:"flex",alignItems:"center",gap:6,padding:"6px 11px",borderRadius:8,border:"none",cursor:"pointer",background:active?K.c2:"transparent",color:active?K.t1:K.t3,fontWeight:active?700:600,fontSize:12,whiteSpace:"nowrap",minHeight:34,fontFamily:"'Outfit',sans-serif",position:"relative",transition:"background .15s,color .15s"}}>
           <div style={{position:"relative"}}>
             <i className={`ti ti-${ico}`} style={{fontSize:15,color:active?K.em:K.t3}}/>
             {hasLive&&<span style={{position:"absolute",top:-3,right:-4,width:7,height:7,borderRadius:"50%",background:K.rd,border:`1.5px solid ${K.card}`,animation:"blink 1.5s ease-in-out infinite"}}/>}
+            {!!badgeCount&&<span style={{position:"absolute",top:-5,right:-7,minWidth:13,height:13,borderRadius:99,background:K.rd,color:"#fff",fontSize:8,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px",border:`1.5px solid ${K.card}`}}>{badgeCount>9?"9+":badgeCount}</span>}
           </div>
           {label}
           {active&&<div style={{position:"absolute",bottom:0,left:"50%",transform:"translateX(-50%)",width:"60%",height:2,borderRadius:"2px 2px 0 0",background:K.em}}/>}
@@ -2374,6 +2465,9 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
   const[hcErr,sHcErr]=useState("");
   const[hcBusy,sHcBusy]=useState(false);
   const isSocial=(auth.currentUser?.providerData||[]).some(p=>p.providerId==="google.com"||p.providerId==="facebook.com");
+  const annonces=useAnnonces();
+  const[dismissed,sDismissed]=useState([]);
+  const activeAnnonces=annonces.filter(a=>a.actif&&(!a.expireAt||new Date(a.expireAt)>=new Date())&&!dismissed.includes(a.id));
   const submitHomeCode=async()=>{
     const c=rHc.current?.value?.trim()||"";
     sHcErr("");if(!c)return sHcErr("Entrez votre code");
@@ -2401,6 +2495,18 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
   ];
 
   return <div style={{animation:"up .3s ease"}}>
+    {/* Annonces */}
+    {activeAnnonces.map(a=>{
+      const typeInfo={info:{bg:K.inBg,bd:K.inBd,col:K.in_,ico:"info-circle"},promo:{bg:K.waBg,bd:K.waBd,col:K.wa,ico:"gift"},urgent:{bg:K.erBg,bd:K.erBd,col:K.er,ico:"alert-triangle"}}[a.type||"info"];
+      return <div key={a.id} style={{background:typeInfo.bg,border:`1px solid ${typeInfo.bd}`,borderRadius:12,padding:"12px 14px",marginBottom:10,display:"flex",alignItems:"flex-start",gap:10}}>
+        <i className={`ti ti-${typeInfo.ico}`} style={{fontSize:16,color:typeInfo.col,marginTop:1,flexShrink:0}}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:2}}>{a.titre}</div>
+          <div style={{fontSize:12,color:K.t2,lineHeight:1.5}}>{a.contenu}</div>
+        </div>
+        <button onClick={()=>sDismissed(d=>[...d,a.id])} className="bt" style={{background:"none",border:"none",color:K.t3,cursor:"pointer",fontSize:16,lineHeight:1,padding:2,flexShrink:0}}>×</button>
+      </div>;
+    })}
     {/* Alertes */}
     {!ok&&<div style={{background:u.abonnement==="expiré"?K.erBg:K.waBg,border:`1px solid ${u.abonnement==="expiré"?K.erBd:K.waBd}`,borderRadius:12,padding:"11px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:700,fontSize:13,color:u.abonnement==="expiré"?K.er:K.wa,marginBottom:2}}>{u.abonnement==="expiré"?"Accès expiré":"Cours verrouillés"}</div><div style={{fontSize:12,color:K.t3}}>{u.abonnement==="demande"?"Demande en cours — code sous 24h.":u.abonnement==="expiré"?"Contactez Éco-Campus.":"Effectuez le paiement."}</div></div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{isSocial&&<Btn ch="J'ai un code" on={()=>sShowCode(true)} v="s" sm/>}{u.abonnement!=="demande"&&<Btn ch="Obtenir l'accès" on={onSub} v="w" sm/>}</div></div>}
     {ok&&jr<=30&&jr>0&&u.dureeId!=="v"&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"9px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><div style={{fontSize:13,color:K.wa}}>⏰ Expire dans <b>{jr}j</b></div><Btn ch="Renouveler" on={onSub} v="w" sm/></div>}
@@ -3075,6 +3181,44 @@ function ServicesPage({user}){
   </div>;
 }
 
+function AdminThread({apprenantUid,onBack}){
+  const K=useK();
+  const msgs=useMessages(apprenantUid);
+  const[texte,sTexte]=useState("");
+  const[sending,sSending]=useState(false);
+  const endRef=useRef();
+  const apprenantNom=msgs[0]?.apprenantNom||"Apprenant";
+  useEffect(()=>{markMsgsRead(apprenantUid,"admin");},[apprenantUid,msgs.length]);
+  useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs.length]);
+  const send=async()=>{
+    const t=texte.trim();if(!t||sending)return;
+    sSending(true);
+    await sendMessage({apprenantUid,apprenantNom,from:"admin",fromNom:"Éco-Campus RDC",fromRole:"admin",texte:t});
+    sTexte("");sSending(false);
+  };
+  return <div>
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+      <button onClick={onBack} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"6px 10px",cursor:"pointer",color:K.t2,display:"flex",alignItems:"center",gap:4,fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-arrow-left" style={{fontSize:13}}/>Retour</button>
+      <div style={{fontWeight:800,fontSize:14,color:K.t1}}>{apprenantNom}</div>
+    </div>
+    <div style={{background:K.c2,borderRadius:12,padding:14,marginBottom:12}}>
+      <div style={{height:340,overflowY:"auto",display:"flex",flexDirection:"column",gap:9}}>
+        {msgs.map(m=>{
+          const mine=m.fromRole==="admin";
+          return <div key={m.id} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"78%"}}>
+            <div style={{background:mine?K.em:K.card,color:mine?"#F5EDD8":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:13,lineHeight:1.5,border:mine?"none":`1px solid ${K.b0}`}}>{m.texte}</div>
+            <div style={{fontSize:9,color:K.t3,marginTop:3,textAlign:mine?"right":"left"}}>{mine?"Vous":m.apprenantNom} · {new Date(m.ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
+          </div>;
+        })}
+        <div ref={endRef}/>
+      </div>
+    </div>
+    <div style={{display:"flex",gap:8}}>
+      <input value={texte} onChange={e=>sTexte(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Répondre…" style={{flex:1,background:K.card,border:`1px solid ${K.b0}`,borderRadius:99,padding:"10px 15px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}/>
+      <Btn ch={sending?"…":"Envoyer"} on={send} v="i" sx={{minHeight:40}}/>
+    </div>
+  </div>;
+}
 function AA({onOut}){
   const K=useK();const{mob}=useW();
   const{warning:aaWarn}=useAutoLogout(onOut);
@@ -3100,6 +3244,10 @@ function AA({onOut}){
   const allStagesAdmin=useStages();
   const allPlatsAdmin=usePlateformes();
   const allDemandesAdmin=useDemandes();
+  const allAnnonces=useAnnonces();
+  const[editAn,sEditAn]=useState(null);
+  const allMessages=useAllMessages();
+  const[activeThread,sActiveThread]=useState(null);
   const[pdfs,sPdfs]=useState({});
   useEffect(()=>{const loadPdfs=async()=>{const snap=await getDocs(collection(db,"pdfs"));const p={};snap.forEach(d=>p[d.id]=d.data());sPdfs(p);};loadPdfs();},[]);
   const fl=users.filter(u=>(u.nom||"").toLowerCase().includes(q.toLowerCase())||(u.mail||"").toLowerCase().includes(q.toLowerCase()));
@@ -3249,6 +3397,8 @@ function AA({onOut}){
           {k:"dm", ico:"ti-message-circle",label:"Demandes",  badge:allDemandesAdmin.filter(d=>d.statut==="nouveau").length, bc:K.in_},
           {k:"p",  ico:"ti-file-text",     label:"PDF"},
           {k:"fo", ico:"ti-school",          label:"Formateurs", badge:users.filter(u=>u.role==="formateur").length, bc:"#8B5CF6"},
+          {k:"an", ico:"ti-speakerphone",    label:"Annonces",   badge:allAnnonces.filter(a=>a.actif).length, bc:K.wa},
+          {k:"msg", ico:"ti-message-circle",  label:"Messages",   badge:allMessages.filter(m=>m.fromRole==="apprenant"&&!m.luAdmin).length, bc:K.rd},
         ];
         return <div className="tn" style={{borderTop:`1px solid ${K.b0}`,gap:1,paddingBottom:2}}>
           {ADMIN_TABS.map(({k,ico,label,badge,bc})=>{
@@ -3584,6 +3734,87 @@ function AA({onOut}){
         <div style={{marginTop:13,padding:"10px 13px",background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:9,fontSize:12,color:K.t2}}>✅ PDF stockés sur Firebase Storage — persistants et sécurisés.</div>
       </div>}
     </div>
+    {tab==="an"&&<div style={{animation:"fadeIn .35s ease"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
+        <div style={{fontWeight:800,fontSize:14,color:K.t1,display:"flex",alignItems:"center",gap:7}}>
+          <i className="ti ti-speakerphone" style={{fontSize:16,color:K.wa}}/>Annonces & Publicités
+        </div>
+        <Btn ch="+ Nouvelle annonce" on={()=>sEditAn({titre:"",contenu:"",type:"info",actif:true,expireAt:""})} v="i" sm/>
+      </div>
+      {allAnnonces.length===0
+        ?<div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"20px",textAlign:"center",fontSize:13,color:K.t3}}>Aucune annonce pour l'instant.</div>
+        :<div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {allAnnonces.map(a=>{
+            const typeInfo={info:{label:"Info",col:K.in_},promo:{label:"Promo",col:K.wa},urgent:{label:"Urgent",col:K.er}}[a.type||"info"];
+            const expired=a.expireAt&&new Date(a.expireAt)<new Date();
+            return <div key={a.id} style={{background:K.card,border:`1px solid ${a.actif&&!expired?K.b1:K.b0}`,borderRadius:12,padding:"13px 15px",opacity:a.actif&&!expired?1:.6}}>
+              <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5,flexWrap:"wrap"}}>
+                <span style={{background:`${typeInfo.col}18`,border:`1px solid ${typeInfo.col}30`,borderRadius:99,padding:"2px 8px",fontSize:10,fontWeight:700,color:typeInfo.col}}>{typeInfo.label}</span>
+                {!a.actif&&<span style={{fontSize:10,color:K.t3}}>Désactivée</span>}
+                {expired&&<span style={{fontSize:10,color:K.er}}>Expirée</span>}
+              </div>
+              <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:4}}>{a.titre}</div>
+              <div style={{fontSize:12,color:K.t2,marginBottom:10,lineHeight:1.5}}>{a.contenu}</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                <button onClick={()=>saveAnnonce({...a,actif:!a.actif})} className="bt" style={{background:a.actif?K.waBg:K.emBg,border:`1px solid ${a.actif?K.waBd:K.emBd}`,color:a.actif?K.wa:K.em,borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>{a.actif?"Désactiver":"Activer"}</button>
+                <button onClick={()=>sEditAn(a)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>Éditer</button>
+                <button onClick={async()=>{if(window.confirm(`Supprimer "${a.titre}" ?`))await deleteAnnonce(a.id);}} className="bt" style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>Supprimer</button>
+              </div>
+            </div>;
+          })}
+        </div>}
+    </div>}
+    {editAn&&<Sheet title={editAn.id?"Modifier l'annonce":"Nouvelle annonce"} onClose={()=>sEditAn(null)}>
+      <div style={{marginBottom:12}}>
+        <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Titre</label>
+        <input value={editAn.titre} onChange={e=>sEditAn({...editAn,titre:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
+      </div>
+      <div style={{marginBottom:12}}>
+        <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Contenu</label>
+        <textarea value={editAn.contenu} onChange={e=>sEditAn({...editAn,contenu:e.target.value})} rows={4} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13,resize:"vertical"}}/>
+      </div>
+      <div style={{display:"flex",gap:10,marginBottom:14}}>
+        <div style={{flex:1}}>
+          <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Type</label>
+          <select value={editAn.type} onChange={e=>sEditAn({...editAn,type:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}>
+            <option value="info">Info</option>
+            <option value="promo">Promo</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div style={{flex:1}}>
+          <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Expire le (optionnel)</label>
+          <input type="date" value={editAn.expireAt||""} onChange={e=>sEditAn({...editAn,expireAt:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}/>
+        </div>
+      </div>
+      <Btn ch="Enregistrer" on={async()=>{if(!editAn.titre.trim())return;await saveAnnonce(editAn);sEditAn(null);}} full/>
+    </Sheet>}
+    {tab==="msg"&&<div style={{animation:"fadeIn .35s ease"}}>
+      {!activeThread?<>
+        <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:14,display:"flex",alignItems:"center",gap:7}}>
+          <i className="ti ti-message-circle" style={{fontSize:16,color:K.rd}}/>Messagerie
+        </div>
+        {(()=>{
+          const convMap={};
+          allMessages.forEach(m=>{if(!convMap[m.apprenantUid]||m.ts>convMap[m.apprenantUid].ts)convMap[m.apprenantUid]=m;});
+          const convs=Object.values(convMap).sort((a,b)=>b.ts-a.ts);
+          if(convs.length===0)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"20px",textAlign:"center",fontSize:13,color:K.t3}}>Aucun message pour l'instant.</div>;
+          return <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {convs.map(c=>{
+              const unread=allMessages.filter(m=>m.apprenantUid===c.apprenantUid&&m.fromRole==="apprenant"&&!m.luAdmin).length;
+              return <div key={c.apprenantUid} onClick={()=>sActiveThread(c.apprenantUid)} className="bt" style={{background:K.card,border:`1px solid ${unread>0?K.rdBd:K.b0}`,borderRadius:12,padding:"12px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:36,height:36,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:14,flexShrink:0}}>{(c.apprenantNom||"?")[0].toUpperCase()}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:700,fontSize:13,color:K.t1}}>{c.apprenantNom||"Apprenant"}</div>
+                  <div style={{fontSize:11,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.fromRole==="admin"?"Vous : ":""}{c.texte}</div>
+                </div>
+                {unread>0&&<span style={{background:K.rd,color:"#fff",fontSize:10,fontWeight:800,borderRadius:99,padding:"2px 7px",flexShrink:0}}>{unread}</span>}
+              </div>;
+            })}
+          </div>;
+        })()}
+      </>:<AdminThread apprenantUid={activeThread} onBack={()=>sActiveThread(null)}/>}
+    </div>}
     {vm&&<Sheet title="Valider — Choisir la durée" onClose={()=>sVm(null)}><div style={{color:K.t3,fontSize:13,marginBottom:12}}>Paiement confirmé pour <b style={{color:K.t1}}>{users.find(u=>u.uid===vm)?.nom}</b>.</div><div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>{DUR.map(d=><div key={d.id} onClick={()=>genC(vm,d.id)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",cursor:"pointer",minHeight:50}} onMouseEnter={e=>{e.currentTarget.style.borderColor=K.emBd;e.currentTarget.style.background=K.emBg;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=K.b0;e.currentTarget.style.background=K.c2;}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{d.l}</div><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={d.j===36500?"∞":d.j+"j"}/></div></div>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t3,fontSize:12}}>Ou activer directement :</div><Btn ch="⚡ 3 mois" on={()=>actD(vm,"3m")} v="s" sm/></div></Sheet>}
     {cm&&<Sheet title="Code généré ✅" onClose={()=>sCm(null)} w={400}><div style={{background:K.bg,border:`2px solid ${K.emBd}`,borderRadius:12,padding:"16px",textAlign:"center",marginBottom:11}}><div style={{color:K.t3,fontSize:9,letterSpacing:2,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",marginBottom:7}}>Code d'accès</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:800,fontSize:32,letterSpacing:6,color:K.em,marginBottom:7}}>{cm.code}</div><div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={cm.d?.l||"—"}/><Tg c={K.t3} bg="none" bd={K.b0} ch={fD(dE(cm.d?.j||30))}/></div></div><Btn ch="✉ Envoyer le mail automatiquement" on={()=>mL({...users.find(u=>u.uid===cm.uid),...cm})} v="i" full sx={{padding:"10px",fontSize:13,marginBottom:7,minHeight:42}}/><div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:8,padding:"7px 10px",marginBottom:11,fontSize:12,color:K.t2}}>📨 Envoyé directement à l'apprenant, sans ouvrir votre messagerie.</div><Btn ch="Fermer" on={()=>sCm(null)} v="g" full/></Sheet>}
     {dm&&<Sheet title="Supprimer ?" onClose={()=>sDm(null)} w={320}><div style={{textAlign:"center",padding:"4px 0"}}><div style={{fontSize:30,marginBottom:7}}>⚠️</div><div style={{color:K.t1,fontWeight:700,fontSize:14,marginBottom:4}}>{users.find(u=>u.uid===dm)?.nom}</div><div style={{color:K.t3,fontSize:12,marginBottom:17}}>Action irréversible.</div><div style={{display:"flex",gap:7,justifyContent:"center"}}><Btn ch="Annuler" on={()=>sDm(null)} v="g" sx={{minHeight:42}}/><Btn ch="Supprimer" on={()=>delU(dm)} v="d" sx={{minHeight:42}}/></div></div></Sheet>}
