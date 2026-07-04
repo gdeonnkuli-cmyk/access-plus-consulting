@@ -1782,7 +1782,7 @@ function Auth({onL}){
       if(u.role==="formateur"){onL("__formateur__:"+cred.user.uid,cred.user);return;}
       if(u.abonnement==="actif"&&xp(u.dateExpiration)){await updateDoc(doc(db,"users",cred.user.uid),{abonnement:"expiré"});}
       onL(cred.user.uid,cred.user);
-    }catch(e){sE(e.code==="auth/invalid-credential"?"Email ou mot de passe incorrect.":e.message);sB(false);}
+    }catch(e){sE(["auth/invalid-credential","auth/invalid-login-credentials","auth/wrong-password","auth/user-not-found"].includes(e.code)?"Email ou mot de passe incorrect.":e.message);sB(false);}
   },[onL]);
   const code=useCallback(async()=>{
     const c=rC.current?.value?.trim()||"";const pw=rP.current?.value||"";
@@ -1791,7 +1791,7 @@ function Auth({onL}){
     let cred;
     try{
       cred=await signInWithEmailAndPassword(auth,pm.current,pw);
-    }catch(e){sB(false);return sE(e.code==="auth/invalid-credential"?"Email ou mot de passe incorrect.":e.message);}
+    }catch(e){sB(false);return sE(["auth/invalid-credential","auth/invalid-login-credentials","auth/wrong-password","auth/user-not-found"].includes(e.code)?"Email ou mot de passe incorrect.":e.message);}
     // Detect formateur code (FO- prefix)
     if(c.startsWith("FO-")){
       try{
