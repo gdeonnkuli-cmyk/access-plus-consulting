@@ -17,6 +17,29 @@ const auth=getAuth(fbApp);
 const db=getFirestore(fbApp);
 const storage=getStorage(fbApp);
 const ADM_EMAIL="admin@accessplus.com";
+const EMAILJS_SERVICE="access_plus_service";
+const EMAILJS_KEY="5Fvh3h8xBasE_APDn";
+const EMAILJS_TPL_CODE="template_3v1a6i6";
+const EMAILJS_TPL_NOTIF="template_aisjy5e";
+const sendCodeEmail=async({to_email,nom,code,duree,expiration})=>{
+  try{
+    const res=await fetch("https://api.emailjs.com/api/v1.0/email/send",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({service_id:EMAILJS_SERVICE,template_id:EMAILJS_TPL_CODE,user_id:EMAILJS_KEY,
+        template_params:{to_email,nom:nom||"Apprenant",code,duree:duree||"—",expiration:expiration||"—"}})
+    });
+    return res.ok;
+  }catch(e){console.log("sendCodeEmail error",e);return false;}
+};
+const sendNotifEmail=async({to_email,subject,nom,message})=>{
+  try{
+    await fetch("https://api.emailjs.com/api/v1.0/email/send",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({service_id:EMAILJS_SERVICE,template_id:EMAILJS_TPL_NOTIF,user_id:EMAILJS_KEY,
+        template_params:{to_email,subject,nom:nom||"",message:message||""}})
+    });
+  }catch(e){console.log("sendNotifEmail error",e);}
+};
 const googleProvider=new GoogleAuthProvider();
 const facebookProvider=new FacebookAuthProvider();
 
@@ -234,6 +257,7 @@ const seedModules=async()=>{
 const saveDemande=async(d)=>{
   const r=doc(collection(db,"demandes"));
   await setDoc(r,{...d,createdAt:Date.now(),statut:"nouveau"});
+  sendNotifEmail({to_email:ADM_EMAIL,subject:`Nouvelle demande — ${d.nom||"Utilisateur"}`,nom:"Admin",message:`Une nouvelle demande vient d'être reçue sur Éco-Campus RDC.\n\nNom : ${d.nom||"—"}\nEmail : ${d.email||"—"}\nTéléphone : ${d.tel||"—"}\nService/Objet : ${d.service||"—"}\nMessage : ${d.message||"—"}\n\nConnectez-vous à l'espace admin pour la traiter.`});
 };
 const updateDemande=async(id,data)=>{
   await updateDoc(doc(db,"demandes",id),data);
@@ -1742,6 +1766,7 @@ function Auth({onL}){
     try{
       const cred=await createUserWithEmailAndPassword(auth,m,p);
       await saveUserData(cred.user.uid,{nom:n,mail:m,createdAt:new Date().toLocaleDateString("fr-FR"),abonnement:"aucun",activationCode:null,codeValide:false,demandeDate:null,dureeId:null,dateExpiration:null,progress:{},scores:{},consentDate:new Date().toISOString(),consentVersion:PRIVACY_VERSION});
+      sendNotifEmail({to_email:m,subject:"Bienvenue sur Éco-Campus RDC 🎉",nom:n,message:"Votre compte vient d'être créé avec succès sur Éco-Campus RDC.\n\nProchaine étape : faites votre demande d'accès à une formation depuis votre espace, puis réglez votre inscription. Vous recevrez ensuite votre code d'activation par email pour débloquer vos modules.\n\nÀ très vite !"});
       sO("Compte créé !");setTimeout(()=>sw("l"),1100);
     }catch(e){sE(e.code==="auth/email-already-in-use"?"Email déjà utilisé.":e.message);}
     sB(false);
@@ -1795,6 +1820,7 @@ function Auth({onL}){
       if(!snap.exists()){
         if(!consent){sNeedConsent(true);await signOut(auth);sB(false);return;}
         await setDoc(doc(db,"users",user.uid),{nom:user.displayName||user.email.split("@")[0],mail:user.email,createdAt:new Date().toLocaleDateString("fr-FR"),abonnement:"aucun",activationCode:null,codeValide:false,demandeDate:null,dureeId:null,dateExpiration:null,progress:{},scores:{},consentDate:new Date().toISOString(),consentVersion:PRIVACY_VERSION});
+        sendNotifEmail({to_email:user.email,subject:"Bienvenue sur Éco-Campus RDC 🎉",nom:user.displayName||user.email.split("@")[0],message:"Votre compte vient d'être créé avec succès sur Éco-Campus RDC.\n\nProchaine étape : faites votre demande d'accès à une formation depuis votre espace, puis réglez votre inscription. Vous recevrez ensuite votre code d'activation par email pour débloquer vos modules.\n\nÀ très vite !"});
       }else{
         const u=snap.data();
         if(u.abonnement==="actif"&&xp(u.dateExpiration)){await updateDoc(doc(db,"users",user.uid),{abonnement:"expiré"});}
@@ -3098,7 +3124,12 @@ function AA({onOut}){
   const rev=async uid=>{await saveUserData(uid,{abonnement:"expiré",codeValide:false});};
   const ref_=async uid=>{await saveUserData(uid,{abonnement:"aucun"});};
   const delU=async uid=>{await deleteDoc(doc(db,"users",uid));sDm(null);};
-  const mL=u=>{const d=DUR.find(x=>x.id===u.dureeId);window.open(`mailto:${u.mail}?subject=${encodeURIComponent("Éco-Campus — Code d'accès")}&body=${encodeURIComponent(`Bonjour ${u.nom},\n\nCODE : ${u.activationCode}\nDurée : ${d?.l}\nExpire : ${fD(u.dateExpiration)}\n\n1. Connectez-vous avec ${u.mail}\n2. Cliquez "J'ai un code"\n3. Saisissez : ${u.activationCode}\n\nÉco-Campus RDC`)}`,"_blank");};
+  const mL=async u=>{
+    const d=DUR.find(x=>x.id===u.dureeId);
+    const ok=await sendCodeEmail({to_email:u.mail,nom:u.nom,code:u.activationCode,duree:d?.l,expiration:fD(u.dateExpiration)});
+    if(ok)sMsg({t:"o",m:`✅ Email envoyé à ${u.mail}`});else sMsg({t:"e",m:"❌ Échec de l'envoi. Réessayez."});
+    setTimeout(()=>sMsg({t:"",m:""}),3000);
+  };
   const sc_=s=>s==="actif"?K.em:s==="demande"?K.wa:K.er,sl_=s=>s==="actif"?"Actif":s==="demande"?"Demande":"Inactif";
   const rLU=useRef(),rLT=useRef(),rLD=useRef(),rVU=useRef(),rVT=useRef(),rVD=useRef(),rVM=useRef();
   const rPT=useRef(),rPU=useRef(),rPD=useRef(),rPM=useRef();
@@ -3525,7 +3556,7 @@ function AA({onOut}){
       </div>}
     </div>
     {vm&&<Sheet title="Valider — Choisir la durée" onClose={()=>sVm(null)}><div style={{color:K.t3,fontSize:13,marginBottom:12}}>Paiement confirmé pour <b style={{color:K.t1}}>{users.find(u=>u.uid===vm)?.nom}</b>.</div><div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>{DUR.map(d=><div key={d.id} onClick={()=>genC(vm,d.id)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",cursor:"pointer",minHeight:50}} onMouseEnter={e=>{e.currentTarget.style.borderColor=K.emBd;e.currentTarget.style.background=K.emBg;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=K.b0;e.currentTarget.style.background=K.c2;}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{d.l}</div><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={d.j===36500?"∞":d.j+"j"}/></div></div>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t3,fontSize:12}}>Ou activer directement :</div><Btn ch="⚡ 3 mois" on={()=>actD(vm,"3m")} v="s" sm/></div></Sheet>}
-    {cm&&<Sheet title="Code généré ✅" onClose={()=>sCm(null)} w={400}><div style={{background:K.bg,border:`2px solid ${K.emBd}`,borderRadius:12,padding:"16px",textAlign:"center",marginBottom:11}}><div style={{color:K.t3,fontSize:9,letterSpacing:2,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",marginBottom:7}}>Code d'accès</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:800,fontSize:32,letterSpacing:6,color:K.em,marginBottom:7}}>{cm.code}</div><div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={cm.d?.l||"—"}/><Tg c={K.t3} bg="none" bd={K.b0} ch={fD(dE(cm.d?.j||30))}/></div></div><Btn ch="✉ Envoyer par email" on={()=>mL({...users.find(u=>u.uid===cm.uid),...cm})} v="i" full sx={{padding:"10px",fontSize:13,marginBottom:7,minHeight:42}}/><div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:8,padding:"7px 10px",marginBottom:11,fontSize:12,color:K.t2}}>Ouvre votre messagerie avec le code pré-rédigé.</div><Btn ch="Fermer" on={()=>sCm(null)} v="g" full/></Sheet>}
+    {cm&&<Sheet title="Code généré ✅" onClose={()=>sCm(null)} w={400}><div style={{background:K.bg,border:`2px solid ${K.emBd}`,borderRadius:12,padding:"16px",textAlign:"center",marginBottom:11}}><div style={{color:K.t3,fontSize:9,letterSpacing:2,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",marginBottom:7}}>Code d'accès</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:800,fontSize:32,letterSpacing:6,color:K.em,marginBottom:7}}>{cm.code}</div><div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={cm.d?.l||"—"}/><Tg c={K.t3} bg="none" bd={K.b0} ch={fD(dE(cm.d?.j||30))}/></div></div><Btn ch="✉ Envoyer le mail automatiquement" on={()=>mL({...users.find(u=>u.uid===cm.uid),...cm})} v="i" full sx={{padding:"10px",fontSize:13,marginBottom:7,minHeight:42}}/><div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:8,padding:"7px 10px",marginBottom:11,fontSize:12,color:K.t2}}>📨 Envoyé directement à l'apprenant, sans ouvrir votre messagerie.</div><Btn ch="Fermer" on={()=>sCm(null)} v="g" full/></Sheet>}
     {dm&&<Sheet title="Supprimer ?" onClose={()=>sDm(null)} w={320}><div style={{textAlign:"center",padding:"4px 0"}}><div style={{fontSize:30,marginBottom:7}}>⚠️</div><div style={{color:K.t1,fontWeight:700,fontSize:14,marginBottom:4}}>{users.find(u=>u.uid===dm)?.nom}</div><div style={{color:K.t3,fontSize:12,marginBottom:17}}>Action irréversible.</div><div style={{display:"flex",gap:7,justifyContent:"center"}}><Btn ch="Annuler" on={()=>sDm(null)} v="g" sx={{minHeight:42}}/><Btn ch="Supprimer" on={()=>delU(dm)} v="d" sx={{minHeight:42}}/></div></div></Sheet>}
   </div>;
 }
