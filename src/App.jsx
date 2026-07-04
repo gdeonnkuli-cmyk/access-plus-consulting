@@ -2369,6 +2369,24 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
   const[pdfMod,setPdfMod]=useState(null);
   const mats=[...new Set(mods.map(m=>m.mat||"Général"))];
   const[fi,sF]=useState("Toutes");
+  const[showCode,sShowCode]=useState(false);
+  const rHc=useRef();
+  const[hcErr,sHcErr]=useState("");
+  const[hcBusy,sHcBusy]=useState(false);
+  const submitHomeCode=async()=>{
+    const c=rHc.current?.value?.trim()||"";
+    sHcErr("");if(!c)return sHcErr("Entrez votre code");
+    sHcBusy(true);
+    try{
+      const snap=await getDoc(doc(db,"users",uid));
+      if(!snap.exists()){sHcBusy(false);return sHcErr("Profil introuvable.");}
+      const ud=snap.data();
+      if(ud.activationCode!==c){sHcBusy(false);return sHcErr("Code incorrect.");}
+      await updateDoc(doc(db,"users",uid),{abonnement:"actif",codeValide:true});
+      sHcBusy(false);sShowCode(false);
+      window.location.reload();
+    }catch(e){sHcBusy(false);sHcErr(e.message);}
+  };
   const fil=fi==="Toutes"?mods:mods.filter(m=>(m.mat||"Général")===fi);
   const recentMods=mods.filter(m=>pr[m.id]==="done").slice(-3).reverse();
   const isLight=['light','sepia'].includes(tid);
@@ -2383,7 +2401,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
 
   return <div style={{animation:"up .3s ease"}}>
     {/* Alertes */}
-    {!ok&&<div style={{background:u.abonnement==="expiré"?K.erBg:K.waBg,border:`1px solid ${u.abonnement==="expiré"?K.erBd:K.waBd}`,borderRadius:12,padding:"11px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:700,fontSize:13,color:u.abonnement==="expiré"?K.er:K.wa,marginBottom:2}}>{u.abonnement==="expiré"?"Accès expiré":"Cours verrouillés"}</div><div style={{fontSize:12,color:K.t3}}>{u.abonnement==="demande"?"Demande en cours — code sous 24h.":u.abonnement==="expiré"?"Contactez Éco-Campus.":"Effectuez le paiement."}</div></div>{u.abonnement!=="demande"&&<Btn ch="Obtenir l'accès" on={onSub} v="w" sm/>}</div>}
+    {!ok&&<div style={{background:u.abonnement==="expiré"?K.erBg:K.waBg,border:`1px solid ${u.abonnement==="expiré"?K.erBd:K.waBd}`,borderRadius:12,padding:"11px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:700,fontSize:13,color:u.abonnement==="expiré"?K.er:K.wa,marginBottom:2}}>{u.abonnement==="expiré"?"Accès expiré":"Cours verrouillés"}</div><div style={{fontSize:12,color:K.t3}}>{u.abonnement==="demande"?"Demande en cours — code sous 24h.":u.abonnement==="expiré"?"Contactez Éco-Campus.":"Effectuez le paiement."}</div></div>{u.abonnement!=="demande"&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}><Btn ch="J'ai un code" on={()=>sShowCode(true)} v="s" sm/><Btn ch="Obtenir l'accès" on={onSub} v="w" sm/></div>}</div>}
     {ok&&jr<=30&&jr>0&&u.dureeId!=="v"&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"9px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><div style={{fontSize:13,color:K.wa}}>⏰ Expire dans <b>{jr}j</b></div><Btn ch="Renouveler" on={onSub} v="w" sm/></div>}
 
     {/* Bannière principale */}
@@ -2632,6 +2650,11 @@ function Res({sc,ok,mods}){
         <div style={{marginTop:8,display:"flex",alignItems:"center",gap:6}}>{w?<><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/><span style={{fontSize:12,color:K.em,fontWeight:600}}>{s.pct>=80?"Excellent !":s.pct>=70?"Très bien":"Bien"}</span></>:<><i className="ti ti-alert-circle" style={{fontSize:14,color:K.er}}/><span style={{fontSize:12,color:K.er,fontWeight:600}}>À retravailler</span></>}</div>
       </div>;})}
     </div>}
+    {showCode&&<Sheet title="🔐 Code d'activation" onClose={()=>sShowCode(false)}>
+      <Inp lb="Code d'activation" rf={rHc} ph="AP-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
+      {hcErr&&<div style={{color:K.er,fontSize:12,marginBottom:10}}>{hcErr}</div>}
+      <Btn ch={hcBusy?"…":"Valider →"} on={submitHomeCode} full dis={hcBusy}/>
+    </Sheet>}
   </div>;
 }
 
