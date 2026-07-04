@@ -1785,30 +1785,34 @@ function Auth({onL}){
     }catch(e){sE(e.code==="auth/invalid-credential"?"Email ou mot de passe incorrect.":e.message);sB(false);}
   },[onL]);
   const code=useCallback(async()=>{
-    const c=rC.current?.value?.trim()||"";sE("");if(!c)return sE("Entrez votre code");
+    const c=rC.current?.value?.trim()||"";const pw=rP.current?.value||"";
+    sE("");if(!c)return sE("Entrez votre code");if(!pw)return sE("Entrez votre mot de passe");
+    sB(true);
+    let cred;
+    try{
+      cred=await signInWithEmailAndPassword(auth,pm.current,pw);
+    }catch(e){sB(false);return sE(e.code==="auth/invalid-credential"?"Email ou mot de passe incorrect.":e.message);}
     // Detect formateur code (FO- prefix)
     if(c.startsWith("FO-")){
       try{
-        const q_=query(collection(db,"users"),where("mail","==",pm.current));
-        const snap=await getDocs(q_);
-        if(snap.empty)return sE("Utilisateur introuvable.");
-        const userDoc=snap.docs[0];const u=userDoc.data();
-        if(u.formateurCode!==c)return sE("Code formateur incorrect.");
-        await updateDoc(doc(db,"users",userDoc.id),{role:"formateur",formateurCodeValide:true});
-        sO("✓ Accès formateur débloqué !");setTimeout(()=>onL("__formateur__:"+userDoc.id,auth.currentUser),700);
-      }catch(e){sE(e.message);}
+        const snap=await getDoc(doc(db,"users",cred.user.uid));
+        if(!snap.exists()){sB(false);return sE("Profil introuvable.");}
+        const u=snap.data();
+        if(u.formateurCode!==c){sB(false);return sE("Code formateur incorrect.");}
+        await updateDoc(doc(db,"users",cred.user.uid),{role:"formateur",formateurCodeValide:true});
+        sO("✓ Accès formateur débloqué !");setTimeout(()=>onL("__formateur__:"+cred.user.uid,cred.user),700);
+      }catch(e){sB(false);sE(e.message);}
       return;
     }
     // Code apprenant standard
     try{
-      const q_=query(collection(db,"users"),where("mail","==",pm.current));
-      const snap=await getDocs(q_);
-      if(snap.empty)return sE("Utilisateur introuvable.");
-      const userDoc=snap.docs[0];const u=userDoc.data();
-      if(u.activationCode!==c)return sE("Code incorrect.");
-      await updateDoc(doc(db,"users",userDoc.id),{abonnement:"actif",codeValide:true});
-      sO("✓ Accès débloqué !");setTimeout(()=>onL(userDoc.id,auth.currentUser),700);
-    }catch(e){sE(e.message);}
+      const snap=await getDoc(doc(db,"users",cred.user.uid));
+      if(!snap.exists()){sB(false);return sE("Profil introuvable.");}
+      const u=snap.data();
+      if(u.activationCode!==c){sB(false);return sE("Code incorrect.");}
+      await updateDoc(doc(db,"users",cred.user.uid),{abonnement:"actif",codeValide:true});
+      sO("✓ Accès débloqué !");setTimeout(()=>onL(cred.user.uid,cred.user),700);
+    }catch(e){sB(false);sE(e.message);}
   },[onL]);
   const socialLogin=useCallback(async(provider)=>{
     sE("");sO("");sB(true);
@@ -1847,6 +1851,7 @@ function Auth({onL}){
         <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:14,padding:mob?"17px 15px":"21px 19px",boxShadow:"0 20px 55px rgba(0,0,0,.3)"}}>
           {step===1&&<div style={{display:"flex",background:K.bg,borderRadius:9,padding:3,marginBottom:17,gap:2}}>{[["l","Connexion"],["r","Inscription"]].map(([k,l])=><button key={k} onClick={()=>sw(k)} className="bt" style={{flex:1,padding:"9px",borderRadius:7,border:"none",fontWeight:700,fontSize:13,fontFamily:"'Outfit',sans-serif",cursor:"pointer",background:tab===k?K.c2:"transparent",color:tab===k?K.t1:K.t3,minHeight:38}}>{l}</button>)}</div>}
           <div style={{marginBottom:15}}><div style={{fontSize:15,fontWeight:800,color:K.t1,marginBottom:3}}>{step===2?"🔐 Code d'activation":tab==="l"?"Bon retour 👋":"Créer un compte"}</div><div style={{fontSize:12,color:K.t3,lineHeight:1.5}}>{step===2?"Code reçu de l'administrateur":tab==="l"?"Accédez à votre formation":"Inscription gratuite · Accès sur abonnement"}</div></div>
+          {step===2&&<Inp lb="Mot de passe" rf={rP} type="password" ph="Le même qu'à l'inscription" ok={hk}/>}
           {step===2&&<Inp lb="Code d'activation" rf={rC} ph="ACC-001" mono note="Communiqué par Éco-Campus" ok={hk}/>}
           {step===1&&tab==="r"&&<Inp lb="Nom complet" rf={rN} ph="Votre nom" ok={hk}/>}
           {step===1&&<Inp lb="Email" rf={rM} type="email" ph="vous@exemple.com" ok={hk}/>}
