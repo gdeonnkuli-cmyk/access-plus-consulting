@@ -26,7 +26,7 @@ const sendCodeEmail=async({to_email,nom,code,duree,expiration})=>{
     const res=await fetch("https://api.emailjs.com/api/v1.0/email/send",{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({service_id:EMAILJS_SERVICE,template_id:EMAILJS_TPL_CODE,user_id:EMAILJS_KEY,
-        template_params:{to_email,nom:nom||"Apprenant",code,duree:duree||"—",expiration:expiration||"—"}})
+        template_params:{to_email,subject:"Éco-Campus RDC — Votre code d'accès",nom:nom||"Apprenant",code,duree:duree||"—",expiration:expiration||"—"}})
     });
     return res.ok;
   }catch(e){console.log("sendCodeEmail error",e);return false;}
