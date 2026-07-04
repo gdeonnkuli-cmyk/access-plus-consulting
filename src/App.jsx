@@ -1943,7 +1943,7 @@ function UA({uid,onOut}){
   const pr=uData.progress||{},sc=uData.scores||{};
   const nd=aMods.filter(m=>pr[m.id]==="done").length,gp=aMods.length?Math.round(nd/aMods.length*100):0;
   const save=async(modId,s,t)=>{await saveProgress(uid,modId,{s,t,pct:Math.round(s/t*100)});};
-  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} uid={uid} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}<AutoLogoutBanner warning={uaWarn} mob={mob}/></div>;
+  const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style><Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on}/><main className="mp" style={{maxWidth:1060,margin:"0 auto",paddingBottom:mob?80:20}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}<AutoLogoutBanner warning={uaWarn} mob={mob}/></div>;
   if(quiz)return W(<QZ mod={quiz} onDone={async(s,t)=>{await save(quiz.id,s,t);sQ(null);sM(null);sV("res");}} onBack={()=>sQ(null)}/>);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]}/>);
   return W(<>
@@ -2287,31 +2287,8 @@ function PsychoPage({uid,u}){
   </div>;
 }
 
-function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
+function Nav({u,vue,sV,ok,onSub,onOut,live}){
   const K=useK();const{mob}=useW();
-  const[showCode,sShowCode]=useState(false);
-  const rHc=useRef();
-  const[hcErr,sHcErr]=useState("");
-  const[hcBusy,sHcBusy]=useState(false);
-  const submitNavCode=async()=>{
-    const c=rHc.current?.value?.trim()||"";
-    sHcErr("");if(!c)return sHcErr("Entrez votre code");
-    sHcBusy(true);
-    try{
-      const snap=await getDoc(doc(db,"users",uid));
-      if(!snap.exists()){sHcBusy(false);return sHcErr("Profil introuvable.");}
-      const ud=snap.data();
-      if(ud.activationCode!==c){sHcBusy(false);return sHcErr("Code incorrect.");}
-      await updateDoc(doc(db,"users",uid),{abonnement:"actif",codeValide:true});
-      sHcBusy(false);sShowCode(false);
-      window.location.reload();
-    }catch(e){sHcBusy(false);sHcErr(e.message);}
-  };
-  const codeModal=showCode&&<Sheet title="🔐 Code d'activation" onClose={()=>sShowCode(false)}>
-    <Inp lb="Code d'activation" rf={rHc} ph="AP-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
-    {hcErr&&<div style={{color:K.er,fontSize:12,marginBottom:10}}>{hcErr}</div>}
-    <Btn ch={hcBusy?"…":"Valider →"} on={submitNavCode} full dis={hcBusy}/>
-  </Sheet>;
   const NAV_ITEMS=[
     {k:"home",   ico:"home-2",        label:"Accueil"},
     {k:"pres",   ico:"presentation",  label:"Cours"},
@@ -2332,7 +2309,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           {ok
             ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"3px 9px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:10,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ Actif":"✓ Actif"}</span></div>
-            :<div style={{display:"flex",alignItems:"center",gap:5}}><button onClick={()=>sShowCode(true)} className="bt" style={{background:K.c2,border:`1px solid ${K.b1}`,borderRadius:99,padding:"4px 10px",fontSize:11,fontWeight:700,color:K.t2,cursor:"pointer"}}>Code</button><button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:11,fontWeight:800,color:"#F5EDD8",cursor:"pointer"}}>Accéder</button></div>
+            :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:11,fontWeight:800,color:"#F5EDD8",cursor:"pointer"}}>Accéder</button>
           }
           <div onClick={onOut} style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:12,cursor:"pointer",flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
         </div>
@@ -2352,7 +2329,6 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
           </button>;
         })}
       </div>
-      {codeModal}
     </>;
   }
   // ── DESKTOP NAV ──
@@ -2376,7 +2352,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
       {ok
         ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 11px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:11,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ À vie":"✓ Actif"}</span></div>
-        :<div style={{display:"flex",alignItems:"center",gap:6}}><button onClick={()=>sShowCode(true)} className="bt" style={{background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"6px 12px",fontSize:12,fontWeight:700,color:K.t2,cursor:"pointer"}}>J'ai un code</button><button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:800,color:"#F5EDD8",cursor:"pointer"}}>Obtenir l'accès</button></div>
+        :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:800,color:"#F5EDD8",cursor:"pointer"}}>Obtenir l'accès</button>
       }
       <div onClick={onOut} style={{display:"flex",alignItems:"center",gap:7,padding:"4px 9px 4px 5px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:99,cursor:"pointer"}} className="bt">
         <div style={{width:26,height:26,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:11}}>{(u.nom||"U")[0].toUpperCase()}</div>
@@ -2384,7 +2360,6 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
         <i className="ti ti-chevron-down" style={{fontSize:11,color:K.t3}}/>
       </div>
     </div>
-    {codeModal}
   </nav>;
 }
 
@@ -2398,6 +2373,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
   const rHc=useRef();
   const[hcErr,sHcErr]=useState("");
   const[hcBusy,sHcBusy]=useState(false);
+  const isSocial=(auth.currentUser?.providerData||[]).some(p=>p.providerId==="google.com"||p.providerId==="facebook.com");
   const submitHomeCode=async()=>{
     const c=rHc.current?.value?.trim()||"";
     sHcErr("");if(!c)return sHcErr("Entrez votre code");
@@ -2426,7 +2402,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,liv
 
   return <div style={{animation:"up .3s ease"}}>
     {/* Alertes */}
-    {!ok&&<div style={{background:u.abonnement==="expiré"?K.erBg:K.waBg,border:`1px solid ${u.abonnement==="expiré"?K.erBd:K.waBd}`,borderRadius:12,padding:"11px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:700,fontSize:13,color:u.abonnement==="expiré"?K.er:K.wa,marginBottom:2}}>{u.abonnement==="expiré"?"Accès expiré":"Cours verrouillés"}</div><div style={{fontSize:12,color:K.t3}}>{u.abonnement==="demande"?"Demande en cours — code sous 24h.":u.abonnement==="expiré"?"Contactez Éco-Campus.":"Effectuez le paiement."}</div></div>{u.abonnement!=="demande"&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}><Btn ch="J'ai un code" on={()=>sShowCode(true)} v="s" sm/><Btn ch="Obtenir l'accès" on={onSub} v="w" sm/></div>}</div>}
+    {!ok&&<div style={{background:u.abonnement==="expiré"?K.erBg:K.waBg,border:`1px solid ${u.abonnement==="expiré"?K.erBd:K.waBd}`,borderRadius:12,padding:"11px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:700,fontSize:13,color:u.abonnement==="expiré"?K.er:K.wa,marginBottom:2}}>{u.abonnement==="expiré"?"Accès expiré":"Cours verrouillés"}</div><div style={{fontSize:12,color:K.t3}}>{u.abonnement==="demande"?"Demande en cours — code sous 24h.":u.abonnement==="expiré"?"Contactez Éco-Campus.":"Effectuez le paiement."}</div></div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{isSocial&&<Btn ch="J'ai un code" on={()=>sShowCode(true)} v="s" sm/>}{u.abonnement!=="demande"&&<Btn ch="Obtenir l'accès" on={onSub} v="w" sm/>}</div></div>}
     {ok&&jr<=30&&jr>0&&u.dureeId!=="v"&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"9px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><div style={{fontSize:13,color:K.wa}}>⏰ Expire dans <b>{jr}j</b></div><Btn ch="Renouveler" on={onSub} v="w" sm/></div>}
 
     {/* Bannière principale */}
