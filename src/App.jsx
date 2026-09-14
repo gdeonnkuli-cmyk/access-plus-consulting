@@ -85,7 +85,7 @@ const getCardPalette=(tid,idx)=>{const p=CARD_PALETTES[tid]||CARD_PALETTES.dark;
 const bK=id=>{const t=TH[id]||TH.eco;return{bg:t.bg,card:t.ca,c2:t.c2,b0:t.b0,b1:t.b1,t1:t.t1,t2:t.t2,t3:t.t3,...ACC};};
 const Ctx=createContext({K:bK("dark"),tid:"dark",setT:()=>{}});
 const useK=()=>useContext(Ctx).K;
-const mCss=K=>`@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Outfit:wght@500;700;800;900&family=JetBrains+Mono:wght@500&display=swap');
+const mCss=K=>`/* Polices chargées dans public/index.html (preconnect + <link>). */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{background:${K.bg};color:${K.t1};font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:${K.b1};border-radius:9px;}
@@ -519,10 +519,6 @@ function useW(){const[w,sW]=useState(typeof window!=="undefined"?window.innerWid
 
 // ── UI PRIMITIVES ─────────────────────────────────────────────────────────────
 const Logo=({sm})=>{const K=useK();return <div style={{display:"flex",alignItems:"center",flexShrink:0}}>
-  <img src="/logo.png" alt="Éco-Campus RDC"
-    style={{height:sm?28:36,width:"auto",objectFit:"contain",display:"none"}}
-    onError={e=>{e.target.style.display="none";if(e.target.nextSibling)e.target.nextSibling.style.display="flex";}}
-  />
   <div style={{display:"flex",alignItems:"center",gap:8}}>
     <svg width={sm?18:22} height={sm?18:22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
     <div><div style={{fontWeight:800,fontSize:sm?13:15,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>{!sm&&<div style={{fontSize:8,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>RDC</div>}</div>
