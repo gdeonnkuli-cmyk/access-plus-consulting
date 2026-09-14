@@ -90,17 +90,28 @@ persistant (`localStorage: ecc_dark_mode`).
 - Impression : masquage des éléments d'interface ajoutés, cartes sans ombre,
   en-têtes lisibles en noir.
 
-## Point d'attention restant (non modifié volontairement)
+## 7. Zoom et taille de frappe sur mobile (correctif WCAG 1.4.4)
 
-Le `<meta viewport>` conserve `maximum-scale=1.0`, qui **bloque le zoom manuel** —
-c'est un échec au critère WCAG 1.4.4. Le retirer rétablit le zoom, mais réintroduit
-le zoom automatique d'iOS au focus des champs (< 16 px). Le correctif propre consiste
-à passer les champs de saisie à 16 px sur mobile puis à supprimer `maximum-scale` ;
-cela modifie la densité de la saisie mobile, d'où le choix de ne pas l'appliquer
-sans validation.
+- `maximum-scale=1.0` a été **retiré** du `<meta viewport>` : le zoom manuel
+  (pincement) est de nouveau possible, ce qui lève l'échec au critère WCAG 1.4.4.
+- Pour éviter le zoom automatique de Safari iOS à la prise de focus, tous les champs
+  de saisie passent à **16 px sur les appareils tactiles uniquement**, via
+  `@media (max-width:1024px) and (pointer:coarse)` : champs de formulaire, montants
+  CDF/USD, notes, codes, recherche, connexion, taux de change.
+  Hauteurs de frappe ajustées en conséquence (42 px pour les champs de formulaire,
+  40 px pour les montants, 46 px pour la connexion).
+- **Le poste de travail n'est pas touché** : `pointer:fine` conserve la densité
+  compacte d'origine (13,4 px pour les champs, 12,6 px pour les montants).
+- En **paysage tactile**, les colonnes de montants passent de 100 à 124 px et la
+  colonne Note est resserrée, pour absorber la taille de frappe sans troncature :
+  un montant à 8 chiffres (12 500 000) s'affiche intégralement.
 
 ## Vérifications effectuées
 
-Rendu contrôlé sous Chromium (Playwright), en 1280 px et 390 px, thèmes clair et sombre,
-sur les modules Accueil, Finances (Recettes, Dashboard) et Membres :
-aucune erreur JavaScript, aucun élément masqué ou déplacé par rapport à l'original.
+Rendu contrôlé sous Chromium (Playwright), thèmes clair et sombre, sur les modules
+Accueil, Finances (Recettes, Dashboard) et Membres :
+
+- 1280 px (pointeur fin) : densité de saisie inchangée par rapport à l'original ;
+- 390 × 844 px tactile (portrait) et 844 × 390 px tactile (paysage) : champs à 16 px,
+  **aucun débordement horizontal**, aucune troncature de montant ;
+- aucune erreur JavaScript, aucun élément masqué ou déplacé par rapport à l'original.
