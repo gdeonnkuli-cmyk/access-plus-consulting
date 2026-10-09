@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Nyembo</string>
+    <string name="title_activity_main">Nyembo</string>
+    <string name="package_name">com.nyembo.cantiques</string>
+    <string name="custom_url_scheme">com.nyembo.cantiques</string>
+</resources>

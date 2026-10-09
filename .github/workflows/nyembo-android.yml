@@ -1,0 +1,86 @@
+# Compile l'application Android « Nyembo » (cantiques-nyembo/) et publie l'APK
+# dans l'onglet « Releases » du dépôt, téléchargeable directement depuis un téléphone.
+name: Nyembo – Android
+
+on:
+  push:
+    paths:
+      - "cantiques-nyembo/**"
+      - ".github/workflows/nyembo-android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nyembo-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cantiques-nyembo
+    env:
+      VERSION_NAME: 1.0.${{ github.run_number }}
+      HAS_KEY: ${{ secrets.NYEMBO_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: cantiques-nyembo/package-lock.json
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Dépendances et synchronisation Capacitor
+        run: |
+          npm ci
+          npx cap sync android
+
+      - name: APK d'installation directe
+        working-directory: cantiques-nyembo/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug -PversionCode=${{ github.run_number }} -PversionName=$VERSION_NAME
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/Nyembo-$VERSION_NAME.apk"
+
+      # Version Play Store : seulement si la clé officielle est déclarée dans les secrets du dépôt
+      - name: AAB signé pour le Play Store
+        if: ${{ env.HAS_KEY == 'true' }}
+        env:
+          NYEMBO_KEYSTORE_PASSWORD: ${{ secrets.NYEMBO_KEYSTORE_PASSWORD }}
+          NYEMBO_KEY_ALIAS: ${{ secrets.NYEMBO_KEY_ALIAS }}
+          NYEMBO_KEY_PASSWORD: ${{ secrets.NYEMBO_KEY_PASSWORD }}
+        working-directory: cantiques-nyembo/android
+        run: |
+          echo "${{ secrets.NYEMBO_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/nyembo.jks"
+          export NYEMBO_KEYSTORE_FILE="$RUNNER_TEMP/nyembo.jks"
+          ./gradlew bundleRelease -PversionCode=${{ github.run_number }} -PversionName=$VERSION_NAME
+          cp app/build/outputs/bundle/release/app-release.aab "$GITHUB_WORKSPACE/Nyembo-$VERSION_NAME-playstore.aab"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Nyembo-${{ env.VERSION_NAME }}
+          path: Nyembo-*
+
+      - name: Publication dans « Releases »
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nyembo-v${{ env.VERSION_NAME }}
+          target_commitish: ${{ github.sha }}
+          name: Nyembo ${{ env.VERSION_NAME }} (Android)
+          body: |
+            **Installer sur Android** : télécharger `Nyembo-${{ env.VERSION_NAME }}.apk` depuis le téléphone, l'ouvrir,
+            puis autoriser « Installer des applications inconnues » si Android le demande.
+            Les versions suivantes s'installent par-dessus, sans perdre les favoris.
+          files: Nyembo-*
+          prerelease: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}

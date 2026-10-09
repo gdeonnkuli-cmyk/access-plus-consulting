@@ -15,6 +15,9 @@
   --ok: #1E7B45;
   --lyrics: 1.15rem;
   --radius: 14px;
+  /* zones sûres : navigateur (env) ou application native (variables injectées par Capacitor) */
+  --sat: max(env(safe-area-inset-top), var(--safe-area-inset-top, 0px));
+  --sab: max(env(safe-area-inset-bottom), var(--safe-area-inset-bottom, 0px));
   --shadow: 0 1px 2px rgba(1, 47, 107, .08), 0 4px 16px rgba(1, 47, 107, .06);
   color-scheme: light;
 }
@@ -37,7 +40,7 @@ body {
   background: var(--bg); color: var(--text);
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
   min-height: 100dvh;
-  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  padding-bottom: calc(64px + var(--sab));
 }
 a { color: inherit; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -57,7 +60,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .topbar {
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  padding: calc(10px + var(--sat)) 16px 10px;
   background: var(--navy); color: #fff;
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
@@ -79,7 +82,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
   display: grid; grid-template-columns: repeat(4, 1fr);
   background: var(--surface); border-top: 1px solid var(--line);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: var(--sab);
 }
 .tabbar a {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -202,7 +205,7 @@ legend { font-size: .88rem; font-weight: 600; padding: 0 4px; }
 .form-msg.err { color: var(--danger); }
 
 .toast {
-  position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+  position: fixed; left: 50%; bottom: calc(80px + var(--sab)); transform: translateX(-50%) translateY(20px);
   background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: .9rem;
   opacity: 0; pointer-events: none; transition: .25s; max-width: calc(100vw - 32px); z-index: 50;
 }

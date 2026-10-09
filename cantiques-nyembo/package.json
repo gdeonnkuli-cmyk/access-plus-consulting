@@ -1,0 +1,22 @@
+{
+  "name": "cantiques-nyembo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Recueil de cantiques Nyembo — application Android / iPhone",
+  "scripts": {
+    "serve": "python3 -m http.server 8000 --directory www",
+    "sync": "cap sync",
+    "android": "cap open android",
+    "ios": "cap open ios",
+    "assets": "capacitor-assets generate --android --ios --iconBackgroundColor '#022556' --iconBackgroundColorDark '#022556' --splashBackgroundColor '#022556' --splashBackgroundColorDark '#022556'"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.3"
+  }
+}

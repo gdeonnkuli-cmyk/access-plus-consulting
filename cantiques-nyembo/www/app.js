@@ -41,7 +41,8 @@ document.documentElement.style.setProperty("--lyrics", prefs.get("taille", 1.15)
   window.addEventListener("hashchange", route);
   route();
   setTimeout(() => $("#splash").classList.add("out"), 350);
-  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  // Service worker uniquement sur le web : dans l'application Android/iPhone, tout est déjà embarqué
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http") && !window.Capacitor?.isNativePlatform?.()) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   }
 })();

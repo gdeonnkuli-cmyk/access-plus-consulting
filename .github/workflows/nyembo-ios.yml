@@ -1,0 +1,26 @@
+# Vérifie que l'application iPhone « Nyembo » compile (simulateur, sans signature).
+# Lancement manuel (onglet Actions) : les machines macOS consomment plus de minutes GitHub.
+# La distribution (TestFlight / App Store) nécessite un compte Apple Developer : voir le README.
+name: Nyembo – iOS (vérification)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: cantiques-nyembo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci && npx cap sync ios
+      - name: Compilation simulateur
+        run: |
+          set -o pipefail
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build | tail -20
