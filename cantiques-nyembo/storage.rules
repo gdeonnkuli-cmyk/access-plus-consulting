@@ -1,0 +1,16 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email in ['admin@exemple.com'];
+    }
+    match /enregistrements/{cantique}/{fichier} {
+      allow read: if request.auth != null;
+      // Fichiers audio uniquement, 25 Mo maximum, pas d'écrasement
+      allow create: if request.auth != null
+        && request.resource.size < 25 * 1024 * 1024
+        && request.resource.contentType.matches('audio/.*');
+      allow delete: if isAdmin();
+    }
+  }
+}

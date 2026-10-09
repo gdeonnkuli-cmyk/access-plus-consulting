@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cantiques Nyembo</title>
+  <meta name="description" content="Recueil de cantiques Nyembo — 450 cantiques, recherche, favoris et enregistrements audio partagés.">
+  <meta name="theme-color" content="#012F6B">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="splash" class="splash" aria-hidden="true">
+    <div class="splash-logo"><img src="icons/logo-mark.png" alt=""></div>
+  </div>
+
+  <header class="topbar">
+    <a href="#/" class="brand" aria-label="Accueil">
+      <span class="brand-logo"><img src="icons/logo-mark.png" alt=""></span>
+      <span class="brand-text"><strong>Nyembo</strong><small>Recueil de cantiques</small></span>
+    </a>
+    <nav class="topnav">
+      <button id="btn-goto" class="icon-btn" title="Aller au numéro" aria-label="Aller au numéro">#</button>
+      <button id="btn-theme" class="icon-btn" title="Thème clair / sombre" aria-label="Changer de thème">◐</button>
+    </nav>
+  </header>
+
+  <main id="view" class="view" tabindex="-1"></main>
+
+  <nav class="tabbar" aria-label="Navigation principale">
+    <a href="#/" data-tab="liste"><span>☰</span>Cantiques</a>
+    <a href="#/favoris" data-tab="favoris"><span>★</span>Favoris</a>
+    <a href="#/audio" data-tab="audio"><span>♪</span>Audio</a>
+    <a href="#/admin" data-tab="admin"><span>⚙</span>Gestion</a>
+  </nav>
+
+  <dialog id="dlg-goto" class="dlg">
+    <form method="dialog" id="form-goto">
+      <h2>Aller au cantique n°</h2>
+      <input id="goto-num" type="number" inputmode="numeric" min="1" max="450" required autofocus>
+      <div class="dlg-actions">
+        <button value="cancel" formnovalidate class="btn ghost">Annuler</button>
+        <button value="ok" class="btn primary">Ouvrir</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-upload" class="dlg dlg-wide">
+    <form id="form-upload">
+      <h2>Envoyer un enregistrement</h2>
+      <p class="muted" id="up-hymn"></p>
+
+      <label>Type d'enregistrement
+        <select name="type" required>
+          <option value="solo">Solo (voix seule)</option>
+          <option value="chorale">Chorale / ensemble</option>
+          <option value="pupitre">Pupitre (une voix de la chorale)</option>
+          <option value="instrumental">Musique / instrumental</option>
+          <option value="accompagnement">Accompagnement (play-back)</option>
+          <option value="autre">Autre</option>
+        </select>
+      </label>
+
+      <label>Voix / pupitre
+        <select name="voix">
+          <option value="">— Non précisé —</option>
+          <option>Soprano</option><option>Alto</option><option>Ténor</option><option>Basse</option>
+          <option>Toutes les voix</option>
+        </select>
+      </label>
+
+      <fieldset class="source">
+        <legend>Source du son</legend>
+        <div class="seg">
+          <label><input type="radio" name="source" value="fichier" checked> Fichier audio</label>
+          <label><input type="radio" name="source" value="micro"> Enregistrer maintenant</label>
+        </div>
+        <div id="src-fichier">
+          <input type="file" name="fichier" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.opus,.amr,.webm">
+          <small class="muted">MP3, M4A, WAV, OGG, OPUS (notes vocales WhatsApp)… — 25 Mo maximum.</small>
+        </div>
+        <div id="src-micro" hidden>
+          <div class="rec">
+            <button type="button" id="rec-btn" class="btn rec-btn">● Enregistrer</button>
+            <span id="rec-time" class="rec-time">00:00</span>
+          </div>
+          <audio id="rec-preview" controls hidden></audio>
+        </div>
+      </fieldset>
+
+      <label>Votre nom (ou chorale)
+        <input name="contributeur" maxlength="80" required placeholder="Ex. : Chorale de Mbandaka">
+      </label>
+      <label>Remarque (facultatif)
+        <textarea name="note" rows="2" maxlength="300" placeholder="Tonalité, tempo, correction du texte…"></textarea>
+      </label>
+
+      <div class="progress" hidden><div class="bar"></div></div>
+      <p class="form-msg" role="status"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn ghost" data-close>Annuler</button>
+        <button type="submit" class="btn primary">Envoyer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Remplacer par les e-mails des responsables (même liste que firebase-config.js)
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email in ['admin@exemple.com'];
+    }
+
+    match /enregistrements/{id} {
+      // Tout le monde voit les sons publiés ; les responsables voient tout
+      allow read: if resource.data.statut == 'approuve' || isAdmin();
+
+      // Tout utilisateur (connexion anonyme) peut proposer un son, qui part « en attente »
+      allow create: if request.auth != null
+        && request.resource.data.statut == 'en_attente'
+        && request.resource.data.auteurUid == request.auth.uid
+        && request.resource.data.cantique is int
+        && request.resource.data.cantique >= 1 && request.resource.data.cantique <= 450
+        && request.resource.data.contributeur is string
+        && request.resource.data.contributeur.size() > 0 && request.resource.data.contributeur.size() <= 80
+        && request.resource.data.note.size() <= 300
+        && request.resource.data.keys().hasOnly(['cantique','type','voix','contributeur','note','nomFichier',
+             'taille','mime','url','chemin','statut','auteurUid','creeLe']);
+
+      // Validation, rejet, suppression : responsables uniquement
+      allow update, delete: if isAdmin();
+    }
+  }
+}
