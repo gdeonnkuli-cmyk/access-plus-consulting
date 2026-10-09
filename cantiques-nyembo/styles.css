@@ -1,7 +1,8 @@
 :root {
-  --navy: #012F6B;
+  --navy: #022556;
   --blue: #0D47A1;
-  --gold: #B58A3A;
+  --gold: #B07D1E;
+  --gold-bright: #E8B04A;
   --bg: #F5F7FB;
   --surface: #FFFFFF;
   --surface-2: #EEF2F8;
@@ -49,8 +50,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: grid; place-items: center; transition: opacity .35s ease;
 }
 .splash.out { opacity: 0; pointer-events: none; }
-.splash-logo { width: 46vw; max-width: 220px; aspect-ratio: 1; background: #fff; border-radius: 22%; display: grid; place-items: center; }
-.splash-logo img { width: 66%; }
+.splash-logo { width: 62vw; max-width: 300px; aspect-ratio: 1; }
+.splash-logo img { width: 100%; display: block; }
 
 /* Barre du haut */
 .topbar {
@@ -60,10 +61,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: var(--navy); color: #fff;
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
-.brand-logo { width: 38px; height: 38px; flex: none; background: #fff; border-radius: 10px; display: grid; place-items: center; }
-.brand-logo img { width: 70%; }
+.brand-logo { width: 54px; height: 38px; flex: none; display: grid; place-items: center; }
+.brand-logo img { width: 100%; height: 100%; object-fit: contain; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
-.brand-text strong { font-size: 1.05rem; letter-spacing: .04em; }
+.brand-text strong { font-size: 1.05rem; letter-spacing: .12em; color: #FBF1DC; }
 .brand-text small { opacity: .75; font-size: .75rem; }
 .topnav { display: flex; gap: 6px; }
 .icon-btn {
@@ -86,6 +87,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .tabbar a span { font-size: 1.15rem; line-height: 1; }
 .tabbar a.on { color: var(--accent); font-weight: 600; }
+.topbar { border-bottom: 2px solid var(--gold-bright); }
 
 /* Recherche & filtres */
 .search { position: relative; margin-bottom: 10px; }
