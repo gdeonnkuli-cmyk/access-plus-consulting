@@ -254,3 +254,4 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .update-bar .btn { background: var(--navy); color: #fff; border-color: var(--navy); }
 .update-x { background: none; border: 0; font-size: 1rem; color: inherit; cursor: pointer; padding: 4px; }
 #q { padding-left: 40px; }
+.rec-dl { margin-top: 6px; }

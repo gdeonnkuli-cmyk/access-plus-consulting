@@ -262,6 +262,15 @@ function renderAudioCard(h) {
   $("#btn-up").onclick = () => openUpload(h);
 }
 
+// Lien de téléchargement : Cloudinary convertit en MP3 et force l'enregistrement du fichier
+function dlUrl(r) {
+  const u = String(r.url || "");
+  if (!/res\.cloudinary\.com\/.+\/upload\//.test(u)) return u;
+  const nom = norm(`nyembo ${r.cantique} ${store.TYPES[r.type] || r.type} ${r.voix || ""} ${r.contributeur || ""}`)
+    .replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "").slice(0, 60) || "nyembo";
+  return u.replace("/upload/", `/upload/fl_attachment:${nom}/`).replace(/\.[a-z0-9]+(\?.*)?$/i, ".mp3");
+}
+
 function recHTML(r, opts = {}) {
   const meta = [store.TYPES[r.type] || r.type, r.voix].filter(Boolean);
   const d = store.dateOf(r);
@@ -273,7 +282,8 @@ function recHTML(r, opts = {}) {
       ${opts.showStatus ? `<span class="tag ${{ en_attente: "warn", rejete: "bad", approuve: "ok" }[r.statut] || ""}">${esc(store.STATUTS[r.statut] || r.statut)}</span>` : ""}
       <span class="muted" style="font-size:.78rem;margin-left:auto">${isNaN(d) ? "" : d.toLocaleDateString("fr-FR")}</span>
     </div>
-    <audio controls preload="none" src="${esc(r.url)}"></audio>
+    <audio controls controlslist="nodownload" preload="none" src="${esc(r.url)}"></audio>
+    <div class="rec-dl"><a class="btn small" href="${esc(dlUrl(r))}" target="_blank" rel="noopener">⬇ Télécharger (MP3)</a></div>
     ${r.note ? `<p class="rec-note">${esc(r.note)}</p>` : ""}
     ${opts.actions || ""}
   </li>`;
