@@ -23,7 +23,12 @@ export const firebaseConfig = {
 
 // Comptes autorisés à valider / rejeter les envois (onglet « Gestion »).
 // Doit correspondre à la liste déclarée dans firestore.rules et storage.rules.
-export const ADMIN_EMAILS = ["admin@exemple.com"]; // ← remplacer par votre e-mail
+export const ADMIN_EMAILS = ["gdeonnkuli@gmail.com"];
+
+// Stockage des fichiers audio sur Cloudinary (offre gratuite, sans carte bancaire).
+// Laisser à null pour utiliser Firebase Storage (formule Blaze requise).
+// uploadPreset : préréglage « Unsigned » créé dans Cloudinary → Settings → Upload.
+export const cloudinary = { cloudName: "o8shaqu1", uploadPreset: "nyembo_audio" };
 
 // Taille maximale d'un fichier audio (octets).
 export const MAX_AUDIO_BYTES = 25 * 1024 * 1024;

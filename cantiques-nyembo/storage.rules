@@ -2,7 +2,7 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     function isAdmin() {
-      return request.auth != null && request.auth.token.email in ['admin@exemple.com'];
+      return request.auth != null && request.auth.token.email in ['gdeonnkuli@gmail.com'];
     }
     match /enregistrements/{cantique}/{fichier} {
       allow read: if request.auth != null;

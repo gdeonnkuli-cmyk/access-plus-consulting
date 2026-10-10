@@ -99,6 +99,14 @@ Tant que `www/firebase-config.js` n'est pas rempli, l'application tourne en **mo
    ```
    La version web sera en ligne sur `https://<projet>.web.app`. Les applications Android/iPhone utilisent la même configuration : recompiler après l'avoir remplie.
 
+### Fichiers audio sur Cloudinary (sans carte bancaire)
+
+Firebase Storage exige la formule Blaze. Les sons sont donc envoyés sur **Cloudinary** (offre gratuite) :
+`cloudinary` dans `www/firebase-config.js` (*cloud name* + préréglage **non signé** `nyembo_audio`, créé dans
+Cloudinary → Settings → Upload → Upload presets). Firestore et Authentication restent chez Firebase (formule Spark gratuite).
+Un son supprimé dans l'onglet *Gestion* disparaît de l'application ; le fichier reste dans Cloudinary → Assets, à effacer à la main si besoin.
+Mettre `cloudinary = null` pour revenir à Firebase Storage.
+
 > Le projet Firebase `access-plus-consulting` existant peut aussi servir, mais un projet séparé est préférable pour isoler les données et les quotas.
 
 **Garde-fous dans les règles**: un son ne peut être publié que par un responsable. Les fichiers sont limités à 25 Mo et aux formats audio, et un contributeur ne peut ni modifier ni supprimer un envoi.

@@ -2,7 +2,7 @@
 //  - Mode « firebase » : sons partagés (Firestore + Storage), avec modération.
 //  - Mode « local »    : sons conservés sur l'appareil (IndexedDB), sans partage.
 
-import { firebaseConfig, ADMIN_EMAILS, MAX_AUDIO_BYTES } from "./firebase-config.js";
+import { firebaseConfig, ADMIN_EMAILS, MAX_AUDIO_BYTES, cloudinary } from "./firebase-config.js";
 
 const FB = "https://www.gstatic.com/firebasejs/10.12.2/";
 const COL = "enregistrements";
@@ -28,10 +28,10 @@ export async function init() {
       import(FB + "firebase-app.js"),
       import(FB + "firebase-auth.js"),
       import(FB + "firebase-firestore.js"),
-      import(FB + "firebase-storage.js"),
+      cloudinary ? null : import(FB + "firebase-storage.js"),
     ]);
     const a = app.initializeApp(firebaseConfig);
-    fb = { auth, fs, st, A: auth.getAuth(a), D: fs.getFirestore(a), S: st.getStorage(a) };
+    fb = { auth, fs, st, A: auth.getAuth(a), D: fs.getFirestore(a), S: st?.getStorage(a) };
     mode = "firebase";
   } catch (e) {
     console.warn("Firebase indisponible, passage en mode local", e);
@@ -73,20 +73,48 @@ export async function submit({ cantique, type, voix, contributeur, note, blob, n
     return { statut: "local" };
   }
 
-  const { auth, fs, st, A, D, S } = fb;
+  const { auth, fs, A, D } = fb;
   if (!A.currentUser) await auth.signInAnonymously(A);
+  const { url, path } = cloudinary
+    ? await uploadCloudinary(blob, meta, onProgress)
+    : await uploadFirebase(blob, meta, nomFichier, onProgress);
+  await fs.addDoc(fs.collection(D, COL), {
+    ...meta, url, chemin: path, statut: "en_attente", auteurUid: A.currentUser.uid,
+    creeLe: fs.serverTimestamp(),
+  });
+  return { statut: "en_attente" };
+}
+
+async function uploadFirebase(blob, meta, nomFichier, onProgress) {
+  const { st, S } = fb;
   const ext = (nomFichier?.split(".").pop() || extFromMime(meta.mime)).toLowerCase().replace(/[^a-z0-9]/g, "");
   const path = `${COL}/${meta.cantique}/${Date.now()}-${uid()}.${ext || "audio"}`;
   const ref = st.ref(S, path);
   const task = st.uploadBytesResumable(ref, blob, { contentType: meta.mime });
   await new Promise((ok, ko) =>
     task.on("state_changed", (s) => onProgress?.(s.bytesTransferred / s.totalBytes), ko, ok));
-  const url = await st.getDownloadURL(ref);
-  await fs.addDoc(fs.collection(D, COL), {
-    ...meta, url, chemin: path, statut: "en_attente", auteurUid: A.currentUser.uid,
-    creeLe: fs.serverTimestamp(),
+  return { url: await st.getDownloadURL(ref), path };
+}
+
+// Envoi direct vers Cloudinary (préréglage non signé). Les fichiers audio sont de type « video ».
+function uploadCloudinary(blob, meta, onProgress) {
+  const form = new FormData();
+  form.append("file", blob);
+  form.append("upload_preset", cloudinary.uploadPreset);
+  form.append("folder", `${COL}/${meta.cantique}`);
+  return new Promise((ok, ko) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudinary.cloudName}/video/upload`);
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total);
+    xhr.onload = () => {
+      let r = {};
+      try { r = JSON.parse(xhr.responseText); } catch {}
+      if (xhr.status >= 200 && xhr.status < 300 && r.secure_url) ok({ url: r.secure_url, path: "cloudinary:" + r.public_id });
+      else ko(new Error(r.error?.message || `envoi refusé (${xhr.status})`));
+    };
+    xhr.onerror = () => ko(new Error("connexion impossible"));
+    xhr.send(form);
   });
-  return { statut: "en_attente" };
 }
 
 // ── Gestion (modération) ───────────────────────────────────────────────────
@@ -105,7 +133,9 @@ export async function setStatus(id, statut) {
 export async function remove(rec) {
   if (mode === "local") return idbDel(rec.id);
   const { fs, st, D, S } = fb;
-  if (rec.chemin) await st.deleteObject(st.ref(S, rec.chemin)).catch(() => {});
+  // Un fichier Cloudinary ne peut pas être effacé depuis l'application (envoi non signé) :
+  // il disparaît de l'appli et peut être supprimé à la main dans Cloudinary → Assets.
+  if (rec.chemin && st && !rec.chemin.startsWith("cloudinary:")) await st.deleteObject(st.ref(S, rec.chemin)).catch(() => {});
   await fs.deleteDoc(fs.doc(D, COL, rec.id));
 }
 

@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Remplacer par les e-mails des responsables (même liste que firebase-config.js)
     function isAdmin() {
-      return request.auth != null && request.auth.token.email in ['admin@exemple.com'];
+      return request.auth != null && request.auth.token.email in ['gdeonnkuli@gmail.com'];
     }
 
     match /enregistrements/{id} {
