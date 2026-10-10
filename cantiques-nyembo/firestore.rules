@@ -36,5 +36,12 @@ service cloud.firestore {
             && request.resource.data.utilisePar == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['utilisePar', 'utiliseLe']));
     }
+
+    // Statistiques anonymes : chaque téléphone ne met à jour que sa propre ligne
+    match /appareils/{uid} {
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['premiere', 'derniere', 'version', 'acces', 'plateforme', 'ouvertures']);
+      allow read: if isAdmin();
+    }
   }
 }

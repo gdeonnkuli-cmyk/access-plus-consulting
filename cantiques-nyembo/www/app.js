@@ -55,7 +55,14 @@ document.documentElement.style.setProperty("--lyrics", prefs.get("taille", 1.15)
   }
   window.addEventListener("hashchange", route);
   route();
-  checkUpdate();
+  checkUpdate().then(() => {
+    // Statistiques anonymes : une ouverture par lancement de l'application
+    if (!prefs.get("premiere")) prefs.set("premiere", Date.now());
+    store.trackDevice({
+      version: window.NYEMBO_VERSION, acces: accesComplet() ? "complet" : "limite",
+      plateforme: window.Capacitor?.isNativePlatform?.() ? "android" : "web", premiere: prefs.get("premiere"),
+    });
+  });
   setTimeout(() => $("#splash").classList.add("out"), 350);
   // Service worker uniquement sur le web : dans l'application Android/iPhone, tout est déjà embarqué
   if ("serviceWorker" in navigator && location.protocol.startsWith("http") && !window.Capacitor?.isNativePlatform?.()) {
@@ -363,7 +370,7 @@ async function drawAdmin(admin) {
   const box = $("#adm");
   box.innerHTML = `
     <div class="filters">
-      ${Object.entries({ en_attente: "En attente", approuve: "Publiés", rejete: "Rejetés", codes: "Codes d'accès" })
+      ${Object.entries({ stats: "Statistiques", en_attente: "En attente", approuve: "Publiés", rejete: "Rejetés", codes: "Codes d'accès" })
         .map(([k, v]) => `<button class="chip" data-s="${k}" aria-pressed="${k === adminTab}">${v}</button>`).join("")}
       <button class="chip" id="logout" style="margin-left:auto">Déconnexion (${esc(admin.email)})</button>
     </div>
@@ -371,6 +378,7 @@ async function drawAdmin(admin) {
   box.querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => { adminTab = b.dataset.s; drawAdmin(admin); }));
   $("#logout").onclick = () => store.signOut();
   if (adminTab === "codes") return drawCodes(admin);
+  if (adminTab === "stats") return drawStats();
   let recs = [];
   try { recs = await store.listByStatus(adminTab); }
   catch (e) { $("#adm-list").innerHTML = `<li class="form-msg err">Erreur : ${esc(e.message)}</li>`; return; }
@@ -621,6 +629,8 @@ function renderAbout() {
       <p>L'application permet aussi aux chantres, solistes et chorales de <strong>partager des enregistrements</strong>
         (solo, pupitres, accompagnement) pour aider chacun à apprendre et à transmettre les chants.
         Chaque son est écouté et validé avant publication.</p>
+      <p class="muted" style="font-size:.85rem">Pour améliorer l'application, le nombre d'ouvertures est compté de façon anonyme
+        (aucun nom, numéro ni contenu personnel n'est collecté).</p>
       <p class="muted" style="margin-bottom:0">Chanter • Célébrer • Transmettre</p>
     </section>
 
@@ -750,4 +760,50 @@ async function checkUpdate() {
     $("#update-x").onclick = () => { prefs.set("majIgnoree", nouvelle); $("#update-bar").hidden = true; };
     $("#update-bar").hidden = false;
   } catch {}
+}
+
+// ── Statistiques (responsable) ─────────────────────────────────────────────
+async function drawStats() {
+  const box = $("#adm-list").closest(".card");
+  box.innerHTML = `<p class="muted">Chargement des statistiques…</p>`;
+  const jour = 864e5, now = Date.now();
+  const [devices, codes, publies, attente, rels] = await Promise.all([
+    store.listDevices().catch(() => null), store.listCodes().catch(() => []),
+    store.listByStatus("approuve").catch(() => []), store.listByStatus("en_attente").catch(() => []),
+    fetch(RELEASES.replace("per_page=10", "per_page=100")).then((r) => r.json()).catch(() => []),
+  ]);
+  // Téléchargements GitHub (fichiers APK)
+  const apks = (Array.isArray(rels) ? rels : []).filter((r) => /^nyembo-/.test(r.tag_name))
+    .flatMap((r) => (r.assets || []).filter((a) => a.name.endsWith(".apk")).map((a) => ({ tag: r.tag_name, n: a.download_count })));
+  const totalDl = apks.reduce((t, a) => t + a.n, 0);
+  const viaLien = apks.filter((a) => a.tag === "nyembo-latest").reduce((t, a) => t + a.n, 0);
+  // Appareils
+  const ms = (t) => (t?.toMillis ? t.toMillis() : +t || 0);
+  const d = devices || [];
+  const actifs = (j) => d.filter((x) => now - ms(x.derniere) <= j * jour).length;
+  const nouveaux = (j) => d.filter((x) => now - ms(x.premiere) <= j * jour).length;
+  const complet = d.filter((x) => x.acces === "complet").length;
+  const ouvertures = d.reduce((t, x) => t + (x.ouvertures || 0), 0);
+  const versions = Object.entries(d.reduce((m, x) => ((m[x.version || "?"] = (m[x.version || "?"] || 0) + 1), m), {}))
+    .sort((a, b) => b[1] - a[1]);
+  const utilises = codes.filter((c) => c.utilisePar).length;
+  const tile = (v, l) => `<div class="stat"><strong>${v}</strong><span>${l}</span></div>`;
+  box.innerHTML = `
+    <h2>Téléchargements</h2>
+    <div class="stats">${tile(totalDl, "APK téléchargés")}${tile(viaLien, "via le lien de partage")}</div>
+    <h2>Utilisation</h2>
+    ${devices === null ? `<p class="form-msg err">Statistiques d'utilisation indisponibles : publiez les règles Firestore à jour.</p>` : `
+    <div class="stats">
+      ${tile(d.length, "téléphones")}${tile(actifs(7), "actifs (7 j)")}${tile(actifs(30), "actifs (30 j)")}
+      ${tile(nouveaux(7), "nouveaux (7 j)")}${tile(ouvertures, "ouvertures")}${tile(complet, "accès complet")}
+      ${tile(d.length - complet, "accès limité")}
+    </div>
+    <p class="muted" style="font-size:.85rem">Versions installées : ${versions.map(([v, n]) => `${esc(v)} (${n})`).join(" · ") || "—"}</p>`}
+    <h2>Accès & sons</h2>
+    <div class="stats">
+      ${tile(codes.length, "codes créés")}${tile(utilises, "codes activés")}${tile(codes.length - utilises, "codes libres")}
+      ${tile(publies.length, "sons publiés")}${tile(attente.length, "sons en attente")}
+    </div>
+    <p class="muted" style="font-size:.8rem;margin:8px 0 0">Les statistiques d'utilisation sont anonymes et commencent à la version 1.0.11.
+      Les téléchargements incluent vos propres essais.</p>`;
 }

@@ -206,6 +206,25 @@ export const resetCode = (code) => fs_().updateDoc(fs_().doc(fb.D, CODES, code),
 export const deleteCode = (code) => fs_().deleteDoc(fs_().doc(fb.D, CODES, code));
 const fs_ = () => fb.fs;
 
+// ── Statistiques d'utilisation (anonymes : un document par téléphone) ─────
+export async function trackDevice({ version, acces, plateforme, premiere }) {
+  if (mode !== "firebase") return;
+  try {
+    const { fs, D } = fb;
+    const u = await ensureUser();
+    if (!u.isAnonymous && !u.uid) return;
+    await fs.setDoc(fs.doc(D, "appareils", u.uid), {
+      premiere, derniere: fs.serverTimestamp(), version: String(version || ""),
+      acces, plateforme, ouvertures: fs.increment(1),
+    }, { merge: true });
+  } catch (e) { console.warn("stats", e); }
+}
+export async function listDevices() {
+  const { fs, D } = fb;
+  const snap = await fs.getDocs(fs.collection(D, "appareils"));
+  return snap.docs.map((d) => d.data());
+}
+
 // ── Utilitaires ────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 10);
 const ts = (r) => (r.creeLe?.toMillis ? r.creeLe.toMillis() : r.creeLe || 0);
