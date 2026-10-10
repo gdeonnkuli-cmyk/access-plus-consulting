@@ -139,6 +139,69 @@ export async function remove(rec) {
   await fs.deleteDoc(fs.doc(D, COL, rec.id));
 }
 
+// ── Codes d'accès (un code = un appareil, accès complet sans limite de durée) ──
+const CODES = "codes";
+const ALPHA = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sans 0/O/1/I pour éviter les confusions
+export const normCode = (c) => String(c || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+const fmtCode = (raw) => `NYB-${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
+
+async function ensureUser() {
+  const { auth, A } = fb;
+  if (A.authStateReady) await A.authStateReady();
+  if (!A.currentUser) await auth.signInAnonymously(A);
+  return A.currentUser;
+}
+
+// Active un code sur cet appareil. Renvoie le code formaté, ou lève une erreur explicite.
+export async function activateCode(saisie) {
+  if (mode !== "firebase") throw new Error("Connexion au serveur indisponible.");
+  const raw = normCode(saisie).replace(/^NYB/, "");
+  if (raw.length !== 8) throw new Error("Le code doit avoir la forme NYB-XXXX-XXXX.");
+  const code = fmtCode(raw);
+  const { fs, D } = fb;
+  const u = await ensureUser();
+  const ref = fs.doc(D, CODES, code);
+  const snap = await fs.getDoc(ref);
+  if (!snap.exists()) throw new Error("Code inconnu. Vérifiez la saisie.");
+  const d = snap.data();
+  if (d.utilisePar && d.utilisePar !== u.uid) throw new Error("Ce code est déjà utilisé sur un autre téléphone.");
+  if (!d.utilisePar) await fs.updateDoc(ref, { utilisePar: u.uid, utiliseLe: fs.serverTimestamp() });
+  return code;
+}
+
+// Vérifie (en ligne) qu'un code activé est toujours valable pour cet appareil.
+// Renvoie true / false, ou null si la vérification est impossible (hors ligne…).
+export async function checkCode(code) {
+  if (mode !== "firebase") return null;
+  try {
+    const { fs, D, A } = fb;
+    if (A.authStateReady) await A.authStateReady();
+    if (!A.currentUser) return null;
+    const snap = await fs.getDoc(fs.doc(D, CODES, code));
+    return snap.exists() && snap.data().utilisePar === A.currentUser.uid;
+  } catch { return null; }
+}
+
+export async function generateCodes(nombre, note = "") {
+  const { fs, D } = fb;
+  const out = [];
+  for (let i = 0; i < nombre; i++) {
+    const r = crypto.getRandomValues(new Uint8Array(8));
+    const code = fmtCode([...r].map((b) => ALPHA[b % ALPHA.length]).join(""));
+    await fs.setDoc(fs.doc(D, CODES, code), { utilisePar: null, utiliseLe: null, note, creeLe: fs.serverTimestamp() });
+    out.push(code);
+  }
+  return out;
+}
+export async function listCodes() {
+  const { fs, D } = fb;
+  const snap = await fs.getDocs(fs.collection(D, CODES));
+  return snap.docs.map((d) => ({ code: d.id, ...d.data() })).sort(byDate);
+}
+export const resetCode = (code) => fs_().updateDoc(fs_().doc(fb.D, CODES, code), { utilisePar: null, utiliseLe: null });
+export const deleteCode = (code) => fs_().deleteDoc(fs_().doc(fb.D, CODES, code));
+const fs_ = () => fb.fs;
+
 // ── Utilitaires ────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 10);
 const ts = (r) => (r.creeLe?.toMillis ? r.creeLe.toMillis() : r.creeLe || 0);

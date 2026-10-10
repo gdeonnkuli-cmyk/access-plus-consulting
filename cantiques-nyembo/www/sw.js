@@ -1,6 +1,6 @@
 // Cache hors-ligne : l'application et les 450 cantiques restent consultables sans connexion.
 // Incrémenter VERSION à chaque mise à jour du recueil ou du code.
-const VERSION = "nyembo-v3";
+const VERSION = "nyembo-v4";
 const SHELL = [
   "./", "index.html", "styles.css", "app.js", "store.js", "firebase-config.js",
   "data/cantiques.json", "manifest.webmanifest",

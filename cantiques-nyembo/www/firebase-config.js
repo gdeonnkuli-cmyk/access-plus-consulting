@@ -37,5 +37,16 @@ export const ADMIN_EMAILS = ["gdeonnkuli@gmail.com"];
 // uploadPreset : préréglage « Unsigned » créé dans Cloudinary → Settings → Upload.
 export const cloudinary = { cloudName: "o8shaqu1", uploadPreset: "nyembo_audio" };
 
+// Accès limité (sans code) : cantiques consultables et écoute des sons.
+// Un code d'accès (généré dans l'onglet Gestion) débloque tout, sans limite de durée.
+export const ACCES_LIBRE = { cantiquesMax: 50, ecouteAudio: false };
+
+// À propos : soutien et contact
+export const CONTACT = {
+  auteur: "Gédéon Nkuli",
+  orangeMoney: "0894405989",
+  email: "gnkuli@outlook.fr",
+};
+
 // Taille maximale d'un fichier audio (octets).
 export const MAX_AUDIO_BYTES = 25 * 1024 * 1024;

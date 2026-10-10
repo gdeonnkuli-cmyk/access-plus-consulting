@@ -1,4 +1,5 @@
 import * as store from "./store.js";
+import { ACCES_LIBRE, CONTACT } from "./firebase-config.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 const view = $("#view");
@@ -24,6 +25,13 @@ let AUDIO = []; // enregistrements publiés (ou locaux)
 let audioCount = new Map();
 const state = { q: "", section: "", audioOnly: false };
 
+// ── Accès : limité sans code, complet avec un code (ou pour un responsable) ──
+let isAdminUser = false;
+const accesCode = () => prefs.get("acces", null)?.code || "";
+const accesComplet = () => store.getMode() !== "firebase" || isAdminUser || !!accesCode();
+const verrouille = (h) => !accesComplet() && h.n > ACCES_LIBRE.cantiquesMax;
+const ecoutePermise = () => accesComplet() || ACCES_LIBRE.ecouteAudio;
+
 // ── Démarrage ──────────────────────────────────────────────────────────────
 applyTheme(prefs.get("theme", ""));
 document.documentElement.style.setProperty("--lyrics", prefs.get("taille", 1.15) + "rem");
@@ -38,6 +46,13 @@ document.documentElement.style.setProperty("--lyrics", prefs.get("taille", 1.15)
     if (h.section && !SECTIONS.includes(h.section)) SECTIONS.push(h.section);
   }
   await refreshAudio();
+  if (store.getMode() === "firebase") {
+    store.onAdmin((admin) => { const was = isAdminUser; isAdminUser = !!admin; if (was !== isAdminUser) route(); });
+    // Vérifie en arrière-plan qu'un code activé est toujours valable (révocation par le responsable)
+    if (accesCode()) store.checkCode(accesCode()).then((ok) => {
+      if (ok === false) { prefs.set("acces", null); toast("Votre code d'accès n'est plus valable."); route(); }
+    });
+  }
   window.addEventListener("hashchange", route);
   route();
   setTimeout(() => $("#splash").classList.add("out"), 350);
@@ -62,6 +77,7 @@ function route() {
   else if (page === "favoris") { tab = "favoris"; renderFavs(); }
   else if (page === "audio") { tab = "audio"; renderAudio(); }
   else if (page === "admin") { tab = "admin"; renderAdmin(); }
+  else if (page === "apropos") { tab = "apropos"; renderAbout(); }
   else renderList();
   document.querySelectorAll(".tabbar a").forEach((a) => a.classList.toggle("on", a.dataset.tab === tab));
   if (page !== "") window.scrollTo(0, 0);
@@ -121,7 +137,7 @@ function itemHTML({ h, snip }, q) {
   return `<li><a href="#/c/${h.n}">
     <span class="num">${h.n}</span>
     <span class="li-main"><div class="li-title">${hl(h.titre, q)}</div><div class="li-sub">${sub}</div></span>
-    <span class="li-badges">${n ? `<span title="${n} enregistrement(s)">♪</span>` : ""}${fav}</span>
+    <span class="li-badges">${verrouille(h) ? `<span title="Accès complet requis">🔒</span>` : ""}${n ? `<span title="${n} enregistrement(s)">♪</span>` : ""}${fav}</span>
   </a></li>`;
 }
 
@@ -183,6 +199,7 @@ function renderFavs() {
 // ── Cantique ───────────────────────────────────────────────────────────────
 function renderHymn(n) {
   const h = BY_N.get(n);
+  if (verrouille(h)) return renderLocked(h);
   const prev = BY_N.get(n - 1), next = BY_N.get(n + 1);
   const body = h.parties.map((p) => p.type === "strophe"
     ? `<div class="stanza"><span class="sn">${p.n}</span><p>${esc(p.texte)}</p></div>`
@@ -224,6 +241,15 @@ function renderHymn(n) {
 function renderAudioCard(h) {
   const recs = AUDIO.filter((a) => a.cantique === h.n);
   const local = store.getMode() === "local";
+  if (recs.length && !ecoutePermise()) {
+    $("#audio-card").innerHTML = `
+      <div class="card-head"><div><h2>Sons & enregistrements</h2>
+        <span class="muted" style="font-size:.85rem">🔒 ${recs.length} son${recs.length > 1 ? "s" : ""} — écoute réservée à l'accès complet</span></div>
+        <a class="btn primary small" href="#/apropos">Activer un code</a></div>
+      <div class="rec-actions"><button class="btn ghost small" id="btn-up">＋ Envoyer un son</button></div>`;
+    $("#btn-up").onclick = () => openUpload(h);
+    return;
+  }
   $("#audio-card").innerHTML = `
     <div class="card-head">
       <div><h2>Sons & enregistrements</h2>
@@ -279,6 +305,11 @@ function swipe(n) {
 // ── Onglet Audio ───────────────────────────────────────────────────────────
 function renderAudio() {
   const local = store.getMode() === "local";
+  if (!ecoutePermise()) {
+    view.innerHTML = `<h1 class="page-title">Enregistrements</h1>${lockCard("L'écoute des enregistrements est réservée à l'accès complet.")}`;
+    bindCodeForm();
+    return;
+  }
   view.innerHTML = `<h1 class="page-title">Enregistrements</h1>
     ${local ? `<div class="notice">Mode local : seuls les sons enregistrés sur cet appareil apparaissent. Activez le partage (Firebase) pour que chacun profite des envois validés.</div>` : ""}
     ${AUDIO.length
@@ -321,13 +352,14 @@ async function drawAdmin(admin) {
   const box = $("#adm");
   box.innerHTML = `
     <div class="filters">
-      ${Object.entries({ en_attente: "En attente", approuve: "Publiés", rejete: "Rejetés" })
+      ${Object.entries({ en_attente: "En attente", approuve: "Publiés", rejete: "Rejetés", codes: "Codes d'accès" })
         .map(([k, v]) => `<button class="chip" data-s="${k}" aria-pressed="${k === adminTab}">${v}</button>`).join("")}
       <button class="chip" id="logout" style="margin-left:auto">Déconnexion (${esc(admin.email)})</button>
     </div>
     <div class="card" style="margin-top:0"><ul class="rec-list" id="adm-list"><li class="muted">Chargement…</li></ul></div>`;
   box.querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => { adminTab = b.dataset.s; drawAdmin(admin); }));
   $("#logout").onclick = () => store.signOut();
+  if (adminTab === "codes") return drawCodes(admin);
   let recs = [];
   try { recs = await store.listByStatus(adminTab); }
   catch (e) { $("#adm-list").innerHTML = `<li class="form-msg err">Erreur : ${esc(e.message)}</li>`; return; }
@@ -477,4 +509,172 @@ let toastT;
 function toast(t) {
   const el = $("#toast"); el.textContent = t; el.classList.add("show");
   clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("show"), 3200);
+}
+
+// ── Accès limité : écran de verrouillage et saisie du code ────────────────
+function lockCard(raison) {
+  return `<div class="card lock">
+    <div class="lock-ico">🔒</div>
+    <h2>Accès complet requis</h2>
+    <p class="muted">${esc(raison)}</p>
+    <p class="muted">Sans code, vous avez accès aux cantiques 1 à ${ACCES_LIBRE.cantiquesMax}.
+      Un <strong>code d'accès</strong> personnel débloque les ${HYMNS.length} cantiques et les enregistrements, sans limite de durée.</p>
+    <form class="code-form" id="code-form">
+      <input name="code" placeholder="NYB-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+      <button class="btn primary">Activer</button>
+    </form>
+    <p class="form-msg" id="code-msg" role="status"></p>
+    <p class="muted" style="font-size:.85rem">Pas encore de code ? <a href="#/apropos">Contactez le responsable</a>.</p>
+  </div>`;
+}
+
+function bindCodeForm() {
+  const f = $("#code-form");
+  if (!f) return;
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const m = $("#code-msg"), b = $("button", f);
+    b.disabled = true; m.classList.remove("err"); m.textContent = "Vérification…";
+    try {
+      const code = await store.activateCode(f.code.value);
+      prefs.set("acces", { code, le: Date.now() });
+      toast("Accès complet activé. Merci !");
+      route();
+    } catch (err) {
+      m.classList.add("err");
+      m.textContent = navigator.onLine === false ? "Pas de connexion internet. Réessayez une fois connecté." : (err.message || "Activation impossible.");
+    } finally { b.disabled = false; }
+  };
+}
+
+function renderLocked(h) {
+  view.innerHTML = `
+    <div class="hymn-head">
+      <span class="hymn-num">CANTIQUE ${h.n}</span>
+      <h1 class="hymn-title">${esc(h.titre)}</h1>
+      <div class="hymn-meta">${esc(h.melodie)}</div>
+    </div>
+    ${lockCard(`Le cantique ${h.n} fait partie de l'accès complet.`)}
+    <nav class="pager"><a href="#/">‹ Retour à la liste</a></nav>`;
+  bindCodeForm();
+}
+
+// ── À propos ───────────────────────────────────────────────────────────────
+function renderAbout() {
+  const code = accesCode();
+  const om = CONTACT.orangeMoney;
+  view.innerHTML = `
+    <div class="about-head">
+      <img src="icons/logo-full.png" alt="Logo Nyembo" class="about-logo">
+      <p class="muted">Recueil de cantiques · version ${esc(window.NYEMBO_VERSION || "1.0")}</p>
+    </div>
+
+    <section class="card">
+      <h2>À propos</h2>
+      <p>« Nyembo » réunit les <strong>${HYMNS.length} cantiques</strong> du recueil communautaire, conservés dans leur langue originale :
+        paroles, mélodies, refrains et auteurs, consultables même sans connexion.</p>
+      <p>L'application permet aussi aux chantres, solistes et chorales de <strong>partager des enregistrements</strong>
+        (solo, pupitres, accompagnement) pour aider chacun à apprendre et à transmettre les chants.
+        Chaque son est écouté et validé avant publication.</p>
+      <p class="muted" style="margin-bottom:0">Chanter • Célébrer • Transmettre</p>
+    </section>
+
+    <section class="card">
+      <h2>Mon accès</h2>
+      ${accesComplet()
+        ? `<p>✅ <strong>Accès complet</strong>${code ? ` — code <code>${esc(code)}</code>` : isAdminUser ? " — responsable" : ""}.</p>`
+        : `<p>Accès limité : cantiques 1 à ${ACCES_LIBRE.cantiquesMax}${ACCES_LIBRE.ecouteAudio ? "" : ", sans écoute des enregistrements"}.</p>
+           <form class="code-form" id="code-form">
+             <input name="code" placeholder="NYB-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+             <button class="btn primary">Activer</button>
+           </form>
+           <p class="form-msg" id="code-msg" role="status"></p>
+           <p class="muted" style="font-size:.85rem">Pour obtenir votre code personnel, écrivez au responsable (ci-dessous).</p>`}
+    </section>
+
+    <section class="card">
+      <h2>Soutenir le projet</h2>
+      <p>Vous aimez cette application et souhaitez soutenir sa réalisation, son hébergement et ses mises à jour ?
+        Toute contribution est la bienvenue, par <strong>Orange Money</strong> :</p>
+      <div class="pay">
+        <span class="pay-num">${esc(om.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3"))}</span>
+        <button class="btn small" id="copy-om">Copier</button>
+      </div>
+      <p class="muted" style="font-size:.85rem;margin-bottom:0">Bénéficiaire : ${esc(CONTACT.auteur)}. Merci pour votre générosité 🙏</p>
+    </section>
+
+    <section class="card">
+      <h2>Écrire au responsable</h2>
+      <p>Une remarque, une correction de paroles, une proposition ou une demande de code d'accès ?</p>
+      <a class="btn primary" href="mailto:${esc(CONTACT.email)}?subject=${encodeURIComponent("Cantiques Nyembo – remarque / proposition")}">✉️ ${esc(CONTACT.email)}</a>
+    </section>
+
+    <p class="muted" style="text-align:center;font-size:.8rem;margin:20px 0 4px">Conçu par ${esc(CONTACT.auteur)} · Kinshasa</p>`;
+  $("#copy-om").onclick = async () => {
+    try { await navigator.clipboard.writeText(om); toast("Numéro copié."); }
+    catch { toast(om); }
+  };
+  bindCodeForm();
+}
+
+// ── Gestion des codes d'accès (responsable) ───────────────────────────────
+async function drawCodes(admin) {
+  const box = $("#adm-list").closest(".card");
+  box.innerHTML = `
+    <form class="code-gen" id="code-gen">
+      <label>Nombre <input name="n" type="number" min="1" max="50" value="5"></label>
+      <label>Pour (facultatif) <input name="note" maxlength="60" placeholder="Ex. : Chorale Saint-Paul"></label>
+      <button class="btn primary">Générer</button>
+    </form>
+    <p class="muted" style="font-size:.85rem">Chaque code ne s'active que sur <strong>un seul téléphone</strong> et donne un accès complet illimité.
+      « Libérer » permet de le réutiliser (changement de téléphone).</p>
+    <ul class="rec-list" id="code-list"><li class="muted">Chargement…</li></ul>`;
+  $("#code-gen").onsubmit = async (e) => {
+    e.preventDefault();
+    const f = e.target, b = $("button", f);
+    b.disabled = true;
+    try {
+      const codes = await store.generateCodes(Math.min(50, Math.max(1, +f.n.value || 1)), f.note.value.trim());
+      toast(`${codes.length} code(s) créé(s).`);
+      drawCodes(admin);
+    } catch (err) { toast("Erreur : " + err.message); b.disabled = false; }
+  };
+  let codes = [];
+  try { codes = await store.listCodes(); }
+  catch (e) { $("#code-list").innerHTML = `<li class="form-msg err">Erreur : ${esc(e.message)}</li>`; return; }
+  const libres = codes.filter((c) => !c.utilisePar).length;
+  $("#code-list").innerHTML = codes.length
+    ? `<li class="muted" style="font-size:.85rem">${codes.length} code(s) · ${libres} libre(s) · ${codes.length - libres} utilisé(s)</li>` +
+      codes.map((c) => `<li class="rec-item" data-code="${esc(c.code)}">
+        <div class="rec-top">
+          <code class="code-val">${esc(c.code)}</code>
+          <span class="tag ${c.utilisePar ? "warn" : "ok"}">${c.utilisePar ? "Utilisé" : "Libre"}</span>
+          ${c.note ? `<span class="muted">${esc(c.note)}</span>` : ""}
+          ${c.utiliseLe?.toDate ? `<span class="muted" style="font-size:.78rem;margin-left:auto">le ${c.utiliseLe.toDate().toLocaleDateString("fr-FR")}</span>` : ""}
+        </div>
+        <div class="rec-actions">
+          <button class="btn small" data-a="partager">Partager</button>
+          ${c.utilisePar ? `<button class="btn ghost small" data-a="liberer">Libérer</button>` : ""}
+          <button class="btn danger small" data-a="suppr">Supprimer</button>
+        </div></li>`).join("")
+    : `<li class="muted">Aucun code pour l'instant.</li>`;
+  $("#code-list").onclick = async (e) => {
+    const b = e.target.closest("[data-a]");
+    if (!b) return;
+    const code = b.closest("[data-code]").dataset.code;
+    if (b.dataset.a === "partager") {
+      const text = `Votre code d'accès à l'application Cantiques Nyembo : ${code}\nOuvrez l'application → « À propos » (ⓘ) → saisissez le code.`;
+      try { if (navigator.share) await navigator.share({ text }); else { await navigator.clipboard.writeText(text); toast("Message copié."); } } catch {}
+      return;
+    }
+    const q = b.dataset.a === "suppr" ? `Supprimer le code ${code} ? Le téléphone qui l'utilise perdra l'accès complet.`
+      : `Libérer le code ${code} ? Le téléphone actuel perdra l'accès et le code pourra être réutilisé.`;
+    if (!confirm(q)) return;
+    b.disabled = true;
+    try {
+      await (b.dataset.a === "suppr" ? store.deleteCode(code) : store.resetCode(code));
+      toast(b.dataset.a === "suppr" ? "Code supprimé." : "Code libéré.");
+      drawCodes(admin);
+    } catch (err) { toast("Erreur : " + err.message); b.disabled = false; }
+  };
 }

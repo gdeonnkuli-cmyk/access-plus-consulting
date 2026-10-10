@@ -25,5 +25,16 @@ service cloud.firestore {
       // Validation, rejet, suppression : responsables uniquement
       allow update, delete: if isAdmin();
     }
+
+    // Codes d'accès : un code = un téléphone, accès complet illimité
+    match /codes/{code} {
+      allow get: if request.auth != null;          // vérifier un code saisi
+      allow list, create, delete: if isAdmin();    // gérer les codes
+      allow update: if isAdmin()
+        || (request.auth != null
+            && resource.data.utilisePar == null      // code encore libre
+            && request.resource.data.utilisePar == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['utilisePar', 'utiliseLe']));
+    }
   }
 }

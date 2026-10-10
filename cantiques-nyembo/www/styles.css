@@ -220,3 +220,20 @@ legend { font-size: .88rem; font-weight: 600; padding: 0 4px; }
 @media (min-width: 700px) {
   .lyrics { padding: 28px 32px; }
 }
+
+/* Accès, à propos */
+a.icon-btn { display: grid; place-items: center; text-decoration: none; }
+.lock { text-align: center; }
+.lock-ico { font-size: 2rem; }
+.lock h2 { margin-bottom: 6px; }
+.code-form { display: flex; gap: 8px; margin: 12px 0 6px; }
+.code-form input { flex: 1; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; text-align: center; }
+.code-gen { display: grid; grid-template-columns: 90px 1fr auto; gap: 8px; align-items: end; margin-bottom: 8px; }
+@media (max-width: 420px) { .code-gen { grid-template-columns: 1fr; } }
+.code-val { font-weight: 700; letter-spacing: .06em; }
+.about-head { text-align: center; margin: 4px 0 8px; }
+.about-logo { width: 140px; height: 140px; border-radius: 28px; display: block; margin: 0 auto 8px; box-shadow: var(--shadow); }
+.card p { margin: 0 0 10px; }
+.pay { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px;
+  border-radius: 12px; background: var(--surface-2); margin-bottom: 10px; }
+.pay-num { font-size: 1.35rem; font-weight: 700; letter-spacing: .04em; color: #FF7900; }
