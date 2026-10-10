@@ -417,6 +417,11 @@ function openUpload(h) {
   $("#src-fichier").hidden = false; $("#src-micro").hidden = true;
   $(".progress", form).hidden = true; msg("");
   $("#up-hymn").textContent = `Cantique ${h.n} — ${h.titre}`;
+  // Paroles affichées pendant l'enregistrement au micro (pour le soliste)
+  $("#rec-lyrics").innerHTML = h.parties.map((p) => p.type === "strophe"
+    ? `<div class="stanza"><span class="sn">${p.n}</span><p>${esc(p.texte)}</p></div>`
+    : `<div class="refrain"><p>${esc(p.texte)}</p></div>`).join("");
+  $("#rec-lyrics").scrollTop = 0;
   const c = prefs.get("contributeur", "");
   if (c) form.contributeur.value = c;
   dlg.showModal();
@@ -446,6 +451,7 @@ $("#rec-btn").onclick = async () => {
       const p = $("#rec-preview"); p.src = URL.createObjectURL(recBlob); p.hidden = false;
     };
     recorder.start();
+    keepAwake(true);
     const t0 = Date.now();
     $("#rec-btn").classList.add("on"); $("#rec-btn").textContent = "■ Arrêter";
     recTimer = setInterval(() => {
@@ -454,8 +460,25 @@ $("#rec-btn").onclick = async () => {
     }, 250);
   } catch { msg("Accès au micro refusé.", true); }
 };
+// Empêche la mise en veille de l'écran pendant l'enregistrement
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && "wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen");
+    else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch {}
+}
+const recSize = (d) => {
+  const v = Math.min(1.8, Math.max(0.85, +(prefs.get("tailleRec", 1.15) + d).toFixed(2)));
+  prefs.set("tailleRec", v); $("#rec-lyrics").style.fontSize = v + "rem";
+};
+$("#rl-minus").onclick = () => recSize(-0.1);
+$("#rl-plus").onclick = () => recSize(0.1);
+recSize(0);
+
 function stopRec(cancel = false) {
   clearInterval(recTimer);
+  keepAwake(false);
   $("#rec-btn").classList.remove("on"); $("#rec-btn").textContent = "● Enregistrer";
   if (recorder?.state === "recording") { recorder._cancel = cancel; recorder.stop(); }
 }
