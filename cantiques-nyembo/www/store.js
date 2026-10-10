@@ -207,13 +207,14 @@ export const deleteCode = (code) => fs_().deleteDoc(fs_().doc(fb.D, CODES, code)
 const fs_ = () => fb.fs;
 
 // ── Statistiques d'utilisation (anonymes : un document par téléphone) ─────
-export async function trackDevice({ version, acces, plateforme, premiere }) {
+export async function trackDevice({ appareil, version, acces, plateforme, premiere }) {
   if (mode !== "firebase") return;
   try {
     const { fs, D } = fb;
-    const u = await ensureUser();
-    if (!u.isAnonymous && !u.uid) return;
-    await fs.setDoc(fs.doc(D, "appareils", u.uid), {
+    await ensureUser();
+    // Document identifié par un numéro d'appareil fixe (et non par le compte Firebase,
+    // qui change quand le responsable se connecte)
+    await fs.setDoc(fs.doc(D, "appareils", appareil), {
       premiere, derniere: fs.serverTimestamp(), version: String(version || ""),
       acces, plateforme, ouvertures: fs.increment(1),
     }, { merge: true });
@@ -222,7 +223,8 @@ export async function trackDevice({ version, acces, plateforme, premiere }) {
 export async function listDevices() {
   const { fs, D } = fb;
   const snap = await fs.getDocs(fs.collection(D, "appareils"));
-  return snap.docs.map((d) => d.data());
+  // Seuls les documents « dv-… » (identifiant d'appareil fixe, version 1.0.13 et +) sont comptés
+  return snap.docs.filter((d) => d.id.startsWith("dv-")).map((d) => ({ id: d.id, ...d.data() }));
 }
 
 // ── Utilitaires ────────────────────────────────────────────────────────────

@@ -62,7 +62,8 @@ document.documentElement.style.setProperty("--lyrics", prefs.get("taille", 1.15)
   Promise.all([checkUpdate(), adminConnu]).then(() => {
     // Statistiques anonymes : une ouverture par lancement de l'application
     if (!prefs.get("premiere")) prefs.set("premiere", Date.now());
-    store.trackDevice({
+    if (!prefs.get("appareil")) prefs.set("appareil", "dv-" + [...crypto.getRandomValues(new Uint8Array(10))].map((b) => (b % 36).toString(36)).join(""));
+    store.trackDevice({ appareil: prefs.get("appareil"),
       version: window.NYEMBO_VERSION, acces: isAdminUser ? "responsable" : accesComplet() ? "complet" : "limite",
       plateforme: window.Capacitor?.isNativePlatform?.() ? "android" : "web", premiere: prefs.get("premiere"),
     });
@@ -803,12 +804,19 @@ async function drawStats() {
       ${tile(nouveaux(7), "nouveaux (7 j)")}${tile(ouvertures, "ouvertures")}${tile(complet, "accès complet")}
       ${tile(d.filter((x) => x.acces === "limite").length, "accès limité")}${tile(resp, "responsables")}
     </div>
-    <p class="muted" style="font-size:.85rem">Versions installées : ${versions.map(([v, n]) => `${esc(v)} (${n})`).join(" · ") || "—"}</p>`}
+    <p class="muted" style="font-size:.85rem">Versions installées : ${versions.map(([v, n]) => `${esc(v)} (${n})`).join(" · ") || "—"}</p>
+    <details class="dev-list"><summary>Détail des appareils (${d.length})</summary>
+      <table><tr><th>Appareil</th><th>Dernière ouverture</th><th>Version</th><th>Accès</th><th>Ouv.</th></tr>
+      ${[...d].sort((a, b) => ms(b.derniere) - ms(a.derniere)).map((x) => `<tr${x.id === prefs.get("appareil") ? ' class="moi"' : ""}>
+        <td>${esc(x.id.slice(3, 9))}${x.id === prefs.get("appareil") ? " (ce téléphone)" : ""}</td>
+        <td>${ms(x.derniere) ? new Date(ms(x.derniere)).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—"}</td>
+        <td>${esc(x.version || "?")}</td><td>${esc(x.acces || "?")}</td><td>${x.ouvertures || 0}</td></tr>`).join("")}
+      </table></details>`}
     <h2>Accès & sons</h2>
     <div class="stats">
       ${tile(codes.length, "codes créés")}${tile(utilises, "codes activés")}${tile(codes.length - utilises, "codes libres")}
       ${tile(publies.length, "sons publiés")}${tile(attente.length, "sons en attente")}
     </div>
-    <p class="muted" style="font-size:.8rem;margin:8px 0 0">Les statistiques d'utilisation sont anonymes et commencent à la version 1.0.11.
+    <p class="muted" style="font-size:.8rem;margin:8px 0 0">Les statistiques d'utilisation sont anonymes et sont comptées par appareil depuis la version 1.0.13.
       Les téléchargements incluent vos propres essais.</p>`;
 }

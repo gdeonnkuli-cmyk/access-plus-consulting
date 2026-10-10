@@ -261,3 +261,8 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .stat { background: var(--surface-2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; }
 .stat strong { font-size: 1.4rem; color: var(--accent); font-variant-numeric: tabular-nums; }
 .stat span { font-size: .75rem; color: var(--muted); }
+.dev-list { margin: 0 0 16px; font-size: .8rem; }
+.dev-list summary { cursor: pointer; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+.dev-list table { width: 100%; border-collapse: collapse; }
+.dev-list th, .dev-list td { text-align: left; padding: 4px 4px; border-bottom: 1px solid var(--line); }
+.dev-list tr.moi td { font-weight: 700; color: var(--gold); }

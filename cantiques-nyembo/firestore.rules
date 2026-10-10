@@ -39,7 +39,7 @@ service cloud.firestore {
 
     // Statistiques anonymes : chaque téléphone ne met à jour que sa propre ligne
     match /appareils/{uid} {
-      allow create, update: if request.auth != null && request.auth.uid == uid
+      allow create, update: if request.auth != null && uid.matches('dv-[a-z0-9]{10}')
         && request.resource.data.keys().hasOnly(['premiere', 'derniere', 'version', 'acces', 'plateforme', 'ouvertures']);
       allow read: if isAdmin();
     }
