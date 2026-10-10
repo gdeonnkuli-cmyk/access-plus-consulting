@@ -512,6 +512,14 @@ function toast(t) {
 }
 
 // ── Accès limité : écran de verrouillage et saisie du code ────────────────
+// Demande de code par SMS au responsable (message pré-rempli)
+function smsLink() {
+  const corps = "Bonjour, je souhaite obtenir un code d'accès illimité à l'application Cantiques Nyembo.\nNom : \nÉglise / chorale : ";
+  const num = "+243" + CONTACT.orangeMoney.replace(/^0/, "");
+  const sep = /iPhone|iPad|iPod/.test(navigator.userAgent) ? "&" : "?";
+  return `sms:${num}${sep}body=${encodeURIComponent(corps)}`;
+}
+const smsBtn = () => `<a class="btn sms-btn" href="${smsLink()}">📩 Demander un code par SMS</a>`;
 function lockCard(raison) {
   return `<div class="card lock">
     <div class="lock-ico">🔒</div>
@@ -524,9 +532,12 @@ function lockCard(raison) {
       <button class="btn primary">Activer</button>
     </form>
     <p class="form-msg" id="code-msg" role="status"></p>
-    <p class="muted" style="font-size:.85rem">Pas encore de code ? <a href="#/apropos">Contactez le responsable</a>.</p>
+    <p class="muted" style="font-size:.85rem;margin-bottom:8px">Pas encore de code ? Envoyez votre demande au ${esc(fmtNum(CONTACT.orangeMoney))} :</p>
+    ${smsBtn()}
   </div>`;
 }
+
+const fmtNum = (n) => String(n).replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3");
 
 function bindCodeForm() {
   const f = $("#code-form");
@@ -589,7 +600,9 @@ function renderAbout() {
              <button class="btn primary">Activer</button>
            </form>
            <p class="form-msg" id="code-msg" role="status"></p>
-           <p class="muted" style="font-size:.85rem">Pour obtenir votre code personnel, écrivez au responsable (ci-dessous).</p>`}
+           <p class="muted" style="font-size:.85rem;margin-bottom:8px">Pas encore de code ? Demandez-le par SMS au ${esc(fmtNum(CONTACT.orangeMoney))}
+             (ou par e-mail, ci-dessous) : vous recevrez votre code personnel en réponse.</p>
+           ${smsBtn()}`}
     </section>
 
     <section class="card">
@@ -597,7 +610,7 @@ function renderAbout() {
       <p>Vous aimez cette application et souhaitez soutenir sa réalisation, son hébergement et ses mises à jour ?
         Toute contribution est la bienvenue, par <strong>Orange Money</strong> :</p>
       <div class="pay">
-        <span class="pay-num">${esc(om.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3"))}</span>
+        <span class="pay-num">${esc(fmtNum(om))}</span>
         <button class="btn small" id="copy-om">Copier</button>
       </div>
       <p class="muted" style="font-size:.85rem;margin-bottom:0">Bénéficiaire : ${esc(CONTACT.auteur)}. Merci pour votre générosité 🙏</p>
