@@ -27,6 +27,9 @@ const state = { q: "", section: "", audioOnly: false };
 
 // ── Accès : limité sans code, complet avec un code (ou pour un responsable) ──
 let isAdminUser = false;
+// Résolu dès que l'on sait si l'utilisateur est un responsable (état de connexion Firebase connu)
+let finAdmin = () => {};
+const adminConnu = new Promise((ok) => { finAdmin = ok; setTimeout(ok, 8000); });
 const accesCode = () => prefs.get("acces", null)?.code || "";
 const accesComplet = () => store.getMode() !== "firebase" || isAdminUser || !!accesCode();
 const verrouille = (h) => !accesComplet() && h.n > ACCES_LIBRE.cantiquesMax;
@@ -46,8 +49,9 @@ document.documentElement.style.setProperty("--lyrics", prefs.get("taille", 1.15)
     if (h.section && !SECTIONS.includes(h.section)) SECTIONS.push(h.section);
   }
   await refreshAudio();
+  if (store.getMode() !== "firebase") finAdmin();
   if (store.getMode() === "firebase") {
-    store.onAdmin((admin) => { const was = isAdminUser; isAdminUser = !!admin; if (was !== isAdminUser) route(); });
+    store.onAdmin((admin) => { const was = isAdminUser; isAdminUser = !!admin; finAdmin(); if (was !== isAdminUser) route(); });
     // Vérifie en arrière-plan qu'un code activé est toujours valable (révocation par le responsable)
     if (accesCode()) store.checkCode(accesCode()).then((ok) => {
       if (ok === false) { prefs.set("acces", null); toast("Votre code d'accès n'est plus valable."); route(); }
@@ -55,11 +59,11 @@ document.documentElement.style.setProperty("--lyrics", prefs.get("taille", 1.15)
   }
   window.addEventListener("hashchange", route);
   route();
-  checkUpdate().then(() => {
+  Promise.all([checkUpdate(), adminConnu]).then(() => {
     // Statistiques anonymes : une ouverture par lancement de l'application
     if (!prefs.get("premiere")) prefs.set("premiere", Date.now());
     store.trackDevice({
-      version: window.NYEMBO_VERSION, acces: accesComplet() ? "complet" : "limite",
+      version: window.NYEMBO_VERSION, acces: isAdminUser ? "responsable" : accesComplet() ? "complet" : "limite",
       plateforme: window.Capacitor?.isNativePlatform?.() ? "android" : "web", premiere: prefs.get("premiere"),
     });
   });
@@ -782,6 +786,7 @@ async function drawStats() {
   const d = devices || [];
   const actifs = (j) => d.filter((x) => now - ms(x.derniere) <= j * jour).length;
   const nouveaux = (j) => d.filter((x) => now - ms(x.premiere) <= j * jour).length;
+  const resp = d.filter((x) => x.acces === "responsable").length;
   const complet = d.filter((x) => x.acces === "complet").length;
   const ouvertures = d.reduce((t, x) => t + (x.ouvertures || 0), 0);
   const versions = Object.entries(d.reduce((m, x) => ((m[x.version || "?"] = (m[x.version || "?"] || 0) + 1), m), {}))
@@ -796,7 +801,7 @@ async function drawStats() {
     <div class="stats">
       ${tile(d.length, "téléphones")}${tile(actifs(7), "actifs (7 j)")}${tile(actifs(30), "actifs (30 j)")}
       ${tile(nouveaux(7), "nouveaux (7 j)")}${tile(ouvertures, "ouvertures")}${tile(complet, "accès complet")}
-      ${tile(d.length - complet, "accès limité")}
+      ${tile(d.filter((x) => x.acces === "limite").length, "accès limité")}${tile(resp, "responsables")}
     </div>
     <p class="muted" style="font-size:.85rem">Versions installées : ${versions.map(([v, n]) => `${esc(v)} (${n})`).join(" · ") || "—"}</p>`}
     <h2>Accès & sons</h2>
