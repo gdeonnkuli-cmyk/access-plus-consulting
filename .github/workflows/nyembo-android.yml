@@ -44,6 +44,7 @@ jobs:
       - name: Dépendances et synchronisation Capacitor
         run: |
           npm ci
+          echo "{\"version\":\"$VERSION_NAME\"}" > www/version.json
           npx cap sync android
 
       - name: APK d'installation directe

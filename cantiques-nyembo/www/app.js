@@ -55,6 +55,7 @@ document.documentElement.style.setProperty("--lyrics", prefs.get("taille", 1.15)
   }
   window.addEventListener("hashchange", route);
   route();
+  checkUpdate();
   setTimeout(() => $("#splash").classList.add("out"), 350);
   // Service worker uniquement sur le web : dans l'application Android/iPhone, tout est déjà embarqué
   if ("serviceWorker" in navigator && location.protocol.startsWith("http") && !window.Capacitor?.isNativePlatform?.()) {
@@ -713,4 +714,30 @@ async function drawCodes(admin) {
       drawCodes(admin);
     } catch (err) { toast("Erreur : " + err.message); b.disabled = false; }
   };
+}
+
+// ── Mise à jour : signale une nouvelle version publiée sur GitHub ─────────
+const RELEASES = "https://api.github.com/repos/gdeonnkuli-cmyk/access-plus-consulting/releases?per_page=10";
+const vnum = (v) => String(v).replace(/^[^\d]*/, "").split(".").map((x) => +x || 0);
+const plusRecente = (a, b) => { const x = vnum(a), y = vnum(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+  return false; };
+
+async function checkUpdate() {
+  try {
+    const v = (await (await fetch("version.json", { cache: "no-store" })).json()).version;
+    window.NYEMBO_VERSION = v;
+    // Uniquement dans l'application Android installée (la version web est toujours à jour)
+    if (!window.Capacitor?.isNativePlatform?.() || !/^\d/.test(v)) return;
+    const rels = await (await fetch(RELEASES)).json();
+    const r = rels.find((x) => !x.draft && /^nyembo-v/.test(x.tag_name));
+    const apk = r?.assets?.find((a) => a.name.endsWith(".apk"));
+    const nouvelle = r?.tag_name.replace("nyembo-v", "");
+    if (!apk || !plusRecente(nouvelle, v) || prefs.get("majIgnoree") === nouvelle) return;
+    $("#update-txt").textContent = `Nouvelle version ${nouvelle} disponible`;
+    $("#update-go").href = apk.browser_download_url;
+    $("#update-go").onclick = () => toast("Téléchargement… ouvrez ensuite le fichier pour installer.");
+    $("#update-x").onclick = () => { prefs.set("majIgnoree", nouvelle); $("#update-bar").hidden = true; };
+    $("#update-bar").hidden = false;
+  } catch {}
 }
