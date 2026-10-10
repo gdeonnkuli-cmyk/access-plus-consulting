@@ -99,7 +99,11 @@ async function uploadFirebase(blob, meta, nomFichier, onProgress) {
 // Envoi direct vers Cloudinary (préréglage non signé). Les fichiers audio sont de type « video ».
 function uploadCloudinary(blob, meta, onProgress) {
   const form = new FormData();
-  form.append("file", blob);
+  // Nom lisible dans Cloudinary (au lieu de « blob ») : nyembo_94_solo_Nom.webm
+  const ext = (meta.nomFichier.split(".").pop() || extFromMime(meta.mime)).toLowerCase();
+  const base = `nyembo_${meta.cantique}_${meta.type}_${meta.contributeur}`.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9_-]+/g, "_").slice(0, 60);
+  form.append("file", blob, `${base}.${ext}`);
   form.append("upload_preset", cloudinary.uploadPreset);
   form.append("folder", `${COL}/${meta.cantique}`);
   return new Promise((ok, ko) => {
