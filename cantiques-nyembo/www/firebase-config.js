@@ -9,7 +9,14 @@
 // de configuration fourni par la console Firebase.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const firebaseConfig = null;
+export const firebaseConfig = {
+  apiKey: "AIzaSyBdy6Ej5CdWQMlDMxM1EAZm-UDxWoE2ZwQ",
+  authDomain: "nyembo-ntomba.firebaseapp.com",
+  projectId: "nyembo-ntomba",
+  storageBucket: "nyembo-ntomba.firebasestorage.app",
+  messagingSenderId: "17269171217",
+  appId: "1:17269171217:web:3d23d62baf47d2e57dbdb0"
+};
 /* Exemple :
 export const firebaseConfig = {
   apiKey: "AIza...",
