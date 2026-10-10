@@ -27,6 +27,15 @@ const state = { q: "", section: "", audioOnly: false };
 
 // ── Accès : limité sans code, complet avec un code (ou pour un responsable) ──
 let isAdminUser = false;
+let statsEnvoyees = false;
+function suivi(compter) {
+  if (!prefs.get("premiere")) prefs.set("premiere", Date.now());
+  if (!prefs.get("appareil")) prefs.set("appareil", "dv-" + [...crypto.getRandomValues(new Uint8Array(10))].map((b) => (b % 36).toString(36)).join(""));
+  store.trackDevice({ appareil: prefs.get("appareil"), compter,
+    version: window.NYEMBO_VERSION, acces: isAdminUser ? "responsable" : accesComplet() ? "complet" : "limite",
+    plateforme: window.Capacitor?.isNativePlatform?.() ? "android" : "web", premiere: prefs.get("premiere"),
+  });
+}
 // Résolu dès que l'on sait si l'utilisateur est un responsable (état de connexion Firebase connu)
 let finAdmin = () => {};
 const adminConnu = new Promise((ok) => { finAdmin = ok; setTimeout(ok, 8000); });
@@ -51,7 +60,10 @@ document.documentElement.style.setProperty("--lyrics", prefs.get("taille", 1.15)
   await refreshAudio();
   if (store.getMode() !== "firebase") finAdmin();
   if (store.getMode() === "firebase") {
-    store.onAdmin((admin) => { const was = isAdminUser; isAdminUser = !!admin; finAdmin(); if (was !== isAdminUser) route(); });
+    store.onAdmin((admin) => {
+      const was = isAdminUser; isAdminUser = !!admin; finAdmin();
+      if (was !== isAdminUser) { route(); if (statsEnvoyees) suivi(false); }  // statut mis à jour à la connexion
+    });
     // Vérifie en arrière-plan qu'un code activé est toujours valable (révocation par le responsable)
     if (accesCode()) store.checkCode(accesCode()).then((ok) => {
       if (ok === false) { prefs.set("acces", null); toast("Votre code d'accès n'est plus valable."); route(); }
@@ -59,15 +71,8 @@ document.documentElement.style.setProperty("--lyrics", prefs.get("taille", 1.15)
   }
   window.addEventListener("hashchange", route);
   route();
-  Promise.all([checkUpdate(), adminConnu]).then(() => {
-    // Statistiques anonymes : une ouverture par lancement de l'application
-    if (!prefs.get("premiere")) prefs.set("premiere", Date.now());
-    if (!prefs.get("appareil")) prefs.set("appareil", "dv-" + [...crypto.getRandomValues(new Uint8Array(10))].map((b) => (b % 36).toString(36)).join(""));
-    store.trackDevice({ appareil: prefs.get("appareil"),
-      version: window.NYEMBO_VERSION, acces: isAdminUser ? "responsable" : accesComplet() ? "complet" : "limite",
-      plateforme: window.Capacitor?.isNativePlatform?.() ? "android" : "web", premiere: prefs.get("premiere"),
-    });
-  });
+  // Statistiques anonymes : une ouverture par lancement de l'application
+  Promise.all([checkUpdate(), adminConnu]).then(() => { suivi(true); statsEnvoyees = true; });
   setTimeout(() => $("#splash").classList.add("out"), 350);
   // Service worker uniquement sur le web : dans l'application Android/iPhone, tout est déjà embarqué
   if ("serviceWorker" in navigator && location.protocol.startsWith("http") && !window.Capacitor?.isNativePlatform?.()) {
@@ -596,6 +601,7 @@ function bindCodeForm() {
     try {
       const code = await store.activateCode(f.code.value);
       prefs.set("acces", { code, le: Date.now() });
+      suivi(false);
       toast("Accès complet activé. Merci !");
       route();
     } catch (err) {

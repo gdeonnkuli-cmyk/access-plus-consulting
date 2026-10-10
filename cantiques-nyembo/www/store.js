@@ -207,7 +207,7 @@ export const deleteCode = (code) => fs_().deleteDoc(fs_().doc(fb.D, CODES, code)
 const fs_ = () => fb.fs;
 
 // ── Statistiques d'utilisation (anonymes : un document par téléphone) ─────
-export async function trackDevice({ appareil, version, acces, plateforme, premiere }) {
+export async function trackDevice({ appareil, version, acces, plateforme, premiere, compter = true }) {
   if (mode !== "firebase") return;
   try {
     const { fs, D } = fb;
@@ -216,7 +216,7 @@ export async function trackDevice({ appareil, version, acces, plateforme, premie
     // qui change quand le responsable se connecte)
     await fs.setDoc(fs.doc(D, "appareils", appareil), {
       premiere, derniere: fs.serverTimestamp(), version: String(version || ""),
-      acces, plateforme, ouvertures: fs.increment(1),
+      acces, plateforme, ...(compter ? { ouvertures: fs.increment(1) } : {}),
     }, { merge: true });
   } catch (e) { console.warn("stats", e); }
 }
