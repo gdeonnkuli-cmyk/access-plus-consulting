@@ -85,3 +85,20 @@ jobs:
             Les versions suivantes s'installent par-dessus, sans perdre les favoris.
           files: Nyembo-*
           prerelease: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+      # Lien fixe à partager : https://github.com/<dépôt>/releases/download/nyembo-latest/Nyembo.apk
+      - name: Lien fixe « dernière version »
+        run: cp "Nyembo-$VERSION_NAME.apk" "$GITHUB_WORKSPACE/Nyembo.apk"
+        working-directory: ${{ github.workspace }}
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nyembo-latest
+          name: Nyembo – dernière version (lien de partage)
+          body: |
+            Lien permanent vers la dernière version Android de l'application Cantiques Nyembo.
+            Télécharger `Nyembo.apk`, l'ouvrir et confirmer l'installation.
+          files: Nyembo.apk
+          overwrite_files: true
+          prerelease: true
+          make_latest: false
