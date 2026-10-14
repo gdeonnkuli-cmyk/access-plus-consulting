@@ -4,9 +4,14 @@ name: Nyembo – Android
 
 on:
   push:
+    # Uniquement les fichiers qui changent l'application (pas les outils PDF/visuels ni la documentation)
     paths:
-      - "cantiques-nyembo/**"
-      - ".github/workflows/nyembo-android.yml"
+      - "cantiques-nyembo/www/**"
+      - "cantiques-nyembo/android/**"
+      - "cantiques-nyembo/assets/**"
+      - "cantiques-nyembo/capacitor.config.json"
+      - "cantiques-nyembo/package.json"
+      - "cantiques-nyembo/package-lock.json"
   workflow_dispatch:
 
 permissions:
