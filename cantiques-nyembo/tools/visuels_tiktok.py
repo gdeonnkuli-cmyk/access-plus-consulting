@@ -21,7 +21,7 @@ def font(nom, t):
                                    "s": "liberation/LiberationSerif-BoldItalic.ttf", "si": "liberation/LiberationSerif-Italic.ttf"}[nom], t)
 
 
-def fond():
+def fond(W=W, H=H):
     """Dégradé bleu nuit + halo doré discret."""
     im = Image.new("RGB", (W, H), NAVY)
     d = ImageDraw.Draw(im)
@@ -29,25 +29,25 @@ def fond():
         k = y / H
         d.line([(0, y), (W, y)], fill=tuple(int(NAVY[i] * (1 - k) + NAVY2[i] * k) for i in range(3)))
     halo = Image.new("L", (W, H), 0)
-    ImageDraw.Draw(halo).ellipse((W * .1, -300, W * .9, 700), fill=70)
+    ImageDraw.Draw(halo).ellipse((W * .1, -300 * H / 1920, W * .9, 700 * H / 1920), fill=70)
     halo = halo.filter(ImageFilter.GaussianBlur(160))
     im.paste(Image.new("RGB", (W, H), GOLD), (0, 0), halo.point(lambda v: v // 3))
     return im
 
 
-def centre(d, y, texte, f, couleur):
+def centre(d, y, texte, f, couleur, cx=None):
     w = d.textlength(texte, font=f)
-    d.text(((W - w) / 2, y), texte, font=f, fill=couleur)
+    d.text(((cx if cx is not None else W / 2) - w / 2, y), texte, font=f, fill=couleur)
 
 
-def logo(im, taille, y):
+def logo(im, taille, y, x=None):
     lg = Image.open(LOGO).convert("RGBA").resize((taille, taille), Image.LANCZOS)
     masque = Image.new("L", (taille, taille), 0)
     ImageDraw.Draw(masque).rounded_rectangle((0, 0, taille, taille), radius=int(taille * .22), fill=255)
     ombre = Image.new("RGBA", (taille + 80, taille + 80), (0, 0, 0, 0))
     ImageDraw.Draw(ombre).rounded_rectangle((40, 50, taille + 40, taille + 50), radius=int(taille * .22), fill=(0, 0, 0, 110))
     ombre = ombre.filter(ImageFilter.GaussianBlur(22))
-    x = (W - taille) // 2
+    x = (im.width - taille) // 2 if x is None else x
     im.paste(ombre, (x - 40, y - 40), ombre)
     im.paste(lg, (x, y), masque)
     # liseré doré
@@ -127,7 +127,7 @@ def diapo2(sortie, capture):
 
 
 def _couper(d, texte, f, largeur):
-    mots, lignes, cur = texte.split(), [], ""
+    mots, lignes, cur = texte.split(" "), [], ""  # les espaces insécables restent collés
     for m in mots:
         t = (cur + " " + m).strip()
         if d.textlength(t, font=f) <= largeur:
@@ -167,9 +167,121 @@ def diapo3(sortie):
     im.save(sortie, quality=95)
 
 
+# ── Formats carrés (Facebook, WhatsApp) ────────────────────────────────────
+C = 1080
+
+
+def qr_carte(im, x, y, taille):
+    q = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=2, box_size=12)
+    q.add_data(LIEN)
+    q.make(fit=True)
+    m = int(taille * .055)
+    qi = q.make_image(fill_color=NAVY, back_color="white").convert("RGB").resize((taille - 2 * m, taille - 2 * m), Image.NEAREST)
+    ImageDraw.Draw(im).rounded_rectangle((x, y, x + taille, y + taille), radius=int(taille * .08), fill=WHITE)
+    im.paste(qi, (x + m, y + m))
+
+
+def carre_affiche(sortie):
+    """Affiche tout-en-un : message + QR code + SMS."""
+    im = fond(C, C)
+    d = ImageDraw.Draw(im)
+    logo(im, 190, 60, 70)
+    d.text((300, 70), "Mbote na bino bandeko !", font=font("si", 40), fill=CREAM)
+    d.text((300, 120), "ÉQUATEUR • BIKORO", font=font("b", 58), fill=GOLD)
+    d.text((300, 195), "Nos cantiques Nyembo", font=font("b", 44), fill=WHITE)
+    d.text((300, 245), "dans votre téléphone !", font=font("b", 44), fill=WHITE)
+    d.rectangle((70, 330, C - 70, 333), fill=GOLD)
+    # colonne gauche : atouts
+    y = 385
+    for t in ["450 cantiques", "Dans notre langue", "Sans internet", "Chorales & solistes", "Enregistrez votre voix"]:
+        coche(d, 70, y, 22)
+        d.text((125, y - 2), t, font=font("b", 38), fill=WHITE)
+        y += 78
+    # colonne droite : QR
+    qr_carte(im, 640, 370, 370)
+    centre(d, 752, "Scannez pour installer", font("r", 28), MUTED, cx=825)
+    # bandeau bas
+    d.rounded_rectangle((70, 820, C - 70, 940), radius=30, fill=GOLD)
+    centre(d, 838, "Application Android  •  Accès complet par SMS", font("b", 34), NAVY)
+    centre(d, 885, "0894 405 989", font("b", 42), NAVY)
+    centre(d, 975, "Partagez à toute la famille !", font("si", 36), CREAM)
+    im.save(sortie, quality=95)
+
+
+def carre1(sortie):
+    im = fond(C, C)
+    d = ImageDraw.Draw(im)
+    logo(im, 330, 70)
+    centre(d, 445, "Mbote na bino bandeko !", font("si", 46), CREAM)
+    centre(d, 515, "ÉQUATEUR", font("b", 90), GOLD)
+    centre(d, 615, "BIKORO", font("b", 120), WHITE)
+    d.rectangle((C / 2 - 100, 768, C / 2 + 100, 773), fill=GOLD)
+    centre(d, 800, "Nos cantiques Nyembo sont maintenant", font("b", 46), CREAM)
+    centre(d, 860, "dans votre téléphone !", font("b", 46), CREAM)
+    centre(d, 960, "450 cantiques  •  dans notre langue  •  sans internet", font("r", 32), MUTED)
+    im.save(sortie, quality=95)
+
+
+def carre2(sortie, capture):
+    im = fond(C, C)
+    d = ImageDraw.Draw(im)
+    d.text((70, 70), "Tout le recueil", font=font("b", 64), fill=WHITE)
+    d.text((70, 145), "dans votre poche", font=font("s", 56), fill=GOLD)
+    sc = Image.open(capture)
+    larg = 340
+    haut = int(sc.height * larg / sc.width)
+    # téléphone recadré dans le carré
+    tmp = Image.new("RGB", (C, C + 400))
+    tmp.paste(im, (0, 0))
+    telephone(tmp, capture, 680, 90, larg)
+    im = tmp.crop((0, 0, C, C))
+    d = ImageDraw.Draw(im)
+    y = 280
+    for t, sub in [("450 cantiques", "en langue originale"), ("Recherche", "numéro, titre ou paroles"),
+                   ("Sans internet", "une fois installée"), ("Écoutez", "solistes et chorales"),
+                   ("Chantez !", "enregistrez et partagez")]:
+        coche(d, 70, y + 2, 24)
+        d.text((130, y - 4), t, font=font("b", 42), fill=WHITE)
+        d.text((130, y + 46), sub, font=font("r", 30), fill=MUTED)
+        y += 140
+    # dégradé de fondu sous le téléphone
+    fondu = Image.new("L", (C, 220), 0)
+    for i in range(220):
+        ImageDraw.Draw(fondu).line([(0, i), (C, i)], fill=int(255 * i / 220))
+    im.paste(Image.new("RGB", (C, 220), NAVY2), (0, C - 220), fondu)
+    centre(d := ImageDraw.Draw(im), 1000, "Pour la chorale, la famille et le culte", font("si", 38), CREAM)
+    im.save(sortie, quality=95)
+
+
+def carre3(sortie):
+    im = fond(C, C)
+    d = ImageDraw.Draw(im)
+    logo(im, 130, 60, 70)
+    d.text((230, 65), "Téléchargez", font=font("b", 66), fill=WHITE)
+    d.text((230, 140), "l'application maintenant", font=font("s", 44), fill=GOLD)
+    qr_carte(im, 70, 260, 470)
+    centre(d, 745, "Scannez avec l'appareil photo", font("r", 28), MUTED, cx=305)
+    y = 290
+    for i, e in enumerate(["Scannez le code\u00a0QR", "Ouvrez «\u00a0Nyembo.apk\u00a0»", "Touchez «\u00a0Installer\u00a0»"], 1):
+        d.ellipse((590, y, 646, y + 56), fill=GOLD)
+        d.text((618 - d.textlength(str(i), font=font("b", 36)) / 2, y + 8), str(i), font=font("b", 36), fill=NAVY)
+        for k, l in enumerate(_couper(d, e, font("b", 36), 340)):
+            d.text((665, y + 8 + k * 44), l, font=font("b", 36), fill=WHITE)
+        y += 140
+    d.rounded_rectangle((70, 820, C - 70, 960), radius=30, outline=GOLD, width=3)
+    centre(d, 840, "Accès complet aux 450 cantiques :", font("b", 36), CREAM)
+    centre(d, 892, "code par SMS au 0894 405 989", font("r", 38), CREAM)
+    centre(d, 990, "Cantiques Nyembo  •  Application Android", font("r", 28), MUTED)
+    im.save(sortie, quality=95)
+
+
 if __name__ == "__main__":
     out, liste, _cantique = sys.argv[1], sys.argv[2], sys.argv[3]
     os.makedirs(out, exist_ok=True)
     diapo1(os.path.join(out, "Nyembo-TikTok-1.png"))
     diapo2(os.path.join(out, "Nyembo-TikTok-2.png"), liste)
     diapo3(os.path.join(out, "Nyembo-TikTok-3.png"))
+    carre_affiche(os.path.join(out, "Nyembo-Carre-Affiche.png"))
+    carre1(os.path.join(out, "Nyembo-Carre-1.png"))
+    carre2(os.path.join(out, "Nyembo-Carre-2.png"), liste)
+    carre3(os.path.join(out, "Nyembo-Carre-3.png"))
