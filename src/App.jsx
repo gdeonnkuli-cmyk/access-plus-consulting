@@ -1163,7 +1163,7 @@ function Onboarding({u,onDone,mods}){
               boxShadow:`0 6px 20px ${K.em}35`}}>
             {isLast?`Commencer ${firstMod?`"${firstMod.titre}"`:""} →`:"Suivant →"}
           </button>
-          {!isLast&&<button onClick={onDone} className="bt"
+          {!isLast&&<button onClick={()=>onDone()} className="bt"
             style={{background:"none",border:"none",color:K.t3,fontSize:13,
               cursor:"pointer",fontFamily:"'Outfit',sans-serif",padding:"6px"}}>
             Passer l'introduction
@@ -2419,7 +2419,7 @@ function UA({uid,onOut}){
   const doneOnboarding=async(firstMod)=>{
     sShowOnboarding(false);
     await updateDoc(doc(db,"users",uid),{onboardingDone:true});
-    if(firstMod){sM(firstMod);}
+    if(firstMod&&firstMod.id){sM(firstMod);}
   };
   const{warning:uaWarn}=useAutoLogout(onOut);
   // Fiche d'annuaire (nom, e-mail) permettant aux collègues d'inviter cet apprenant dans un dossier d'états financiers
