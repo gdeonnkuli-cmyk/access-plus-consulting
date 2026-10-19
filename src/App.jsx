@@ -3,6 +3,7 @@ import{initializeApp,deleteApp}from"firebase/app";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup}from"firebase/auth";
 import{getFirestore,doc,getDoc,setDoc,updateDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,deleteField}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
+import EtatsFinanciers from"./EtatsFinanciers";
 
 // ── FIREBASE CONFIG ───────────────────────────────────────────────────────────
 const FB_CONFIG={
@@ -1309,6 +1310,7 @@ function FA({uid,onOut}){
     {k:"corr",ico:"checkbox",label:"Corrections",badge:nUngraded},
     {k:"fmsg",ico:"message-circle",label:"Messages",badge:unreadMsgFA},
     {k:"stats",ico:"chart-bar",label:"Statistiques"},
+    {k:"ef",ico:"report-money",label:"États financiers"},
   ];
 
   const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
@@ -1440,6 +1442,7 @@ function FA({uid,onOut}){
 
   // ── MESSAGES ─────────────────────────────────────────────────────────────
   if(vue==="fmsg")return W(<FAMessages msgs={myMsgsFA} uid={uid} fNom={fData.nom}/>);
+  if(vue==="ef")return W(<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:fData.nom,mail:fData.mail,role:"formateur"}}/>);
 
   return W(<div/>);
 }
@@ -2440,6 +2443,7 @@ function UA({uid,onOut}){
     {vue==="prog"&&<Prog pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods}/>}
     {vue==="res"&&<Res sc={sc} ok={ok} mods={aMods} u={uData} pr={pr} nd={nd} gp={gp}/>}
     {vue==="psycho"&&<PsychoPage uid={uid} u={uData}/>}
+    {vue==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="msg"&&<MessagerieApprenant uid={uid} uNom={uData.nom}/>}
   </>);
 }
@@ -2913,6 +2917,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     {k:"pres",   ico:"presentation",  label:"Cours"},
     {k:"stages", ico:"briefcase",     label:"Stages"},
     {k:"videos", ico:"video",         label:"Vidéos", live:true},
+    {k:"ef",     ico:"report-money",  label:"États fin."},
     {k:"psycho", ico:"brain",         label:"Psycho"},
     {k:"services",ico:"building",     label:"Services"},
     {k:"prog",   ico:"chart-line",    label:"Progrès"},
@@ -4037,6 +4042,7 @@ function AA({onOut}){
           {k:"an", ico:"ti-speakerphone",    label:"Annonces",   badge:allAnnonces.filter(a=>a.actif).length, bc:K.wa},
           {k:"au", ico:"ti-shield-check",     label:"Audit",       bc:K.in_},
           {k:"pl", ico:"ti-calendar-check",   label:"Présentiel",  bc:K.em},
+          {k:"ef", ico:"ti-report-money",     label:"États fin."},
           {k:"msg", ico:"ti-message-circle",  label:"Messages",   badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, bc:K.rd},
         ];
         return <div className="tn" style={{borderTop:`1px solid ${K.b0}`,gap:1,paddingBottom:2}}>
@@ -4077,6 +4083,7 @@ function AA({onOut}){
           {k:"an",ico:"speakerphone",   label:"Annonces",       badge:allAnnonces.filter(a=>a.actif).length, col:K.wa},
           {k:"au",ico:"shield-check",   label:"Audit",          col:K.in_},
           {k:"pl",ico:"calendar-check", label:"Présentiel",     col:K.em},
+          {k:"ef",ico:"report-money",   label:"États financiers",col:K.in_},
           {k:"msg",ico:"message-circle",label:"Messages",       badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, col:K.rd},
         ];
         // ── Calcul des indicateurs ──
@@ -4679,6 +4686,7 @@ function AA({onOut}){
         }
       }} full/>
     </Sheet>}
+    {tab==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid:auth.currentUser?.uid,nom:"Administrateur",mail:ADM_EMAIL,role:"admin"}}/>}
     {tab==="pl"&&(()=>{
       const apprs=users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL);
       const day=plAll.find(p=>p.id===plDate);
