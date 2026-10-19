@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// Règles Firebase Storage — Éco-Campus RDC
+service firebase.storage {
+  match /b/{bucket}/o {
+    function connecte() { return request.auth != null; }
+    function estAdmin() { return connecte() && request.auth.token.email == "admin@accessplus.com"; }
+    function tailleOk() { return request.resource.size < 20 * 1024 * 1024; } // 20 Mo, comme dans l'application
+
+    // Supports PDF des modules : déposés par l'administrateur
+    match /pdfs/{modId}/{fichier} {
+      allow read: if connecte();
+      allow create, update: if estAdmin() && tailleOk();
+      allow delete: if estAdmin();
+    }
+    // Slides et documents des formateurs : chacun dans son dossier
+    match /slides/{uid}/{fichier} {
+      allow read: if connecte();
+      allow create, update: if connecte() && request.auth.uid == uid && tailleOk();
+      allow delete: if (connecte() && request.auth.uid == uid) || estAdmin();
+    }
+    match /documents/{uid}/{fichier} {
+      allow read: if connecte();
+      allow create, update: if connecte() && request.auth.uid == uid && tailleOk();
+      allow delete: if (connecte() && request.auth.uid == uid) || estAdmin();
+    }
+  }
+}

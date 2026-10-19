@@ -1,0 +1,70 @@
+// ── CONTEXTE RÉPUBLIQUE DÉMOCRATIQUE DU CONGO ─────────────────────────────────────
+// Identification de l'entité (DGI-RDC, RCCM, Id. Nat., NIF…) et détermination de l'IBP.
+import { num } from "./engine";
+
+export const DEVISES = [["CDF", "Francs congolais (CDF)"], ["USD", "Dollars américains (USD)"]];
+export const FORMES = ["SA", "SARL", "SARLU", "SAS", "SASU", "SNC", "SCS", "GIE", "Société coopérative", "Établissement (entreprise individuelle)", "Succursale"];
+export const PROVINCES = ["Kinshasa", "Kongo-Central", "Kwango", "Kwilu", "Mai-Ndombe", "Kasaï", "Kasaï-Central", "Kasaï-Oriental", "Lomami", "Sankuru",
+  "Maniema", "Sud-Kivu", "Nord-Kivu", "Ituri", "Haut-Uele", "Bas-Uele", "Tshopo", "Tshuapa", "Mongala", "Nord-Ubangi", "Sud-Ubangi", "Équateur",
+  "Haut-Lomami", "Lualaba", "Haut-Katanga", "Tanganyika"];
+export const CENTRES = ["DGE — Direction des Grandes Entreprises", "CDI — Centre des Impôts (moyennes entreprises)", "CIS — Centre d'Impôt Synthétique (petites entreprises)"];
+
+// Champs de la fiche d'identification (sections de la page de garde et de la fiche R1)
+export const IDENTITE = [
+  { t: "Désignation de l'entité" },
+  { k: "sigle", l: "Sigle usuel" },
+  { k: "forme", l: "Forme juridique", opts: FORMES },
+  { k: "capital", l: "Capital social", num: true },
+  { k: "activite", l: "Activité principale exercée", wide: true },
+  { t: "Adresse" },
+  { k: "avenue", l: "Avenue et numéro" },
+  { k: "quartier", l: "Quartier" },
+  { k: "commune", l: "Commune / Territoire" },
+  { k: "ville", l: "Ville" },
+  { k: "province", l: "Province", opts: PROVINCES },
+  { k: "tel", l: "Téléphone" },
+  { k: "email", l: "E-mail" },
+  { t: "Immatriculations" },
+  { k: "rccm", l: "N° RCCM", ph: "CD/KNG/RCCM/24-B-00000" },
+  { k: "idnat", l: "Identification nationale (Id. Nat.)", ph: "01-XXXX-NXXXXXX" },
+  { k: "nif", l: "Numéro Impôt (NIF)", ph: "A0000000X" },
+  { k: "centre", l: "Centre fiscal de rattachement", opts: CENTRES },
+  { k: "cnss", l: "N° d'affiliation CNSS" },
+  { k: "inpp", l: "N° INPP" },
+  { k: "onem", l: "N° ONEM" },
+  { k: "impexp", l: "N° import-export" },
+  { t: "Exercice et arrêté des comptes" },
+  { k: "dateArrete", l: "Date d'arrêté des comptes", date: true },
+  { k: "duree", l: "Durée de l'exercice (mois)", ph: "12" },
+  { k: "dureeN1", l: "Durée de l'exercice précédent (mois)", ph: "12" },
+  { k: "ago", l: "États financiers approuvés par l'AG", opts: ["Non", "Oui"] },
+  { t: "Établissement des états financiers" },
+  { k: "comptable", l: "Professionnel ayant établi les états financiers" },
+  { k: "onec", l: "N° d'inscription au tableau de l'ONEC" },
+  { k: "signataire", l: "Signataire des états financiers" },
+  { k: "qualite", l: "Qualité du signataire", ph: "Directeur général" },
+  { k: "banques", l: "Domiciliations bancaires (banque — n° de compte)", wide: true, rows: 2 },
+  { k: "dirigeants", l: "Dirigeants (nom, qualité, adresse)", wide: true, rows: 3 },
+];
+
+// ── Impôt sur les Bénéfices et Profits (IBP) ─────────────────────────────────────
+// Taux et minimum d'imposition paramétrables : à aligner sur la loi de finances de l'exercice.
+export const FISC_DEFAUT = { tauxIBP: 30, tauxMin: 1, reint: [], deduc: [], deficits: 0, acomptes: 0 };
+
+export function computeIBP(R, f = {}) {
+  const N = R.N, cfg = { ...FISC_DEFAUT, ...f };
+  const ibpCompta = N.cr.RS;
+  const rai = N.cr.XI + ibpCompta; // résultat comptable avant impôt
+  const auto = [{ lib: "Amendes et pénalités (647)", m: Math.max(N.s("647"), 0), auto: true }].filter(x => x.m);
+  const reint = [...auto, ...(cfg.reint || []).map(x => ({ lib: x.lib, m: num(x.m) }))];
+  const deduc = (cfg.deduc || []).map(x => ({ lib: x.lib, m: num(x.m) }));
+  const tR = reint.reduce((s, x) => s + x.m, 0), tD = deduc.reduce((s, x) => s + x.m, 0);
+  const avantDef = rai + tR - tD;
+  const imput = Math.min(Math.max(num(cfg.deficits), 0), Math.max(avantDef, 0));
+  const rf = avantDef - imput;
+  const ibpTheo = Math.max(rf, 0) * num(cfg.tauxIBP) / 100;
+  const minimum = Math.max(N.cr.XB, 0) * num(cfg.tauxMin) / 100;
+  const ibp = Math.max(ibpTheo, minimum);
+  const acomptes = num(cfg.acomptes);
+  return { rai, reint, deduc, tR, tD, avantDef, imput, rf, ibpTheo, minimum, ibp, minApplique: minimum > ibpTheo, ibpCompta, ecart: ibp - ibpCompta, acomptes, solde: ibp - acomptes, cfg };
+}
