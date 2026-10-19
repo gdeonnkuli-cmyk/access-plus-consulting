@@ -3,6 +3,7 @@ import{collection,doc,addDoc,setDoc,getDoc,updateDoc,deleteDoc,onSnapshot,query,
 import{computeAll,parseBalance,mapCompte,num,fmt,LIB,ACTIF,PASSIF,CR,TFT}from"./ef/engine";
 import{CAS_PRATIQUES}from"./ef/casPratiques";
 import{DEVISES,FORMES,PROVINCES,IDENTITE,FISC_DEFAUT,computeIBP}from"./ef/rdc";
+import{COMPTES,CLASSES,REGLES,ficheCompte,anomaliesSens,rubriqueDe}from"./ef/guide";
 import{computeNotes,fmtPct,TRANCHES,NATURES_TITRES,EFF_COLS,EFF_PROPRE,EFF_STATUT,EFF_EXT}from"./ef/notes";
 
 // ══════════════════ ATELIER ÉTATS FINANCIERS SYSCOHADA (multi-utilisateurs) ══════════════════
@@ -82,7 +83,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
   const staff=me.role==="formateur"||me.role==="admin";
   useEffect(()=>{if(me.role!=="admin")inscrireAnnuaire(db,me);},[db,me.uid,me.nom,me.mail,me.role]);
   const[dossiers,sDos]=useState([]),[loading,sL]=useState(true),[err,sErr]=useState("");
-  const[openId,sOpen]=useState(null),[creer,sCreer]=useState(false),[scope,sScope]=useState(staff?"tous":"miens"),[filtre,sFiltre]=useState("");
+  const[openId,sOpen]=useState(null),[guide,sGuide]=useState(false),[creer,sCreer]=useState(false),[scope,sScope]=useState(staff?"tous":"miens"),[filtre,sFiltre]=useState("");
   useEffect(()=>{
     if(!me.uid)return;
     const q=staff&&scope==="tous"?collection(db,COLL):query(collection(db,COLL),where("membres","array-contains",me.uid));
@@ -97,6 +98,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
     <div style={{color:K.t3,fontSize:13,marginBottom:16}}>Réservé aux apprenants disposant d'un abonnement actif.</div>
     {onSub&&<B K={K} ch="Obtenir l'accès" on={onSub}/>}
   </div>;
+  if(guide)return <div style={{animation:"fadeIn .3s ease"}}><div style={{marginBottom:12}}><B K={K} v="g" sm ico="arrow-left" ch="Dossiers" on={()=>sGuide(false)}/></div><GuideView K={K} mob={mob}/></div>;
   if(cur)return <><style>{PRINT_CSS}</style><Dossier db={db} K={K} mob={mob} me={me} staff={staff} d={cur} onBack={()=>sOpen(null)}/></>;
   const list=dossiers.filter(d=>!filtre||d.statut===filtre);
   return <div style={{animation:"fadeIn .3s ease"}}>
@@ -105,7 +107,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?20:24,color:K.t1}}>Atelier États financiers</div>
         <div style={{color:K.t3,fontSize:12,marginTop:3}}>République Démocratique du Congo · SYSCOHADA révisé · Système Normal · Bilan, Compte de résultat, TFT et IBP générés depuis la balance</div>
       </div>
-      <B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><B K={K} v="g" ico="book" ch="Règles & fonctionnement des comptes" on={()=>sGuide(true)}/><B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/></div>
     </div>
     <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
       {staff&&[["tous","Tous les dossiers"],["miens","Mes dossiers"]].map(([k,l])=><B key={k} K={K} sm v={scope===k?"p":"g"} ch={l} on={()=>sScope(k)}/>)}
@@ -207,7 +209,7 @@ function Dossier({db,K,mob,me,staff,d,onBack}){
   const R=useMemo(()=>computeAll(lignes,comp),[lignes,comp]);
   const nErr=R.ctrl.filter(c=>c.niv==="err").length,nWarn=R.ctrl.filter(c=>c.niv==="warn").length;
   const cas=CAS_PRATIQUES.find(c=>c.id===d.casId);
-  const TABS=[["id","id-badge-2","Identification"],["bal","table","Balance"],["ctrl","shield-check",`Contrôles${nErr+nWarn?` (${nErr+nWarn})`:""}`],["bilan","scale","Bilan"],["cr","chart-bar","Compte de résultat"],["tft","arrows-exchange","TFT"],["notes","notes","Notes annexes"],["fisc","receipt-tax","Fiscalité (IBP)"],["suivi","users","Équipe & suivi"]];
+  const TABS=[["id","id-badge-2","Identification"],["bal","table","Balance"],["ctrl","shield-check",`Contrôles${nErr+nWarn?` (${nErr+nWarn})`:""}`],["bilan","scale","Bilan"],["cr","chart-bar","Compte de résultat"],["tft","arrows-exchange","TFT"],["notes","notes","Notes annexes"],["fisc","receipt-tax","Fiscalité (IBP)"],["guide","book","Règles & comptes"],["suivi","users","Équipe & suivi"]];
   const meta={societe:d.societe,exercice:d.exercice,devise:d.devise,ident};
   return <div style={{animation:"fadeIn .3s ease"}}>
     <div className="ef-noprint" style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:12}}>
@@ -231,7 +233,8 @@ function Dossier({db,K,mob,me,staff,d,onBack}){
     {tab==="notes"&&<NotesTab K={K} mob={mob} R={R} saisies={notesS} setN={setN} canEdit={canEdit} meta={meta}/>}
     {tab==="fisc"&&<FiscTab K={K} R={R} fisc={fisc} setF={setF} canEdit={canEdit} meta={meta}/>}
     {tab==="bal"&&<BalanceTab K={K} mob={mob} lignes={lignes} setL={setL} canEdit={canEdit} R={R} meta={meta}/>}
-    {tab==="ctrl"&&<ControlsTab K={K} R={R} go={sTab}/>}
+    {tab==="ctrl"&&<ControlsTab K={K} R={R} go={sTab} lignes={lignes}/>}
+    {tab==="guide"&&<GuideView K={K} mob={mob} lignes={lignes}/>}
     {tab==="bilan"&&<BilanTab K={K} R={R} meta={meta}/>}
     {tab==="cr"&&<CRTab K={K} R={R} meta={meta}/>}
     {tab==="tft"&&<TFTTab K={K} R={R} meta={meta} comp={comp} setC={setC} canEdit={canEdit}/>}
@@ -253,7 +256,7 @@ const Toolbar=({K,children})=><div className="ef-noprint" style={{display:"flex"
 
 // ── BALANCE ──────────────────────────────────────────────────────────────────────
 function BalanceTab({K,mob,lignes,setL,canEdit,R,meta}){
-  const[q,sQ]=useState(""),[imp,sImp]=useState(false),[mvt,sMvt]=useState(()=>lignes.some(x=>num(x.md)||num(x.mc)));
+  const[q,sQ]=useState(""),[imp,sImp]=useState(false),[fiche,sFiche]=useState(null),[mvt,sMvt]=useState(()=>lignes.some(x=>num(x.md)||num(x.mc)));
   const COLS=["dn","cn","dn1","cn1",...(mvt?["md","mc"]:[])];
   const upd=(i,k,v)=>setL(p=>p.map((x,j)=>j===i?{...x,[k]:v}:x));
   const view=lignes.map((x,i)=>({x,i})).filter(({x})=>!q||x.c.startsWith(q)||(x.l||"").toLowerCase().includes(q.toLowerCase()));
@@ -284,7 +287,7 @@ function BalanceTab({K,mob,lignes,setL,canEdit,R,meta}){
                 <td style={{...td(K),textAlign:"left",padding:"2px 4px"}}>{canEdit?<input style={{...inp,fontFamily:mono}} value={x.c} onChange={e=>upd(i,"c",e.target.value.replace(/\D/g,""))}/>:x.c}</td>
                 <td style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif",padding:"2px 4px",minWidth:200}}>{canEdit?<input style={inp} value={x.l} onChange={e=>upd(i,"l",e.target.value)}/>:x.l}</td>
                 <td style={{...td(K),textAlign:"center"}} title={rub?LIB[rub]+(m.amort?" (amort./dépréc.)":""):"Compte non reconnu"}>
-                  {x.c?<span style={{fontSize:10,fontWeight:800,padding:"1px 6px",borderRadius:5,background:rub?K.emBg:K.erBg,color:rub?K.em:K.er}}>{rub?rub+(m.amort?"·A":""):"?"}</span>:null}
+                  {x.c?<button onClick={()=>sFiche(x)} title="Fonctionnement du compte" style={{fontSize:10,fontWeight:800,padding:"1px 6px",borderRadius:5,border:"none",cursor:"pointer",background:rub?K.emBg:K.erBg,color:rub?K.em:K.er,fontFamily:mono}}>{rub?rub+(m.amort?"·A":""):"?"} <i className="ti ti-info-circle" style={{fontSize:10}}/></button>:null}
                 </td>
                 {COLS.map(k=><td key={k} style={{...td(K),padding:"2px 4px"}}><NumCell K={K} value={x[k]} dis={!canEdit} onChange={v=>upd(i,k,v)}/></td>)}
                 {canEdit&&<td style={{...td(K),padding:"2px 4px"}}><button title="Supprimer" onClick={()=>setL(p=>p.filter((_,j)=>j!==i))} style={{background:"none",border:"none",color:K.t3,cursor:"pointer"}}><i className="ti ti-trash" style={{fontSize:14}}/></button></td>}
@@ -304,6 +307,7 @@ function BalanceTab({K,mob,lignes,setL,canEdit,R,meta}){
       {mvt&&<span style={{color:Math.abs(T.md-T.mc)<0.5?K.em:K.er,fontWeight:700}}>{Math.abs(T.md-T.mc)<0.5?"✓ Mouvements N équilibrés":`✗ Mouvements N : écart ${fmt(T.md-T.mc)}`}</span>}
       <span style={{color:K.t3}}>Rubrique : référence SYSCOHADA du poste · « A » = amortissement/dépréciation</span>
     </div>
+    {fiche&&<FicheModal K={K} ligne={fiche} onClose={()=>sFiche(null)}/>}
     {imp&&<ImportModal K={K} onClose={()=>sImp(false)} onImport={(rows,mode)=>{setL(p=>mode==="add"?[...p,...rows]:rows);sImp(false);}}/>}
   </>;
 }
@@ -329,7 +333,9 @@ function ImportModal({K,onClose,onImport}){
 }
 
 // ── CONTRÔLES ────────────────────────────────────────────────────────────────────
-function ControlsTab({K,R,go}){
+function ControlsTab({K,R,go,lignes=[]}){
+  const[fiche,sFiche]=useState(null);
+  const sens=anomaliesSens(lignes);
   const col={ok:K.em,warn:K.wa,err:K.er},ico={ok:"circle-check",warn:"alert-triangle",err:"circle-x"};
   const N=R.N;
   const kpi=[["Chiffre d'affaires",N.cr.XB],["Valeur ajoutée",N.cr.XC],["EBE",N.cr.XD],["Résultat net",N.cr.XI],["Total bilan",N.act.BZ.n],["Trésorerie nette",N.act.BT.n-N.pas.DT]];
@@ -344,8 +350,77 @@ function ControlsTab({K,R,go}){
         <div><div style={{fontWeight:700,fontSize:13,color:K.t1}}>{c.titre}</div><div style={{fontSize:12,color:K.t2,marginTop:2,lineHeight:1.5}}>{c.detail}</div></div>
       </div>)}
     </div>
+    <div style={{background:K.card,border:`1px solid ${K.b0}`,borderLeft:`3px solid ${sens.length?K.wa:K.em}`,borderRadius:9,padding:"10px 12px",marginTop:7}}>
+      <div style={{display:"flex",gap:10}}><i className={`ti ti-${sens.length?"alert-triangle":"circle-check"}`} style={{fontSize:18,color:sens.length?K.wa:K.em,flexShrink:0}}/>
+        <div style={{flex:1}}><div style={{fontWeight:700,fontSize:13,color:K.t1}}>Sens des soldes, compte par compte</div>
+          <div style={{fontSize:12,color:K.t2,marginTop:2,lineHeight:1.5}}>{sens.length?`${sens.length} compte(s) à vérifier : leur solde est dans le sens inverse de leur fonctionnement normal. Certains sous-comptes (retours, rabais) peuvent l'expliquer ; sinon, recherchez une erreur d'imputation.`:"Tous les comptes ont un solde conforme à leur fonctionnement."}</div>
+          {sens.length>0&&<div style={{marginTop:6,display:"flex",flexDirection:"column",gap:3}}>{sens.map(a=><button key={a.c} onClick={()=>sFiche(a)} className="bt" style={{textAlign:"left",background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:6,padding:"5px 8px",fontSize:11,color:K.t1,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+            <b style={{fontFamily:mono}}>{a.c}</b> {a.l} — solde {a.solde>0?"débiteur":"créditeur"} de {fmt(Math.abs(a.solde))}, attendu {a.attendu} <i className="ti ti-info-circle"/></button>)}</div>}
+        </div></div>
+    </div>
+    {fiche&&<FicheModal K={K} ligne={fiche} onClose={()=>sFiche(null)}/>}
     <div style={{marginTop:12,display:"flex",gap:6,flexWrap:"wrap"}}><B K={K} sm v="g" ch="Voir le Bilan" on={()=>go("bilan")}/><B K={K} sm v="g" ch="Voir le Compte de résultat" on={()=>go("cr")}/><B K={K} sm v="g" ch="Voir le TFT" on={()=>go("tft")}/></div>
   </>;
+}
+
+// ── GUIDE : RÈGLES ET FONCTIONNEMENT DES COMPTES ─────────────────────────────────
+const SENS_LIB={D:"Débiteur",C:"Créditeur",V:"Variable (selon le sens)"};
+const ETAT_LIB={A:"Actif du bilan",P:"Passif du bilan","A-":"Actif, en déduction (amortissements / dépréciations)","CR-":"Compte de résultat — charge","CR+":"Compte de résultat — produit"};
+function FicheContenu({K,c,f,ligne}){
+  const solde=ligne?num(ligne.dn)-num(ligne.cn):0;
+  const rub=rubriqueDe(c,solde);
+  const Row=({l,v})=>v?<div style={{display:"grid",gridTemplateColumns:"110px 1fr",gap:8,padding:"5px 0",borderBottom:`1px solid ${K.b0}`,fontSize:12}}><span style={{color:K.t3,fontWeight:700}}>{l}</span><span style={{color:K.t1,lineHeight:1.5}}>{v}</span></div>:null;
+  return <div>
+    {f?<>
+      <Row l="Compte" v={`${f.prefixe} — ${f.l}`}/>
+      <Row l="Nature" v={ETAT_LIB[f.etat]}/>
+      <Row l="Solde normal" v={SENS_LIB[f.sens]}/>
+      <Row l="Débité de" v={f.d}/>
+      <Row l="Crédité de" v={f.c}/>
+      <Row l="À retenir" v={f.r}/>
+    </>:<div style={{fontSize:12,color:K.t3,marginBottom:6}}>Pas de fiche détaillée pour ce compte : consultez le compte principal de la même classe.</div>}
+    <Row l="Poste" v={rub?(rub.alt?`${rub.alt.d} s'il est débiteur (${LIB[rub.alt.d]}) · ${rub.alt.c} s'il est créditeur (${LIB[rub.alt.c]})`:`${rub.ref} — ${rub.lib}${rub.amort?" (colonne amortissements / dépréciations)":""}`):"Compte non rattaché à un poste"}/>
+    {ligne&&<Row l="Dans ce dossier" v={`Solde N ${solde>=0?"débiteur":"créditeur"} de ${fmt(Math.abs(solde))}${rub&&rub.alt?` → classé en ${rub.ref}`:""}${f&&f.sens!=="V"&&Math.abs(solde)>0.5&&((f.sens==="D")!==(solde>0))?" — ⚠ sens inhabituel":""}`}/>}
+  </div>;
+}
+function FicheModal({K,ligne,onClose}){
+  const c=String(ligne.c||"");const f=ficheCompte(c);
+  return <Modal K={K} title={`Compte ${c}${ligne.l?` — ${ligne.l}`:""}`} onClose={onClose}><FicheContenu K={K} c={c} f={f} ligne={ligne}/></Modal>;
+}
+function GuideView({K,mob,lignes}){
+  const[vue,sVue]=useState("regles"),[q,sQ]=useState(""),[sel,sSel]=useState(null);
+  const liste=Object.entries(COMPTES).filter(([k,f])=>!q||k.startsWith(q.replace(/\s/g,""))||f.l.toLowerCase().includes(q.toLowerCase())).sort(([a],[b])=>a.localeCompare(b));
+  const ligneDe=k=>(lignes||[]).find(x=>String(x.c).startsWith(k));
+  return <div>
+    <div className="tn ef-noprint" style={{gap:6,marginBottom:12}}>
+      {[["regles","list-check","Règles de montage"],["comptes","books","Fonctionnement des comptes"]].map(([k,ico,l])=><B key={k} K={K} sm v={vue===k?"p":"g"} ico={ico} ch={l} on={()=>sVue(k)}/>)}
+    </div>
+    {vue==="regles"?<div style={{display:"flex",flexDirection:"column",gap:8}}>
+      <div style={{fontSize:12,color:K.t3,lineHeight:1.5}}>Synthèse du manuel « Montage des états financiers du SYSCOHADA révisé » et de l'Acte uniforme relatif au droit comptable et à l'information financière, adaptée à la RDC.</div>
+      {REGLES.map((r,i)=><details key={i} open={i<2} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:"10px 13px"}}>
+        <summary style={{cursor:"pointer",fontWeight:800,fontSize:13,color:K.t1}}>{i+1}. {r.t}</summary>
+        <ul style={{margin:"8px 0 2px 18px",display:"flex",flexDirection:"column",gap:5}}>{r.p.map((x,j)=><li key={j} style={{fontSize:12,color:K.t2,lineHeight:1.55}}>{x}</li>)}</ul>
+      </details>)}
+    </div>
+    :<div style={{display:"grid",gridTemplateColumns:mob?"1fr":"300px 1fr",gap:10,alignItems:"start"}}>
+      <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:8}}>
+        <input value={q} onChange={e=>sQ(e.target.value)} placeholder="N° de compte ou intitulé (ex. 401, caisse)" style={{...fieldSt(K),minHeight:36,fontSize:12,marginBottom:6}}/>
+        <div style={{maxHeight:mob?260:"62vh",overflowY:"auto"}}>
+          {CLASSES.map(([cl,lib])=>{const items=liste.filter(([k])=>k[0]===cl);if(!items.length)return null;return <div key={cl}>
+            <div style={{fontSize:10,fontWeight:800,color:K.em,textTransform:"uppercase",letterSpacing:.4,padding:"8px 6px 3px"}}>Classe {cl} — {lib}</div>
+            {items.map(([k,f])=><button key={k} onClick={()=>sSel(k)} className="bt" style={{display:"flex",gap:8,width:"100%",textAlign:"left",padding:"6px 7px",border:"none",borderRadius:7,background:sel===k?K.c2:"transparent",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+              <span style={{fontFamily:mono,fontSize:11,fontWeight:800,color:sel===k?K.em:K.t3,minWidth:34}}>{k}</span><span style={{fontSize:12,color:K.t1,lineHeight:1.3}}>{f.l}</span>
+            </button>)}
+          </div>;})}
+          {!liste.length&&<div style={{fontSize:12,color:K.t3,padding:8}}>Aucun compte trouvé.</div>}
+        </div>
+      </div>
+      <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px"}}>
+        {sel?<><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:8}}>{sel} — {COMPTES[sel].l}</div><FicheContenu K={K} c={sel} f={{prefixe:sel,...COMPTES[sel]}} ligne={ligneDe(sel)}/></>
+        :<div style={{fontSize:12,color:K.t3,lineHeight:1.6}}>Choisissez un compte pour voir son fonctionnement : ce qui s'inscrit au débit et au crédit, le sens normal de son solde et le poste des états financiers où il est présenté. Dans la balance d'un dossier, touchez la rubrique d'un compte pour ouvrir directement sa fiche.</div>}
+      </div>
+    </div>}
+  </div>;
 }
 
 // ── BILAN ────────────────────────────────────────────────────────────────────────
