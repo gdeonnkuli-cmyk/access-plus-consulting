@@ -3,6 +3,7 @@ import{collection,doc,addDoc,updateDoc,deleteDoc,onSnapshot,query,where,getDocs,
 import{computeAll,parseBalance,mapCompte,num,fmt,LIB,ACTIF,PASSIF,CR,TFT}from"./ef/engine";
 import{CAS_PRATIQUES}from"./ef/casPratiques";
 import{DEVISES,FORMES,PROVINCES,IDENTITE,FISC_DEFAUT,computeIBP}from"./ef/rdc";
+import{computeNotes,fmtPct}from"./ef/notes";
 
 // ══════════════════ ATELIER ÉTATS FINANCIERS SYSCOHADA (multi-utilisateurs) ══════════════════
 // Collection Firestore « ef_dossiers » : un document par dossier (balance, compléments TFT, membres, suivi).
@@ -23,7 +24,7 @@ const downloadCSV=(name,rows)=>{
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name.replace(/[^\w.-]+/g,"_")+".csv";a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 };
-const PRINT_CSS=`@media print{body *{visibility:hidden!important;}.ef-print,.ef-print *{visibility:visible!important;color:#000!important;background:#fff!important;border-color:#999!important;}.ef-print{position:absolute;left:0;top:0;width:100%;}.ef-noprint{display:none!important;}}`;
+const PRINT_CSS=`@media print{body *{visibility:hidden!important;}.ef-print,.ef-print *{visibility:visible!important;color:#000!important;background:#fff!important;border-color:#999!important;}.ef-print{position:absolute;left:0;top:0;width:100%;}.ef-noprint{display:none!important;}.ef-printonly{display:block!important;}.ef-pb{break-before:page;}}.ef-printonly{display:none;}`;
 
 // ── Petits composants ──────────────────────────────────────────────────────────
 function B({K,ch,on,v="p",sm,dis,ico,title}){
@@ -159,10 +160,10 @@ function NewDossier({db,K,me,onClose,onCreated}){
 // ══════════════════ DOSSIER ══════════════════
 function Dossier({db,K,mob,me,staff,d,onBack}){
   const[tab,sTab]=useState("bal");
-  const[lignes,sLignes]=useState(d.lignes||[]),[comp,sComp]=useState(d.complements||{}),[ident,sIdent]=useState(d.identite||{}),[fisc,sFisc]=useState(d.fiscal||FISC_DEFAUT);
+  const[lignes,sLignes]=useState(d.lignes||[]),[comp,sComp]=useState(d.complements||{}),[ident,sIdent]=useState(d.identite||{}),[fisc,sFisc]=useState(d.fiscal||FISC_DEFAUT),[notesS,sNotesS]=useState(d.notes||{});
   const dirty=useRef(false),timer=useRef(null),[saveSt,sSaveSt]=useState("");
   // Synchronisation temps réel : on adopte la version distante tant qu'aucune saisie locale n'est en attente
-  useEffect(()=>{if(!dirty.current){sLignes(d.lignes||[]);sComp(d.complements||{});sIdent(d.identite||{});sFisc(d.fiscal||FISC_DEFAUT);}},[d.lignes,d.complements,d.identite,d.fiscal]);
+  useEffect(()=>{if(!dirty.current){sLignes(d.lignes||[]);sComp(d.complements||{});sIdent(d.identite||{});sFisc(d.fiscal||FISC_DEFAUT);sNotesS(d.notes||{});}},[d.lignes,d.complements,d.identite,d.fiscal,d.notes]);
   useEffect(()=>()=>clearTimeout(timer.current),[]);
   const isMember=(d.membres||[]).includes(me.uid);
   const canEdit=staff||(isMember&&["brouillon","renvoye"].includes(d.statut||"brouillon"));
@@ -175,15 +176,16 @@ function Dossier({db,K,mob,me,staff,d,onBack}){
       dirty.current=false;
     },900);
   };
-  const latest=useRef({});latest.current={lignes,comp,ident,fisc};
+  const latest=useRef({});latest.current={lignes,comp,ident,fisc,notesS};
   const setL=fn=>{sLignes(prev=>{const n=typeof fn==="function"?fn(prev):fn;latest.current.lignes=n;return n;});persist(()=>({lignes:latest.current.lignes}));};
   const setC=n=>{sComp(n);latest.current.comp=n;persist(()=>({complements:latest.current.comp}));};
   const setI=n=>{sIdent(n);latest.current.ident=n;persist(()=>({identite:latest.current.ident}));};
   const setF=n=>{sFisc(n);latest.current.fisc=n;persist(()=>({fiscal:latest.current.fisc}));};
+  const setN=n=>{sNotesS(n);latest.current.notesS=n;persist(()=>({notes:latest.current.notesS}));};
   const R=useMemo(()=>computeAll(lignes,comp),[lignes,comp]);
   const nErr=R.ctrl.filter(c=>c.niv==="err").length,nWarn=R.ctrl.filter(c=>c.niv==="warn").length;
   const cas=CAS_PRATIQUES.find(c=>c.id===d.casId);
-  const TABS=[["id","id-badge-2","Identification"],["bal","table","Balance"],["ctrl","shield-check",`Contrôles${nErr+nWarn?` (${nErr+nWarn})`:""}`],["bilan","scale","Bilan"],["cr","chart-bar","Compte de résultat"],["tft","arrows-exchange","TFT"],["fisc","receipt-tax","Fiscalité (IBP)"],["suivi","users","Équipe & suivi"]];
+  const TABS=[["id","id-badge-2","Identification"],["bal","table","Balance"],["ctrl","shield-check",`Contrôles${nErr+nWarn?` (${nErr+nWarn})`:""}`],["bilan","scale","Bilan"],["cr","chart-bar","Compte de résultat"],["tft","arrows-exchange","TFT"],["notes","notes","Notes annexes"],["fisc","receipt-tax","Fiscalité (IBP)"],["suivi","users","Équipe & suivi"]];
   const meta={societe:d.societe,exercice:d.exercice,devise:d.devise,ident};
   return <div style={{animation:"fadeIn .3s ease"}}>
     <div className="ef-noprint" style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:12}}>
@@ -204,6 +206,7 @@ function Dossier({db,K,mob,me,staff,d,onBack}){
         <i className={`ti ti-${ico}`} style={{fontSize:14,color:a?K.em:K.t3}}/>{l}</button>;})}
     </div>
     {tab==="id"&&<IdentTab K={K} ident={ident} setI={setI} canEdit={canEdit} meta={meta}/>}
+    {tab==="notes"&&<NotesTab K={K} mob={mob} R={R} saisies={notesS} setN={setN} canEdit={canEdit} meta={meta}/>}
     {tab==="fisc"&&<FiscTab K={K} R={R} fisc={fisc} setF={setF} canEdit={canEdit} meta={meta}/>}
     {tab==="bal"&&<BalanceTab K={K} mob={mob} lignes={lignes} setL={setL} canEdit={canEdit} R={R} meta={meta}/>}
     {tab==="ctrl"&&<ControlsTab K={K} R={R} go={sTab}/>}
@@ -228,19 +231,21 @@ const Toolbar=({K,children})=><div className="ef-noprint" style={{display:"flex"
 
 // ── BALANCE ──────────────────────────────────────────────────────────────────────
 function BalanceTab({K,mob,lignes,setL,canEdit,R,meta}){
-  const[q,sQ]=useState(""),[imp,sImp]=useState(false);
+  const[q,sQ]=useState(""),[imp,sImp]=useState(false),[mvt,sMvt]=useState(()=>lignes.some(x=>num(x.md)||num(x.mc)));
+  const COLS=["dn","cn","dn1","cn1",...(mvt?["md","mc"]:[])];
   const upd=(i,k,v)=>setL(p=>p.map((x,j)=>j===i?{...x,[k]:v}:x));
   const view=lignes.map((x,i)=>({x,i})).filter(({x})=>!q||x.c.startsWith(q)||(x.l||"").toLowerCase().includes(q.toLowerCase()));
   const tot=k=>lignes.reduce((s,x)=>s+num(x[k]),0);
-  const T={dn:tot("dn"),cn:tot("cn"),dn1:tot("dn1"),cn1:tot("cn1")};
+  const T={dn:tot("dn"),cn:tot("cn"),dn1:tot("dn1"),cn1:tot("cn1"),md:tot("md"),mc:tot("mc")};
   const okN=Math.abs(T.dn-T.cn)<0.5,okN1=Math.abs(T.dn1-T.cn1)<0.5;
-  const exp=()=>downloadCSV(`Balance_${meta.societe}_${meta.exercice}`,[["Compte","Intitulé","Débit N","Crédit N","Débit N-1","Crédit N-1","Rubrique"],...lignes.map(x=>{const m=mapCompte(x.c);return[x.c,x.l,num(x.dn),num(x.cn),num(x.dn1),num(x.cn1),m?(typeof m.r==="object"?`${m.r.d}/${m.r.c}`:m.r):""];})]);
+  const exp=()=>downloadCSV(`Balance_${meta.societe}_${meta.exercice}`,[["Compte","Intitulé","Débit N","Crédit N","Débit N-1","Crédit N-1","Mouvement débit N","Mouvement crédit N","Rubrique"],...lignes.map(x=>{const m=mapCompte(x.c);return[x.c,x.l,num(x.dn),num(x.cn),num(x.dn1),num(x.cn1),num(x.md),num(x.mc),m?(typeof m.r==="object"?`${m.r.d}/${m.r.c}`:m.r):""];})]);
   const inp={background:"transparent",border:"1px solid transparent",borderRadius:5,color:K.t1,fontSize:12,padding:"5px 6px",outline:"none",width:"100%"};
   return <>
     <Toolbar K={K}>
       {canEdit&&<B K={K} sm ico="clipboard" ch="Coller depuis Excel" on={()=>sImp(true)}/>}
-      {canEdit&&<B K={K} sm v="g" ico="plus" ch="Ajouter un compte" on={()=>setL(p=>[...p,{c:"",l:"",dn:0,cn:0,dn1:0,cn1:0}])}/>}
+      {canEdit&&<B K={K} sm v="g" ico="plus" ch="Ajouter un compte" on={()=>setL(p=>[...p,{c:"",l:"",dn:0,cn:0,dn1:0,cn1:0,md:0,mc:0}])}/>}
       <B K={K} sm v="g" ico="file-spreadsheet" ch="Export Excel (CSV)" on={exp} dis={!lignes.length}/>
+      <B K={K} sm v={mvt?"w":"g"} ico="arrows-left-right" ch={mvt?"Masquer les mouvements N":"Afficher les mouvements N"} on={()=>sMvt(!mvt)}/>
       <input placeholder="Filtrer : compte ou intitulé" value={q} onChange={e=>sQ(e.target.value)} style={{...fieldSt(K),width:mob?"100%":220,minHeight:32,padding:"5px 10px",fontSize:12}}/>
     </Toolbar>
     <Wrap K={K}>
@@ -248,7 +253,7 @@ function BalanceTab({K,mob,lignes,setL,canEdit,R,meta}){
         <table style={{width:"100%",borderCollapse:"collapse",minWidth:820}}>
           <thead><tr>
             <th style={{...th(K),textAlign:"left",width:90}}>Compte</th><th style={{...th(K),textAlign:"left"}}>Intitulé</th><th style={{...th(K),textAlign:"center"}}>Rubrique</th>
-            <th style={th(K)}>Débit N</th><th style={th(K)}>Crédit N</th><th style={th(K)}>Débit N-1</th><th style={th(K)}>Crédit N-1</th>{canEdit&&<th style={th(K)}/>}
+            <th style={th(K)}>Débit N</th><th style={th(K)}>Crédit N</th><th style={th(K)}>Débit N-1</th><th style={th(K)}>Crédit N-1</th>{mvt&&<><th style={th(K)}>Mvt débit N</th><th style={th(K)}>Mvt crédit N</th></>}{canEdit&&<th style={th(K)}/>}
           </tr></thead>
           <tbody>
             {view.map(({x,i})=>{const m=mapCompte(x.c);let rub=m?m.r:null;
@@ -259,14 +264,14 @@ function BalanceTab({K,mob,lignes,setL,canEdit,R,meta}){
                 <td style={{...td(K),textAlign:"center"}} title={rub?LIB[rub]+(m.amort?" (amort./dépréc.)":""):"Compte non reconnu"}>
                   {x.c?<span style={{fontSize:10,fontWeight:800,padding:"1px 6px",borderRadius:5,background:rub?K.emBg:K.erBg,color:rub?K.em:K.er}}>{rub?rub+(m.amort?"·A":""):"?"}</span>:null}
                 </td>
-                {["dn","cn","dn1","cn1"].map(k=><td key={k} style={{...td(K),padding:"2px 4px"}}><NumCell K={K} value={x[k]} dis={!canEdit} onChange={v=>upd(i,k,v)}/></td>)}
+                {COLS.map(k=><td key={k} style={{...td(K),padding:"2px 4px"}}><NumCell K={K} value={x[k]} dis={!canEdit} onChange={v=>upd(i,k,v)}/></td>)}
                 {canEdit&&<td style={{...td(K),padding:"2px 4px"}}><button title="Supprimer" onClick={()=>setL(p=>p.filter((_,j)=>j!==i))} style={{background:"none",border:"none",color:K.t3,cursor:"pointer"}}><i className="ti ti-trash" style={{fontSize:14}}/></button></td>}
               </tr>;})}
-            {!lignes.length&&<tr><td colSpan={8} style={{...td(K),textAlign:"center",fontFamily:"'Outfit',sans-serif",color:K.t3,padding:24}}>Balance vide — collez votre balance depuis Excel ou ajoutez les comptes un par un.</td></tr>}
+            {!lignes.length&&<tr><td colSpan={10} style={{...td(K),textAlign:"center",fontFamily:"'Outfit',sans-serif",color:K.t3,padding:24}}>Balance vide — collez votre balance depuis Excel ou ajoutez les comptes un par un.</td></tr>}
           </tbody>
           <tfoot><tr>
             <td colSpan={3} style={{...td(K),textAlign:"left",fontWeight:800,fontFamily:"'Outfit',sans-serif",background:K.c2}}>TOTAUX · {lignes.length} comptes</td>
-            {["dn","cn","dn1","cn1"].map(k=><td key={k} style={{...td(K),fontWeight:800,background:K.c2}}>{fmt(T[k])}</td>)}{canEdit&&<td style={{...td(K),background:K.c2}}/>}
+            {COLS.map(k=><td key={k} style={{...td(K),fontWeight:800,background:K.c2}}>{fmt(T[k])}</td>)}{canEdit&&<td style={{...td(K),background:K.c2}}/>}
           </tr></tfoot>
         </table>
       </Scroll>
@@ -274,6 +279,7 @@ function BalanceTab({K,mob,lignes,setL,canEdit,R,meta}){
     <div style={{display:"flex",gap:14,flexWrap:"wrap",marginTop:8,fontSize:12}}>
       <span style={{color:okN?K.em:K.er,fontWeight:700}}>{okN?"✓ Balance N équilibrée":`✗ Balance N déséquilibrée : écart ${fmt(T.dn-T.cn)}`}</span>
       {(T.dn1||T.cn1)?<span style={{color:okN1?K.em:K.er,fontWeight:700}}>{okN1?"✓ Balance N-1 équilibrée":`✗ Écart N-1 : ${fmt(T.dn1-T.cn1)}`}</span>:<span style={{color:K.t3}}>Colonnes N-1 vides (nécessaires au comparatif et au TFT)</span>}
+      {mvt&&<span style={{color:Math.abs(T.md-T.mc)<0.5?K.em:K.er,fontWeight:700}}>{Math.abs(T.md-T.mc)<0.5?"✓ Mouvements N équilibrés":`✗ Mouvements N : écart ${fmt(T.md-T.mc)}`}</span>}
       <span style={{color:K.t3}}>Rubrique : référence SYSCOHADA du poste · « A » = amortissement/dépréciation</span>
     </div>
     {imp&&<ImportModal K={K} onClose={()=>sImp(false)} onImport={(rows,mode)=>{setL(p=>mode==="add"?[...p,...rows]:rows);sImp(false);}}/>}
@@ -281,15 +287,16 @@ function BalanceTab({K,mob,lignes,setL,canEdit,R,meta}){
 }
 
 function ImportModal({K,onClose,onImport}){
-  const[txt,sTxt]=useState(""),[mode,sMode]=useState("replace");
-  const rows=useMemo(()=>parseBalance(txt),[txt]);
+  const[txt,sTxt]=useState(""),[mode,sMode]=useState("replace"),[fmtB,sFmtB]=useState("8");
+  const rows=useMemo(()=>parseBalance(txt,fmtB),[txt,fmtB]);
   return <Modal K={K} title="Importer une balance depuis Excel" onClose={onClose} w={640}>
     <div style={{fontSize:12,color:K.t2,lineHeight:1.6,marginBottom:10}}>
-      Copiez les colonnes dans Excel puis collez-les ci-dessous, dans cet ordre :<br/>
-      <b style={{fontFamily:mono}}>Compte | Intitulé | Débit N | Crédit N | Débit N-1 | Crédit N-1</b><br/>
+      Copiez les colonnes dans Excel puis collez-les ci-dessous. Choisissez le format de votre balance :<br/>
+      <label style={{display:"block",marginTop:4}}><input type="radio" checked={fmtB==="8"} onChange={()=>sFmtB("8")}/> <b>Balance à 8 colonnes</b> (recommandé, alimente les notes 3A, 3C, 3D et 28) : <span style={{fontFamily:mono}}>Compte | Intitulé | Solde N-1 D | Solde N-1 C | Mouvement D | Mouvement C | Solde N D | Solde N C</span></label>
+      <label style={{display:"block"}}><input type="radio" checked={fmtB==="6"} onChange={()=>sFmtB("6")}/> <b>Balance à 6 colonnes</b> : <span style={{fontFamily:mono}}>Compte | Intitulé | Débit N | Crédit N | Débit N-1 | Crédit N-1</span></label>
       Les lignes d'en-tête et de totaux sont ignorées automatiquement. Formats acceptés : « 1 250 000,50 » ou « 1250000.50 », séparateur tabulation ou point-virgule.
     </div>
-    <textarea value={txt} onChange={e=>sTxt(e.target.value)} rows={10} placeholder={"101\tCapital social\t0\t250000000\t0\t200000000\n5211\tBanque\t159550000\t0\t84000000\t0"} style={{...fieldSt(K),fontFamily:mono,fontSize:11,resize:"vertical"}}/>
+    <textarea value={txt} onChange={e=>sTxt(e.target.value)} rows={10} placeholder={fmtB==="8"?"101\tCapital social\t0\t200000000\t0\t50000000\t0\t250000000\n5211\tBanque\t84000000\t0\t500000000\t424450000\t159550000\t0":"101\tCapital social\t0\t250000000\t0\t200000000\n5211\tBanque\t159550000\t0\t84000000\t0"} style={{...fieldSt(K),fontFamily:mono,fontSize:11,resize:"vertical"}}/>
     <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap",margin:"10px 0"}}>
       <span style={{fontSize:12,color:rows.length?K.em:K.t3,fontWeight:700}}>{rows.length} compte(s) détecté(s)</span>
       <label style={{fontSize:12,color:K.t2}}><input type="radio" checked={mode==="replace"} onChange={()=>sMode("replace")}/> Remplacer la balance</label>
@@ -405,6 +412,84 @@ function NumCellBox({K,value,onChange,dis}){
   return <input disabled={dis} inputMode="decimal" style={{...fieldSt(K),fontFamily:mono,textAlign:"right"}} placeholder="0"
     value={ed!==null?ed:(has?fmt(value):"")} onFocus={()=>sEd(has?String(value):"")} onChange={e=>sEd(e.target.value)}
     onBlur={()=>{const v=ed.trim()===""?"":num(ed);sEd(null);if(v!==value)onChange(v);}}/>;
+}
+
+// ── NOTES ANNEXES ────────────────────────────────────────────────────────────────
+const fv=(v,u)=>v==null||!isFinite(v)?"":u==="%"?`${v.toFixed(1).replace(".",",")} %`:u==="x"?v.toFixed(2).replace(".",","):fmt(v);
+const noteCells=r=>r.cells?r.cells.map((v,i)=>({v,u:i===r.cells.length-1&&r.cells.length===3&&!r.u?"var":r.u})):[{v:r.n},{v:r.n1},{v:r.var,u:"var"}];
+const noteCsv=n=>[[`NOTE ${n.id} : ${n.titre}`],...(n.cols?[n.cols]:[]),...(n.rows||[]).map(r=>r.h?[r.l]:[r.l,...noteCells(r).map(c=>c.v==null?"":c.u==="var"||c.u==="%"||c.u==="x"?Number(c.v.toFixed(2)):Math.round(c.v))]),...(n.texte||[]).map(t=>[t]),...(n.txt?[["Commentaire"],[n.txt]]:[]),[]];
+
+function NoteBody({K,n,meta,canEdit,upd}){
+  const st=fieldSt(K);
+  return <div className="ef-pb">
+    <PrintHead K={K} meta={meta} titre={`NOTE ${n.id} : ${n.titre}`}/>
+    {n.estime&&<div style={{padding:"8px 14px",fontSize:11,color:K.wa,background:K.waBg}}>Mouvements N absents de la balance : augmentations et diminutions estimées par différence entre les soldes N et N-1. Saisissez la balance à 8 colonnes pour un tableau exact.</div>}
+    {n.texte&&<div style={{padding:"10px 14px",fontSize:12,color:K.t1,lineHeight:1.6}}>{n.texte.map((t,i)=>/^[A-Z]\. /.test(t)?<div key={i} style={{fontWeight:800,marginTop:i?8:0}}>{t}</div>:<p key={i} style={{marginTop:3}}>{t}</p>)}</div>}
+    {n.rows&&<Scroll><table style={{width:"100%",borderCollapse:"collapse",minWidth:n.cols&&n.cols.length>4?760:520}}>
+      <thead><tr>{(n.cols||[]).map((c,i)=><th key={i} style={{...th(K),textAlign:i?"right":"left",whiteSpace:"normal",minWidth:i?100:220}}>{c}</th>)}</tr></thead>
+      <tbody>{n.rows.map((r,i)=>r.h?<tr key={i}><td colSpan={(n.cols||[]).length||4} style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif",fontWeight:700,color:K.in_,paddingTop:9}}>{r.l}</td></tr>
+        :<tr key={i} style={r.tot?{fontWeight:800,background:K.c2}:{}}>
+          <td style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif",whiteSpace:"normal",paddingLeft:r.tot?8:16}}>{r.l}</td>
+          {noteCells(r).map((c,j)=><td key={j} style={{...td(K),color:c.u==="var"?K.t3:c.v<0?K.er:K.t1}}>{c.u==="var"?fmtPct(c.v):fv(c.v,c.u)}</td>)}
+        </tr>)}</tbody>
+    </table></Scroll>}
+    {n.remarque&&<div style={{padding:"8px 14px",fontSize:11,color:K.t3}}>{n.remarque}</div>}
+    {(n.ctrl||[]).length>0&&<div className="ef-noprint" style={{padding:"8px 14px",display:"flex",flexDirection:"column",gap:3}}>
+      {n.ctrl.map((c,i)=><div key={i} style={{fontSize:11,fontWeight:700,color:c.ok?K.em:K.er}}>{c.ok?"✓":"✗"} Contrôle {c.lib} : note {fmt(c.note)} — états financiers {fmt(c.etat)}</div>)}
+    </div>}
+    <div style={{padding:"8px 14px 12px"}}>
+      {n.aide&&<div className="ef-noprint" style={{fontSize:11,color:K.t3,lineHeight:1.5,marginBottom:6}}><i className="ti ti-info-circle"/> {n.aide}</div>}
+      {canEdit?<textarea className="ef-noprint" rows={n.t==="txt"?6:2} value={n.txt} onChange={e=>upd(n.id,{txt:e.target.value})} placeholder={n.t==="txt"?"Rédigez le contenu de la note…":"Commentaire (variations significatives, méthodes, précisions…)"} style={{...st,resize:"vertical"}}/>
+      :n.txt&&<div className="ef-noprint" style={{fontSize:12,color:K.t2,whiteSpace:"pre-wrap"}}>{n.txt}</div>}
+      {n.txt&&<div className="ef-printonly" style={{fontSize:12,whiteSpace:"pre-wrap",marginTop:6}}><b>Commentaire :</b> {n.txt}</div>}
+    </div>
+  </div>;
+}
+
+function NotesTab({K,mob,R,saisies,setN,canEdit,meta}){
+  const notes=useMemo(()=>computeNotes(R,saisies,{denomination:meta.societe,...(meta.ident||{})},meta.devise),[R,saisies,meta]);
+  const[sel,sSel]=useState("R4"),[all,sAll]=useState(false);
+  const upd=(id,patch)=>setN({...saisies,[id]:{...(saisies[id]||{}),...patch}});
+  const cur=notes.find(n=>n.id===sel);
+  const ko=n=>(n.ctrl||[]).some(c=>!c.ok);
+  const nA=notes.filter(n=>n.applicable).length,nKo=notes.filter(n=>n.applicable&&ko(n)).length;
+  const exportAll=()=>downloadCSV(`NotesAnnexes_${meta.societe}_${meta.exercice}`,[["FICHE R4 : FICHE RÉCAPITULATIVE DES NOTES ANNEXES"],["Note","Intitulé","A / N/A"],...notes.map(n=>[n.id,n.titre,n.applicable?"A":"N/A"]),[],...notes.filter(n=>n.applicable).flatMap(noteCsv)]);
+  const R4=<div className={sel==="R4"||all?"":"ef-noprint"}>
+    <PrintHead K={K} meta={meta} titre="FICHE R4 : FICHE RÉCAPITULATIVE DES NOTES ANNEXES"/>
+    <table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={{...th(K),textAlign:"left",width:70}}>Notes</th><th style={{...th(K),textAlign:"left"}}>Intitulés</th><th style={{...th(K),textAlign:"center",width:50}}>A</th><th style={{...th(K),textAlign:"center",width:50}}>N/A</th><th className="ef-noprint" style={{...th(K),textAlign:"center",width:130}}>Applicabilité</th></tr></thead>
+      <tbody>{notes.map(n=><tr key={n.id} onClick={()=>{sSel(n.id);sAll(false);}} style={{cursor:"pointer"}}>
+        <td style={{...td(K),textAlign:"left",fontWeight:700}}>NOTE {n.id}</td>
+        <td style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif",whiteSpace:"normal"}}>{n.titre}{ko(n)&&n.applicable&&<span className="ef-noprint" style={{color:K.er,fontWeight:800}}> · contrôle à revoir</span>}</td>
+        <td style={{...td(K),textAlign:"center",fontWeight:800}}>{n.applicable?"X":""}</td><td style={{...td(K),textAlign:"center",fontWeight:800}}>{n.applicable?"":"X"}</td>
+        <td className="ef-noprint" style={{...td(K),textAlign:"center"}} onClick={e=>e.stopPropagation()}>
+          <select disabled={!canEdit} value={n.force||""} onChange={e=>upd(n.id,{a:e.target.value||null})} style={{...fieldSt(K),minHeight:28,padding:"2px 6px",fontSize:11}}>
+            <option value="">Auto ({n.auto?"A":"N/A"})</option><option value="A">Applicable</option><option value="NA">Non applicable</option>
+          </select></td>
+      </tr>)}</tbody>
+    </table>
+    <div style={{padding:"8px 14px",fontSize:11,color:K.t3}}>A : Applicable · N/A : Non applicable. Les notes non applicables ne sont pas jointes aux états financiers. Applicabilité déterminée automatiquement d'après la balance (montants non nuls) ou le texte saisi.</div>
+  </div>;
+  return <>
+    <Toolbar K={K}>
+      <B K={K} sm ico="printer" ch={all?"Imprimer la liasse des notes":"Imprimer cette note"} on={()=>window.print()}/>
+      <B K={K} sm v={all?"w":"g"} ico="files" ch={all?"Revenir à la note":`Liasse complète (${nA} notes applicables)`} on={()=>sAll(!all)}/>
+      <B K={K} sm v="g" ico="file-spreadsheet" ch="Export Excel (CSV) de toutes les notes" on={exportAll}/>
+      <span style={{fontSize:12,fontWeight:700,color:nKo?K.er:K.em,alignSelf:"center"}}>{nKo?`${nKo} note(s) en écart avec les états`:"✓ Notes cohérentes avec le Bilan et le Compte de résultat"}</span>
+    </Toolbar>
+    {all?<Wrap K={K} print>{R4}{notes.filter(n=>n.applicable).map(n=><NoteBody key={n.id} K={K} n={n} meta={meta} canEdit={false} upd={upd}/>)}</Wrap>
+    :<div style={{display:"grid",gridTemplateColumns:mob?"1fr":"240px 1fr",gap:10,alignItems:"start"}}>
+      {mob?<select className="ef-noprint" value={sel} onChange={e=>sSel(e.target.value)} style={fieldSt(K)}><option value="R4">Fiche R4 — récapitulatif</option>{notes.map(n=><option key={n.id} value={n.id}>Note {n.id} — {n.titre}</option>)}</select>
+      :<div className="ef-noprint" style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:6,maxHeight:"70vh",overflowY:"auto"}}>
+        {[{id:"R4",titre:"Fiche récapitulative",applicable:true},...notes].map(n=>{const a=sel===n.id;return <button key={n.id} onClick={()=>sSel(n.id)} className="bt" style={{display:"flex",gap:7,alignItems:"center",width:"100%",textAlign:"left",padding:"6px 8px",border:"none",borderRadius:7,background:a?K.c2:"transparent",cursor:"pointer",fontFamily:"'Outfit',sans-serif",opacity:n.applicable?1:.5}}>
+          <span style={{fontFamily:mono,fontSize:10,fontWeight:800,color:a?K.em:K.t3,minWidth:30}}>{n.id}</span>
+          <span style={{fontSize:11,color:K.t1,flex:1,lineHeight:1.3}}>{n.titre.charAt(0)+n.titre.slice(1).toLowerCase()}</span>
+          {n.id!=="R4"&&ko(n)&&n.applicable&&<i className="ti ti-alert-triangle" style={{color:K.er,fontSize:13}}/>}
+        </button>;})}
+      </div>}
+      <Wrap K={K} print>{sel==="R4"?R4:cur&&<NoteBody K={K} n={cur} meta={meta} canEdit={canEdit} upd={upd}/>}</Wrap>
+    </div>}
+  </>;
 }
 
 // ── IDENTIFICATION (contexte RDC) ────────────────────────────────────────────────

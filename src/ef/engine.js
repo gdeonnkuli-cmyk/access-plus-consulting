@@ -54,7 +54,7 @@ export function mapCompte(compte) {
   if (!/^[1-8]\d*$/.test(c)) return null;
   if (/^2[89]/.test(c)) { const r = lookup("2" + c.slice(2)); return r ? { r, amort: true } : null; }
   if (c.startsWith("39")) return { r: "BB", amort: true };
-  if (c.startsWith("49") && !c.startsWith("499")) return { r: c.startsWith("490") ? "BH" : c.startsWith("491") ? "BI" : "BJ", amort: true };
+  if (c.startsWith("49") && !c.startsWith("499")) return { r: c.startsWith("490") ? "BH" : c.startsWith("491") ? "BI" : c.startsWith("498") ? "BA" : "BJ", amort: true };
   if (c.startsWith("59") && !c.startsWith("599")) return { r: c.startsWith("590") ? "BQ" : c.startsWith("591") ? "BR" : "BS", amort: true };
   const r = lookup(c);
   return r ? { r, amort: false } : null;
@@ -214,8 +214,9 @@ export const num = v => {
 const r2 = v => Math.round(v * 100) / 100;
 
 // Import d'une balance collée depuis Excel (tabulations) ou CSV (; ou ,).
-// Colonnes : Compte | Intitulé | Débit N | Crédit N | [Débit N-1 | Crédit N-1]
-export function parseBalance(text) {
+// Format "6" : Compte | Intitulé | Débit N | Crédit N | [Débit N-1 | Crédit N-1]
+// Format "8" : Compte | Intitulé | Solde N-1 D | Solde N-1 C | Mouvement D | Mouvement C | Solde N D | Solde N C
+export function parseBalance(text, format = "6") {
   const out = [];
   for (const raw of String(text || "").split(/\r?\n/)) {
     if (!raw.trim()) continue;
@@ -223,7 +224,12 @@ export function parseBalance(text) {
     const p = raw.split(sep).map(x => x.trim().replace(/^"|"$/g, ""));
     const c = (p[0] || "").replace(/\s/g, "");
     if (!/^[1-8]\d+$/.test(c)) continue; // en-têtes, totaux, lignes vides
-    out.push({ c, l: p[1] || "", dn: num(p[2]), cn: num(p[3]), dn1: num(p[4]), cn1: num(p[5]) });
+    if (format === "8") {
+      // Solde N recalculé si les colonnes de clôture sont absentes
+      const s1 = num(p[2]) - num(p[3]), md = num(p[4]), mc = num(p[5]);
+      const sN = p[6] !== undefined || p[7] !== undefined ? num(p[6]) - num(p[7]) : s1 + md - mc;
+      out.push({ c, l: p[1] || "", dn: Math.max(sN, 0), cn: Math.max(-sN, 0), dn1: Math.max(s1, 0), cn1: Math.max(-s1, 0), md, mc });
+    } else out.push({ c, l: p[1] || "", dn: num(p[2]), cn: num(p[3]), dn1: num(p[4]), cn1: num(p[5]) });
   }
   return out;
 }
@@ -235,7 +241,9 @@ function computePeriod(lignes, per) {
   const add = (o, k, v) => { o[k] = (o[k] || 0) + v; };
   let td = 0, tc = 0, s13 = 0;
   const acc = {}; // solde (débit − crédit) par compte, pour les retraitements du TFT
+  const mvD = {}, mvC = {}; // mouvements de l'exercice N (facultatifs)
   for (const x of lignes) {
+    if (per === "n" && (num(x.md) || num(x.mc))) { add(mvD, String(x.c), num(x.md)); add(mvC, String(x.c), num(x.mc)); }
     const d = num(x[D]), c = num(x[C]);
     if (!d && !c) continue;
     td += d; tc += c;
@@ -274,10 +282,15 @@ function computePeriod(lignes, per) {
   const pas = {};
   for (const x of PASSIF) pas[x.ref] = x.f ? x.f.reduce((s, [sg, r]) => s + sg * pas[r], 0) : (P[x.ref] || 0);
   // Soldes par préfixe : s = algébrique (débit − crédit), sD = comptes débiteurs, sC = comptes créditeurs
-  const keys = Object.keys(acc);
-  const agg = (ps, f) => [].concat(ps).reduce((t, p) => t + keys.reduce((u, c) => c.startsWith(p) ? u + f(acc[c]) : u, 0), 0);
-  const s = ps => agg(ps, v => v), sD = ps => agg(ps, v => Math.max(v, 0)), sC = ps => agg(ps, v => Math.max(-v, 0));
-  return { act, pas, cr, td: r2(td), tc: r2(tc), nonMap, detail, s13, has678, s, sD, sC, vide: !td && !tc };
+  // Préfixes : "41" inclut, "!419" exclut ; un compte n'est compté qu'une fois
+  const sel = (o, ps, f) => {
+    const L = [].concat(ps), inc = L.filter(p => p[0] !== "!"), exc = L.filter(p => p[0] === "!").map(p => p.slice(1));
+    return Object.keys(o).reduce((u, c) => inc.some(p => c.startsWith(p)) && !exc.some(p => c.startsWith(p)) ? u + f(o[c]) : u, 0);
+  };
+  const s = ps => sel(acc, ps, v => v), sD = ps => sel(acc, ps, v => Math.max(v, 0)), sC = ps => sel(acc, ps, v => Math.max(-v, 0));
+  const mD = ps => sel(mvD, ps, v => v), mC = ps => sel(mvC, ps, v => v);
+  const hasMvt = Object.keys(mvD).length + Object.keys(mvC).length > 0;
+  return { act, pas, cr, td: r2(td), tc: r2(tc), nonMap, detail, s13, has678, s, sD, sC, mD, mC, hasMvt, acc, vide: !td && !tc };
 }
 
 // ── TFT : méthode du guide d'application SYSCOHADA révisé ─────────────────────────
@@ -323,9 +336,9 @@ function computeTFT(N, P1, k = {}) {
   ex.FF = `Δ AD net ${fmt(dA("AD"))} + dotations ${fmt(dotI - repI)} + VCC ${fmt(vncI)}`;
   t.FG = -(acqC - dDetImmo);
   ex.FG = `Δ AI+AP net ${fmt(dA("AI") + dA("AP"))} + dotations nettes ${fmt(dotC - repC)} + VCC ${fmt(vncC)} − réévaluations (106, 154) ${fmt(reev)} − location-acquisition ${fmt(locAcq)} − Δ dettes sur immobilisations (404, 481, 482) ${fmt(dDetImmo)}`;
-  const remb = cb("rembFin");
+  const remb = has("rembFin") ? cb("rembFin") : N.hasMvt ? N.mC("27") : 0;
   t.FH = -(dA("AQ") + dotF - repF + vncF + remb);
-  ex.FH = `Δ AQ net ${fmt(dA("AQ"))} + VCC ${fmt(vncF)} + remboursements encaissés ${fmt(remb)}`;
+  ex.FH = `Δ AQ net ${fmt(dA("AQ"))} + VCC ${fmt(vncF)} + remboursements encaissés ${fmt(remb)}${!has("rembFin") && N.hasMvt ? " (mouvements crédit des 27)" : ""}`;
   const pcFin = -s("826"), dCreCess = d("sD", ["485", "414"]);
   t.FI = pc - pcFin - dCreCess;
   ex.FI = `Produits de cession (82, 754) ${fmt(pc - pcFin)} − Δ créances sur cessions (485, 414) ${fmt(dCreCess)}`;
@@ -347,10 +360,11 @@ function computeTFT(N, P1, k = {}) {
   // Capitaux étrangers : 16 et 18 hors intérêts courus (166), corrigés des écarts de conversion sur emprunts
   const ecF = (d("sC", "479") - d("sC", ECART_CIRC.p)) - (d("sD", "478") - d("sD", ECART_CIRC.a));
   const dFin = dP("DA") - d("sC", "166") + ecF;
-  t.FO = has("nouvEmp") ? cb("nouvEmp") : Math.max(dFin, 0);
+  const nouvMvt = N.mC(["16", "181", "182", "183", "184", "!166"]);
+  t.FO = has("nouvEmp") ? cb("nouvEmp") : N.hasMvt ? nouvMvt : Math.max(dFin, 0);
   t.FP = 0;
   t.FQ = dFin - t.FO + (dP("DB") - locAcq);
-  ex.FO = has("nouvEmp") ? "Montant saisi dans les informations complémentaires" : `Variation nette des dettes financières ${fmt(dFin)} (renseignez les nouveaux emprunts pour séparer FO et FQ)`;
+  ex.FO = has("nouvEmp") ? "Montant saisi dans les informations complémentaires" : N.hasMvt ? `Mouvements crédit des comptes 16 et 181-184 (hors 166) : ${fmt(nouvMvt)}` : `Variation nette des dettes financières ${fmt(dFin)} (renseignez les nouveaux emprunts pour séparer FO et FQ)`;
   ex.FQ = `Δ dettes financières corrigée ${fmt(dFin)} − emprunts nouveaux ${fmt(t.FO)} + remboursements de location-acquisition ${fmt(dP("DB") - locAcq)}`;
   t.ZE = t.FO + t.FP + t.FQ;
   t.ZF = t.ZD + t.ZE;
@@ -382,6 +396,17 @@ function controls(N, P1, tft) {
   if (N.pas.CA < -0.5) anomalies.push("Capital à solde débiteur");
   for (const r of ["AD", "AI", "AQ"]) if (N.act[r].n < -0.5) anomalies.push(`${LIB[r]} : valeur nette négative`);
   push(!anomalies.length, "Sens des soldes cohérents", anomalies.length ? anomalies.join(" · ") : "Pas de solde anormal détecté.", "warn");
+  if (N.hasMvt && !P1.vide) {
+    // Solde N = solde N-1 + mouvements, contrôlé par compte à 2 chiffres (classes 1 à 5, hors 13)
+    const ecarts = [];
+    for (let c = 10; c <= 59; c++) {
+      const p = String(c);
+      if (p === "13") continue;
+      const e = N.s(p) - P1.s(p) - (N.mD(p) - N.mC(p));
+      if (Math.abs(e) > 0.5) ecarts.push(`${p} (${fmt(e)})`);
+    }
+    push(!ecarts.length, "Mouvements N cohérents (solde N = solde N-1 + débits − crédits)", ecarts.length ? `Écarts sur : ${ecarts.join(", ")}` : "Mouvements de l'exercice cohérents avec les soldes N-1 et N.", "warn");
+  }
   if (P1.vide) push(false, "TFT : balance N-1 nécessaire", "Le Tableau des flux de trésorerie se construit à partir des bilans N et N-1. Renseignez les colonnes N-1.", "warn");
   else push(eq(tft.ZH, tft.tresoBilan), "TFT : Trésorerie au 31/12 (ZH) = Trésorerie nette du bilan",
     `ZH ${fmt(tft.ZH)} — Bilan (BT − DT) ${fmt(tft.tresoBilan)}${eq(tft.ZH, tft.tresoBilan) ? "" : ` — écart ${fmt(tft.ZH - tft.tresoBilan)} : vérifiez les compléments (cessions, emprunts), les écarts de réévaluation ou de conversion.`}`, "warn");

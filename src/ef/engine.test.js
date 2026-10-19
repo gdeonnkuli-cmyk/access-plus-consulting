@@ -1,6 +1,7 @@
 import { computeAll } from "./engine";
 import { computeIBP } from "./rdc";
 import { CAS_PRATIQUES } from "./casPratiques";
+import { computeNotes } from "./notes";
 
 const cas = id => CAS_PRATIQUES.find(x => x.id === id);
 
@@ -21,4 +22,22 @@ test("le cas KIN NÉGOCE passe tous les contrôles et l'IBP comptabilisé est ex
   const r = computeAll(c.lignes, c.complementsCorriges);
   expect(r.ctrl.every(x => x.ok)).toBe(true);
   expect(Math.round(computeIBP(r, {}).ecart)).toBe(0);
+});
+
+test("avec les mouvements N, le TFT du manuel se calcule sans informations complémentaires", () => {
+  const c = cas("meubles-fleuve");
+  const t = computeAll(c.lignes, {}).tft;
+  expect([t.FH, t.FJ, t.FO, t.FQ, t.ZH].map(Math.round)).toEqual([-601175, 730043, 100000000, -5000000, 123097127]);
+});
+
+test("les notes annexes concordent avec le Bilan et le Compte de résultat", () => {
+  for (const id of ["meubles-fleuve", "kin-negoce"]) {
+    const c = cas(id);
+    const R = computeAll(c.lignes, c.complementsCorriges);
+    const notes = computeNotes(R, {});
+    const ecarts = notes.flatMap(n => (n.ctrl || []).filter(x => !x.ok).map(x => `${id} note ${n.id} : ${x.lib}`));
+    expect(ecarts).toEqual([]);
+    const n3a = notes.find(n => n.id === "3A"), tot = n3a.rows[n3a.rows.length - 1].cells;
+    expect(Math.round(tot[0] + tot[1] - tot[2])).toBe(Math.round(tot[3]));
+  }
 });

@@ -17,6 +17,15 @@ Référence : manuel « Montage des états financiers du SYSCOHADA révisé ». 
   - emprunts = Δ (16, 18) hors 166, corrigée des autres écarts de conversion 478x/479x ;
   - trésorerie (ZA, ZH) corrigée du compte 472.
   - Compléments saisis : nouveaux emprunts, remboursements encaissés d'immobilisations financières, contrats de location-acquisition, prélèvements.
+- **Notes annexes** (`src/ef/notes.js`), reprises de la liasse « Logiciel des états financiers » et générées automatiquement depuis la balance :
+  - fiche R4 récapitulative avec applicabilité automatique (A / N/A d'après les montants non nuls ou le texte saisi, modifiable) ;
+  - notes chiffrées N / N-1 / variation : 3B, 3E, 4 à 30 (immobilisations financières, stocks, clients, autres créances, trésorerie, capitaux propres, dettes, chiffre d'affaires, achats, charges, résultat financier, HAO), avec contrôle de concordance de chaque total avec le poste du Bilan ou du Compte de résultat ;
+  - tableaux de mouvements 3A, 3C, 28A, 28B, 28C et plus/moins-values 3D, alimentés par les colonnes « Mouvements N » de la balance (format 8 colonnes : solde N-1, mouvements, solde N), ou estimés par différence de soldes à défaut ;
+  - notes calculées : 2 (déclaration de conformité et méthodes, contexte RDC), 31 (éléments caractéristiques), 34 (fiche de synthèse des indicateurs : SIG, CAFG, rentabilités, FR / BFG / TN, endettement) ;
+  - notes narratives à rédiger (1, 16B, 16C, 27B, 32, 33, 35, 37, 38, 39) avec aide au contenu ; commentaire possible sur chaque note ;
+  - impression de la liasse complète des notes applicables et export CSV.
+  - Ventilations géographiques adaptées à la RDC (ventes en RDC / à l'exportation / groupe / internet selon les subdivisions x1 à x5) ; aucune référence UEMOA.
+- **Mouvements N** : quand ils sont saisis, ils alimentent aussi le TFT (nouveaux emprunts = crédits des 16 et 181-184 hors 166, remboursements d'immobilisations financières = crédits des 27) et un contrôle « solde N = solde N-1 + débits − crédits ».
 - **Identification RDC** : page de garde imprimable (République Démocratique du Congo, Ministère des Finances, DGI, centre DGE / CDI / CIS), RCCM, Id. Nat., NIF, CNSS, INPP, ONEM, n° import-export, province, professionnel inscrit à l'ONEC.
 - **Fiscalité (IBP)** : résultat avant impôt + réintégrations (dont 647 amendes et pénalités, automatique) − déductions − déficits antérieurs ; IBP = max(taux × résultat fiscal ; minimum × chiffre d'affaires) ; comparaison avec le compte 89 et solde après acomptes. Taux par défaut 30 % et minimum 1 % du CA, **paramétrables** : à vérifier selon la loi de finances de l'exercice.
 - **Multi-utilisateurs** : un dossier = un document Firestore `ef_dossiers/{id}` partagé en temps réel entre ses membres (invitation par e-mail). Circuit : Brouillon → Soumis → Validé / À corriger, avec fil de commentaires. Formateurs et administrateur voient tous les dossiers.
