@@ -2,6 +2,8 @@
 
 Module de formation intégré à Éco-Campus (`src/EtatsFinanciers.jsx`, moteur `src/ef/engine.js`, contexte RDC `src/ef/rdc.js`), conçu pour la **République Démocratique du Congo** (et non la zone UEMOA) : francs congolais, DGI-RDC, RCCM / Id. Nat. / NIF, CNSS-INPP-ONEM, ONEC, IBP.
 
+Cas pratiques : SA KIN NÉGOCE (négoce, intermédiaire), SA MEUBLES DU FLEUVE (balances du manuel, avancé) et SARL MALACHITE LOGISTIQUE (services, avancé : TVA, créance douteuse, écarts de conversion, location-acquisition, cession à crédit, dettes d'immobilisations, intérêts courus, dividendes à payer).
+
 Référence : manuel « Montage des états financiers du SYSCOHADA révisé ». Son cas pratique (balances N-1 et N) est intégré sous le nom « SA MEUBLES DU FLEUVE » et le moteur reproduit à l'identique le Bilan, le Compte de résultat et le TFT publiés dans le manuel (test `src/ef/engine.test.js`, `npm test`).
 
 ## Fonctionnement
@@ -15,7 +17,8 @@ Référence : manuel « Montage des états financiers du SYSCOHADA révisé ». 
   - cessions encaissées = 82 + 754 − Δ créances sur cessions (485, 414) ;
   - capital = Δ (CA + CB + CD) − Δ apporteurs restant dû ; subventions = Δ 14 + 799 − Δ subventions à recevoir ; dividendes = résultat N-1 − Δ réserves/report − Δ 465 ;
   - emprunts = Δ (16, 18) hors 166, corrigée des autres écarts de conversion 478x/479x ;
-  - trésorerie (ZA, ZH) corrigée du compte 472.
+  - trésorerie (ZA, ZH) corrigée du compte 472 ;
+  - passif circulant (FE) hors dividendes à payer (465, traités en FN) et augmenté des intérêts courus (166), dette d'exploitation exclue du financement.
   - Compléments saisis : nouveaux emprunts, remboursements encaissés d'immobilisations financières, contrats de location-acquisition, prélèvements.
 - **Notes annexes** (`src/ef/notes.js`), reprises de la liasse « Logiciel des états financiers » et générées automatiquement depuis la balance :
   - fiche R4 récapitulative avec applicabilité automatique (A / N/A d'après les montants non nuls ou le texte saisi, modifiable) ;

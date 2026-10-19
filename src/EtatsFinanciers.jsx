@@ -120,7 +120,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
     :!list.length?<div style={{background:K.card,border:`1px dashed ${K.b1}`,borderRadius:14,padding:"36px 20px",textAlign:"center"}}>
       <i className="ti ti-report-money" style={{fontSize:34,color:K.em}}/>
       <div style={{fontWeight:700,color:K.t1,margin:"8px 0 4px"}}>Aucun dossier</div>
-      <div style={{color:K.t3,fontSize:12,marginBottom:14}}>Créez un dossier vierge ou partez d'un cas pratique (SA KIN NÉGOCE, SA MEUBLES DU FLEUVE).</div>
+      <div style={{color:K.t3,fontSize:12,marginBottom:14}}>Créez un dossier vierge ou partez d'un cas pratique (SA KIN NÉGOCE, SA MEUBLES DU FLEUVE, SARL MALACHITE LOGISTIQUE).</div>
       <B K={K} ico="plus" ch="Créer mon premier dossier" on={()=>sCreer(true)}/>
     </div>
     :<div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(300px,1fr))",gap:10}}>
