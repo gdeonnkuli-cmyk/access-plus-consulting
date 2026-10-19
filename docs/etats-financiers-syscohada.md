@@ -55,3 +55,9 @@ Points clés :
 - l'invitation dans l'atelier passe par `ef_annuaire` (lecture d'une fiche par e-mail exact, listage interdit).
 
 Les règles Firestore ont été vérifiées sur l'émulateur Firebase (83 scénarios : parcours autorisés et tentatives d'abus refusées).
+
+## Application installable (PWA)
+Éco-Campus s'installe comme une application depuis le navigateur (Android, iPhone, ordinateur) :
+- `public/manifest.json` : nom, icônes (`public/icons/`), couleurs, raccourcis « Atelier États financiers » (`/?vue=ef`) et « Mes cours » (`/?vue=pres`) ;
+- `public/sw.js` : service worker — pages en réseau d'abord (mises à jour immédiates), fichiers statiques gardés en local ; Firebase et les domaines externes ne sont jamais mis en cache ;
+- bandeau « Installer Éco-Campus » (composant `InstallPrompt`) : bouton d'installation sur Android et ordinateur, consigne « Partager → Sur l'écran d'accueil » sur iPhone ; masqué 7 jours après fermeture.

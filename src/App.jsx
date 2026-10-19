@@ -2395,7 +2395,8 @@ function Auth({onL}){
 // ── USER APP ──────────────────────────────────────────────────────────────────
 function UA({uid,onOut}){
   const K=useK();const{mob}=useW();
-  const[vue,sV]=useState("home"),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
+  // Vue initiale : raccourcis de l'application installée (?vue=ef, ?vue=pres…)
+  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","psycho","services","prog","res"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
   const[uData,sUD]=useState(null),[pdfs,sPdfs]=useState({});
   const[showOnboarding,sShowOnboarding]=useState(false);
   const{mods,loading:mL}=useModules();
@@ -4756,6 +4757,36 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// ── INSTALLATION DE L'APPLICATION (PWA) ─────────────────────────────────────────
+function InstallPrompt(){
+  const K=useK();const{mob}=useW();
+  const[evt,sEvt]=useState(null),[ios,sIos]=useState(false),[show,sShow]=useState(false);
+  useEffect(()=>{
+    const standalone=window.matchMedia?.("(display-mode: standalone)").matches||window.navigator.standalone;
+    let refus=0;try{refus=Number(localStorage.getItem("ap_install_refus")||0);}catch{}
+    if(standalone||Date.now()-refus<7*864e5)return;
+    const onPrompt=e=>{e.preventDefault();sEvt(e);sShow(true);};
+    window.addEventListener("beforeinstallprompt",onPrompt);
+    const ua=window.navigator.userAgent||"";
+    const t=/iphone|ipad|ipod/i.test(ua)&&/safari/i.test(ua)&&!/crios|fxios/i.test(ua)?setTimeout(()=>{sIos(true);sShow(true);},4000):null;
+    const onInstalled=()=>sShow(false);
+    window.addEventListener("appinstalled",onInstalled);
+    return()=>{window.removeEventListener("beforeinstallprompt",onPrompt);window.removeEventListener("appinstalled",onInstalled);if(t)clearTimeout(t);};
+  },[]);
+  if(!show)return null;
+  const fermer=()=>{sShow(false);try{localStorage.setItem("ap_install_refus",String(Date.now()));}catch{}};
+  const installer=async()=>{if(!evt)return;evt.prompt();try{await evt.userChoice;}catch{}sEvt(null);sShow(false);};
+  return <div style={{position:"fixed",left:12,right:mob?12:"auto",bottom:mob?78:18,maxWidth:380,zIndex:997,background:K.card,border:`1px solid ${K.emBd}`,borderRadius:14,boxShadow:"0 10px 30px rgba(0,0,0,.25)",padding:"12px 14px",display:"flex",gap:11,alignItems:"center",animation:"slideUp .35s ease"}}>
+    <img src="/icons/icon-192.png" alt="" style={{width:44,height:44,borderRadius:11,flexShrink:0}}/>
+    <div style={{flex:1,minWidth:0}}>
+      <div style={{fontWeight:800,fontSize:13,color:K.t1}}>Installer Éco-Campus</div>
+      <div style={{fontSize:11,color:K.t2,lineHeight:1.45,marginTop:2}}>{ios?<>Touchez <b>Partager</b> <i className="ti ti-share-2"/> puis <b>« Sur l'écran d'accueil »</b>.</>:"Accès direct depuis votre écran d'accueil, en plein écran."}</div>
+    </div>
+    {!ios&&<button onClick={installer} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,color:"#F5EDD8",border:"none",borderRadius:9,padding:"8px 12px",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",flexShrink:0}}>Installer</button>}
+    <button onClick={fermer} aria-label="Fermer" className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:20,cursor:"pointer",lineHeight:1,flexShrink:0}}>×</button>
+  </div>;
+}
+
 export default function App(){
   const[who,sW]=useState(null);const[loading,sL]=useState(true);const[showAuth,sShowAuth]=useState(false);
   const[tid,sTid]=useState(()=>{try{return localStorage.getItem("ap_theme")||"eco";}catch{return"eco";}});
@@ -4785,6 +4816,7 @@ export default function App(){
       style={{position:"fixed",bottom:18,right:18,zIndex:998,width:44,height:44,borderRadius:"50%",background:K.card,border:`1px solid ${K.b1}`,color:K.t2,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 16px rgba(0,0,0,.25)"}}>
       {TH[tid]?.i||"🎨"}
     </button>
+    <InstallPrompt/>
     {loading&&<Spin/>}
     {!loading&&!who&&!showAuth&&<LandingPage onLogin={()=>sShowAuth(true)}/>}
     {!loading&&!who&&showAuth&&<Auth onL={(role,user)=>{const r=role==="__admin__"?{role:"admin",user}:role?.startsWith("__formateur__:")?{role:"formateur",uid:role.split(":")[1],user}:{role:"user",uid:user.uid,user};sW(r);sShowAuth(false);}}/>}
