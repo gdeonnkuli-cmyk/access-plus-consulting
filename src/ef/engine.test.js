@@ -41,3 +41,25 @@ test("les notes annexes concordent avec le Bilan et le Compte de résultat", () 
     expect(Math.round(tot[0] + tot[1] - tot[2])).toBe(Math.round(tot[3]));
   }
 });
+
+test("saisies structurées : échéancier, associés, effectifs", () => {
+  const c = cas("meubles-fleuve");
+  const R = computeAll(c.lignes, {});
+  const saisies = {
+    "16A": { ech: { 1: { a: 5000000, b: 10000000 } } },
+    "13": { act: { nominal: 10000, rows: [{ nom: "A", nb: 30000 }, { nom: "B", nb: 10000 }] } },
+    "27B": { eff: { YA: { e: [3, 1], m: [60000000, 20000000] }, YF: { e: [4] } } },
+  };
+  const notes = computeNotes(R, saisies);
+  const n16 = notes.find(n => n.id === "16A"), l = n16.ech.rows.find(r => r.i === 1);
+  expect([l.n, l.a, l.b, l.c].map(Math.round)).toEqual([92499075, 5000000, 10000000, 77499075]);
+  const n13 = notes.find(n => n.id === "13");
+  expect(n13.act.total).toBe(400000000);
+  expect(n13.act.ok).toBe(true);
+  expect(n13.act.rows[0].pct).toBe(75);
+  const n27 = notes.find(n => n.id === "27B");
+  expect(n27.applicable).toBe(true);
+  expect(n27.eff.tot.YE.te).toBe(4);
+  expect(n27.ctrl[0].ok).toBe(true);
+  expect(n27.ctrl[1].ok).toBe(false); // 80 M saisis contre 179,5 M comptabilisés
+});

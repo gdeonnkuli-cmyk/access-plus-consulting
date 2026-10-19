@@ -3,7 +3,7 @@ import{collection,doc,addDoc,updateDoc,deleteDoc,onSnapshot,query,where,getDocs,
 import{computeAll,parseBalance,mapCompte,num,fmt,LIB,ACTIF,PASSIF,CR,TFT}from"./ef/engine";
 import{CAS_PRATIQUES}from"./ef/casPratiques";
 import{DEVISES,FORMES,PROVINCES,IDENTITE,FISC_DEFAUT,computeIBP}from"./ef/rdc";
-import{computeNotes,fmtPct}from"./ef/notes";
+import{computeNotes,fmtPct,TRANCHES,NATURES_TITRES,EFF_COLS,EFF_PROPRE,EFF_STATUT,EFF_EXT}from"./ef/notes";
 
 // ══════════════════ ATELIER ÉTATS FINANCIERS SYSCOHADA (multi-utilisateurs) ══════════════════
 // Collection Firestore « ef_dossiers » : un document par dossier (balance, compléments TFT, membres, suivi).
@@ -417,9 +417,98 @@ function NumCellBox({K,value,onChange,dis}){
 // ── NOTES ANNEXES ────────────────────────────────────────────────────────────────
 const fv=(v,u)=>v==null||!isFinite(v)?"":u==="%"?`${v.toFixed(1).replace(".",",")} %`:u==="x"?v.toFixed(2).replace(".",","):fmt(v);
 const noteCells=r=>r.cells?r.cells.map((v,i)=>({v,u:i===r.cells.length-1&&r.cells.length===3&&!r.u?"var":r.u})):[{v:r.n},{v:r.n1},{v:r.var,u:"var"}];
-const noteCsv=n=>[[`NOTE ${n.id} : ${n.titre}`],...(n.cols?[n.cols]:[]),...(n.rows||[]).map(r=>r.h?[r.l]:[r.l,...noteCells(r).map(c=>c.v==null?"":c.u==="var"||c.u==="%"||c.u==="x"?Number(c.v.toFixed(2)):Math.round(c.v))]),...(n.texte||[]).map(t=>[t]),...(n.txt?[["Commentaire"],[n.txt]]:[]),[]];
+const noteCsv=n=>[[`NOTE ${n.id} : ${n.titre}`],...(n.cols?[n.cols]:[]),...(n.rows||[]).map(r=>r.h?[r.l]:[r.l,...noteCells(r).map(c=>c.v==null?"":c.u==="var"||c.u==="%"||c.u==="x"?Number(c.v.toFixed(2)):Math.round(c.v))]),...(n.texte||[]).map(t=>[t]),
+  ...(n.ech&&n.ech.rows.length?[[],["Échéancier","Montant N",...TRANCHES.map(t=>t[1])],...n.ech.rows.map(r=>[r.l,Math.round(r.n),Math.round(r.a),Math.round(r.b),Math.round(r.c)])]:[]),
+  ...(n.act&&n.act.rows.length?[[],["Associés","Nationalité","Pays de résidence","Nature des titres","Nombre","Montant","% du capital"],...n.act.rows.map(r=>[r.nom,r.nat,r.pays,r.nature,num(r.nb),Math.round(r.montant),r.pct==null?"":Number(r.pct.toFixed(2))]),["Valeur nominale",n.act.nominal]]:[]),
+  ...(n.eff&&n.eff.saisi?[[],["Qualification",...EFF_COLS.map(c=>"Effectif "+c),"Effectif total",...EFF_COLS.map(c=>"Masse "+c),"Masse totale"],...[...EFF_PROPRE,["YE","TOTAL (1)"],...EFF_STATUT,...EFF_EXT,["YL","TOTAL (2)"]].map(([c,l])=>{const L=n.eff.lines[c]||n.eff.tot[c];return[`${c} ${l}`,...L.e,L.te,...L.m,L.tm];})]:[]),
+  ...(n.txt?[["Commentaire"],[n.txt]]:[]),[]];
 
-function NoteBody({K,n,meta,canEdit,upd}){
+// Saisie numérique compacte (tableaux de saisie des notes)
+function SmallNum({K,value,onChange,dis,w=84}){
+  const[ed,sEd]=useState(null);
+  const has=value!==undefined&&value!==""&&value!==null&&num(value)!==0;
+  const st={width:w,padding:"4px 6px",background:dis?"transparent":K.c2,border:`1px solid ${ed!==null?K.emBd:dis?"transparent":K.b0}`,borderRadius:5,color:K.t1,fontSize:11,textAlign:"right",fontFamily:mono,outline:"none"};
+  return <input disabled={dis} inputMode="decimal" style={st} value={ed!==null?ed:(has?fmt(value):"")} onFocus={()=>sEd(has?String(value):"")} onChange={e=>sEd(e.target.value)}
+    onBlur={()=>{const v=ed.trim()===""?"":num(ed);sEd(null);if(v!==value)onChange(v);}} onKeyDown={e=>{if(e.key==="Enter")e.target.blur();}}/>;
+}
+const SubTitle=({K,children,note})=><div style={{padding:"12px 14px 6px",borderTop:`1px solid ${K.b0}`}}><div style={{fontWeight:800,fontSize:12,color:K.t1,textTransform:"uppercase",letterSpacing:.4}}>{children}</div>{note&&<div className="ef-noprint" style={{fontSize:11,color:K.t3,marginTop:2,lineHeight:1.5}}>{note}</div>}</div>;
+
+function EchTable({K,n,saisie,canEdit,upd}){
+  const E=n.ech;if(!E||!E.rows.length)return null;
+  const set=(i,k,v)=>{const ech={...(saisie.ech||{})};ech[i]={...(ech[i]||{}),[k]:v};upd(n.id,{ech});};
+  const restLib=TRANCHES.find(([k])=>k===E.rest)[1].toLowerCase();
+  return <>
+    <SubTitle K={K} note={`Saisissez deux tranches : la tranche « ${restLib} » est calculée par différence avec le solde N, l'échéancier reste ainsi égal à la note.`}>Échéancier des {n.id==="4"||n.id==="7"||n.id==="8"?"créances":"dettes"}</SubTitle>
+    <Scroll><table style={{width:"100%",borderCollapse:"collapse",minWidth:680}}>
+      <thead><tr><th style={{...th(K),textAlign:"left"}}>Libellés</th><th style={th(K)}>Montant N</th>{TRANCHES.map(([k,l])=><th key={k} style={{...th(K),whiteSpace:"normal"}}>{l}</th>)}</tr></thead>
+      <tbody>{E.rows.map(r=><tr key={r.i}>
+        <td style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif",whiteSpace:"normal"}}>{r.l}</td><td style={td(K)}>{fmt(r.n)}</td>
+        {TRANCHES.map(([k])=><td key={k} style={{...td(K),padding:"3px 6px"}}>{k===E.rest?<span style={{color:r.neg?K.er:K.t2,fontStyle:"italic"}} title="Calculé par différence">{fmt(r[k])}</span>
+          :<SmallNum K={K} w={110} value={(saisie.ech||{})[r.i]?.[k]} dis={!canEdit} onChange={v=>set(r.i,k,v)}/>}</td>)}
+      </tr>)}
+      <tr style={{fontWeight:800,background:K.c2}}><td style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif"}}>TOTAL</td><td style={td(K)}>{fmt(E.tot.n)}</td>{TRANCHES.map(([k])=><td key={k} style={td(K)}>{fmt(E.tot[k])}</td>)}</tr>
+      </tbody></table></Scroll>
+    {!E.ok&&<div style={{padding:"6px 14px",fontSize:11,fontWeight:700,color:K.er}}>✗ Les tranches saisies dépassent le solde N de certaines lignes (montant négatif dans la colonne calculée).</div>}
+  </>;
+}
+
+function ActTable({K,n,saisie,canEdit,upd}){
+  const A=n.act;if(!A)return null;
+  const act=saisie.act||{},rows=act.rows||[];
+  const save=patch=>upd(n.id,{act:{...act,...patch}});
+  const setRow=(i,k,v)=>save({rows:rows.map((r,j)=>j===i?{...r,[k]:v}:r)});
+  const inp={background:canEdit?K.c2:"transparent",border:`1px solid ${canEdit?K.b0:"transparent"}`,borderRadius:5,color:K.t1,fontSize:11,padding:"4px 6px",outline:"none",width:"100%",fontFamily:"'Outfit',sans-serif"};
+  return <>
+    <SubTitle K={K} note="Répartition du capital : le montant de chaque associé est égal au nombre de titres × valeur nominale ; le total doit égaler le capital social (comptes 101 à 104).">Associés et répartition du capital</SubTitle>
+    <div style={{padding:"0 14px 8px",display:"flex",alignItems:"center",gap:8,fontSize:12,color:K.t2}}>Valeur nominale des actions ou parts : <SmallNum K={K} w={130} value={act.nominal} dis={!canEdit} onChange={v=>save({nominal:v})}/> {n.ident?.devise||""}</div>
+    <Scroll><table style={{width:"100%",borderCollapse:"collapse",minWidth:820}}>
+      <thead><tr>{["Nom et prénoms ou raison sociale","Nationalité","Pays de résidence","Nature des titres","Nombre","Montant total","% du capital"].map((c,i)=><th key={i} style={{...th(K),textAlign:i<4?"left":"right"}}>{c}</th>)}{canEdit&&<th style={th(K)}/>}</tr></thead>
+      <tbody>{rows.map((r,i)=><tr key={i}>
+        <td style={{...td(K),padding:"3px 4px",minWidth:180}}><input disabled={!canEdit} style={inp} value={r.nom||""} onChange={e=>setRow(i,"nom",e.target.value)}/></td>
+        <td style={{...td(K),padding:"3px 4px"}}><input disabled={!canEdit} list="ef-nat" style={inp} value={r.nat||""} onChange={e=>setRow(i,"nat",e.target.value)}/></td>
+        <td style={{...td(K),padding:"3px 4px"}}><input disabled={!canEdit} style={inp} value={r.pays||""} onChange={e=>setRow(i,"pays",e.target.value)}/></td>
+        <td style={{...td(K),padding:"3px 4px"}}><select disabled={!canEdit} style={inp} value={r.nature||NATURES_TITRES[0]} onChange={e=>setRow(i,"nature",e.target.value)}>{NATURES_TITRES.map(x=><option key={x}>{x}</option>)}</select></td>
+        <td style={{...td(K),padding:"3px 4px"}}><SmallNum K={K} value={r.nb} dis={!canEdit} onChange={v=>setRow(i,"nb",v)}/></td>
+        <td style={td(K)}>{fmt(A.rows[i]?.montant)}</td><td style={td(K)}>{A.rows[i]?.pct==null?"":`${A.rows[i].pct.toFixed(2).replace(".",",")} %`}</td>
+        {canEdit&&<td style={td(K)}><button onClick={()=>save({rows:rows.filter((_,j)=>j!==i)})} style={{background:"none",border:"none",color:K.t3,cursor:"pointer"}}><i className="ti ti-trash"/></button></td>}
+      </tr>)}
+      {!rows.length&&<tr><td colSpan={8} style={{...td(K),textAlign:"center",fontFamily:"'Outfit',sans-serif",color:K.t3,padding:14}}>Aucun associé saisi.</td></tr>}
+      <tr style={{fontWeight:800,background:K.c2}}><td colSpan={4} style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif"}}>TOTAL</td><td style={td(K)}>{fmt(A.nb)}</td><td style={td(K)}>{fmt(A.total)}</td><td style={td(K)}>{A.total?"100 %":""}</td>{canEdit&&<td style={td(K)}/>}</tr>
+      </tbody></table></Scroll>
+    <datalist id="ef-nat">{["Congolaise (RDC)","Belge","Française","Libanaise","Indienne","Chinoise","Sud-africaine","Angolaise","Zambienne","Rwandaise"].map(x=><option key={x} value={x}/>)}</datalist>
+    <div style={{padding:"6px 14px",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+      {canEdit&&<B K={K} sm v="g" ico="user-plus" ch="Ajouter un associé" on={()=>save({rows:[...rows,{nom:"",nat:"Congolaise (RDC)",pays:"RDC",nature:NATURES_TITRES[0],nb:""}]})}/>}
+      {rows.length>0&&<span style={{fontSize:11,fontWeight:700,color:A.ok?K.em:K.er}}>{A.ok?"✓":"✗"} Total des associés {fmt(A.total)} — capital social {fmt(A.capital)}</span>}
+    </div>
+  </>;
+}
+
+function EffTable({K,n,saisie,canEdit,upd}){
+  const E=n.eff;if(!E)return null;
+  const eff=saisie.eff||{};
+  const set=(code,kind,i,v)=>{const x={...(eff[code]||{})};if(kind==="f")x.f=v;else{const a=[...(x[kind]||[])];a[i]=v;x[kind]=a;}upd(n.id,{eff:{...eff,[code]:x}});};
+  const grid=(rows,ext)=><Scroll><table style={{width:"100%",borderCollapse:"collapse",minWidth:ext?820:1320}}>
+    <thead>
+      <tr><th style={{...th(K),textAlign:"left"}} rowSpan={2}>Qualifications</th><th style={{...th(K),textAlign:"center"}} colSpan={7}>Effectifs</th><th style={{...th(K),textAlign:"center"}} colSpan={ext?1:7}>{ext?"Facturation à l'entité":"Masse salariale"}</th></tr>
+      <tr>{[...EFF_COLS,"Total"].map((c,i)=><th key={i} style={{...th(K),top:27}}>{c}</th>)}{ext?<th style={{...th(K),top:27}}>Montant</th>:[...EFF_COLS,"Total"].map((c,i)=><th key={"m"+i} style={{...th(K),top:27}}>{c}</th>)}</tr>
+    </thead>
+    <tbody>{rows.map(([code,lib,total])=>{const L=total?E.tot[total]:E.lines[code];return <tr key={code} style={total?{fontWeight:800,background:K.c2}:{}}>
+      <td style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif",whiteSpace:"normal",minWidth:200}}><b style={{fontFamily:mono,color:K.t3}}>{code}</b> {lib}</td>
+      {EFF_COLS.map((_,i)=><td key={i} style={{...td(K),padding:"3px 4px"}}>{total?fmt(L.e[i]):<SmallNum K={K} w={62} value={(eff[code]?.e||[])[i]} dis={!canEdit} onChange={v=>set(code,"e",i,v)}/>}</td>)}
+      <td style={{...td(K),fontWeight:800}}>{fmt(L.te)}</td>
+      {ext?<td style={{...td(K),padding:"3px 4px"}}>{total?fmt(L.f):<SmallNum K={K} w={110} value={eff[code]?.f} dis={!canEdit} onChange={v=>set(code,"f",0,v)}/>}</td>
+      :<>{EFF_COLS.map((_,i)=><td key={"m"+i} style={{...td(K),padding:"3px 4px"}}>{total?fmt(L.m[i]):<SmallNum K={K} w={96} value={(eff[code]?.m||[])[i]} dis={!canEdit} onChange={v=>set(code,"m",i,v)}/>}</td>)}<td style={{...td(K),fontWeight:800}}>{fmt(L.tm)}</td></>}
+    </tr>;})}</tbody></table></Scroll>;
+  return <>
+    <SubTitle K={K} note="Effectifs et masse salariale de l'exercice par qualification, nationalité (nationaux, autres États de l'OHADA, hors OHADA) et sexe. La masse salariale du personnel propre est rapprochée des comptes 661 à 663 et doit concorder avec les déclarations CNSS, INPP, ONEM et IPR.">1. Personnel propre</SubTitle>
+    {grid([...EFF_PROPRE,["YE","TOTAL (1)","YE"],...EFF_STATUT])}
+    <SubTitle K={K}>2. Personnel extérieur</SubTitle>
+    {grid([...EFF_EXT,["YL","TOTAL (2)","YL"]],true)}
+    <div style={{padding:"8px 14px",fontSize:12,fontWeight:700,color:K.t1}}>YO — TOTAL (1 + 2) : {fmt(E.tot.YO.te)} personnes · masse salariale du personnel propre {fmt(E.tot.YE.tm)} · comptabilisée (661 à 663) {fmt(E.masseCompta)}</div>
+  </>;
+}
+
+function NoteBody({K,n,meta,canEdit,upd,saisie={}}){
   const st=fieldSt(K);
   return <div className="ef-pb">
     <PrintHead K={K} meta={meta} titre={`NOTE ${n.id} : ${n.titre}`}/>
@@ -434,8 +523,11 @@ function NoteBody({K,n,meta,canEdit,upd}){
         </tr>)}</tbody>
     </table></Scroll>}
     {n.remarque&&<div style={{padding:"8px 14px",fontSize:11,color:K.t3}}>{n.remarque}</div>}
+    <EchTable K={K} n={n} saisie={saisie} canEdit={canEdit} upd={upd}/>
+    <ActTable K={K} n={n} saisie={saisie} canEdit={canEdit} upd={upd}/>
+    <EffTable K={K} n={n} saisie={saisie} canEdit={canEdit} upd={upd}/>
     {(n.ctrl||[]).length>0&&<div className="ef-noprint" style={{padding:"8px 14px",display:"flex",flexDirection:"column",gap:3}}>
-      {n.ctrl.map((c,i)=><div key={i} style={{fontSize:11,fontWeight:700,color:c.ok?K.em:K.er}}>{c.ok?"✓":"✗"} Contrôle {c.lib} : note {fmt(c.note)} — états financiers {fmt(c.etat)}</div>)}
+      {n.ctrl.map((c,i)=><div key={i} style={{fontSize:11,fontWeight:700,color:c.ok?K.em:K.er}}>{c.ok?"✓":"✗"} Contrôle {c.lib}{c.info?"":` : note ${fmt(c.note)} — ${n.id==="27B"?"référence":"états financiers"} ${fmt(c.etat)}`}</div>)}
     </div>}
     <div style={{padding:"8px 14px 12px"}}>
       {n.aide&&<div className="ef-noprint" style={{fontSize:11,color:K.t3,lineHeight:1.5,marginBottom:6}}><i className="ti ti-info-circle"/> {n.aide}</div>}
@@ -477,7 +569,7 @@ function NotesTab({K,mob,R,saisies,setN,canEdit,meta}){
       <B K={K} sm v="g" ico="file-spreadsheet" ch="Export Excel (CSV) de toutes les notes" on={exportAll}/>
       <span style={{fontSize:12,fontWeight:700,color:nKo?K.er:K.em,alignSelf:"center"}}>{nKo?`${nKo} note(s) en écart avec les états`:"✓ Notes cohérentes avec le Bilan et le Compte de résultat"}</span>
     </Toolbar>
-    {all?<Wrap K={K} print>{R4}{notes.filter(n=>n.applicable).map(n=><NoteBody key={n.id} K={K} n={n} meta={meta} canEdit={false} upd={upd}/>)}</Wrap>
+    {all?<Wrap K={K} print>{R4}{notes.filter(n=>n.applicable).map(n=><NoteBody key={n.id} K={K} n={n} meta={meta} canEdit={false} upd={upd} saisie={saisies[n.id]}/>)}</Wrap>
     :<div style={{display:"grid",gridTemplateColumns:mob?"1fr":"240px 1fr",gap:10,alignItems:"start"}}>
       {mob?<select className="ef-noprint" value={sel} onChange={e=>sSel(e.target.value)} style={fieldSt(K)}><option value="R4">Fiche R4 — récapitulatif</option>{notes.map(n=><option key={n.id} value={n.id}>Note {n.id} — {n.titre}</option>)}</select>
       :<div className="ef-noprint" style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:6,maxHeight:"70vh",overflowY:"auto"}}>
@@ -487,7 +579,7 @@ function NotesTab({K,mob,R,saisies,setN,canEdit,meta}){
           {n.id!=="R4"&&ko(n)&&n.applicable&&<i className="ti ti-alert-triangle" style={{color:K.er,fontSize:13}}/>}
         </button>;})}
       </div>}
-      <Wrap K={K} print>{sel==="R4"?R4:cur&&<NoteBody K={K} n={cur} meta={meta} canEdit={canEdit} upd={upd}/>}</Wrap>
+      <Wrap K={K} print>{sel==="R4"?R4:cur&&<NoteBody K={K} n={cur} meta={meta} canEdit={canEdit} upd={upd} saisie={saisies[cur.id]}/>}</Wrap>
     </div>}
   </>;
 }

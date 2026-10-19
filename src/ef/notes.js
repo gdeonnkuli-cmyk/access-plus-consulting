@@ -259,7 +259,7 @@ function computeVar(note, R) {
       acc = { n: 0, n1: 0 };
     }
     if (x.k) { keys.n[x.k] = n; keys.n1[x.k] = n1; }
-    rows.push({ l: x.l, n, n1, tot: !x.spec, var: n1 ? (n - n1) / Math.abs(n1) * 100 : null });
+    rows.push({ l: x.l, k: x.k, n, n1, tot: !x.spec, var: n1 ? (n - n1) / Math.abs(n1) * 100 : null });
   }
   const ctrl = (note.ctrl || []).map(([k, lib, f]) => { const a = keys.n[k] || 0, b = f(R); return { lib, note: a, etat: b, ok: Math.abs(a - b) < 0.5 }; });
   return { cols: ["Libellés", "Année N", "Année N-1", "Variation %"], rows, ctrl };
@@ -369,7 +369,7 @@ function note2(R, ident = {}, devise = "CDF") {
   ] };
 }
 
-function note31(R, ident = {}) {
+function note31(R, ident = {}, eff = null) {
   const N = R.N, P = R.P1;
   const ln = (l, f) => ({ l, cells: [f(N), P.vide ? null : f(P)] });
   return { cols: ["Nature des indications", "Exercice N", "Exercice N-1"], rows: [
@@ -383,6 +383,7 @@ function note31(R, ident = {}) {
     { l: "PERSONNEL ET POLITIQUE SALARIALE", h: true },
     ln("Masse salariale distribuée (661, 662, 663)", x => x.s(["661", "662", "663"])), ln("Avantages sociaux versés (664, 668)", x => x.s(["664", "668"])),
     ln("Personnel extérieur facturé à l'entité (637, 667)", x => x.s(["637", "667"])),
+    ...(eff ? [{ l: "Effectif du personnel propre (note 27B)", cells: [eff.tot.YE.te, null], u: "n" }, { l: "Effectif du personnel extérieur (note 27B)", cells: [eff.tot.YL.te, null], u: "n" }] : []),
   ], ctrl: [] };
 }
 
@@ -419,6 +420,58 @@ function note34(R) {
   ctrl: [{ lib: "Trésorerie nette (FR − BFG) = BT − DT", note: tn(N), etat: N.act.BT.n - N.pas.DT, ok: Math.abs(tn(N) - (N.act.BT.n - N.pas.DT)) < 0.5 }] };
 }
 
+// ── Saisies structurées : échéanciers, actionnaires, effectifs ────────────────────
+// Échéancier : l'apprenant ventile deux tranches, la troisième est déduite du solde N (colonne « reste »).
+export const ECHEANCES = { "4": "c", "7": "a", "8": "a", "16A": "c", "17": "a", "18": "a", "19": "a" };
+export const TRANCHES = [["a", "À un an au plus"], ["b", "À plus d'un an et à deux ans au plus"], ["c", "À plus de deux ans"]];
+function computeEch(note, saisie = {}) {
+  const rest = ECHEANCES[note.id], inp = saisie.ech || {};
+  const rows = [];
+  const tot = { n: 0, a: 0, b: 0, c: 0 };
+  note.rows.forEach((r, i) => {
+    if (r.h || r.tot || ["dep", "d1", "d2"].includes(r.k) || !(Math.abs(r.n) > 0.5)) return;
+    const e = inp[i] || {}, v = { a: num(e.a), b: num(e.b), c: num(e.c) };
+    v[rest] = r.n - TRANCHES.filter(([k]) => k !== rest).reduce((t, [k]) => t + v[k], 0);
+    rows.push({ i, l: r.l, n: r.n, ...v, neg: v[rest] < -0.5 });
+    tot.n += r.n; tot.a += v.a; tot.b += v.b; tot.c += v.c;
+  });
+  return { rest, rows, tot, ok: !rows.some(r => r.neg) };
+}
+
+export const NATURES_TITRES = ["Actions ordinaires", "Actions de préférence", "Parts sociales", "Certificats d'investissement"];
+function computeActionnaires(R, saisie = {}) {
+  const a = saisie.act || {}, nominal = num(a.nominal);
+  const rows = (a.rows || []).map(x => ({ ...x, montant: num(x.nb) * nominal }));
+  const total = rows.reduce((t, x) => t + x.montant, 0), nb = rows.reduce((t, x) => t + num(x.nb), 0);
+  rows.forEach(x => { x.pct = total ? x.montant / total * 100 : null; });
+  const capital = -R.N.s(["10", "!105", "!106", "!109"]);
+  return { nominal, rows, total, nb, capital, ok: !rows.length || Math.abs(total - capital) < 0.5 };
+}
+
+// Effectifs : 6 colonnes (Nationaux, autres États de l'OHADA, hors OHADA × M / F) pour les effectifs et la masse salariale
+export const EFF_COLS = ["Nationaux M", "Nationaux F", "OHADA M", "OHADA F", "Hors OHADA M", "Hors OHADA F"];
+export const EFF_PROPRE = [["YA", "1. Cadres supérieurs"], ["YB", "2. Techniciens supérieurs et cadres moyens"], ["YC", "3. Techniciens, agents de maîtrise et ouvriers qualifiés"],
+  ["YD", "4. Employés, manœuvres, ouvriers et apprentis"]];
+export const EFF_STATUT = [["YF", "Permanents"], ["YG", "Saisonniers"]];
+export const EFF_EXT = [["YH", "1. Cadres supérieurs"], ["YI", "2. Techniciens supérieurs et cadres moyens"], ["YJ", "3. Techniciens, agents de maîtrise et ouvriers qualifiés"],
+  ["YK", "4. Employés, manœuvres, ouvriers et apprentis"]];
+function computeEffectifs(R, saisie = {}) {
+  const e = saisie.eff || {};
+  const line = code => { const x = e[code] || {}; const ef = EFF_COLS.map((_, i) => num((x.e || [])[i])), ms = EFF_COLS.map((_, i) => num((x.m || [])[i]));
+    return { e: ef, m: ms, te: ef.reduce((a, b) => a + b, 0), tm: ms.reduce((a, b) => a + b, 0), f: num(x.f) }; };
+  const sum = codes => { const ls = codes.map(line); return { e: EFF_COLS.map((_, i) => ls.reduce((t, l) => t + l.e[i], 0)), m: EFF_COLS.map((_, i) => ls.reduce((t, l) => t + l.m[i], 0)),
+    te: ls.reduce((t, l) => t + l.te, 0), tm: ls.reduce((t, l) => t + l.tm, 0), f: ls.reduce((t, l) => t + l.f, 0) }; };
+  const lines = Object.fromEntries([...EFF_PROPRE, ...EFF_STATUT, ...EFF_EXT].map(([c]) => [c, line(c)]));
+  const tot = { YE: sum(EFF_PROPRE.map(x => x[0])), YL: sum(EFF_EXT.map(x => x[0])), ST: sum(EFF_STATUT.map(x => x[0])) };
+  tot.YO = { te: tot.YE.te + tot.YL.te, tm: tot.YE.tm, f: tot.YL.f };
+  const masseCompta = R.N.s(["661", "662", "663"]), saisi = tot.YE.te + tot.YL.te > 0;
+  const ctrl = saisi ? [
+    { lib: "Permanents + saisonniers (YF + YG) = total du personnel propre (YE)", note: tot.ST.te, etat: tot.YE.te, ok: Math.abs(tot.ST.te - tot.YE.te) < 0.5, n: true },
+    { lib: "Masse salariale déclarée (YE) = rémunérations comptabilisées (661 à 663)", note: tot.YE.tm, etat: masseCompta, ok: Math.abs(tot.YE.tm - masseCompta) < 0.5 },
+  ] : [];
+  return { lines, tot, masseCompta, ctrl, saisi };
+}
+
 // ── Point d'entrée ─────────────────────────────────────────────────────────────
 // saisies : { [id]: { a: "A" | "NA" | undefined (auto), txt: "commentaire" } }
 export function computeNotes(R, saisies = {}, ident = {}, devise = "CDF") {
@@ -428,12 +481,17 @@ export function computeNotes(R, saisies = {}, ident = {}, devise = "CDF") {
     else if (n.t === "mvt") res = computeMvt(n, R);
     else if (n.id === "2") res = note2(R, ident, devise);
     else if (n.id === "3D") res = note3D(R);
-    else if (n.id === "31") res = note31(R, ident);
+    else if (n.id === "31") { const ef = computeEffectifs(R, saisies["27B"]); res = note31(R, ident, ef.saisi ? ef : null); }
     else if (n.id === "34") res = note34(R);
     else res = {};
     const s = saisies[n.id] || {};
+    if (ECHEANCES[n.id]) res.ech = computeEch({ ...n, ...res }, s);
+    if (n.id === "13") res.act = computeActionnaires(R, s);
+    if (n.id === "27B") { res.eff = computeEffectifs(R, s); res.ctrl = res.eff.ctrl; }
     const chiffres = (res.rows || []).some(r => (r.cells || [r.n, r.n1]).some(v => v && Math.abs(v) > 0.5));
-    const auto = n.t === "txt" ? !!(s.txt && s.txt.trim()) : n.id === "2" || chiffres;
+    const auto = n.t === "txt" ? !!(s.txt && s.txt.trim()) || !!(res.eff && res.eff.saisi) : n.id === "2" || chiffres;
+    if (res.ech && !res.ech.ok) res.ctrl = [...(res.ctrl || []), { lib: "Échéancier : tranches supérieures au solde", note: 0, etat: 0, ok: false, info: true }];
+    if (res.act && res.act.rows.length) res.ctrl = [...(res.ctrl || []), { lib: "Répartition du capital entre associés = capital social", note: res.act.total, etat: res.act.capital, ok: res.act.ok }];
     return { ...n, ...res, txt: s.txt || "", applicable: s.a ? s.a === "A" : auto, auto, force: s.a || null };
   });
 }

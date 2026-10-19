@@ -24,6 +24,10 @@ Référence : manuel « Montage des états financiers du SYSCOHADA révisé ». 
   - notes calculées : 2 (déclaration de conformité et méthodes, contexte RDC), 31 (éléments caractéristiques), 34 (fiche de synthèse des indicateurs : SIG, CAFG, rentabilités, FR / BFG / TN, endettement) ;
   - notes narratives à rédiger (1, 16B, 16C, 27B, 32, 33, 35, 37, 38, 39) avec aide au contenu ; commentaire possible sur chaque note ;
   - impression de la liasse complète des notes applicables et export CSV.
+  - tableaux de saisie structurés :
+    - échéanciers (notes 4, 7, 8, 16A, 17, 18, 19) : deux tranches saisies, la troisième déduite du solde N (≤ 1 an pour les éléments circulants, > 2 ans pour les immobilisations financières et les dettes financières) ;
+    - associés (note 13) : valeur nominale, nom, nationalité, pays de résidence, nature et nombre de titres, montant et % calculés, contrôle avec le capital social ;
+    - effectifs (note 27B) : codes YA à YO, effectifs et masse salariale par qualification, nationalité et sexe, permanents / saisonniers, personnel extérieur et facturation ; contrôles YF + YG = YE et masse salariale = comptes 661 à 663 ; effectifs repris en note 31.
   - Ventilations géographiques adaptées à la RDC (ventes en RDC / à l'exportation / groupe / internet selon les subdivisions x1 à x5) ; aucune référence UEMOA.
 - **Mouvements N** : quand ils sont saisis, ils alimentent aussi le TFT (nouveaux emprunts = crédits des 16 et 181-184 hors 166, remboursements d'immobilisations financières = crédits des 27) et un contrôle « solde N = solde N-1 + débits − crédits ».
 - **Identification RDC** : page de garde imprimable (République Démocratique du Congo, Ministère des Finances, DGI, centre DGE / CDI / CIS), RCCM, Id. Nat., NIF, CNSS, INPP, ONEM, n° import-export, province, professionnel inscrit à l'ONEC.
