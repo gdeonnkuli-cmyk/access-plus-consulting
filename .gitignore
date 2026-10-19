@@ -1,3 +1,8 @@
 node_modules/
 build/
 package-lock.json
+android/app/build/
+android/.gradle/
+android/build/
+*.jks
+*.keystore

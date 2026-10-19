@@ -1,0 +1,66 @@
+// Application Android Éco-Campus RDC : Trusted Web Activity (TWA) qui ouvre le site en plein écran.
+// Le site lui-même reste la source unique : toute mise à jour du site est immédiatement dans l'application.
+plugins {
+    id "com.android.application"
+}
+
+def siteHost = "eco-campus-rdc.vercel.app"
+def keystoreFile = System.getenv("ANDROID_KEYSTORE_PATH")
+
+android {
+    namespace "cd.ecocampus.rdc"
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "cd.ecocampus.rdc"
+        minSdk 23
+        targetSdk 36
+        // À augmenter à chaque nouvelle version envoyée au Play Store
+        versionCode 1
+        versionName "1.0.0"
+
+        manifestPlaceholders = [
+            hostName       : siteHost,
+            defaultUrl     : "https://" + siteHost + "/?source=android",
+            launcherName   : "Éco-Campus RDC",
+            themeColor     : "#1A6B3A",
+            navigationColor: "#0C2E1E",
+            backgroundColor: "#F7F3EC"
+        ]
+        resValue "string", "app_name", "Éco-Campus RDC"
+        resValue "string", "asset_statements",
+            "[{\\\"relation\\\": [\\\"delegate_permission/common.handle_all_urls\\\"], \\\"target\\\": {\\\"namespace\\\": \\\"web\\\", \\\"site\\\": \\\"https://" + siteHost + "\\\"}}]"
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreFile) {
+                storeFile file(keystoreFile)
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (keystoreFile) signingConfig signingConfigs.release
+        }
+    }
+
+    buildFeatures {
+        resValues true
+        buildConfig false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
+}
