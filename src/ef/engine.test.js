@@ -63,3 +63,14 @@ test("saisies structurées : échéancier, associés, effectifs", () => {
   expect(n27.ctrl[0].ok).toBe(true);
   expect(n27.ctrl[1].ok).toBe(false); // 80 M saisis contre 179,5 M comptabilisés
 });
+
+test("le cas MALACHITE LOGISTIQUE (services) boucle sans informations complémentaires", () => {
+  const c = cas("malachite-logistique");
+  const R = computeAll(c.lignes, {});
+  expect(R.ctrl.every(x => x.ok)).toBe(true);
+  const t = R.tft;
+  expect([R.N.cr.XI, t.FA, t.FE, t.ZB, t.FG, t.FI, t.FN, t.FQ, t.ZH].map(Math.round))
+    .toEqual([17900000, 110900000, 12100000, 83800000, -20000000, 12000000, -12000000, -48000000, 333300000]);
+  expect(computeNotes(R, {}).flatMap(n => (n.ctrl || []).filter(x => !x.ok))).toEqual([]);
+  expect(Math.round(computeIBP(R, {}).ecart)).toBe(0);
+});

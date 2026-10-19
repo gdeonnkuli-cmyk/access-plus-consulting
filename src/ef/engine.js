@@ -319,16 +319,18 @@ function computeTFT(N, P1, k = {}) {
   const exBG = d("sD", ["414", "4613", "467", "458", "4494", "4751"]), ecA = d("sD", ECART_CIRC.a[0]) - d("sC", ECART_CIRC.p[0]);
   t.FD = -(dA("BG") - exBG + ecA);
   ex.FD = `Δ BG net ${fmt(dA("BG"))} − comptes exclus (414, 4613/467, 458, 4494, 4751) ${fmt(exBG)} + écarts de conversion sur créances ${fmt(ecA)}`;
-  const exDP = d("sC", ["404", "481", "482", "4613", "467", "4752", "472"]), ecP = d("sC", ECART_CIRC.p[1]) - d("sD", ECART_CIRC.a[1]);
-  t.FE = dP("DP") - exDP + ecP;
-  ex.FE = `Δ DP ${fmt(dP("DP"))} − comptes exclus (404, 481, 482, 467, 4752, 472) ${fmt(exDP)} + écarts de conversion sur dettes ${fmt(ecP)}`;
+  // 465 est traité dans les dividendes versés (FN) ; les intérêts courus (166), exclus du financement, sont une dette d'exploitation
+  const exDP = d("sC", ["404", "481", "482", "4613", "467", "4752", "472", "465"]), ecP = d("sC", ECART_CIRC.p[1]) - d("sD", ECART_CIRC.a[1]);
+  const dIc = d("sC", "166");
+  t.FE = dP("DP") - exDP + ecP + dIc;
+  ex.FE = `Δ DP ${fmt(dP("DP"))} − comptes exclus (404, 481, 482, 467, 4752, 472, 465) ${fmt(exDP)} + écarts de conversion sur dettes ${fmt(ecP)} + Δ intérêts courus (166) ${fmt(dIc)}`;
   t.ZB = t.FA + t.FB + t.FC + t.FD + t.FE;
   // Investissements : acquisitions = Δ net + dotations − reprises + VCC − réévaluations
   const dotI = s(["6811", "6812", "6913"]), repI = -s("7913"), vncI = s("811");
   const dotC = s("681") - s(["6811", "6812"]) + s(["6914", "852", "853"]), repC = -s(["7914", "798", "862", "863"]), vncC = s("81") - s(["811", "816"]) + s("654");
   const dotF = s("6972"), repF = -s("7972"), vncF = s("816");
   const reev = dP("CE") + d("sC", "154");
-  const locAcq = has("locAcq") ? cb("locAcq") : Math.max(dP("DB"), 0);
+  const locAcq = has("locAcq") ? cb("locAcq") : N.hasMvt ? N.mC(["172", "173", "174", "178"]) : Math.max(dP("DB"), 0); // nouveaux contrats (hors intérêts courus 176)
   const acqI = dA("AD") + dotI - repI + vncI;
   const acqC = dA("AI") + dA("AP") + dotC - repC + vncC - reev - locAcq;
   const dDetImmo = d("sC", ["404", "481", "482"]);
