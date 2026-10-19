@@ -2300,14 +2300,19 @@ function Auth({onL}){
     }catch(e){sB(false);sE(e.message);}
   },[onL]);
   const socialLogin=useCallback(async(provider)=>{
-    sE("");sO("");sB(true);
+    sE("");sO("");
+    if(tab==="r"&&!consent){sNeedConsent(true);return sE("Cochez d'abord la politique de confidentialité, puis cliquez à nouveau.");}
+    sB(true);
     try{
       const cred=await signInWithPopup(auth,provider);
       const user=cred.user;
       if(user.email===ADM_EMAIL){onL("__admin__",user);return;}
       const snap=await getDoc(doc(db,"users",user.uid));
       if(!snap.exists()){
-        if(!consent){sNeedConsent(true);await signOut(auth);sB(false);return;}
+        if(!consent){
+          await signOut(auth);sB(false);sT("r");sNeedConsent(true);
+          return sE("Première connexion avec ce compte : acceptez la politique de confidentialité ci-dessous, puis cliquez à nouveau sur le bouton.");
+        }
         await setDoc(doc(db,"users",user.uid),{nom:user.displayName||user.email.split("@")[0],mail:user.email,createdAt:new Date().toLocaleDateString("fr-FR"),abonnement:"aucun",activationCode:null,codeValide:false,demandeDate:null,dureeId:null,dateExpiration:null,progress:{},scores:{},consentDate:new Date().toISOString(),consentVersion:PRIVACY_VERSION,lastLogin:Date.now()});
         sendNotifEmail({to_email:user.email,subject:"Bienvenue sur Éco-Campus RDC 🎉",nom:user.displayName||user.email.split("@")[0],message:"Votre compte vient d'être créé avec succès sur Éco-Campus RDC.\n\nProchaine étape : faites votre demande d'accès à une formation depuis votre espace, puis réglez votre inscription. Vous recevrez ensuite votre code d'activation par email pour débloquer vos modules.\n\nÀ très vite !"});
       }else{
@@ -2317,10 +2322,17 @@ function Auth({onL}){
       }
       onL(user.uid,user);
     }catch(e){
-      if(e.code!=="auth/popup-closed-by-user")sE("Connexion échouée : "+e.message);
+      const msg={
+        "auth/unauthorized-domain":`Ce site (${window.location.hostname}) n'est pas autorisé dans Firebase. L'administrateur doit l'ajouter dans Authentication > Paramètres > Domaines autorisés.`,
+        "auth/operation-not-allowed":"Ce mode de connexion n'est pas activé dans Firebase (Authentication > Méthode de connexion).",
+        "auth/popup-blocked":"La fenêtre de connexion a été bloquée. Autorisez les fenêtres pop-up pour ce site, puis réessayez.",
+        "auth/account-exists-with-different-credential":"Cet e-mail est déjà inscrit avec une autre méthode. Connectez-vous avec votre e-mail et votre mot de passe.",
+        "auth/network-request-failed":"Connexion Internet indisponible. Réessayez.",
+      }[e.code];
+      if(e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request")sE(msg||"Connexion échouée : "+e.message);
       sB(false);
     }
-  },[onL]);
+  },[onL,tab,consent]);
   const go=useCallback(()=>step===2?code():tab==="r"?reg():login(),[step,tab,code,reg,login]);
   const hk=useCallback(e=>{if(e.key==="Enter")go();},[go]);
   return <div style={{minHeight:"100vh",background:K.bg,display:"flex",flexDirection:"column",fontFamily:"'Outfit',sans-serif",position:"relative"}}>
@@ -2366,10 +2378,10 @@ function Auth({onL}){
           {tab==="r"&&step===1&&<div style={{marginBottom:6,padding:"7px 10px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,fontSize:11,color:K.t3,display:"flex",alignItems:"center",gap:6}}>
             <i className="ti ti-lock" style={{fontSize:12,color:K.em}}/>Données protégées · Firebase sécurisé · Jamais revendues
           </div>}
-          {tab==="l"&&step===1&&<>
+          {step===1&&<>
             <div style={{display:"flex",alignItems:"center",gap:8,margin:"12px 0"}}>
               <div style={{flex:1,height:1,background:K.b0}}/>
-              <span style={{fontSize:11,color:K.t3}}>ou continuer avec</span>
+              <span style={{fontSize:11,color:K.t3}}>{tab==="r"?"ou s'inscrire avec":"ou continuer avec"}</span>
               <div style={{flex:1,height:1,background:K.b0}}/>
             </div>
             <div style={{display:"flex",gap:8,marginBottom:8}}>
@@ -4802,7 +4814,7 @@ export default function App(){
           const d=snap.data();
           if(d.role==="formateur"){sW({role:"formateur",uid:user.uid,user});}
           else{sW({role:"user",uid:user.uid,user});}
-        } else sW(null);
+        } else sW(w=>w?.uid===user.uid?w:null); // profil en cours de création (inscription Google/Facebook)
       }else{sW(null);}
       sL(false);
     });
