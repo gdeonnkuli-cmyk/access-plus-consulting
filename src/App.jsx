@@ -2396,7 +2396,6 @@ function Auth({onL}){
                 Facebook
               </button>
             </div>
-            <div style={{marginTop:3,padding:"7px 10px",background:K.bg,borderRadius:7,border:`1px solid ${K.b0}`,fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:K.t3,lineHeight:1.8}}>admin@accessplus.com</div>
           </>}
         </div>
       </div>
