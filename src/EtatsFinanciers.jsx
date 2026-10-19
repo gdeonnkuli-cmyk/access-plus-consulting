@@ -2,6 +2,7 @@ import React,{useState,useEffect,useRef,useMemo}from"react";
 import{collection,doc,addDoc,updateDoc,deleteDoc,onSnapshot,query,where,getDocs,arrayUnion,arrayRemove}from"firebase/firestore";
 import{computeAll,parseBalance,mapCompte,num,fmt,LIB,ACTIF,PASSIF,CR,TFT}from"./ef/engine";
 import{CAS_PRATIQUES}from"./ef/casPratiques";
+import{DEVISES,FORMES,PROVINCES,IDENTITE,FISC_DEFAUT,computeIBP}from"./ef/rdc";
 
 // ══════════════════ ATELIER ÉTATS FINANCIERS SYSCOHADA (multi-utilisateurs) ══════════════════
 // Collection Firestore « ef_dossiers » : un document par dossier (balance, compléments TFT, membres, suivi).
@@ -79,7 +80,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,flexWrap:"wrap",marginBottom:14}}>
       <div>
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?20:24,color:K.t1}}>Atelier États financiers</div>
-        <div style={{color:K.t3,fontSize:12,marginTop:3}}>SYSCOHADA révisé · Système Normal · Bilan, Compte de résultat, TFT générés depuis la balance</div>
+        <div style={{color:K.t3,fontSize:12,marginTop:3}}>République Démocratique du Congo · SYSCOHADA révisé · Système Normal · Bilan, Compte de résultat, TFT et IBP générés depuis la balance</div>
       </div>
       <B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/>
     </div>
@@ -94,7 +95,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
     :!list.length?<div style={{background:K.card,border:`1px dashed ${K.b1}`,borderRadius:14,padding:"36px 20px",textAlign:"center"}}>
       <i className="ti ti-report-money" style={{fontSize:34,color:K.em}}/>
       <div style={{fontWeight:700,color:K.t1,margin:"8px 0 4px"}}>Aucun dossier</div>
-      <div style={{color:K.t3,fontSize:12,marginBottom:14}}>Créez un dossier vierge ou partez du cas pratique « SA KIN NÉGOCE ».</div>
+      <div style={{color:K.t3,fontSize:12,marginBottom:14}}>Créez un dossier vierge ou partez d'un cas pratique (SA KIN NÉGOCE, SA MEUBLES DU FLEUVE).</div>
       <B K={K} ico="plus" ch="Créer mon premier dossier" on={()=>sCreer(true)}/>
     </div>
     :<div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(300px,1fr))",gap:10}}>
@@ -116,7 +117,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
 }
 
 function NewDossier({db,K,me,onClose,onCreated}){
-  const[f,sF]=useState({societe:"",exercice:new Date().getFullYear()-1,devise:"CDF",forme:"SA",src:"vierge"});
+  const[f,sF]=useState({societe:"",exercice:new Date().getFullYear()-1,devise:"CDF",forme:"SA",province:"Kinshasa",src:"vierge"});
   const[busy,sBusy]=useState(false),[err,sErr]=useState("");
   const cas=CAS_PRATIQUES.find(c=>c.id===f.src);
   const create=async()=>{
@@ -124,8 +125,9 @@ function NewDossier({db,K,me,onClose,onCreated}){
     sBusy(true);
     try{
       const r=await addDoc(collection(db,COLL),{
-        societe:cas?cas.societe:f.societe.trim(),exercice:cas?cas.exercice:Number(f.exercice)||f.exercice,devise:cas?cas.devise:f.devise,forme:f.forme,
-        casId:cas?cas.id:null,lignes:cas?cas.lignes:[],complements:{},
+        societe:cas?cas.societe:f.societe.trim(),exercice:cas?cas.exercice:Number(f.exercice)||f.exercice,devise:cas?cas.devise:f.devise,forme:cas?.identite?.forme||f.forme,
+        casId:cas?cas.id:null,lignes:cas?cas.lignes:[],complements:{},fiscal:{...FISC_DEFAUT},
+        identite:cas?{...(cas.identite||{})}:{forme:f.forme,province:f.province,ville:f.province==="Kinshasa"?"Kinshasa":"",duree:"12",dureeN1:"12"},
         ownerUid:me.uid,ownerNom:me.nom||"",membres:[me.uid],membresInfo:{[me.uid]:{nom:me.nom||"",mail:me.mail||""}},
         statut:"brouillon",commentaires:[],createdAt:now(),updatedAt:now(),updatedBy:me.uid,updatedByNom:me.nom||""});
       onCreated(r.id);
@@ -142,10 +144,11 @@ function NewDossier({db,K,me,onClose,onCreated}){
     {cas?<div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",fontSize:12,color:K.t2,lineHeight:1.55,marginBottom:12}}>{cas.enonce[0]}</div>
     :<>
       <Field K={K} lb="Raison sociale"><input style={st} value={f.societe} onChange={e=>sF({...f,societe:e.target.value})} placeholder="Ex. SARL MBOKA SERVICES"/></Field>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
         <Field K={K} lb="Exercice"><input style={st} value={f.exercice} onChange={e=>sF({...f,exercice:e.target.value})}/></Field>
-        <Field K={K} lb="Devise"><select style={st} value={f.devise} onChange={e=>sF({...f,devise:e.target.value})}>{["CDF","USD","XAF","XOF","EUR"].map(x=><option key={x}>{x}</option>)}</select></Field>
-        <Field K={K} lb="Forme"><select style={st} value={f.forme} onChange={e=>sF({...f,forme:e.target.value})}>{["SA","SARL","SAS","SNC","EI","GIE"].map(x=><option key={x}>{x}</option>)}</select></Field>
+        <Field K={K} lb="Monnaie de présentation"><select style={st} value={f.devise} onChange={e=>sF({...f,devise:e.target.value})}>{DEVISES.map(([k,l])=><option key={k} value={k}>{l}</option>)}</select></Field>
+        <Field K={K} lb="Forme juridique"><select style={st} value={f.forme} onChange={e=>sF({...f,forme:e.target.value})}>{FORMES.map(x=><option key={x}>{x}</option>)}</select></Field>
+        <Field K={K} lb="Province du siège"><select style={st} value={f.province} onChange={e=>sF({...f,province:e.target.value})}>{PROVINCES.map(x=><option key={x}>{x}</option>)}</select></Field>
       </div>
     </>}
     {err&&<div style={{color:K.er,fontSize:12,marginBottom:10}}>{err}</div>}
@@ -156,10 +159,10 @@ function NewDossier({db,K,me,onClose,onCreated}){
 // ══════════════════ DOSSIER ══════════════════
 function Dossier({db,K,mob,me,staff,d,onBack}){
   const[tab,sTab]=useState("bal");
-  const[lignes,sLignes]=useState(d.lignes||[]),[comp,sComp]=useState(d.complements||{});
+  const[lignes,sLignes]=useState(d.lignes||[]),[comp,sComp]=useState(d.complements||{}),[ident,sIdent]=useState(d.identite||{}),[fisc,sFisc]=useState(d.fiscal||FISC_DEFAUT);
   const dirty=useRef(false),timer=useRef(null),[saveSt,sSaveSt]=useState("");
   // Synchronisation temps réel : on adopte la version distante tant qu'aucune saisie locale n'est en attente
-  useEffect(()=>{if(!dirty.current){sLignes(d.lignes||[]);sComp(d.complements||{});}},[d.lignes,d.complements]);
+  useEffect(()=>{if(!dirty.current){sLignes(d.lignes||[]);sComp(d.complements||{});sIdent(d.identite||{});sFisc(d.fiscal||FISC_DEFAUT);}},[d.lignes,d.complements,d.identite,d.fiscal]);
   useEffect(()=>()=>clearTimeout(timer.current),[]);
   const isMember=(d.membres||[]).includes(me.uid);
   const canEdit=staff||(isMember&&["brouillon","renvoye"].includes(d.statut||"brouillon"));
@@ -172,20 +175,22 @@ function Dossier({db,K,mob,me,staff,d,onBack}){
       dirty.current=false;
     },900);
   };
-  const latest=useRef({lignes,comp});latest.current={lignes,comp};
+  const latest=useRef({});latest.current={lignes,comp,ident,fisc};
   const setL=fn=>{sLignes(prev=>{const n=typeof fn==="function"?fn(prev):fn;latest.current.lignes=n;return n;});persist(()=>({lignes:latest.current.lignes}));};
   const setC=n=>{sComp(n);latest.current.comp=n;persist(()=>({complements:latest.current.comp}));};
+  const setI=n=>{sIdent(n);latest.current.ident=n;persist(()=>({identite:latest.current.ident}));};
+  const setF=n=>{sFisc(n);latest.current.fisc=n;persist(()=>({fiscal:latest.current.fisc}));};
   const R=useMemo(()=>computeAll(lignes,comp),[lignes,comp]);
   const nErr=R.ctrl.filter(c=>c.niv==="err").length,nWarn=R.ctrl.filter(c=>c.niv==="warn").length;
   const cas=CAS_PRATIQUES.find(c=>c.id===d.casId);
-  const TABS=[["bal","table","Balance"],["ctrl","shield-check",`Contrôles${nErr+nWarn?` (${nErr+nWarn})`:""}`],["bilan","scale","Bilan"],["cr","chart-bar","Compte de résultat"],["tft","arrows-exchange","TFT"],["suivi","users","Équipe & suivi"]];
-  const meta={societe:d.societe,exercice:d.exercice,devise:d.devise};
+  const TABS=[["id","id-badge-2","Identification"],["bal","table","Balance"],["ctrl","shield-check",`Contrôles${nErr+nWarn?` (${nErr+nWarn})`:""}`],["bilan","scale","Bilan"],["cr","chart-bar","Compte de résultat"],["tft","arrows-exchange","TFT"],["fisc","receipt-tax","Fiscalité (IBP)"],["suivi","users","Équipe & suivi"]];
+  const meta={societe:d.societe,exercice:d.exercice,devise:d.devise,ident};
   return <div style={{animation:"fadeIn .3s ease"}}>
     <div className="ef-noprint" style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:12}}>
       <B K={K} v="g" sm ico="arrow-left" ch="Dossiers" on={onBack}/>
       <div style={{flex:1,minWidth:180}}>
         <div style={{fontWeight:800,fontSize:17,color:K.t1}}>{d.societe}</div>
-        <div style={{color:K.t3,fontSize:11,fontFamily:mono}}>Exercice {d.exercice} · {d.forme||""} · {d.devise}{cas?" · Cas pratique":""}</div>
+        <div style={{color:K.t3,fontSize:11,fontFamily:mono}}>Exercice {d.exercice} · {ident.forme||d.forme||""} · {d.devise}{ident.nif?` · NIF ${ident.nif}`:""}{cas?" · Cas pratique":""}</div>
       </div>
       <Badge s={d.statut}/>
       <span style={{fontSize:11,color:saveSt.startsWith("⚠")?K.er:K.t3,minWidth:80}}>{saveSt||(canEdit?"":"Lecture seule")}</span>
@@ -198,6 +203,8 @@ function Dossier({db,K,mob,me,staff,d,onBack}){
       {TABS.map(([k,ico,l])=>{const a=tab===k;return <button key={k} onClick={()=>sTab(k)} className="bt" style={{display:"flex",alignItems:"center",gap:5,padding:"8px 12px",border:"none",background:a?K.c2:"transparent",color:a?K.t1:K.t3,fontWeight:a?700:500,fontSize:12,whiteSpace:"nowrap",borderBottom:a?`2px solid ${K.em}`:"2px solid transparent",borderRadius:"6px 6px 0 0",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
         <i className={`ti ti-${ico}`} style={{fontSize:14,color:a?K.em:K.t3}}/>{l}</button>;})}
     </div>
+    {tab==="id"&&<IdentTab K={K} ident={ident} setI={setI} canEdit={canEdit} meta={meta}/>}
+    {tab==="fisc"&&<FiscTab K={K} R={R} fisc={fisc} setF={setF} canEdit={canEdit} meta={meta}/>}
     {tab==="bal"&&<BalanceTab K={K} mob={mob} lignes={lignes} setL={setL} canEdit={canEdit} R={R} meta={meta}/>}
     {tab==="ctrl"&&<ControlsTab K={K} R={R} go={sTab}/>}
     {tab==="bilan"&&<BilanTab K={K} R={R} meta={meta}/>}
@@ -212,10 +219,11 @@ const th=K=>({padding:"7px 8px",fontSize:10,fontWeight:800,color:K.t3,textAlign:
 const td=K=>({padding:"5px 8px",fontSize:12,color:K.t1,borderBottom:`1px solid ${K.b0}`,textAlign:"right",fontFamily:mono,whiteSpace:"nowrap"});
 const Wrap=({K,children,print})=><div className={print?"ef-print":undefined} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,overflow:"hidden"}}>{children}</div>;
 const Scroll=({children,max})=><div style={{overflowX:"auto",maxHeight:max,overflowY:max?"auto":undefined,WebkitOverflowScrolling:"touch"}}>{children}</div>;
-const PrintHead=({K,meta,titre})=><div style={{padding:"12px 14px",borderBottom:`1px solid ${K.b0}`,display:"flex",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
-  <div><div style={{fontWeight:800,fontSize:15,color:K.t1}}>{titre}</div><div style={{color:K.t3,fontSize:11}}>{meta.societe} · Exercice clos le 31/12/{meta.exercice} · Montants en {meta.devise}</div></div>
-  <div style={{color:K.t3,fontSize:10,alignSelf:"flex-end"}}>SYSCOHADA révisé — Système Normal</div>
-</div>;
+const PrintHead=({K,meta,titre})=>{const i=meta.ident||{};const ids=[i.nif&&`NIF : ${i.nif}`,i.rccm&&`RCCM : ${i.rccm}`,i.idnat&&`Id. Nat. : ${i.idnat}`].filter(Boolean).join(" · ");
+  return <div style={{padding:"12px 14px",borderBottom:`1px solid ${K.b0}`,display:"flex",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
+  <div><div style={{fontWeight:800,fontSize:15,color:K.t1}}>{titre}</div><div style={{color:K.t3,fontSize:11}}>{meta.societe}{i.sigle?` (${i.sigle})`:""} · Exercice clos le 31/12/{meta.exercice} · Montants en {meta.devise==="USD"?"dollars américains (USD)":"francs congolais (CDF)"}</div>{ids&&<div style={{color:K.t3,fontSize:11}}>{ids}</div>}</div>
+  <div style={{color:K.t3,fontSize:10,alignSelf:"flex-end",textAlign:"right"}}>République Démocratique du Congo<br/>SYSCOHADA révisé — Système Normal</div>
+</div>;};
 const Toolbar=({K,children})=><div className="ef-noprint" style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>{children}</div>;
 
 // ── BALANCE ──────────────────────────────────────────────────────────────────────
@@ -359,24 +367,22 @@ function CRTab({K,R,meta}){
 
 // ── TFT ──────────────────────────────────────────────────────────────────────────
 const COMP=[
-  ["cbIncorp","Valeur brute des immobilisations incorporelles cédées"],
-  ["cbCorp","Valeur brute des immobilisations corporelles cédées"],
-  ["cbFin","Valeur brute des immobilisations financières cédées / remboursées"],
-  ["pcFin","Prix de cession des immobilisations financières (inclus dans le compte 82)"],
-  ["nouvEmp","Nouveaux emprunts obtenus (vide = variation nette des dettes financières)"],
+  ["nouvEmp","Nouveaux emprunts encaissés (mouvement crédit des 16/18 ; vide = variation nette)"],
+  ["rembFin","Remboursements encaissés de prêts, dépôts et cautionnements (crédit des 27)"],
+  ["locAcq","Nouveaux contrats de location-acquisition (vide = augmentation du compte 17)"],
   ["prelev","Prélèvements de l'exploitant sur le capital"],
 ];
 function TFTTab({K,R,meta,comp,setC,canEdit}){
-  const t=R.tft;
+  const t=R.tft;const[calc,sCalc]=useState(true);
   if(!t)return <div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"18px",fontSize:13,color:K.t2,lineHeight:1.6}}>
     <b style={{color:K.wa}}>Balance N-1 requise.</b> Le Tableau des flux de trésorerie se construit par différence entre les bilans N et N-1 : renseignez les colonnes « Débit N-1 / Crédit N-1 » dans l'onglet Balance.</div>;
   const ok=Math.abs(t.ZH-t.tresoBilan)<0.5;
   const exp=()=>downloadCSV(`TFT_${meta.societe}_${meta.exercice}`,[["Réf","Libellé","Exercice N"],...TFT.filter(x=>x.t!=="h").map(x=>[x.ref,x.lib,Math.round(t[x.ref])])]);
   return <>
-    <Toolbar K={K}><B K={K} sm ico="printer" ch="Imprimer / PDF" on={()=>window.print()}/><B K={K} sm v="g" ico="file-spreadsheet" ch="Export Excel (CSV)" on={exp}/></Toolbar>
+    <Toolbar K={K}><B K={K} sm ico="printer" ch="Imprimer / PDF" on={()=>window.print()}/><B K={K} sm v="g" ico="file-spreadsheet" ch="Export Excel (CSV)" on={exp}/><B K={K} sm v={calc?"w":"g"} ico="math-function" ch={calc?"Masquer les calculs":"Afficher les calculs"} on={()=>sCalc(!calc)}/></Toolbar>
     <div className="ef-noprint" style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px",marginBottom:12}}>
       <div style={{fontWeight:700,color:K.t1,fontSize:13,marginBottom:3}}>Informations complémentaires</div>
-      <div style={{color:K.t3,fontSize:11,marginBottom:10,lineHeight:1.5}}>Données non déductibles de la balance seule. Les acquisitions sont calculées ainsi : variation des valeurs brutes + valeurs brutes cédées.</div>
+      <div style={{color:K.t3,fontSize:11,marginBottom:10,lineHeight:1.5}}>Mouvements non déductibles des seuls soldes de la balance. Méthode du guide d'application : acquisitions = Δ immobilisations nettes + dotations + valeur comptable des cessions − réévaluations (106, 154) − Δ dettes sur immobilisations (404, 481, 482).</div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:"0 10px"}}>
         {COMP.map(([k,l])=><Field key={k} K={K} lb={l}><NumCellBox K={K} value={comp[k]} dis={!canEdit} onChange={v=>setC({...comp,[k]:v===""?"":v})}/></Field>)}
       </div>
@@ -386,7 +392,7 @@ function TFTTab({K,R,meta,comp,setC,canEdit}){
       <Scroll><table style={{width:"100%",borderCollapse:"collapse",minWidth:560}}>
         <thead><tr><th style={{...th(K),textAlign:"left",width:44}}>Réf</th><th style={{...th(K),textAlign:"left"}}>Libellés</th><th style={th(K)}>Exercice N</th></tr></thead>
         <tbody>{TFT.map(x=>x.t==="h"?<tr key={x.ref}><td colSpan={3} style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif",fontWeight:700,color:K.in_,paddingTop:10}}>{x.lib}</td></tr>
-          :<tr key={x.ref} style={rowSt(K,x.t)}><td style={{...td(K),textAlign:"left",color:K.t3}}>{x.ref}</td><td style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif",whiteSpace:"normal",paddingLeft:x.t==="d"?18:8}}>{x.lib}</td>
+          :<tr key={x.ref} style={rowSt(K,x.t)}><td style={{...td(K),textAlign:"left",color:K.t3}}>{x.ref}</td><td style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif",whiteSpace:"normal",paddingLeft:x.t==="d"?18:8}}>{x.lib}{calc&&t.ex[x.ref]&&<div className="ef-noprint" style={{fontSize:10,color:K.t3,fontFamily:mono,marginTop:2,lineHeight:1.4}}>{t.ex[x.ref]}</div>}</td>
           <td style={{...td(K),fontWeight:x.t!=="d"?800:500,color:t[x.ref]<0?K.er:K.t1}}>{fmt(t[x.ref])}</td></tr>)}</tbody>
       </table></Scroll>
       <div style={{padding:"10px 14px",fontSize:12,fontWeight:700,color:ok?K.em:K.wa}}>{ok?"✓":"⚠"} Contrôle : ZH = {fmt(t.ZH)} — Trésorerie nette au bilan (BT − DT) = {fmt(t.tresoBilan)}</div>
@@ -399,6 +405,106 @@ function NumCellBox({K,value,onChange,dis}){
   return <input disabled={dis} inputMode="decimal" style={{...fieldSt(K),fontFamily:mono,textAlign:"right"}} placeholder="0"
     value={ed!==null?ed:(has?fmt(value):"")} onFocus={()=>sEd(has?String(value):"")} onChange={e=>sEd(e.target.value)}
     onBlur={()=>{const v=ed.trim()===""?"":num(ed);sEd(null);if(v!==value)onChange(v);}}/>;
+}
+
+// ── IDENTIFICATION (contexte RDC) ────────────────────────────────────────────────
+function IdentTab({K,ident,setI,canEdit,meta}){
+  const st=fieldSt(K);
+  const set=(k,v)=>setI({...ident,[k]:v});
+  const docs=["Fiche d'identification et renseignements divers","Bilan","Compte de résultat","Tableau des flux de trésorerie","Notes annexes"];
+  const L=({l,v})=><div style={{display:"flex",gap:8,fontSize:12,padding:"3px 0"}}><span style={{color:K.t3,minWidth:190}}>{l}</span><b style={{color:K.t1}}>{v||"……………………"}</b></div>;
+  return <>
+    <Toolbar K={K}><B K={K} sm ico="printer" ch="Imprimer la page de garde" on={()=>window.print()}/></Toolbar>
+    {canEdit&&<div className="ef-noprint" style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px",marginBottom:12}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))",gap:"0 10px"}}>
+        {IDENTITE.map((f,i)=>f.t?<div key={i} style={{gridColumn:"1/-1",fontWeight:800,fontSize:12,color:K.em,margin:"6px 0 8px",textTransform:"uppercase",letterSpacing:.5}}>{f.t}</div>
+          :<div key={f.k} style={{gridColumn:f.wide?"1/-1":undefined}}><Field K={K} lb={f.l}>
+            {f.opts?<select style={st} value={ident[f.k]||""} onChange={e=>set(f.k,e.target.value)}><option value="">—</option>{f.opts.map(o=><option key={o}>{o}</option>)}</select>
+            :f.rows?<textarea rows={f.rows} style={{...st,resize:"vertical"}} value={ident[f.k]||""} onChange={e=>set(f.k,e.target.value)}/>
+            :<input type={f.date?"date":"text"} inputMode={f.num?"decimal":undefined} placeholder={f.ph||""} style={st} value={ident[f.k]||""} onChange={e=>set(f.k,e.target.value)}/>}
+          </Field></div>)}
+      </div>
+    </div>}
+    <Wrap K={K} print>
+      <div style={{padding:"22px 20px",textAlign:"center",borderBottom:`1px solid ${K.b0}`}}>
+        <div style={{fontWeight:800,fontSize:13,color:K.t1,letterSpacing:.5}}>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</div>
+        <div style={{fontSize:11,color:K.t2,marginTop:2}}>MINISTÈRE DES FINANCES — DIRECTION GÉNÉRALE DES IMPÔTS</div>
+        <div style={{fontSize:11,color:K.t3,marginTop:2}}>Centre de dépôt : {ident.centre||"……………………"}</div>
+        <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:20,color:K.t1,marginTop:16}}>ÉTATS FINANCIERS NORMALISÉS</div>
+        <div style={{fontSize:12,color:K.t2,marginTop:3}}>SYSTÈME COMPTABLE OHADA RÉVISÉ (SYSCOHADA) — SYSTÈME NORMAL</div>
+        <div style={{fontSize:13,fontWeight:700,color:K.t1,marginTop:10}}>EXERCICE CLOS LE 31 DÉCEMBRE {meta.exercice}</div>
+      </div>
+      <div style={{padding:"14px 20px"}}>
+        <L l="Dénomination sociale" v={meta.societe}/><L l="Sigle usuel" v={ident.sigle}/><L l="Forme juridique" v={ident.forme}/>
+        <L l="Capital social" v={ident.capital?`${fmt(ident.capital)} ${meta.devise}`:""}/>
+        <L l="Adresse complète" v={[ident.avenue,ident.quartier&&`Q/ ${ident.quartier}`,ident.commune&&`C/ ${ident.commune}`,ident.ville,ident.province].filter(Boolean).join(", ")}/>
+        <L l="Téléphone / e-mail" v={[ident.tel,ident.email].filter(Boolean).join(" · ")}/>
+        <L l="N° RCCM" v={ident.rccm}/><L l="Identification nationale" v={ident.idnat}/><L l="Numéro Impôt (NIF)" v={ident.nif}/>
+        <L l="CNSS / INPP / ONEM" v={[ident.cnss,ident.inpp,ident.onem].filter(Boolean).join(" · ")}/>
+        <L l="Activité principale" v={ident.activite}/>
+        <L l="Durée de l'exercice" v={`${ident.duree||12} mois (exercice précédent : ${ident.dureeN1||12} mois)`}/>
+        <L l="Date d'arrêté des comptes" v={ident.dateArrete?new Date(ident.dateArrete).toLocaleDateString("fr-FR"):""}/>
+        <L l="États approuvés par l'AG" v={ident.ago}/>
+        <L l="Établis par" v={[ident.comptable,ident.onec&&`ONEC n° ${ident.onec}`].filter(Boolean).join(" — ")}/>
+        <L l="Signataire" v={[ident.signataire,ident.qualite].filter(Boolean).join(", ")}/>
+        {ident.banques&&<L l="Domiciliations bancaires" v={ident.banques}/>}
+        {ident.dirigeants&&<L l="Dirigeants" v={ident.dirigeants}/>}
+        <div style={{marginTop:12,fontSize:11,color:K.t2}}><b>Documents déposés :</b> {docs.join(" · ")}</div>
+      </div>
+    </Wrap>
+  </>;
+}
+
+// ── FISCALITÉ : IMPÔT SUR LES BÉNÉFICES ET PROFITS (RDC) ─────────────────────────
+function FiscTab({K,R,fisc,setF,canEdit,meta}){
+  const f={...FISC_DEFAUT,...fisc};
+  const I=computeIBP(R,f);
+  const st=fieldSt(K);
+  const Lines=({k,titre})=><div style={{marginBottom:10}}>
+    <div style={{fontSize:12,fontWeight:700,color:K.t2,marginBottom:5}}>{titre}</div>
+    {(f[k]||[]).map((x,i)=><div key={i} style={{display:"flex",gap:6,marginBottom:5}}>
+      <input disabled={!canEdit} style={{...st,minHeight:34,fontSize:12}} placeholder="Libellé" value={x.lib} onChange={e=>setF({...f,[k]:f[k].map((y,j)=>j===i?{...y,lib:e.target.value}:y)})}/>
+      <div style={{width:160,flexShrink:0}}><NumCellBox K={K} value={x.m} dis={!canEdit} onChange={v=>setF({...f,[k]:f[k].map((y,j)=>j===i?{...y,m:v}:y)})}/></div>
+      {canEdit&&<button onClick={()=>setF({...f,[k]:f[k].filter((_,j)=>j!==i)})} style={{background:"none",border:"none",color:K.t3,cursor:"pointer"}}><i className="ti ti-trash"/></button>}
+    </div>)}
+    {canEdit&&<B K={K} sm v="g" ico="plus" ch="Ajouter" on={()=>setF({...f,[k]:[...(f[k]||[]),{lib:"",m:""}]})}/>}
+  </div>;
+  const rows=[
+    ["Résultat net comptable (XI)",R.N.cr.XI],["+ IBP comptabilisé (compte 89)",I.ibpCompta],["= Résultat comptable avant impôt",I.rai,1],
+    ...I.reint.map(x=>[`+ ${x.lib||"Réintégration"}${x.auto?" (repris de la balance)":""}`,x.m]),
+    ...I.deduc.map(x=>[`− ${x.lib||"Déduction"}`,-x.m]),
+    ["= Résultat fiscal avant imputation des déficits",I.avantDef,1],["− Déficits antérieurs imputés",-I.imput],["= RÉSULTAT FISCAL",I.rf,2],
+    [`IBP au taux de ${num(f.tauxIBP)} %`,I.ibpTheo],[`Minimum d'imposition (${num(f.tauxMin)} % du chiffre d'affaires ${fmt(R.N.cr.XB)})`,I.minimum],
+    [`= IBP DÛ${I.minApplique?" (minimum appliqué)":""}`,I.ibp,2],["− Acomptes provisionnels versés",-I.acomptes],[I.solde>=0?"= SOLDE D'IBP À PAYER":"= CRÉDIT D'IBP",I.solde,2],
+  ];
+  const exp=()=>downloadCSV(`IBP_${meta.societe}_${meta.exercice}`,[["Libellé","Montant"],...rows.map(([l,v])=>[l,Math.round(v)])]);
+  const okC=Math.abs(I.ecart)<0.5;
+  return <>
+    <Toolbar K={K}><B K={K} sm ico="printer" ch="Imprimer / PDF" on={()=>window.print()}/><B K={K} sm v="g" ico="file-spreadsheet" ch="Export Excel (CSV)" on={exp}/></Toolbar>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:10,alignItems:"start"}}>
+      <div className="ef-noprint" style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px"}}>
+        <div style={{fontWeight:700,color:K.t1,fontSize:13,marginBottom:3}}>Paramètres et retraitements extra-comptables</div>
+        <div style={{color:K.t3,fontSize:11,marginBottom:10,lineHeight:1.5}}>Taux de l'IBP et minimum d'imposition à aligner sur la loi de finances applicable à l'exercice (DGI-RDC). Les amendes et pénalités (647) sont réintégrées automatiquement.</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 8px"}}>
+          <Field K={K} lb="Taux IBP (%)"><NumCellBox K={K} value={f.tauxIBP} dis={!canEdit} onChange={v=>setF({...f,tauxIBP:v})}/></Field>
+          <Field K={K} lb="Minimum (% du CA)"><NumCellBox K={K} value={f.tauxMin} dis={!canEdit} onChange={v=>setF({...f,tauxMin:v})}/></Field>
+          <Field K={K} lb="Déficits antérieurs reportables"><NumCellBox K={K} value={f.deficits} dis={!canEdit} onChange={v=>setF({...f,deficits:v})}/></Field>
+          <Field K={K} lb="Acomptes provisionnels versés"><NumCellBox K={K} value={f.acomptes} dis={!canEdit} onChange={v=>setF({...f,acomptes:v})}/></Field>
+        </div>
+        {Lines({k:"reint",titre:"Réintégrations (charges non déductibles)"})}
+        {Lines({k:"deduc",titre:"Déductions (produits non imposables, abattements)"})}
+      </div>
+      <Wrap K={K} print>
+        <PrintHead K={K} meta={meta} titre="DÉTERMINATION DE L'IMPÔT SUR LES BÉNÉFICES ET PROFITS (IBP)"/>
+        <table style={{width:"100%",borderCollapse:"collapse"}}><tbody>
+          {rows.map(([l,v,lvl],i)=><tr key={i} style={lvl===2?{fontWeight:800,background:K.emBg}:lvl===1?{fontWeight:700,background:K.c2}:{}}>
+            <td style={{...td(K),textAlign:"left",fontFamily:"'Outfit',sans-serif",whiteSpace:"normal"}}>{l}</td>
+            <td style={{...td(K),color:v<0?K.er:K.t1}}>{fmt(v)}</td></tr>)}
+        </tbody></table>
+        <div style={{padding:"10px 14px",fontSize:12,fontWeight:700,color:okC?K.em:K.wa}}>{okC?"✓ L'IBP comptabilisé (89) correspond à l'IBP dû.":`⚠ Écart de ${fmt(I.ecart)} entre l'IBP dû et l'IBP comptabilisé (89) : régularisez l'écriture d'IBP (débit 891 / crédit 441) puis régénérez les états.`}</div>
+      </Wrap>
+    </div>
+  </>;
 }
 
 // ── ÉQUIPE & SUIVI ───────────────────────────────────────────────────────────────

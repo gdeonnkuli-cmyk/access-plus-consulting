@@ -17,7 +17,7 @@ const RULES = {
   "22": "AJ",
   "23": "AK", "231": "AK", "232": "AK", "233": "AK", "237": "AK", "2391": "AK",
   "234": "AL", "235": "AL", "238": "AL", "2392": "AL", "2393": "AL",
-  "24": "AM", "245": "AN", "2495": "AN",
+  "24": "AM", "245": "AN", "2495": "AN", "247": "AL",
   "25": "AP", "26": "AR", "27": "AS",
   // Classe 3 — Stocks
   "3": "BB",
@@ -234,13 +234,13 @@ function computePeriod(lignes, per) {
   const A = {}, P = {}, R = {}, nonMap = [], detail = {};
   const add = (o, k, v) => { o[k] = (o[k] || 0) + v; };
   let td = 0, tc = 0, s13 = 0;
-  const pref = {}; // soldes débiteurs par préfixe de 2 et 3 chiffres (pour le TFT)
+  const acc = {}; // solde (débit − crédit) par compte, pour les retraitements du TFT
   for (const x of lignes) {
     const d = num(x[D]), c = num(x[C]);
     if (!d && !c) continue;
     td += d; tc += c;
     const solde = d - c;
-    for (const n of [2, 3]) add(pref, String(x.c).slice(0, n), solde);
+    add(acc, String(x.c), solde);
     const m = mapCompte(x.c);
     if (!m) { nonMap.push(x.c); continue; }
     let ref = m.r;
@@ -273,42 +273,91 @@ function computePeriod(lignes, per) {
   }
   const pas = {};
   for (const x of PASSIF) pas[x.ref] = x.f ? x.f.reduce((s, [sg, r]) => s + sg * pas[r], 0) : (P[x.ref] || 0);
-  const s = p => pref[p] || 0; // solde débiteur d'un préfixe
-  return { act, pas, cr, td: r2(td), tc: r2(tc), nonMap, detail, s13, has678, s, vide: !td && !tc };
+  // Soldes par préfixe : s = algébrique (débit − crédit), sD = comptes débiteurs, sC = comptes créditeurs
+  const keys = Object.keys(acc);
+  const agg = (ps, f) => [].concat(ps).reduce((t, p) => t + keys.reduce((u, c) => c.startsWith(p) ? u + f(acc[c]) : u, 0), 0);
+  const s = ps => agg(ps, v => v), sD = ps => agg(ps, v => Math.max(v, 0)), sC = ps => agg(ps, v => Math.max(-v, 0));
+  return { act, pas, cr, td: r2(td), tc: r2(tc), nonMap, detail, s13, has678, s, sD, sC, vide: !td && !tc };
 }
 
-// ── TFT (méthode SYSCOHADA révisé, variations sur valeurs nettes) ───────────────
-// k : compléments saisis par l'apprenant (informations non déductibles de la balance)
+// ── TFT : méthode du guide d'application SYSCOHADA révisé ─────────────────────────
+// Variations sur valeurs nettes ; retraitements des comptes liés aux immobilisations,
+// au capital, aux écarts de conversion et au compte 472. k : compléments saisis.
+const ECART_CIRC = { a: ["4781", "4782"], p: ["4791", "4792"] }; // écarts sur créances/dettes circulantes
+export function tresorerie(P) { return P.act.BT.n - P.pas.DT + P.s("472"); } // trésorerie corrigée du 472
 function computeTFT(N, P1, k = {}) {
-  const t = {};
-  const dA = r => N.act[r].n - P1.act[r].n, dAb = r => N.act[r].b - P1.act[r].b, dP = r => N.pas[r] - P1.pas[r];
-  const s = N.s;
-  t.ZA = P1.act.BT.n - P1.pas.DT;
-  // CAFG = Résultat net + dotations − reprises + VCC des cessions − produits des cessions
+  const t = {}, ex = {};
+  const dA = r => N.act[r].n - P1.act[r].n, dP = r => N.pas[r] - P1.pas[r];
+  const d = (f, ps) => N[f](ps) - P1[f](ps); // variation d'un agrégat de comptes
+  const s = N.s, cb = x => num(k[x]), has = x => k[x] !== undefined && k[x] !== "";
+  t.ZA = tresorerie(P1);
+  ex.ZA = `BT N-1 ${fmt(P1.act.BT.n)} − DT N-1 ${fmt(P1.pas.DT)}${P1.s("472") ? ` − 472 ${fmt(-P1.s("472"))}` : ""}`;
+  // CAFG = résultat net + dotations − reprises + VCC des cessions (81, 654) − produits des cessions (82, 754)
   const dot = s("68") + s("69") + s("85"), rep = -(s("79") + s("86"));
-  t.FA = N.cr.XI + dot - rep + s("81") + s("82");
-  t.FB = -dA("BA"); t.FC = -dA("BB"); t.FD = -dA("BG"); t.FE = dP("DP");
+  const vcc = s("81") + s("654"), pc = -(s("82") + s("754"));
+  t.FA = N.cr.XI + dot - rep + vcc - pc;
+  ex.FA = `Résultat net ${fmt(N.cr.XI)} + dotations ${fmt(dot)} − reprises ${fmt(rep)} + VCC ${fmt(vcc)} − produits de cession ${fmt(pc)}`;
+  // Variation du BFR (hors créances/dettes sur immobilisations, capital, subventions, 472, écarts de conversion)
+  const exBA = d("sD", "485");
+  t.FB = -(dA("BA") - exBA);
+  ex.FB = `Δ BA ${fmt(dA("BA"))} hors 485 (${fmt(exBA)})`;
+  t.FC = -dA("BB");
+  ex.FC = `Δ BB net ${fmt(dA("BB"))}`;
+  const exBG = d("sD", ["414", "4613", "467", "458", "4494", "4751"]), ecA = d("sD", ECART_CIRC.a[0]) - d("sC", ECART_CIRC.p[0]);
+  t.FD = -(dA("BG") - exBG + ecA);
+  ex.FD = `Δ BG net ${fmt(dA("BG"))} − comptes exclus (414, 4613/467, 458, 4494, 4751) ${fmt(exBG)} + écarts de conversion sur créances ${fmt(ecA)}`;
+  const exDP = d("sC", ["404", "481", "482", "4613", "467", "4752", "472"]), ecP = d("sC", ECART_CIRC.p[1]) - d("sD", ECART_CIRC.a[1]);
+  t.FE = dP("DP") - exDP + ecP;
+  ex.FE = `Δ DP ${fmt(dP("DP"))} − comptes exclus (404, 481, 482, 467, 4752, 472) ${fmt(exDP)} + écarts de conversion sur dettes ${fmt(ecP)}`;
   t.ZB = t.FA + t.FB + t.FC + t.FD + t.FE;
-  const cb = x => num(k[x]);
-  t.FF = -(dAb("AD") + cb("cbIncorp"));
-  t.FG = -(dAb("AI") + dAb("AP") + cb("cbCorp"));
-  t.FH = -(dAb("AQ") + cb("cbFin"));
-  const pcTot = -s("82");
-  t.FJ = cb("pcFin"); t.FI = pcTot - t.FJ;
+  // Investissements : acquisitions = Δ net + dotations − reprises + VCC − réévaluations
+  const dotI = s(["6811", "6812", "6913"]), repI = -s("7913"), vncI = s("811");
+  const dotC = s("681") - s(["6811", "6812"]) + s(["6914", "852", "853"]), repC = -s(["7914", "798", "862", "863"]), vncC = s("81") - s(["811", "816"]) + s("654");
+  const dotF = s("6972"), repF = -s("7972"), vncF = s("816");
+  const reev = dP("CE") + d("sC", "154");
+  const locAcq = has("locAcq") ? cb("locAcq") : Math.max(dP("DB"), 0);
+  const acqI = dA("AD") + dotI - repI + vncI;
+  const acqC = dA("AI") + dA("AP") + dotC - repC + vncC - reev - locAcq;
+  const dDetImmo = d("sC", ["404", "481", "482"]);
+  t.FF = -acqI;
+  ex.FF = `Δ AD net ${fmt(dA("AD"))} + dotations ${fmt(dotI - repI)} + VCC ${fmt(vncI)}`;
+  t.FG = -(acqC - dDetImmo);
+  ex.FG = `Δ AI+AP net ${fmt(dA("AI") + dA("AP"))} + dotations nettes ${fmt(dotC - repC)} + VCC ${fmt(vncC)} − réévaluations (106, 154) ${fmt(reev)} − location-acquisition ${fmt(locAcq)} − Δ dettes sur immobilisations (404, 481, 482) ${fmt(dDetImmo)}`;
+  const remb = cb("rembFin");
+  t.FH = -(dA("AQ") + dotF - repF + vncF + remb);
+  ex.FH = `Δ AQ net ${fmt(dA("AQ"))} + VCC ${fmt(vncF)} + remboursements encaissés ${fmt(remb)}`;
+  const pcFin = -s("826"), dCreCess = d("sD", ["485", "414"]);
+  t.FI = pc - pcFin - dCreCess;
+  ex.FI = `Produits de cession (82, 754) ${fmt(pc - pcFin)} − Δ créances sur cessions (485, 414) ${fmt(dCreCess)}`;
+  t.FJ = pcFin + remb;
+  ex.FJ = `Produits de cession financiers (826) ${fmt(pcFin)} + remboursements encaissés ${fmt(remb)}`;
   t.ZC = t.FF + t.FG + t.FH + t.FI + t.FJ;
-  t.FK = dP("CA") + dP("CB") + dP("CD");
-  t.FL = dP("CL") - s("799");
+  // Capitaux propres
+  const dApp = d("sD", ["4613", "467", "4581"]);
+  t.FK = dP("CA") + dP("CB") + dP("CD") - dApp;
+  ex.FK = `Δ capital appelé et primes ${fmt(dP("CA") + dP("CB") + dP("CD"))} − Δ apporteurs restant dû (4613/467, 4581) ${fmt(dApp)}`;
+  const dSubR = d("sD", ["4582", "4494"]);
+  t.FL = dP("CL") - s("799") - dSubR;
+  ex.FL = `Δ 14 ${fmt(dP("CL"))} + quote-part virée au résultat (799) ${fmt(-s("799"))} − Δ subventions à recevoir ${fmt(dSubR)}`;
   t.FM = -cb("prelev");
-  t.FN = -(P1.pas.CJ - (dP("CF") + dP("CG") + dP("CH")));
+  const dRes = dP("CF") + dP("CG") + dP("CH"), d465 = d("sC", "465");
+  t.FN = -(P1.pas.CJ - dRes - d465);
+  ex.FN = `Résultat N-1 ${fmt(P1.pas.CJ)} − Δ réserves et report à nouveau ${fmt(dRes)} − Δ dividendes à payer (465) ${fmt(d465)}`;
   t.ZD = t.FK + t.FL + t.FM + t.FN;
-  const dDette = dP("DA") + dP("DB");
-  const nouv = k.nouvEmp !== undefined && k.nouvEmp !== "" ? cb("nouvEmp") : Math.max(dDette, 0);
-  t.FO = nouv; t.FP = 0; t.FQ = dDette - nouv;
+  // Capitaux étrangers : 16 et 18 hors intérêts courus (166), corrigés des écarts de conversion sur emprunts
+  const ecF = (d("sC", "479") - d("sC", ECART_CIRC.p)) - (d("sD", "478") - d("sD", ECART_CIRC.a));
+  const dFin = dP("DA") - d("sC", "166") + ecF;
+  t.FO = has("nouvEmp") ? cb("nouvEmp") : Math.max(dFin, 0);
+  t.FP = 0;
+  t.FQ = dFin - t.FO + (dP("DB") - locAcq);
+  ex.FO = has("nouvEmp") ? "Montant saisi dans les informations complémentaires" : `Variation nette des dettes financières ${fmt(dFin)} (renseignez les nouveaux emprunts pour séparer FO et FQ)`;
+  ex.FQ = `Δ dettes financières corrigée ${fmt(dFin)} − emprunts nouveaux ${fmt(t.FO)} + remboursements de location-acquisition ${fmt(dP("DB") - locAcq)}`;
   t.ZE = t.FO + t.FP + t.FQ;
   t.ZF = t.ZD + t.ZE;
   t.ZG = t.ZB + t.ZC + t.ZF;
   t.ZH = t.ZG + t.ZA;
-  t.tresoBilan = N.act.BT.n - N.pas.DT;
+  t.tresoBilan = tresorerie(N);
+  t.ex = ex;
   return t;
 }
 
