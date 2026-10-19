@@ -35,15 +35,36 @@ Référence : manuel « Montage des états financiers du SYSCOHADA révisé ». 
 - **Multi-utilisateurs** : un dossier = un document Firestore `ef_dossiers/{id}` partagé en temps réel entre ses membres (invitation par e-mail). Circuit : Brouillon → Soumis → Validé / À corriger, avec fil de commentaires. Formateurs et administrateur voient tous les dossiers.
 
 ## Règles Firestore à ajouter (console Firebase)
+À coller à l'intérieur du bloc `match /databases/{database}/documents { … }` existant.
 ```
-match /ef_dossiers/{id} {
-  function isStaff() {
-    return request.auth.token.email == "admin@accessplus.com"
-      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "formateur";
-  }
-  allow read, update: if request.auth != null && (request.auth.uid in resource.data.membres || isStaff());
-  allow create: if request.auth != null && request.auth.uid in request.resource.data.membres;
-  allow delete: if request.auth != null && (resource.data.ownerUid == request.auth.uid || isStaff());
+function efConnecte() {
+  return request.auth != null;
+}
+function efStaff() {
+  return efConnecte() && (
+    request.auth.token.email == "admin@accessplus.com" ||
+    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "formateur"
+  );
+}
+
+match /ef_dossiers/{dossierId} {
+  allow read: if efConnecte() && (request.auth.uid in resource.data.membres || efStaff());
+  allow create: if efConnecte() && request.resource.data.ownerUid == request.auth.uid
+    && request.auth.uid in request.resource.data.membres;
+  allow update: if efConnecte() && (request.auth.uid in resource.data.membres || efStaff())
+    && request.resource.data.ownerUid == resource.data.ownerUid;
+  allow delete: if efConnecte() && (resource.data.ownerUid == request.auth.uid || efStaff());
+}
+
+// Annuaire des invitations : une fiche par e-mail (uid, nom, mail), lisible uniquement par son e-mail exact
+match /ef_annuaire/{mail} {
+  allow get: if efConnecte();
+  allow list: if false;
+  allow create, update: if efConnecte() && request.auth.token.email != null
+    && mail == request.auth.token.email.lower()
+    && request.resource.data.uid == request.auth.uid
+    && request.resource.data.keys().hasOnly(["uid", "nom", "mail", "maj"]);
+  allow delete: if efConnecte() && resource.data.uid == request.auth.uid;
 }
 ```
-L'invitation d'un collaborateur recherche son compte dans `users` par e-mail : les apprenants doivent donc pouvoir lire `users` (filtre `mail ==`).
+L'invitation d'un collaborateur passe par l'annuaire `ef_annuaire` : chaque utilisateur y inscrit sa fiche à la connexion, et l'on ne peut lire une fiche qu'en connaissant l'e-mail exact (pas de listage possible). La collection `users`, qui contient les codes d'activation, n'a pas à être ouverte aux apprenants ; formateurs et administrateur peuvent en plus retrouver un compte pas encore inscrit à l'annuaire via `users`.

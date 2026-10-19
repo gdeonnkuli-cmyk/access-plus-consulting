@@ -3,7 +3,7 @@ import{initializeApp,deleteApp}from"firebase/app";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup}from"firebase/auth";
 import{getFirestore,doc,getDoc,setDoc,updateDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,deleteField}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
-import EtatsFinanciers from"./EtatsFinanciers";
+import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
 
 // ── FIREBASE CONFIG ───────────────────────────────────────────────────────────
 const FB_CONFIG={
@@ -1272,6 +1272,7 @@ function FA({uid,onOut}){
   },[uid]);
 
   const{warning:faWarn}=useAutoLogout(onOut);
+  useEffect(()=>{if(fData)inscrireAnnuaire(db,{uid,nom:fData.nom,mail:auth.currentUser?.email||fData.mail});},[uid,fData?.nom,fData?.mail]);
   const myOpenAnswersFA=useFormateurOpenAnswers(uid);
   const myMsgsFA=useFormateurMessages(uid);
   const unreadMsgFA=myMsgsFA.filter(m=>m.fromRole==="apprenant"&&!m.luAdmin).length;
@@ -2422,6 +2423,8 @@ function UA({uid,onOut}){
     if(firstMod){sM(firstMod);}
   };
   const{warning:uaWarn}=useAutoLogout(onOut);
+  // Fiche d'annuaire (nom, e-mail) permettant aux collègues d'inviter cet apprenant dans un dossier d'états financiers
+  useEffect(()=>{if(uData)inscrireAnnuaire(db,{uid,nom:uData.nom,mail:auth.currentUser?.email||uData.mail});},[uid,uData?.nom,uData?.mail]);
   const myOpenAnswers=useMyOpenAnswers(uid);
   if(!uData||mL)return <div style={{minHeight:"100vh",background:K.bg}}><style>{mCss(K)}</style><Spin/></div>;
   const ok=uData.abonnement==="actif"&&!xp(uData.dateExpiration);

@@ -1,5 +1,5 @@
 import React,{useState,useEffect,useRef,useMemo}from"react";
-import{collection,doc,addDoc,updateDoc,deleteDoc,onSnapshot,query,where,getDocs,arrayUnion,arrayRemove}from"firebase/firestore";
+import{collection,doc,addDoc,setDoc,getDoc,updateDoc,deleteDoc,onSnapshot,query,where,getDocs,arrayUnion,arrayRemove}from"firebase/firestore";
 import{computeAll,parseBalance,mapCompte,num,fmt,LIB,ACTIF,PASSIF,CR,TFT}from"./ef/engine";
 import{CAS_PRATIQUES}from"./ef/casPratiques";
 import{DEVISES,FORMES,PROVINCES,IDENTITE,FISC_DEFAUT,computeIBP}from"./ef/rdc";
@@ -15,6 +15,27 @@ const STATUTS={
   valide:{l:"Validé",c:"#1A6B3A"},
 };
 const now=()=>new Date().toISOString();
+
+// ── Annuaire des invitations ─────────────────────────────────────────────────────
+// Collection « ef_annuaire » : une fiche par utilisateur, identifiée par son e-mail en minuscules,
+// ne contenant que l'uid, le nom et l'e-mail. Les règles Firestore autorisent la lecture d'une fiche
+// par son identifiant exact (get) mais pas le listage : on ne peut retrouver que les e-mails déjà connus.
+const ANNUAIRE="ef_annuaire";
+export async function inscrireAnnuaire(db,{uid,nom,mail}){
+  const m=(mail||"").trim().toLowerCase();
+  if(!uid||!m.includes("@"))return;
+  try{await setDoc(doc(db,ANNUAIRE,m),{uid,nom:nom||m.split("@")[0],mail:m,maj:now()},{merge:true});}
+  catch(e){console.log("inscrireAnnuaire",e.message);}
+}
+async function chercherCompte(db,m,staff){
+  const fiche=await getDoc(doc(db,ANNUAIRE,m));
+  if(fiche.exists())return{uid:fiche.data().uid,nom:fiche.data().nom||m};
+  if(staff){ // l'encadrement a accès à « users » : utile pour les comptes pas encore inscrits à l'annuaire
+    const snap=await getDocs(query(collection(db,"users"),where("mail","==",m)));
+    if(!snap.empty)return{uid:snap.docs[0].id,nom:snap.docs[0].data().nom||m};
+  }
+  return null;
+}
 const fDT=i=>!i?"—":new Date(i).toLocaleString("fr-FR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 const mono="'JetBrains Mono',monospace";
 
@@ -59,6 +80,7 @@ function NumCell({K,value,onChange,dis}){
 // ══════════════════ RACINE ══════════════════
 export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
   const staff=me.role==="formateur"||me.role==="admin";
+  useEffect(()=>{if(me.role!=="admin")inscrireAnnuaire(db,me);},[db,me.uid,me.nom,me.mail,me.role]);
   const[dossiers,sDos]=useState([]),[loading,sL]=useState(true),[err,sErr]=useState("");
   const[openId,sOpen]=useState(null),[creer,sCreer]=useState(false),[scope,sScope]=useState(staff?"tous":"miens"),[filtre,sFiltre]=useState("");
   useEffect(()=>{
@@ -694,11 +716,10 @@ function SuiviTab({db,K,me,staff,d,dref,onDeleted,nErr}){
     const m=mail.trim().toLowerCase();if(!m.includes("@"))return sMsg("Adresse e-mail invalide.");
     sBusy(true);sMsg("");
     try{
-      const snap=await getDocs(query(collection(db,"users"),where("mail","==",m)));
-      if(snap.empty){sMsg("Aucun compte Éco-Campus avec cette adresse.");sBusy(false);return;}
-      const u=snap.docs[0];
-      if((d.membres||[]).includes(u.id)){sMsg("Déjà membre du dossier.");sBusy(false);return;}
-      await updateDoc(dref,{membres:arrayUnion(u.id),[`membresInfo.${u.id}`]:{nom:u.data().nom||m,mail:m},...stamp});
+      const u=await chercherCompte(db,m,staff);
+      if(!u){sMsg("Aucun compte trouvé : votre collègue doit être inscrit sur Éco-Campus et s'être connecté au moins une fois depuis la mise en service de l'atelier.");sBusy(false);return;}
+      if((d.membres||[]).includes(u.uid)){sMsg("Déjà membre du dossier.");sBusy(false);return;}
+      await updateDoc(dref,{membres:arrayUnion(u.uid),[`membresInfo.${u.uid}`]:{nom:u.nom,mail:m},...stamp});
       sMail("");sMsg("✓ Collaborateur ajouté : il voit désormais ce dossier dans son atelier.");
     }catch(e){sMsg("⚠ "+e.message);}
     sBusy(false);
