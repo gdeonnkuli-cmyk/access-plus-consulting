@@ -34,37 +34,16 @@ Référence : manuel « Montage des états financiers du SYSCOHADA révisé ». 
 - **Fiscalité (IBP)** : résultat avant impôt + réintégrations (dont 647 amendes et pénalités, automatique) − déductions − déficits antérieurs ; IBP = max(taux × résultat fiscal ; minimum × chiffre d'affaires) ; comparaison avec le compte 89 et solde après acomptes. Taux par défaut 30 % et minimum 1 % du CA, **paramétrables** : à vérifier selon la loi de finances de l'exercice.
 - **Multi-utilisateurs** : un dossier = un document Firestore `ef_dossiers/{id}` partagé en temps réel entre ses membres (invitation par e-mail). Circuit : Brouillon → Soumis → Validé / À corriger, avec fil de commentaires. Formateurs et administrateur voient tous les dossiers.
 
-## Règles Firestore à ajouter (console Firebase)
-À coller à l'intérieur du bloc `match /databases/{database}/documents { … }` existant.
-```
-function efConnecte() {
-  return request.auth != null;
-}
-function efStaff() {
-  return efConnecte() && (
-    request.auth.token.email == "admin@accessplus.com" ||
-    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "formateur"
-  );
-}
+## Règles de sécurité Firebase
+Les règles complètes de l'application sont dans `firestore.rules` (Firestore) et `storage.rules` (Storage), référencées par `firebase.json`.
+Elles couvrent toutes les collections d'Éco-Campus (users, modules et notes, vidéos, présentations, documents, stages, plateformes, annonces, pdfs, config, présences, messages, openAnswers, psychoScores, demandes) ainsi que l'atelier (`ef_dossiers`, `ef_annuaire`) ; toute autre collection est refusée.
 
-match /ef_dossiers/{dossierId} {
-  allow read: if efConnecte() && (request.auth.uid in resource.data.membres || efStaff());
-  allow create: if efConnecte() && request.resource.data.ownerUid == request.auth.uid
-    && request.auth.uid in request.resource.data.membres;
-  allow update: if efConnecte() && (request.auth.uid in resource.data.membres || efStaff())
-    && request.resource.data.ownerUid == resource.data.ownerUid;
-  allow delete: if efConnecte() && (resource.data.ownerUid == request.auth.uid || efStaff());
-}
+Publication : console Firebase → Firestore Database → Règles → remplacer tout le contenu par `firestore.rules` → Publier ; puis Storage → Règles → `storage.rules` → Publier. Ou en ligne de commande : `firebase deploy --only firestore:rules,storage`.
 
-// Annuaire des invitations : une fiche par e-mail (uid, nom, mail), lisible uniquement par son e-mail exact
-match /ef_annuaire/{mail} {
-  allow get: if efConnecte();
-  allow list: if false;
-  allow create, update: if efConnecte() && request.auth.token.email != null
-    && mail == request.auth.token.email.lower()
-    && request.resource.data.uid == request.auth.uid
-    && request.resource.data.keys().hasOnly(["uid", "nom", "mail", "maj"]);
-  allow delete: if efConnecte() && resource.data.uid == request.auth.uid;
-}
-```
-L'invitation d'un collaborateur passe par l'annuaire `ef_annuaire` : chaque utilisateur y inscrit sa fiche à la connexion, et l'on ne peut lire une fiche qu'en connaissant l'e-mail exact (pas de listage possible). La collection `users`, qui contient les codes d'activation, n'a pas à être ouverte aux apprenants ; formateurs et administrateur peuvent en plus retrouver un compte pas encore inscrit à l'annuaire via `users`.
+Points clés :
+- un apprenant ne lit que sa fiche ; il ne peut s'attribuer l'abonnement « actif » que si l'administrateur lui a délivré un code, ni le rôle formateur sans code formateur, ni modifier sa date d'expiration ou ses codes ;
+- un formateur crée et soumet ses contenus en brouillon / en attente, corrige les copies qui lui sont adressées et ne modifie chez les apprenants que `progress` et `scores` ; seul l'administrateur publie ;
+- messages, copies et résultats psychotechniques ne sont lisibles que par leurs destinataires (apprenant, formateur concerné, administrateur) ;
+- l'invitation dans l'atelier passe par `ef_annuaire` (lecture d'une fiche par e-mail exact, listage interdit).
+
+Les règles Firestore ont été vérifiées sur l'émulateur Firebase (83 scénarios : parcours autorisés et tentatives d'abus refusées).

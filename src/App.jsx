@@ -2402,7 +2402,6 @@ function UA({uid,onOut}){
   const allPres=usePresentations();
   const allStages=useStages();
   const allPlats=usePlateformes();
-  const allDemandes=useDemandes();
   const{vids,live}=useVideos();
   useEffect(()=>{
     const unsub=onSnapshot(doc(db,"users",uid),(snap)=>{if(snap.exists())sUD({uid,...snap.data()});});

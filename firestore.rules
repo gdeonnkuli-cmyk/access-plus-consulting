@@ -1,0 +1,166 @@
+rules_version = '2';
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Règles Firestore — Éco-Campus RDC (Access Plus Consulting)
+// Rôles : administrateur (admin@accessplus.com), formateur (users/{uid}.role == "formateur"),
+// apprenant (tout autre compte connecté). Toute collection non listée ici est refusée.
+// ══════════════════════════════════════════════════════════════════════════════
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Fonctions communes ─────────────────────────────────────────────────────
+    function connecte() { return request.auth != null; }
+    function moi(uid) { return connecte() && request.auth.uid == uid; }
+    function estAdmin() { return connecte() && request.auth.token.email == "admin@accessplus.com"; }
+    function estFormateur() {
+      return connecte() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("role", "") == "formateur";
+    }
+    function estStaff() { return estAdmin() || estFormateur(); }
+    function champsModifies() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    function nouveau() { return request.resource.data; }
+
+    // ── Utilisateurs ────────────────────────────────────────────────────────────
+    // Un apprenant ne peut s'attribuer l'abonnement « actif » que si l'administrateur lui a déjà
+    // délivré un code (activationCode), ni le rôle formateur sans code formateur (formateurCode).
+    function abonnementAutorise() {
+      let avant = resource.data.get("abonnement", "aucun");
+      let apres = nouveau().get("abonnement", "aucun");
+      return apres == avant
+        || apres in ["demande", "expiré"]
+        || (apres == "actif" && resource.data.get("activationCode", null) is string && nouveau().get("codeValide", false) == true);
+    }
+    function roleAutorise() {
+      let avant = resource.data.get("role", null);
+      let apres = nouveau().get("role", null);
+      return apres == avant || (apres == "formateur" && resource.data.get("formateurCode", null) is string);
+    }
+    function inscriptionValide() {
+      return nouveau().get("abonnement", "aucun") == "aucun"
+        && nouveau().get("activationCode", null) == null
+        && nouveau().get("codeValide", false) == false
+        && nouveau().get("dateExpiration", null) == null
+        && !("role" in nouveau())
+        && !("formateurCode" in nouveau());
+    }
+    match /users/{uid} {
+      allow read: if moi(uid) || estStaff();
+      allow create: if estAdmin() || (moi(uid) && inscriptionValide());
+      allow update: if estAdmin()
+        // correction des évaluations par un formateur
+        || (estFormateur() && champsModifies().hasOnly(["progress", "scores"]))
+        // modifications par l'utilisateur lui-même
+        || (moi(uid)
+            && champsModifies().hasOnly(["nom", "lastLogin", "onboardingDone", "progress", "scores", "abonnement", "demandeDate",
+                                         "codeValide", "role", "formateurCodeValide", "consentDate", "consentVersion"])
+            && abonnementAutorise() && roleAutorise());
+      allow delete: if estAdmin();
+    }
+
+    // ── Contenus pédagogiques ───────────────────────────────────────────────────
+    // Un formateur crée et modifie ses propres contenus en brouillon ou en attente ; seul
+    // l'administrateur publie (status "approved", on: true).
+    function contenuFormateurValide() {
+      return estFormateur()
+        && nouveau().get("createdBy", "") == request.auth.uid
+        && nouveau().get("status", "draft") in ["draft", "pending"]
+        && nouveau().get("on", false) == false;
+    }
+    function supprimableParFormateur() {
+      return estFormateur() && resource.data.get("createdBy", "") == request.auth.uid && resource.data.get("status", "draft") != "approved";
+    }
+    match /modules/{id} {
+      allow read: if connecte();
+      allow create: if estAdmin() || contenuFormateurValide();
+      allow update: if estAdmin() || (contenuFormateurValide() && resource.data.get("createdBy", "") == request.auth.uid);
+      allow delete: if estAdmin() || supprimableParFormateur();
+
+      // Notes et avis des apprenants : un document par apprenant
+      match /ratings/{uid} {
+        allow read: if connecte();
+        allow create, update: if moi(uid) && nouveau().get("uid", "") == uid;
+        allow delete: if moi(uid) || estAdmin();
+      }
+    }
+    match /videos/{id} {
+      allow read: if connecte();
+      allow create: if estAdmin() || contenuFormateurValide();
+      allow update: if estAdmin() || (contenuFormateurValide() && resource.data.get("createdBy", "") == request.auth.uid);
+      allow delete: if estAdmin() || supprimableParFormateur();
+    }
+    match /presentations/{id} {
+      allow read: if connecte();
+      allow create: if estAdmin() || contenuFormateurValide();
+      allow update: if estAdmin() || (contenuFormateurValide() && resource.data.get("createdBy", "") == request.auth.uid);
+      allow delete: if estAdmin() || supprimableParFormateur();
+    }
+    // Documents déposés par les formateurs (validés par l'administrateur)
+    match /documents/{id} {
+      allow read: if estAdmin() || (connecte() && resource.data.get("createdBy", "") == request.auth.uid);
+      allow create: if estAdmin() || (estFormateur() && nouveau().get("createdBy", "") == request.auth.uid && nouveau().get("status", "draft") == "draft");
+      allow update: if estAdmin()
+        || (estFormateur() && resource.data.get("createdBy", "") == request.auth.uid
+            && nouveau().get("createdBy", "") == request.auth.uid && nouveau().get("status", "draft") in ["draft", "pending"]);
+      allow delete: if estAdmin() || supprimableParFormateur();
+    }
+
+    // Catalogue géré par l'administrateur, lisible par tous les connectés
+    match /stages/{id}      { allow read: if connecte(); allow write: if estAdmin(); }
+    match /plateformes/{id} { allow read: if connecte(); allow write: if estAdmin(); }
+    match /annonces/{id}    { allow read: if connecte(); allow write: if estAdmin(); }
+    match /pdfs/{id}        { allow read: if connecte(); allow write: if estAdmin(); }
+    match /config/{id}      { allow read: if connecte(); allow write: if estAdmin(); }
+    match /presences/{id}   { allow read, write: if estAdmin(); }
+
+    // ── Échanges et évaluations ─────────────────────────────────────────────────
+    match /messages/{id} {
+      allow read: if estAdmin()
+        || (connecte() && (resource.data.get("apprenantUid", "") == request.auth.uid || resource.data.get("formateurUid", "") == request.auth.uid));
+      allow create: if estAdmin()
+        || (connecte() && nouveau().get("from", "") == request.auth.uid
+            && (nouveau().get("apprenantUid", "") == request.auth.uid || (estFormateur() && nouveau().get("formateurUid", "") == request.auth.uid)));
+      allow update: if estAdmin()
+        || (connecte() && resource.data.get("apprenantUid", "") == request.auth.uid && champsModifies().hasOnly(["luApprenant"]))
+        || (connecte() && resource.data.get("formateurUid", "") == request.auth.uid && champsModifies().hasOnly(["luAdmin"]));
+      allow delete: if estAdmin();
+    }
+    // Copies des évaluations à réponses ouvertes
+    match /openAnswers/{id} {
+      allow read: if estAdmin()
+        || (connecte() && (resource.data.get("apprenantUid", "") == request.auth.uid || resource.data.get("formateurUid", "") == request.auth.uid));
+      allow create: if connecte() && nouveau().get("apprenantUid", "") == request.auth.uid && nouveau().get("graded", false) == false;
+      allow update: if estAdmin()
+        || (connecte() && resource.data.get("formateurUid", "") == request.auth.uid
+            && champsModifies().hasOnly(["graded", "notes", "totalPoints", "pct", "gradedAt"]));
+      allow delete: if estAdmin();
+    }
+    match /psychoScores/{id} {
+      allow read: if estAdmin() || (connecte() && resource.data.get("uid", "") == request.auth.uid);
+      allow create: if connecte() && nouveau().get("uid", "") == request.auth.uid;
+      allow update, delete: if estAdmin();
+    }
+    // Demandes de services : créées par les connectés, traitées par l'administrateur
+    match /demandes/{id} {
+      allow create: if connecte();
+      allow read, update, delete: if estAdmin();
+    }
+
+    // ── Atelier États financiers SYSCOHADA ──────────────────────────────────────
+    match /ef_dossiers/{dossierId} {
+      allow read: if connecte() && (request.auth.uid in resource.data.membres || estStaff());
+      allow create: if connecte() && nouveau().ownerUid == request.auth.uid && request.auth.uid in nouveau().membres;
+      allow update: if connecte() && (request.auth.uid in resource.data.membres || estStaff())
+        && nouveau().ownerUid == resource.data.ownerUid;
+      allow delete: if connecte() && (resource.data.ownerUid == request.auth.uid || estStaff());
+    }
+    // Annuaire des invitations : une fiche par e-mail, lisible seulement par son e-mail exact
+    match /ef_annuaire/{mail} {
+      allow get: if connecte();
+      allow list: if false;
+      allow create, update: if connecte() && request.auth.token.email != null
+        && mail == request.auth.token.email.lower()
+        && nouveau().uid == request.auth.uid
+        && nouveau().keys().hasOnly(["uid", "nom", "mail", "maj"]);
+      allow delete: if connecte() && resource.data.uid == request.auth.uid;
+    }
+  }
+}
