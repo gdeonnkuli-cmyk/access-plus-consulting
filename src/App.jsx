@@ -528,16 +528,8 @@ function usePresentations(){
 function useW(){const[w,sW]=useState(typeof window!=="undefined"?window.innerWidth:375);useEffect(()=>{const h=()=>sW(window.innerWidth);window.addEventListener("resize",h,{passive:true});return()=>window.removeEventListener("resize",h);},[]);return{mob:w<640};}
 
 // ── UI PRIMITIVES ─────────────────────────────────────────────────────────────
-const Logo=({sm})=>{const K=useK();return <div style={{display:"flex",alignItems:"center",flexShrink:0}}>
-  <img src="/logo.png" alt="Éco-Campus RDC"
-    style={{height:sm?28:36,width:"auto",objectFit:"contain",display:"none"}}
-    onError={e=>{e.target.style.display="none";if(e.target.nextSibling)e.target.nextSibling.style.display="flex";}}
-  />
-  <div style={{display:"flex",alignItems:"center",gap:8}}>
-    <svg width={sm?18:22} height={sm?18:22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke={K.em} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-    <div><div style={{fontWeight:800,fontSize:sm?13:15,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>{!sm&&<div style={{fontSize:8,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>RDC</div>}</div>
-  </div>
-</div>;};
+const Logo=({sm,h})=>{const{tid}=useContext(Ctx);const sombre=["dark","blue","green","purple"].includes(tid);
+  return <img src={sombre?"/logo-clair.png":"/logo.png"} alt="Éco-Campus" style={{height:h||(sm?28:34),width:"auto",display:"block",flexShrink:0}}/>;};
 const Tg=({c,bg,bd,ch})=>{const K=useK();return <span style={{background:bg||K.c2,color:c||K.t2,border:`1px solid ${bd||K.b0}`,borderRadius:99,padding:"2px 8px",fontSize:12,fontWeight:600,fontFamily:"'JetBrains Mono',monospace",whiteSpace:"nowrap"}}>{ch}</span>;};
 const Bar=({p,col,h=4})=>{const K=useK();return <div style={{background:K.b0,borderRadius:99,height:h,overflow:"hidden"}}><div style={{width:`${Math.min(p,100)}%`,height:"100%",background:col||K.em,borderRadius:99,transition:"width .6s ease"}}/></div>;};
 const Spin=()=>{const K=useK();return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:24,background:K.bg}}><div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{position:"absolute",width:70,height:70,borderRadius:"50%",background:`${K.em}14`,animation:"pulse 2s ease-in-out infinite"}}/><div style={{position:"absolute",width:52,height:52,borderRadius:"50%",background:`${K.em}0D`,animation:"pulse 2s ease-in-out infinite .4s"}}/><div style={{width:46,height:46,borderRadius:14,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 8px 24px ${K.emD}55`,animation:"logofl 2.4s ease-in-out infinite"}}><svg width={22} height={22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="rgba(7,18,9,.5)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 2L18 11L10 20" stroke="#F5EDD8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg></div></div><div style={{textAlign:"center"}}><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:6}}>Éco-Campus</div><div style={{display:"flex",alignItems:"center",gap:5,justifyContent:"center"}}>{[0,1,2].map(i=><span key={i} style={{width:5,height:5,borderRadius:"50%",background:K.em,display:"inline-block",animation:"dotfl 1.4s ease-in-out infinite",animationDelay:`${i*0.22}s`}}/>)}</div></div></div>;};
@@ -611,7 +603,7 @@ function Player({url,titre,onClose,playlist,startIdx=0}){
           {list.map((v,i)=>{const pv=pVid(v.url);const isCur=i===idx;return <div key={i} onClick={()=>{go(i);if(mob)sShowPlan(false);}} className="bt" style={{padding:"10px 14px",borderBottom:`1px solid ${K.b0}`,cursor:"pointer",background:isCur?K.emBg:"transparent",borderLeft:isCur?`3px solid ${K.em}`:"3px solid transparent",display:"flex",gap:9,alignItems:"flex-start"}}>
             <div style={{width:48,height:32,borderRadius:5,background:K.c2,flexShrink:0,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
               {pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:null}
-              <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.3)",display:"flex",alignItems:"center",justifyContent:"center"}}><i className={isCur?"ti ti-player-play-filled":"ti ti-player-play"} style={{fontSize:12,color:isCur?K.em:"#fff"}}/></div>
+              <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.3)",display:"flex",alignItems:"center",justifyContent:"center"}}><i className={isCur?"ti ti-player-play":"ti ti-player-play"} style={{fontSize:12,color:isCur?K.em:"#fff"}}/></div>
             </div>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:13,fontWeight:isCur?700:500,color:isCur?K.em:K.t1,lineHeight:1.35,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{v.titre}</div>
@@ -899,11 +891,7 @@ function LandingPage({onLogin}){
       borderBottom:scrolled?`1px solid ${K.b0}`:"none",
       padding:mob?"10px 16px":"12px 32px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
       <div style={{display:"flex",alignItems:"center",gap:9}}>
-        <svg width="24" height="24" viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        <div>
-          <div style={{fontWeight:800,fontSize:16,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>
-          <div style={{fontSize:10,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>RDC</div>
-        </div>
+        <Logo h={mob?28:34}/>
       </div>
       <button onClick={onLogin} className="bt" style={{
         background:`linear-gradient(135deg,#16A34A,#22C55E)`,border:"none",
@@ -936,11 +924,7 @@ function LandingPage({onLogin}){
 
       {/* Logo hero */}
       <div style={{marginBottom:20,animation:"up .5s ease .05s both",display:"flex",alignItems:"center",justifyContent:"center",gap:12}}>
-        <svg width={mob?32:42} height={mob?32:42} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        <div style={{textAlign:"left"}}>
-          <div style={{fontWeight:900,fontSize:mob?24:32,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>
-          <div style={{fontSize:mob?10:12,color:K.t3,letterSpacing:"3px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginTop:3}}>RDC</div>
-        </div>
+        <Logo h={mob?54:76}/>
       </div>
 
       {/* Titre */}
@@ -1056,11 +1040,7 @@ function LandingPage({onLogin}){
     <div style={{padding:mob?"56px 20px":"80px 32px",textAlign:"center"}}>
       <div style={{maxWidth:560,margin:"0 auto"}}>
         <div style={{margin:"0 auto 20px",display:"flex",justifyContent:"center",alignItems:"center",gap:10}}>
-          <svg width="30" height="30" viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <div style={{textAlign:"left"}}>
-            <div style={{fontWeight:900,fontSize:22,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>
-            <div style={{fontSize:10,color:K.t3,letterSpacing:"2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginTop:3}}>RDC</div>
-          </div>
+          <Logo h={44}/>
         </div>
         <h2 style={{margin:"0 0 14px",fontSize:mob?"1.8rem":"2.4rem",
           fontWeight:900,color:K.t1,lineHeight:1.2}}>
@@ -1255,6 +1235,76 @@ function ProgressRing({pct,size=80,stroke=7,col,track,txt}){
   </svg>;
 }
 
+
+// ── COMPOSANTS COMMUNS ESPACES FORMATEUR / ADMIN ──────────────────────────────
+const ROLE_COL={formateur:["#5B21B6","#8B5CF6"],admin:["#011B33","#1A6B3A"]};
+function StaffNav({role,nom,onOut,tabs,active,onTab,extra}){
+  const K=useK();const{mob}=useW();const[c1,c2]=ROLE_COL[role];
+  return <nav className="nb" style={{background:`${K.card}f4`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99,boxShadow:"0 4px 18px rgba(0,0,0,.04)"}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,minHeight:mob?54:60,padding:mob?"6px 12px":"6px 20px"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}>
+        <Logo sm={mob}/>
+        <span style={{display:"inline-flex",alignItems:"center",gap:5,background:`linear-gradient(135deg,${c1},${c2})`,color:"#fff",borderRadius:99,padding:mob?"3px 9px":"4px 11px",fontSize:11,fontWeight:800,letterSpacing:.6,boxShadow:`0 4px 12px ${c2}40`,flexShrink:0}}>
+          <i className={`ti ti-${role==="admin"?"shield-check":"school"}`} style={{fontSize:13}}/>{role==="admin"?"ADMIN":"FORMATEUR"}
+        </span>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+        {extra}
+        <div style={{display:"flex",alignItems:"center",gap:7,padding:"3px 4px 3px 3px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:99}}>
+          <div style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${c1},${c2})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:13}}>{(nom||"?")[0].toUpperCase()}</div>
+          {!mob&&<span style={{fontSize:13,fontWeight:700,color:K.t2}}>{(nom||"").split(" ")[0]}</span>}
+          <button onClick={onOut} className="bt" title="Se déconnecter" style={{display:"flex",alignItems:"center",gap:4,background:K.card,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:99,padding:"5px 10px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
+            <i className="ti ti-logout" style={{fontSize:14}}/>{!mob&&"Quitter"}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div className="tn" style={{gap:6,padding:mob?"0 12px 9px":"0 20px 10px"}}>
+      {tabs.map(({k,ico,label,badge,bc})=>{const a=active===k;return <button key={k} onClick={()=>onTab(k)} className="bt" style={{display:"flex",alignItems:"center",gap:6,padding:"7px 13px",borderRadius:99,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"'Outfit',sans-serif",fontSize:13,fontWeight:a?800:600,
+        background:a?`linear-gradient(135deg,${c1},${c2})`:K.c2,color:a?"#fff":K.t2,border:a?"1px solid transparent":`1px solid ${K.b0}`,boxShadow:a?`0 4px 12px ${c2}40`:"none",flexShrink:0}}>
+        <i className={`ti ti-${ico.replace(/^ti-/,"")}`} style={{fontSize:15,color:a?"#fff":K.t3}}/>{label}
+        {badge>0&&<span style={{background:a?"rgba(255,255,255,.25)":(bc||K.rd),color:"#fff",borderRadius:99,fontSize:11,fontWeight:800,padding:"0 6px",minWidth:18,textAlign:"center",lineHeight:"17px"}}>{badge}</span>}
+      </button>;})}
+    </div>
+  </nav>;
+}
+function StaffHero({role,label,title,sub,stats,children}){
+  const{mob}=useW();const[c1,c2]=ROLE_COL[role];
+  return <div className="card-enter" style={{background:`linear-gradient(135deg,${c1} 0%,${c2} 100%)`,borderRadius:24,padding:mob?"22px 18px":"28px 30px",marginBottom:22,position:"relative",overflow:"hidden",color:"#fff",boxShadow:`0 16px 36px ${c2}35`}}>
+    <div style={{position:"absolute",top:-70,right:-50,width:240,height:240,borderRadius:"50%",background:"rgba(255,255,255,.07)"}}/>
+    <div style={{position:"absolute",bottom:-90,right:mob?-40:160,width:200,height:200,borderRadius:"50%",background:"rgba(255,255,255,.05)"}}/>
+    <div style={{position:"absolute",top:mob?16:22,right:mob?16:30,opacity:.12,fontSize:mob?80:110,lineHeight:1,pointerEvents:"none"}}><i className={`ti ti-${role==="admin"?"shield-check":"school"}`}/></div>
+    <div style={{position:"relative"}}>
+      <div style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:12,fontWeight:700,letterSpacing:.4,textTransform:"uppercase",background:"rgba(255,255,255,.14)",border:"1px solid rgba(255,255,255,.22)",borderRadius:99,padding:"5px 11px",marginBottom:12}}><i className="ti ti-sparkles" style={{fontSize:14}}/>{label}</div>
+      <div style={{fontFamily:"'Fraunces',serif",fontSize:mob?26:32,fontWeight:800,marginBottom:6,letterSpacing:"-.4px",lineHeight:1.15}}>{title}</div>
+      <div style={{fontSize:mob?15:16,color:"rgba(255,255,255,.86)",marginBottom:stats?18:0,lineHeight:1.55,maxWidth:560}}>{sub}</div>
+      {stats&&<div style={{display:"grid",gridTemplateColumns:mob?"repeat(2,1fr)":`repeat(${stats.length},minmax(0,150px))`,gap:8}}>
+        {stats.map(([v,l,ic,on])=><div key={l} onClick={on} className={on?"bt":undefined} style={{background:"rgba(255,255,255,.13)",backdropFilter:"blur(8px)",borderRadius:14,padding:"11px 14px",border:"1px solid rgba(255,255,255,.2)",cursor:on?"pointer":"default"}}>
+          <div style={{fontSize:mob?21:24,fontWeight:900,lineHeight:1.1}}>{v}</div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,.8)",marginTop:3,display:"flex",alignItems:"center",gap:4}}><i className={`ti ti-${ic}`} style={{fontSize:13}}/>{l}</div>
+        </div>)}
+      </div>}
+      {children}
+    </div>
+  </div>;
+}
+// Tuile d'action : icône en dégradé, titre, description, pastille facultative
+function ActionTile({ico,col,label,desc,badge,on,i=0,compact}){
+  const K=useK();const{mob}=useW();
+  if(compact)return <div onClick={on} className="tile" style={{padding:"14px 6px 12px",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",gap:8,animation:`slideUp .4s cubic-bezier(.22,1,.36,1) ${i*25}ms both`}}>
+    {!!badge&&<span style={{position:"absolute",top:7,right:7,background:col,color:"#fff",borderRadius:99,fontSize:11,fontWeight:800,padding:"1px 6px",minWidth:18,textAlign:"center"}}>{badge}</span>}
+    <div style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${col},${col}B0)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 6px 14px ${col}40`}}><i className={`ti ti-${ico}`} style={{fontSize:21,color:"#fff"}}/></div>
+    <div style={{fontWeight:700,fontSize:12.5,color:K.t1,lineHeight:1.2}}>{label}</div>
+  </div>;
+  return <div onClick={on} className="tile" style={{padding:mob?"15px 14px":"18px 18px",display:"flex",flexDirection:"column",minHeight:desc?(mob?132:146):(mob?108:118),animation:`slideUp .4s cubic-bezier(.22,1,.36,1) ${i*35}ms both`}}>
+    <div style={{position:"absolute",top:-34,right:-34,width:110,height:110,borderRadius:"50%",background:`radial-gradient(circle,${col}22,transparent 70%)`}}/>
+    {!!badge&&<span style={{position:"absolute",top:12,right:12,background:col,color:"#fff",borderRadius:99,fontSize:12,fontWeight:800,padding:"2px 8px",minWidth:22,textAlign:"center",boxShadow:`0 4px 10px ${col}50`}}>{badge}</span>}
+    <div style={{width:mob?44:48,height:mob?44:48,borderRadius:14,background:`linear-gradient(135deg,${col},${col}B0)`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12,boxShadow:`0 8px 18px ${col}40`,position:"relative"}}><i className={`ti ti-${ico}`} style={{fontSize:mob?22:24,color:"#fff"}}/></div>
+    <div style={{fontWeight:800,fontSize:mob?15:16,color:K.t1,marginBottom:desc?4:0,letterSpacing:"-.2px",lineHeight:1.25}}>{label}</div>
+    {desc&&<div style={{fontSize:13,color:K.t2,lineHeight:1.45,flex:1}}>{desc}</div>}
+  </div>;
+}
+
 // ── FORMATEUR APP ─────────────────────────────────────────────────────────────
 function FA({uid,onOut}){
   const K=useK();const{mob}=useW();
@@ -1318,43 +1368,8 @@ function FA({uid,onOut}){
   const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
     <AutoLogoutBanner warning={faWarn} mob={mob}/>
-    {/* Navbar formateur */}
-    <nav className="nb" style={{background:`${K.card}f2`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",rowGap:6,minHeight:50,padding:"8px 16px"}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <Logo sm={mob}/>
-          <div style={{width:1,height:16,background:K.b0}}/>
-          <div style={{display:"flex",alignItems:"center",gap:5,background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:99,padding:"2px 10px"}}>
-            <i className="ti ti-school" style={{fontSize:12,color:"#8B5CF6"}}/>
-            <span style={{fontSize:11,fontWeight:800,color:"#8B5CF6",letterSpacing:.4}}>FORMATEUR</span>
-          </div>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:13,color:K.t2,fontWeight:600}}>{(fData.nom||"").split(" ")[0]}</span>
-          <button onClick={onOut} className="bt" style={{display:"flex",alignItems:"center",gap:5,background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
-            <i className="ti ti-logout" style={{fontSize:13}}/>
-            {!mob&&"Quitter"}
-          </button>
-        </div>
-      </div>
-      {/* Sous-nav */}
-      <div className="tn" style={{borderTop:`1px solid ${K.b0}`,gap:1,paddingBottom:2}}>
-        {NAV.map(({k,ico,label,badge})=>{
-          const active=vue===k;
-          return <button key={k} onClick={()=>sV(k)} className="bt"
-            style={{display:"flex",alignItems:"center",gap:5,padding:"6px 12px",border:"none",cursor:"pointer",
-              background:active?K.c2:"transparent",color:active?K.t1:K.t3,
-              fontWeight:active?700:500,fontSize:13,whiteSpace:"nowrap",
-              fontFamily:"'Outfit',sans-serif",borderBottom:active?`2px solid #8B5CF6`:"2px solid transparent",
-              borderRadius:"6px 6px 0 0",minHeight:34}}>
-            <i className={`ti ti-${ico}`} style={{fontSize:14,color:active?"#8B5CF6":K.t3}}/>
-            {label}
-            {!!badge&&<span style={{background:"#EF4444",color:"#fff",borderRadius:99,fontSize:10,fontWeight:800,padding:"1px 6px",marginLeft:2}}>{badge}</span>}
-          </button>;
-        })}
-      </div>
-    </nav>
-    <main style={{maxWidth:960,margin:"0 auto",padding:mob?"16px 14px 80px":"20px 24px"}}>
+    <StaffNav role="formateur" nom={fData.nom} onOut={onOut} tabs={NAV} active={vue} onTab={sV}/>
+    <main style={{maxWidth:1060,margin:"0 auto",padding:mob?"18px 14px 80px":"24px 24px 40px"}}>
       {msg.m&&<div style={{background:msg.t==="o"?K.emBg:K.erBg,border:`1px solid ${msg.t==="o"?K.emBd:K.erBd}`,borderRadius:9,padding:"9px 14px",marginBottom:12,fontSize:14,color:msg.t==="o"?K.em:K.er,display:"flex",gap:7}}><i className={`ti ti-${msg.t==="o"?"check":"alert-triangle"}`} style={{fontSize:14}}/>{msg.m}</div>}
       {ch}
     </main>
@@ -1362,62 +1377,41 @@ function FA({uid,onOut}){
 
   // ── HOME ──────────────────────────────────────────────────────────────────
   if(vue==="home")return W(<div style={{animation:"fadeIn .35s ease"}}>
-    {/* Bannière bienvenue */}
-    <div style={{background:`linear-gradient(135deg,#8B5CF618,#6D28D918)`,border:`1px solid #8B5CF630`,borderRadius:16,padding:"20px 22px",marginBottom:16}}>
-      <div style={{fontSize:13,color:"#8B5CF6",fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:5}}>
-        <i className="ti ti-school" style={{fontSize:14}}/>Espace Formateur
-      </div>
-      <div style={{fontSize:mob?18:22,fontWeight:900,color:K.t1,marginBottom:4}}>Bonjour, {(fData.nom||"").split(" ")[0]} 👋</div>
-      <div style={{fontSize:14,color:K.t2,marginBottom:16}}>Créez du contenu de qualité pour vos apprenants SYSCOHADA.</div>
-      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-        {[
-          [`${myMods.length}`,"Modules créés","#8B5CF6"],
-          [`${myVids.length}`,"Vidéos","#3B82F6"],
-          [`${myLearners.length}`,"Apprenants","#22C55E"],
-          [`${avgScore}%`,"Score moyen","#F59E0B"],
-        ].map(([v,l,c])=><div key={l} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:"10px 14px"}}>
-          <div style={{fontWeight:900,fontSize:18,color:c,lineHeight:1}}>{v}</div>
-          <div style={{fontSize:12,color:K.t3,marginTop:3}}>{l}</div>
-        </div>)}
-      </div>
-    </div>
+    <StaffHero role="formateur" label="Espace formateur" title={<>Bonjour, {(fData.nom||"").split(" ")[0]} 👋</>}
+      sub="Créez du contenu de qualité pour vos apprenants et suivez leur progression."
+      stats={[[`${myMods.length}`,"Modules créés","book-2",()=>sV("mods")],[`${myVids.length}`,"Vidéos","video",()=>sV("vids")],[`${myLearners.length}`,"Apprenants","users",()=>sV("stats")],[`${avgScore}%`,"Score moyen","chart-line",()=>sV("stats")]]}/>
 
-    {/* Actions rapides */}
-    <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:12}}>Actions rapides</div>
-    <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(2,1fr)",gap:12,marginBottom:20}}>
+    <div className="h-sec" style={{color:K.t1,marginBottom:12}}>Actions rapides</div>
+    <div className="gq" style={{marginBottom:24}}>
       {[
-        {ico:"book-plus",col:"#8B5CF6",bg:"#8B5CF618",bd:"#8B5CF630",label:"Créer un module",desc:"Nouveau module avec QCM et contenu",action:()=>sV("mods")},
-        {ico:"video-plus",col:"#3B82F6",bg:"#3B82F618",bd:"#3B82F630",label:"Ajouter une vidéo",desc:"Lien YouTube ou URL de la vidéo",action:()=>sV("vids")},
-        {ico:"chart-bar",col:"#22C55E",bg:"#22C55E18",bd:"#22C55E30",label:"Voir les stats",desc:"Progression et scores de vos apprenants",action:()=>sV("stats")},
-        {ico:"clock",col:"#F59E0B",bg:"#F59E0B18",bd:"#F59E0B30",label:"En attente",desc:`${myMods.filter(m=>m.status==="pending").length} module(s) en validation`,action:()=>sV("mods")},
-      ].map(({ico,col,bg,bd,label,desc,action})=><div key={label} onClick={action} className="hv"
-        style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"16px",cursor:"pointer",display:"flex",gap:14,alignItems:"flex-start"}}>
-        <div style={{width:40,height:40,borderRadius:11,background:bg,border:`1px solid ${bd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-          <i className={`ti ti-${ico}`} style={{fontSize:19,color:col}}/>
-        </div>
-        <div>
-          <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:3}}>{label}</div>
-          <div style={{fontSize:13,color:K.t2}}>{desc}</div>
-        </div>
-      </div>)}
+        {ico:"book-upload",col:"#7C3AED",label:"Créer un module",desc:"Contenu, QCM et exercice corrigé",on:()=>sV("mods")},
+        {ico:"video-plus",col:"#2563EB",label:"Ajouter une vidéo",desc:"Lien YouTube ou URL directe",on:()=>sV("vids")},
+        {ico:"presentation",col:"#D97706",label:"Mes slides",desc:`${myPres.length} présentation${myPres.length>1?"s":""}`,on:()=>sV("pres")},
+        {ico:"checkbox",col:"#DC2626",label:"Corrections",desc:nUngraded?`${nUngraded} copie${nUngraded>1?"s":""} à corriger`:"Aucune copie en attente",badge:nUngraded,on:()=>sV("corr")},
+        {ico:"message-circle",col:"#0D7A6B",label:"Messages",desc:unreadMsgFA?`${unreadMsgFA} non lu${unreadMsgFA>1?"s":""}`:"Échanges avec vos apprenants",badge:unreadMsgFA,on:()=>sV("fmsg")},
+        {ico:"report-money",col:"#1D4ED8",label:"États financiers",desc:"Atelier SYSCOHADA et suivi des dossiers",on:()=>sV("ef")},
+      ].map((t,i)=><ActionTile key={t.label} {...t} i={i}/>)}
     </div>
 
     {/* Modules récents */}
     {myMods.length>0&&<>
-      <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10}}>Mes derniers modules</div>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {myMods.slice(0,3).map(m=>{
-          const statusCol={pending:"#F59E0B",approved:"#22C55E",rejected:"#EF4444"}[m.status]||K.t3;
+      <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:12}}>
+        <div className="h-sec" style={{color:K.t1}}>Mes derniers modules</div>
+        <button onClick={()=>sV("mods")} className="bt" style={{background:"none",border:"none",color:"#7C3AED",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Tout voir →</button>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {myMods.slice(0,4).map(m=>{
+          const statusCol={pending:"#D97706",approved:"#16A34A",rejected:"#DC2626"}[m.status]||K.t3;
           const statusLbl={pending:"En attente",approved:"Publié",rejected:"Rejeté"}[m.status]||"Brouillon";
-          return <div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12}}>
-            <div style={{width:36,height:36,borderRadius:9,background:`${statusCol}18`,border:`1px solid ${statusCol}30`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              <i className="ti ti-book-2" style={{fontSize:16,color:statusCol}}/>
+          return <div key={m.id} onClick={()=>sV("mods")} className="tile" style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:13,borderLeft:`4px solid ${statusCol}`}}>
+            <div style={{width:40,height:40,borderRadius:12,background:`${statusCol}16`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <i className="ti ti-book-2" style={{fontSize:19,color:statusCol}}/>
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontWeight:700,fontSize:14,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>
-              <div style={{fontSize:12,color:K.t3}}>{m.q?.length||0} questions</div>
+              <div style={{fontWeight:800,fontSize:15,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>
+              <div style={{fontSize:13,color:K.t3,marginTop:2}}>{m.mat?`${m.mat} · `:""}{m.q?.length||0} questions</div>
             </div>
-            <div style={{background:`${statusCol}18`,border:`1px solid ${statusCol}30`,borderRadius:99,padding:"2px 9px",fontSize:12,fontWeight:700,color:statusCol,flexShrink:0}}>{statusLbl}</div>
+            <div style={{background:`${statusCol}16`,border:`1px solid ${statusCol}35`,borderRadius:99,padding:"3px 11px",fontSize:12,fontWeight:800,color:statusCol,flexShrink:0}}>{statusLbl}</div>
           </div>;
         })}
       </div>
@@ -2000,9 +1994,9 @@ const DOC_TYPES = {
   "application/vnd.ms-powerpoint":      {label:"PowerPoint",  ico:"presentation", col:"#F59E0B"},
   "application/vnd.openxmlformats-officedocument.presentationml.presentation":
                                         {label:"PowerPoint",  ico:"presentation", col:"#F59E0B"},
-  "application/msword":                 {label:"Word",        ico:"file-word",    col:"#3B82F6"},
+  "application/msword":                 {label:"Word",        ico:"file-type-doc",    col:"#3B82F6"},
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-                                        {label:"Word",        ico:"file-word",    col:"#3B82F6"},
+                                        {label:"Word",        ico:"file-type-doc",    col:"#3B82F6"},
   "application/vnd.ms-excel":           {label:"Excel",       ico:"file-spreadsheet", col:"#22C55E"},
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
                                         {label:"Excel",       ico:"file-spreadsheet", col:"#22C55E"},
@@ -2125,7 +2119,7 @@ function FADocs({uid,toast}){
             <div style={{fontSize:12,color:K.t3}}>PDF · PowerPoint · Word · Excel · Max {MAX_SIZE_MB} MB</div>
             {/* Badges formats */}
             <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center",marginTop:4}}>
-              {[["file-text","PDF","#EF4444"],["presentation","PPT/PPTX","#F59E0B"],["file-word","DOC/DOCX","#3B82F6"],["file-spreadsheet","XLS/XLSX","#22C55E"]].map(([ico,lbl,col])=>
+              {[["file-text","PDF","#EF4444"],["presentation","PPT/PPTX","#F59E0B"],["file-type-doc","DOC/DOCX","#3B82F6"],["file-spreadsheet","XLS/XLSX","#22C55E"]].map(([ico,lbl,col])=>
                 <div key={lbl} style={{display:"flex",alignItems:"center",gap:4,background:`${col}14`,border:`1px solid ${col}25`,borderRadius:6,padding:"3px 8px"}}>
                   <i className={`ti ti-${ico}`} style={{fontSize:12,color:col}}/>
                   <span style={{fontSize:11,fontWeight:700,color:col}}>{lbl}</span>
@@ -3371,13 +3365,13 @@ function Prog({pr,sc,gp,nd,ok,mods}){
     </div>
 
     {/* Modules complétés */}
-    {done.length>0&&<><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-check-circle" style={{fontSize:16,color:K.em}}/> Complétés ({done.length})</div>
+    {done.length>0&&<><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-circle-check" style={{fontSize:16,color:K.em}}/> Complétés ({done.length})</div>
     <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
       {done.map((m,i)=>{const s=sc[m.id];const cp=getCardPalette(tid,i);return <div key={m.id} style={{background:cp.bg,border:`1px solid ${cp.bd}`,borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,animation:`up .25s ease ${i*15}ms both`}}>
         <div style={{width:38,height:38,borderRadius:11,background:isLight?"rgba(255,255,255,.8)":K.b1,border:`1px solid ${cp.bd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{icoEl(m.ico,cp.ac,17)}</div>
         <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:14,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>{m.mat&&<div style={{fontSize:11,color:cp.ac,fontWeight:600,marginTop:1}}>{m.mat}</div>}</div>
         {s&&<div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:800,fontSize:17,color:s.pct>=60?K.em:K.er}}>{s.pct}%</div><div style={{fontSize:10,color:K.t3}}>Score QCM</div></div>}
-        <i className="ti ti-check-circle" style={{fontSize:18,color:K.em,flexShrink:0}}/>
+        <i className="ti ti-circle-check" style={{fontSize:18,color:K.em,flexShrink:0}}/>
       </div>;})}
     </div></>}
 
@@ -3434,7 +3428,7 @@ function Res({sc,ok,mods,u,pr,nd,gp}){
           </div>
         </div>
         <Bar p={s.pct} col={w?cp.ac:K.er} h={4}/>
-        <div style={{marginTop:8,display:"flex",alignItems:"center",gap:6}}>{w?<><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/><span style={{fontSize:13,color:K.em,fontWeight:600}}>{s.pct>=80?"Excellent !":s.pct>=70?"Très bien":"Bien"}</span></>:<><i className="ti ti-alert-circle" style={{fontSize:14,color:K.er}}/><span style={{fontSize:13,color:K.er,fontWeight:600}}>À retravailler</span></>}</div>
+        <div style={{marginTop:8,display:"flex",alignItems:"center",gap:6}}>{w?<><i className="ti ti-circle-check" style={{fontSize:14,color:K.em}}/><span style={{fontSize:13,color:K.em,fontWeight:600}}>{s.pct>=80?"Excellent !":s.pct>=70?"Très bien":"Bien"}</span></>:<><i className="ti ti-alert-circle" style={{fontSize:14,color:K.er}}/><span style={{fontSize:13,color:K.er,fontWeight:600}}>À retravailler</span></>}</div>
       </div>;})}
     </div>}
   </div>;
@@ -4045,43 +4039,10 @@ function AA({onOut}){
       <div style={{display:"flex",gap:8}}><Btn ch="Annuler" on={onCancel} v="g" full/><Btn ch={saving?"Enregistrement…":isNew?"Créer →":"Enregistrer →"} on={save} full dis={saving}/></div>
     </div>;
   }
-  return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
-    <style>{mCss(K)}</style>
-    <AutoLogoutBanner warning={aaWarn} mob={mob}/>
-    {/* ── ADMIN NAV ── */}
-    <nav className="nb" style={{background:`${K.card}f2`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99}}>
-      {/* Ligne 1 : logo + badge + déconnexion */}
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",height:46,paddingLeft:mob?0:4}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <Logo sm={mob}/>
-          <div style={{width:1,height:16,background:K.b0,flexShrink:0}}/>
-          <div style={{display:"flex",alignItems:"center",gap:5,background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:99,padding:"2px 9px"}}>
-            <i className="ti ti-shield-check" style={{fontSize:12,color:K.wa}}/>
-            <span style={{fontSize:11,fontWeight:800,color:K.wa,letterSpacing:.4}}>ADMIN</span>
-          </div>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <div style={{display:"flex",gap:10,alignItems:"center"}}>
-            {[[`${users.length}`,"ti-users",K.t2],[`${nD}`,"ti-clock",K.wa],[`${nA}`,"ti-check-circle",K.em]].map(([v,ic,c])=>(
-              <div key={ic} style={{display:"flex",alignItems:"center",gap:3}}>
-                <i className={`ti ${ic}`} style={{fontSize:13,color:c}}/>
-                <span style={{fontSize:12,fontWeight:700,color:c}}>{v}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{width:1,height:16,background:K.b0}}/>
-          <button onClick={onOut} className="bt" style={{display:"flex",alignItems:"center",gap:5,background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontSize:12,fontWeight:700,minHeight:28,fontFamily:"'Outfit',sans-serif"}}>
-            <i className="ti ti-logout" style={{fontSize:13}}/>
-            {!mob&&"Quitter"}
-          </button>
-        </div>
-      </div>
-      {/* Ligne 2 : onglets avec icônes */}
-      {(()=>{
-        const ADMIN_TABS=[
+    const ADMIN_TABS=[
           {k:"home",ico:"ti-layout-grid",  label:"Accueil"},
           {k:"d",  ico:"ti-clock",         label:`Dem.`,      badge:nD,  bc:K.wa},
-          {k:"a",  ico:"ti-check-circle",  label:"Actifs",    badge:nA,  bc:K.em},
+          {k:"a",  ico:"ti-circle-check",  label:"Actifs",    badge:nA,  bc:K.em},
           {k:"e",  ico:"ti-clock-off",     label:"Expirés",   badge:nE,  bc:K.er},
           {k:"t",  ico:"ti-users",         label:"Tous",      badge:users.length, bc:K.t2},
           {k:"s",  ico:"ti-chart-bar",     label:"Stats"},
@@ -4097,47 +4058,37 @@ function AA({onOut}){
           {k:"pl", ico:"ti-calendar-check",   label:"Présentiel",  bc:K.em},
           {k:"ef", ico:"ti-report-money",     label:"États fin."},
           {k:"msg", ico:"ti-message-circle",  label:"Messages",   badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, bc:K.rd},
-        ];
-        return <div className="tn" style={{borderTop:`1px solid ${K.b0}`,gap:1,paddingBottom:2}}>
-          {ADMIN_TABS.map(({k,ico,label,badge,bc})=>{
-            const active=tab===k;
-            return <button key={k} onClick={()=>sT(k)} className="bt"
-              style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",border:"none",cursor:"pointer",
-                background:active?K.c2:"transparent",color:active?K.t1:K.t3,
-                fontWeight:active?700:500,fontSize:12,whiteSpace:"nowrap",
-                fontFamily:"'Outfit',sans-serif",position:"relative",minHeight:34,
-                borderBottom:active?`2px solid ${K.em}`:"2px solid transparent",
-                borderRadius:"6px 6px 0 0",transition:"background .12s,color .12s"}}>
-              <i className={`ti ${ico}`} style={{fontSize:14,color:active?K.em:K.t3}}/>
-              {label}
-              {badge>0&&<span style={{background:bc,color:"#F5EDD8",borderRadius:99,fontSize:10,fontWeight:800,padding:"1px 5px",minWidth:16,textAlign:"center",lineHeight:1.4}}>{badge}</span>}
-            </button>;
-          })}
-        </div>;
-      })()}
-    </nav>
+    ];
+  return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
+    <style>{mCss(K)}</style>
+    <AutoLogoutBanner warning={aaWarn} mob={mob}/>
+    <StaffNav role="admin" nom="Administrateur" onOut={onOut} tabs={ADMIN_TABS} active={tab} onTab={sT}
+      extra={!mob&&<div style={{display:"flex",gap:12,alignItems:"center",marginRight:4}}>
+        {[[`${users.length}`,"users",K.t2,"Inscrits"],[`${nD}`,"clock",K.wa,"Demandes"],[`${nA}`,"circle-check",K.em,"Actifs"]].map(([v,ic,c,t])=>(
+          <div key={ic} title={t} style={{display:"flex",alignItems:"center",gap:4}}><i className={`ti ti-${ic}`} style={{fontSize:16,color:c}}/><span style={{fontSize:14,fontWeight:800,color:c}}>{v}</span></div>))}
+      </div>}/>
     <div className="mp" style={{maxWidth:1060,margin:"0 auto"}}>
       {msg.m&&<Pop t={msg.t} m={msg.m}/>}
-      <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:13}}>{[[`${users.length}`,"Inscrits",K.t2],[`${nD}`,"Dem.",K.wa],[`${nA}`,"Actifs",K.em],[`${nE}`,"Exp.",K.er],[`${mods.filter(m=>m.on!==false).length}`,"Modules",K.in_]].map(([v,l,c])=><div key={l} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:9,padding:"7px 11px",minWidth:mob?56:68,textAlign:"center"}}><div style={{color:c,fontWeight:800,fontSize:mob?14:16,letterSpacing:"-.5px",lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}</div>
+      {tab!=="home"&&<div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:13}}>{[[`${users.length}`,"Inscrits",K.t2],[`${nD}`,"Dem.",K.wa],[`${nA}`,"Actifs",K.em],[`${nE}`,"Exp.",K.er],[`${mods.filter(m=>m.on!==false).length}`,"Modules",K.in_]].map(([v,l,c])=><div key={l} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:9,padding:"7px 11px",minWidth:mob?56:68,textAlign:"center"}}><div style={{color:c,fontWeight:800,fontSize:mob?14:16,letterSpacing:"-.5px",lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}</div>}
       {tab==="home"&&(()=>{
         const dashTiles=[
-          {k:"d", ico:"clock",          label:"Demandes",       badge:nD, col:K.wa},
-          {k:"a", ico:"check-circle",   label:"Actifs",         badge:nA, col:K.em},
-          {k:"e", ico:"clock-off",      label:"Expirés",        badge:nE, col:K.er},
-          {k:"t", ico:"users",          label:"Tous",           badge:users.length, col:K.t2},
-          {k:"s", ico:"chart-bar",      label:"Statistiques",   col:K.in_},
-          {k:"m", ico:"book-2",         label:"Cours",          col:K.em},
-          {k:"v", ico:"video",          label:"Vidéos",         col:K.in_},
-          {k:"pr",ico:"presentation",   label:"Présentations",  col:"#22C55E"},
-          {k:"st",ico:"briefcase",      label:"Stages",         col:K.wa},
-          {k:"dm",ico:"message-circle", label:"Demandes services",badge:allDemandesAdmin.filter(d=>d.statut==="nouveau").length, col:K.in_},
-          {k:"p", ico:"file-text",      label:"PDF",            col:K.er},
-          {k:"fo",ico:"school",         label:"Formateurs",     badge:users.filter(u=>u.role==="formateur").length, col:"#8B5CF6"},
-          {k:"an",ico:"speakerphone",   label:"Annonces",       badge:allAnnonces.filter(a=>a.actif).length, col:K.wa},
-          {k:"au",ico:"shield-check",   label:"Audit",          col:K.in_},
-          {k:"pl",ico:"calendar-check", label:"Présentiel",     col:K.em},
-          {k:"ef",ico:"report-money",   label:"États financiers",col:K.in_},
-          {k:"msg",ico:"message-circle",label:"Messages",       badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, col:K.rd},
+          {k:"d", ico:"clock",          label:"Demandes",       badge:nD, col:"#D97706"},
+          {k:"a", ico:"circle-check",   label:"Actifs",         badge:nA, col:"#16A34A"},
+          {k:"e", ico:"clock-off",      label:"Expirés",        badge:nE, col:"#DC2626"},
+          {k:"t", ico:"users",          label:"Tous les inscrits",badge:users.length, col:"#475569"},
+          {k:"s", ico:"chart-bar",      label:"Statistiques",   col:"#0D7A6B"},
+          {k:"m", ico:"book-2",         label:"Cours",          col:"#1A6B3A"},
+          {k:"v", ico:"video",          label:"Vidéos",         col:"#C2410C"},
+          {k:"pr",ico:"presentation",   label:"Présentations",  col:"#CA8A04"},
+          {k:"st",ico:"briefcase",      label:"Stages",         col:"#0891B2"},
+          {k:"dm",ico:"message-circle", label:"Demandes services",badge:allDemandesAdmin.filter(d=>d.statut==="nouveau").length, col:"#2563EB"},
+          {k:"p", ico:"file-text",      label:"PDF",            col:"#B91C1C"},
+          {k:"fo",ico:"school",         label:"Formateurs",     badge:users.filter(u=>u.role==="formateur").length, col:"#7C3AED"},
+          {k:"an",ico:"speakerphone",   label:"Annonces",       badge:allAnnonces.filter(a=>a.actif).length, col:"#EA580C"},
+          {k:"au",ico:"shield-check",   label:"Audit",          col:"#011B33"},
+          {k:"pl",ico:"calendar-check", label:"Présentiel",     col:"#15803D"},
+          {k:"ef",ico:"report-money",   label:"États financiers",col:"#1D4ED8"},
+          {k:"msg",ico:"message-circle",label:"Messages",       badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, col:"#BE123C"},
         ];
         // ── Calcul des indicateurs ──
         const apprenants=users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL);
@@ -4167,19 +4118,29 @@ function AA({onOut}){
         const nMsgNonLus=allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length;
 
         const KpiCard=({label,val,col,suffix})=>
-          <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:12,padding:"12px 13px"}}>
-            <div style={{fontSize:20,fontWeight:900,color:col||K.t1,lineHeight:1}}>{val==null?"—":val}{suffix||""}</div>
-            <div style={{fontSize:11,color:K.t3,marginTop:5,fontWeight:600,lineHeight:1.3}}>{label}</div>
+          <div className="tile" style={{padding:mob?"11px 10px":"13px 15px",cursor:"default"}}>
+            <div style={{width:26,height:4,borderRadius:4,background:col||K.t2,marginBottom:10,opacity:.85}}/>
+            <div style={{fontSize:mob?22:26,fontWeight:900,color:col||K.t1,lineHeight:1,letterSpacing:"-.5px"}}>{val==null?"—":val}{suffix||""}</div>
+            <div style={{fontSize:mob?11.5:12.5,color:K.t2,marginTop:7,fontWeight:600,lineHeight:1.3}}>{label}</div>
           </div>;
-        const KpiGroup=({title,children})=><div style={{marginBottom:18}}>
-          <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>{title}</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(110px,1fr))",gap:8}}>{children}</div>
+        const KpiGroup=({title,ico,children})=><div style={{marginBottom:22}}>
+          <div style={{display:"flex",alignItems:"center",gap:7,fontSize:13,fontWeight:800,color:K.t2,letterSpacing:.6,textTransform:"uppercase",marginBottom:10}}><i className={`ti ti-${ico||"chart-dots"}`} style={{fontSize:16,color:K.em}}/>{title}</div>
+          <div style={{display:"grid",gridTemplateColumns:mob?"repeat(3,1fr)":"repeat(auto-fill,minmax(160px,1fr))",gap:mob?8:10}}>{children}</div>
         </div>;
 
         return <div style={{animation:"fadeIn .35s ease"}}>
-          <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:14}}>Tableau de bord</div>
+          <StaffHero role="admin" label="Administration" title="Tableau de bord"
+            sub={`${nD} demande${nD>1?"s":""} d'accès en attente · ${nMsgNonLus} message${nMsgNonLus>1?"s":""} non lu${nMsgNonLus>1?"s":""} · ${modsAttente+presAttente+docsAttente} contenu${modsAttente+presAttente+docsAttente>1?"s":""} à valider`}
+            stats={[[`${users.length}`,"Inscrits","users",()=>sT("t")],[`${nD}`,"Demandes","clock",()=>sT("d")],[`${nA}`,"Actifs","circle-check",()=>sT("a")],[`${mods.filter(m=>m.on!==false).length}`,"Modules","book-2",()=>sT("m")]]}/>
 
-          <KpiGroup title="Utilisateurs">
+          <div className="h-sec" style={{color:K.t1,marginBottom:12}}>Accès rapide</div>
+          <div className="gq" style={{marginBottom:26,gridTemplateColumns:mob?"repeat(3,1fr)":"repeat(auto-fill,minmax(180px,1fr))",gap:mob?9:undefined}}>
+            {dashTiles.map(({k,ico,label,badge,col},i)=><ActionTile key={k} ico={ico} col={col} label={label} badge={badge} on={()=>sT(k)} i={i} compact={mob}/>)}
+          </div>
+
+          <div className="h-sec" style={{color:K.t1,marginBottom:14}}>Indicateurs</div>
+
+          <KpiGroup title="Utilisateurs" ico="users">
             <KpiCard label="Inscrits au total" val={users.length} col={K.t1}/>
             <KpiCard label="Nouveaux ce mois" val={(()=>{const now=new Date();return users.filter(u=>{const p=String(u.createdAt||"").split("/");if(p.length!==3)return false;return +p[1]===now.getMonth()+1&&+p[2]===now.getFullYear();}).length;})()} col={K.em}/>
             <KpiCard label="Apprenants" val={apprenants.length} col={K.in_}/>
@@ -4189,7 +4150,7 @@ function AA({onOut}){
             <KpiCard label="Expirés" val={nE} col={K.er}/>
           </KpiGroup>
 
-          <KpiGroup title="Engagement apprenants">
+          <KpiGroup title="Engagement apprenants" ico="activity">
             <KpiCard label="🟢 Engagés" val={nEngage} col="#22C55E"/>
             <KpiCard label="🟡 À surveiller" val={nSurveiller} col="#F59E0B"/>
             <KpiCard label="🔴 Inactifs" val={nInactif} col="#EF4444"/>
@@ -4197,7 +4158,7 @@ function AA({onOut}){
             <KpiCard label="Score moyen (modules)" val={avgScoreGlobal} suffix="%" col={K.em}/>
           </KpiGroup>
 
-          <KpiGroup title="Contenu pédagogique">
+          <KpiGroup title="Contenu pédagogique" ico="books">
             <KpiCard label="Modules publiés" val={modsPubliees} col={K.em}/>
             <KpiCard label="Modules en attente" val={modsAttente} col={K.wa}/>
             <KpiCard label="Vidéos" val={vids.length} col={K.in_}/>
@@ -4207,34 +4168,22 @@ function AA({onOut}){
             <KpiCard label="Stages" val={allStagesAdmin.length} col={K.t2}/>
           </KpiGroup>
 
-          <KpiGroup title="Formateurs & encadrement">
+          <KpiGroup title="Formateurs & encadrement" ico="school">
             <KpiCard label="Formateurs actifs" val={formateurs.length} col="#8B5CF6"/>
             <KpiCard label="Apprenants encadrés" val={totalApprenantsEncadres} col="#8B5CF6"/>
           </KpiGroup>
 
-          <KpiGroup title="Psychotechnique">
+          <KpiGroup title="Psychotechnique" ico="brain">
             <KpiCard label="Tests passés" val={allPsychoScores.length} col={K.in_}/>
             <KpiCard label="Score moyen" val={psychoAvg} suffix="%" col={K.em}/>
           </KpiGroup>
 
-          <KpiGroup title="Activité courante">
+          <KpiGroup title="Activité courante" ico="bell">
             <KpiCard label="Demandes services" val={allDemandesAdmin.filter(d=>d.statut==="nouveau").length} col={K.in_}/>
             <KpiCard label="Messages non lus" val={nMsgNonLus} col={K.rd}/>
             <KpiCard label="Annonces actives" val={allAnnonces.filter(a=>a.actif).length} col={K.wa}/>
           </KpiGroup>
 
-          <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>Accès rapide</div>
-          <div className="gm">
-            {dashTiles.map(({k,ico,label,badge,col})=>
-              <div key={k} onClick={()=>sT(k)} className="bt" style={{cursor:"pointer",padding:"14px 12px",borderRadius:13,background:K.card,border:`1px solid ${K.b1}`,position:"relative",overflow:"hidden",transition:"transform .15s"}}>
-                {!!badge&&<span style={{position:"absolute",top:9,right:9,background:col,color:"#F5EDD8",borderRadius:99,fontSize:11,fontWeight:800,padding:"1px 7px",minWidth:18,textAlign:"center"}}>{badge}</span>}
-                <div style={{width:34,height:34,borderRadius:10,background:`${col}18`,border:`1px solid ${col}30`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:10}}>
-                  <i className={`ti ti-${ico}`} style={{fontSize:17,color:col}}/>
-                </div>
-                <div style={{fontSize:13,fontWeight:700,color:K.t1,lineHeight:1.3}}>{label}</div>
-              </div>
-            )}
-          </div>
         </div>;
       })()}
       {["d","a","e","t"].includes(tab)&&<><div style={{marginBottom:10}}><input type="text" placeholder="🔍 Rechercher…" defaultValue="" onChange={e=>sQ(e.target.value)} style={{padding:"8px 11px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:14,outline:"none",width:"100%",maxWidth:290,fontFamily:"'Outfit',sans-serif",caretColor:K.em,minHeight:38}} onFocus={e=>e.target.style.borderColor=K.emBd} onBlur={e=>e.target.style.borderColor=K.b0}/></div>{tab==="d"&&nD>0&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:9,padding:"8px 12px",marginBottom:9,fontSize:13,color:K.t2}}>💡 Vérifiez paiement → <b>✓</b> Valider → Durée → Code → <b>✉</b> mail.</div>}<Liste list={byT[tab]||fl} empty="Aucun résultat"/></>}
@@ -4438,11 +4387,11 @@ function AA({onOut}){
         const pendingMods=mods.filter(m=>m.status==="pending");
         const pendingPres=allPresAdmin.filter(p=>p.status==="pending");
         const total=pendingMods.length+pendingPres.length+pendingDocs.length;
-        if(!total)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:14,color:K.t3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/>Aucun contenu en attente de validation.</div>;
+        if(!total)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:14,color:K.t3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-circle-check" style={{fontSize:14,color:K.em}}/>Aucun contenu en attente de validation.</div>;
         const DocTypeInfo={
           "application/pdf":{label:"PDF",ico:"file-text",col:"#EF4444"},
           "application/vnd.openxmlformats-officedocument.presentationml.presentation":{label:"PPT",ico:"presentation",col:"#F59E0B"},
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document":{label:"Word",ico:"file-word",col:"#3B82F6"},
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document":{label:"Word",ico:"file-type-doc",col:"#3B82F6"},
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{label:"Excel",ico:"file-spreadsheet",col:"#22C55E"},
         };
         return <div style={{marginBottom:20}}>
