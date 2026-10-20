@@ -2566,7 +2566,7 @@ const PSY_BANK=[
 {id:"at_m1",cat:"att",niv:"moyen",q:"Dans 5 8 2 7 3 6 4 5 9 1, combien de chiffres pairs ?",opts:["3","4","5","6"],a:1,exp:"8, 2, 6, 4 : quatre chiffres pairs."},
 {id:"at_m2",cat:"att",niv:"moyen",libre:true,q:"Combien de lettres E dans « ECO-CAMPUS EXCELLENCE » ?",a:"5",exp:"1 dans ECO + 4 dans EXCELLENCE = 5."},
 {id:"at_d1",cat:"att",niv:"difficile",q:"Si vous lisez VENDREDI à l'envers, la 3e lettre est…",opts:["D","E","R","N"],a:1,exp:"IDERDNEV → I, D, E : la 3e est E."},
-{id:"at_d2",cat:"att",niv:"difficile",libre:true,q:"Combien de lettres A dans « ACCESS PLUS ACADEMIA KINSHASA » ?",a:"6",exp:"1 + 3 + 2 = 6."},
+{id:"at_d2",cat:"att",niv:"difficile",libre:true,q:"Combien de lettres A dans « ÉCO-CAMPUS ACADEMIA KINSHASA » ?",a:"6",exp:"1 + 3 + 2 = 6."},
 {id:"at_t1",cat:"att",niv:"tresdiff",q:"Suite répétitive : 7 4 9 2 7 4 9 2 7 4 … Quel est le 11e élément ?",opts:["7","4","9","2"],a:2,exp:"Période de 4 : le 11e correspond au 3e → 9."},
 {id:"at_t2",cat:"att",niv:"tresdiff",libre:true,q:"Quelle est la 4e lettre après P dans l'alphabet ?",a:"t",exp:"Q, R, S, T."},
 {id:"at_e1",cat:"att",niv:"expert",q:"Dans « 383538335833 », combien de fois voit-on « 83 » ?",opts:["2","3","4","5"],a:1,exp:"Positions 2-3, 6-7 et 10-11 : trois fois."},
@@ -2966,7 +2966,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     }catch(e){sHcBusy(false);sHcErr(e.message);}
   };
   const codeModal=showCode&&<Sheet title="🔑 J'ai un code" onClose={()=>sShowCode(false)}>
-    <Inp lb="Code d'activation" rf={rHc} ph="AP-XXXXXXXX ou FO-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
+    <Inp lb="Code d'activation" rf={rHc} ph="EC-XXXXXXXX ou FO-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
     {hcErr&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{hcErr}</div>}
     <Btn ch={hcBusy?"…":"Valider →"} on={submitNavCode} full dis={hcBusy}/>
   </Sheet>;
@@ -3247,7 +3247,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
       </div>
     </div>}
     {showCode&&<Sheet title="🔐 Code d'activation" onClose={()=>sShowCode(false)}>
-      <Inp lb="Code d'activation" rf={rHc} ph="AP-XXXXXXXX ou FO-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
+      <Inp lb="Code d'activation" rf={rHc} ph="EC-XXXXXXXX ou FO-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
       {hcErr&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{hcErr}</div>}
       <Btn ch={hcBusy?"…":"Valider →"} on={submitHomeCode} full dis={hcBusy}/>
     </Sheet>}
@@ -3995,7 +3995,7 @@ function AA({onOut}){
   let CC_LOCAL=users.reduce((mx,u)=>{const n=parseInt((u.activationCode||"").replace("ACC-",""))||0;return Math.max(mx,n);},0);
   const nC=()=>{
   const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code="AP-";
+  let code="EC-";
   for(let i=0;i<8;i++)code+=chars[Math.floor(Math.random()*chars.length)];
   return code;
 };
