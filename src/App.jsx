@@ -4,6 +4,7 @@ import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut
 import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,orderBy,limit,deleteField}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
 import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
+import{htmlCodeAcces,htmlNotification}from"./emails";
 import LOGO from"./assets/logo.png";
 import LOGO_CLAIR from"./assets/logo-clair.png";
 import LOGO_ICONE from"./assets/logo-icone.png";
@@ -31,7 +32,8 @@ const sendCodeEmail=async({to_email,nom,code,duree,expiration})=>{
     const res=await fetch("https://api.emailjs.com/api/v1.0/email/send",{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({service_id:EMAILJS_SERVICE,template_id:EMAILJS_TPL_CODE,user_id:EMAILJS_KEY,
-        template_params:{to_email,subject:"Éco-Campus RDC — Votre code d'accès",nom:nom||"Apprenant",code,duree:duree||"—",expiration:expiration||"—"}})
+        template_params:{to_email,subject:"Éco-Campus RDC — Votre code d'accès",nom:nom||"Apprenant",code,duree:duree||"—",expiration:expiration||"—",
+          html:htmlCodeAcces({nom:nom||"Apprenant",code,duree:duree||"—",expiration:expiration||"—"})}})
     });
     return res.ok;
   }catch(e){console.log("sendCodeEmail error",e);return false;}
@@ -41,7 +43,7 @@ const sendNotifEmail=async({to_email,subject,nom,message})=>{
     await fetch("https://api.emailjs.com/api/v1.0/email/send",{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({service_id:EMAILJS_SERVICE,template_id:EMAILJS_TPL_NOTIF,user_id:EMAILJS_KEY,
-        template_params:{to_email,subject,nom:nom||"",message:message||""}})
+        template_params:{to_email,subject,nom:nom||"",message:message||"",html:htmlNotification({nom:nom||"",message:message||""})}})
     });
   }catch(e){console.log("sendNotifEmail error",e);}
 };
