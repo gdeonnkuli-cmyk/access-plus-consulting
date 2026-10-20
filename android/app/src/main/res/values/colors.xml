@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="couleur_barre">#1A6B3A</color>
-    <color name="couleur_navigation">#0C2E1E</color>
-    <color name="couleur_fond">#F7F3EC</color>
+    <color name="couleur_barre">#0A2A5C</color>
+    <color name="couleur_navigation">#001433</color>
+    <color name="couleur_fond">#F4F6FB</color>
 </resources>

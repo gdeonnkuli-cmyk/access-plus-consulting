@@ -13,7 +13,7 @@ const STATUTS={
   brouillon:{l:"Brouillon",c:"#8B97BC"},
   soumis:{l:"Soumis au formateur",c:"#DAA854"},
   renvoye:{l:"À corriger",c:"#C05A2A"},
-  valide:{l:"Validé",c:"#1A6B3A"},
+  valide:{l:"Validé",c:"#0A2A5C"},
 };
 const now=()=>new Date().toISOString();
 
