@@ -162,5 +162,31 @@ service cloud.firestore {
         && nouveau().keys().hasOnly(["uid", "nom", "mail", "maj"]);
       allow delete: if connecte() && resource.data.uid == request.auth.uid;
     }
+
+    // ── Audit : présence en ligne et journal des connexions ─────────────────────
+    // Chaque compte écrit uniquement sa propre activité ; seul l'administrateur peut lire.
+    function roleDeclareValide() {
+      return nouveau().role == "apprenant"
+        || (nouveau().role == "formateur" && estFormateur())
+        || (nouveau().role == "admin" && estAdmin());
+    }
+    match /activite/{uid} {
+      allow read: if estAdmin();
+      allow create, update: if moi(uid)
+        && nouveau().keys().hasOnly(["uid", "nom", "mail", "role", "vue", "appareil", "enLigne", "lastSeen"])
+        && nouveau().uid == uid
+        && nouveau().lastSeen == request.time
+        && roleDeclareValide();
+      allow delete: if estAdmin();
+    }
+    match /connexions/{id} {
+      allow read, delete: if estAdmin();
+      allow create: if connecte()
+        && nouveau().keys().hasOnly(["uid", "nom", "mail", "role", "appareil", "ts"])
+        && nouveau().uid == request.auth.uid
+        && nouveau().ts == request.time
+        && roleDeclareValide();
+      allow update: if false;
+    }
   }
 }

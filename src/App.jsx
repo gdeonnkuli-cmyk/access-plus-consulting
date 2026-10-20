@@ -1,7 +1,7 @@
 import React,{useState,useRef,useEffect,useCallback,createContext,useContext}from"react";
 import{initializeApp,deleteApp}from"firebase/app";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup}from"firebase/auth";
-import{getFirestore,doc,getDoc,setDoc,updateDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,deleteField}from"firebase/firestore";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,orderBy,limit,deleteField}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
 import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
 import LOGO from"./assets/logo.png";
@@ -192,6 +192,46 @@ function useUsers(){
     return unsub;
   },[]);
   return users;
+}
+
+
+// ── AUDIT : PRÉSENCE EN LIGNE ET JOURNAL DES CONNEXIONS ─────────────────────
+// activite/{uid} : dernière activité de chaque compte (signal toutes les 90 s quand l'onglet est visible)
+// connexions/{id} : une ligne par ouverture de session (une fois par onglet)
+const ENLIGNE_MS=4*60*1000;
+const VUE_LBL={home:"Accueil",msg:"Messages",pres:"Cours",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration"};
+const appareil=()=>{const ua=navigator.userAgent||"";const os=/Android/i.test(ua)?"Android":/iPhone|iPad|iPod/i.test(ua)?"iOS":/Windows/i.test(ua)?"Windows":/Mac OS/i.test(ua)?"Mac":/Linux/i.test(ua)?"Linux":"Autre";
+  const nav=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/SamsungBrowser/.test(ua)?"Samsung":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"Navigateur";
+  const app=(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||String(document.referrer).startsWith("android-app://")?"Application":"Site web";
+  return{type:/Android|iPhone|iPad|iPod|Mobile/i.test(ua)?"Mobile":"Ordinateur",os,nav,app};};
+const tsMs=t=>!t?0:typeof t==="number"?t:t.toMillis?t.toMillis():t.seconds?t.seconds*1000:0;
+const ilya=ms=>{const d=Math.max(0,Date.now()-ms)/1000;if(d<60)return"à l'instant";if(d<3600)return`il y a ${Math.floor(d/60)} min`;if(d<86400)return`il y a ${Math.floor(d/3600)} h`;const j=Math.floor(d/86400);return j===1?"hier":`il y a ${j} j`;};
+function usePresence({uid,nom,mail,role,vue}){
+  useEffect(()=>{
+    if(!uid||!nom)return;
+    const ref_=doc(db,"activite",uid);
+    const ping=()=>{if(document.visibilityState!=="visible")return;setDoc(ref_,{uid,nom,mail:mail||"",role,vue:vue||"",appareil:appareil(),enLigne:true,lastSeen:serverTimestamp()},{merge:true}).catch(()=>{});};
+    const quitte=()=>{setDoc(ref_,{enLigne:false,lastSeen:serverTimestamp()},{merge:true}).catch(()=>{});};
+    const vis=()=>{if(document.visibilityState==="visible")ping();else quitte();};
+    ping();const t=setInterval(ping,90000);
+    document.addEventListener("visibilitychange",vis);window.addEventListener("pagehide",quitte);
+    return()=>{clearInterval(t);document.removeEventListener("visibilitychange",vis);window.removeEventListener("pagehide",quitte);};
+  },[uid,nom,mail,role,vue]);
+  useEffect(()=>{
+    if(!uid||!nom)return;
+    const k="ec_cx_"+uid;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");}catch(e){}
+    addDoc(collection(db,"connexions"),{uid,nom,mail:mail||"",role,appareil:appareil(),ts:serverTimestamp()}).catch(()=>{});
+  },[uid,nom,mail,role]);
+}
+function useActiviteAll(){
+  const[a,sA]=useState([]);
+  useEffect(()=>onSnapshot(collection(db,"activite"),snap=>sA(snap.docs.map(d=>({id:d.id,...d.data()}))),()=>{}),[]);
+  return a;
+}
+function useConnexions(n=400){
+  const[c,sC]=useState([]);
+  useEffect(()=>onSnapshot(query(collection(db,"connexions"),orderBy("ts","desc"),limit(n)),snap=>sC(snap.docs.map(d=>({id:d.id,...d.data()}))),()=>{}),[n]);
+  return c;
 }
 
 // ── FIRESTORE ACTIONS ─────────────────────────────────────────────────────────
@@ -757,6 +797,7 @@ function PrivacyModal({onClose}){
   const sections=[
     {ico:"ti-user",title:"Données collectées",body:"Nous collectons votre nom, adresse email, progression dans les modules, scores aux QCM et date d'inscription. Ces données sont nécessaires au fonctionnement de la plateforme."},
     {ico:"ti-shield-lock",title:"Utilisation des données",body:"Vos données sont utilisées exclusivement pour : gérer votre accès à la formation, suivre votre progression, vous envoyer votre code d'activation, et améliorer le contenu pédagogique."},
+    {ico:"ti-history",title:"Journal de connexion",body:"Pour la sécurité de la plateforme et le suivi pédagogique, nous enregistrons la date et l'heure de vos connexions, le type d'appareil (téléphone ou ordinateur, système, navigateur ou application) et la rubrique consultée. Ces informations sont visibles uniquement par l'administrateur."},
     {ico:"ti-share",title:"Partage des données",body:"Vos données ne sont jamais vendues ni partagées avec des tiers à des fins commerciales. Elles sont stockées de manière sécurisée sur Firebase (Google Cloud), conforme au RGPD."},
     {ico:"ti-clock",title:"Durée de conservation",body:"Vos données sont conservées pendant la durée de votre abonnement et 12 mois après expiration. Vous pouvez demander la suppression de votre compte à tout moment."},
     {ico:"ti-adjustments",title:"Vos droits",body:"Vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : contact@accessplusconsulting.com"},
@@ -1333,6 +1374,7 @@ function FA({uid,onOut}){
   const myMsgsFA=useFormateurMessages(uid);
   const unreadMsgFA=myMsgsFA.filter(m=>m.fromRole==="apprenant"&&!m.luAdmin).length;
 
+  usePresence({uid,nom:fData?.nom,mail:auth.currentUser?.email||fData?.mail,role:"formateur",vue:VUE_LBL[vue]||vue});
   if(!fData)return <div style={{minHeight:"100vh",background:K.bg}}><style>{mCss(K)}</style><Spin/></div>;
 
   // Stats sur les modules créés par ce formateur
@@ -2438,6 +2480,7 @@ function UA({uid,onOut}){
   // Fiche d'annuaire (nom, e-mail) permettant aux collègues d'inviter cet apprenant dans un dossier d'états financiers
   useEffect(()=>{if(uData)inscrireAnnuaire(db,{uid,nom:uData.nom,mail:auth.currentUser?.email||uData.mail});},[uid,uData?.nom,uData?.mail]);
   const myOpenAnswers=useMyOpenAnswers(uid);
+  usePresence({uid,nom:uData?.nom,mail:auth.currentUser?.email||uData?.mail,role:"apprenant",vue:mod?`Module : ${mod.titre}`:VUE_LBL[vue]||vue});
   if(!uData||mL)return <div style={{minHeight:"100vh",background:K.bg}}><style>{mCss(K)}</style><Spin/></div>;
   const ok=uData.abonnement==="actif"&&!xp(uData.dateExpiration);
   const aMods=mods.filter(m=>m.on!==false);
@@ -3900,6 +3943,7 @@ function AdminThread({apprenantUid,apprenantMail,onBack}){
 function AA({onOut}){
   const K=useK();const{mob}=useW();
   const{warning:aaWarn}=useAutoLogout(onOut);
+  usePresence({uid:auth.currentUser?.uid,nom:"Administrateur",mail:ADM_EMAIL,role:"admin",vue:"Administration"});
   const[pendingDocs,setPendingDocs]=useState([]);
   useEffect(()=>{
     const unsub=onSnapshot(query(collection(db,"documents"),where("status","==","pending")),
@@ -3928,6 +3972,9 @@ function AA({onOut}){
   const[nuErr,sNuErr]=useState("");
   const[nuBusy,sNuBusy]=useState(false);
   const allMessages=useAllMessages();
+  const activite=useActiviteAll(),connexions=useConnexions();
+  const[auPer,sAuPer]=useState("7"),[auQ,sAuQ]=useState(""),[auRole,sAuRole]=useState("tous"),[,sTick]=useState(0);
+  useEffect(()=>{const t=setInterval(()=>sTick(x=>x+1),30000);return()=>clearInterval(t);},[]);
   const[activeThread,sActiveThread]=useState(null);
   const[plDate,sPlDate]=useState(new Date().toISOString().slice(0,10));
   const[plAll,sPlAll]=useState([]);
@@ -4630,6 +4677,89 @@ function AA({onOut}){
           <Btn ch="+ Nouvel utilisateur" on={()=>{sNewUser({nom:"",mail:"",password:"",role:"apprenant"});sNuErr("");}} v="i" sm/>
         </div>
       </div>
+      {(()=>{
+        const now=Date.now(),J=86400000,debutJour=new Date().setHours(0,0,0,0);
+        const enLigne=activite.filter(a=>a.enLigne!==false&&now-tsMs(a.lastSeen)<ENLIGNE_MS).sort((a,b)=>tsMs(b.lastSeen)-tsMs(a.lastSeen));
+        const recents=activite.filter(a=>!enLigne.includes(a)&&now-tsMs(a.lastSeen)<7*J).sort((a,b)=>tsMs(b.lastSeen)-tsMs(a.lastSeen)).slice(0,12);
+        const cxJour=connexions.filter(c=>tsMs(c.ts)>=debutJour);
+        const uniq=d=>new Set(connexions.filter(c=>now-tsMs(c.ts)<d*J).map(c=>c.uid)).size;
+        const per={jour:debutJour,"7":now-7*J,"30":now-30*J,tout:0}[auPer];
+        const ql=auQ.trim().toLowerCase();
+        const journal=connexions.filter(c=>tsMs(c.ts)>=per&&(auRole==="tous"||c.role===auRole)&&(!ql||(c.nom||"").toLowerCase().includes(ql)||(c.mail||"").toLowerCase().includes(ql)));
+        const RC_={apprenant:[K.in_,"Apprenant"],formateur:["#7C3AED","Formateur"],admin:[K.wa,"Admin"]};
+        const Role=({r})=>{const[c,l]=RC_[r]||[K.t3,r||"—"];return <span style={{fontSize:11.5,fontWeight:800,color:c,background:`${c}14`,border:`1px solid ${c}30`,borderRadius:99,padding:"1px 8px",whiteSpace:"nowrap"}}>{l}</span>;};
+        const App_=({a})=>a?<span style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:12.5,color:K.t3,whiteSpace:"nowrap"}}><i className={`ti ti-${a.type==="Mobile"?"device-mobile":"device-desktop"}`} style={{fontSize:14}}/>{a.os} · {a.app==="Application"?"Application":a.nav}</span>:null;
+        const Av=({n,on})=><div style={{position:"relative",flexShrink:0}}><div style={{width:38,height:38,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:14}}>{(n||"?").split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase()}</div><span style={{position:"absolute",right:-1,bottom:-1,width:12,height:12,borderRadius:"50%",background:on?"#16A34A":K.t3,border:`2px solid ${K.c2}`}}/></div>;
+        const jourDe=t=>new Date(t).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+        const exportJournal=()=>{
+          const rows=[["Date","Heure","Nom","E-mail","Rôle","Appareil","Système","Accès"],...journal.map(c=>{const d=new Date(tsMs(c.ts));return[d.toLocaleDateString("fr-FR"),d.toLocaleTimeString("fr-FR"),c.nom,c.mail,c.role,c.appareil?.type||"",c.appareil?.os||"",c.appareil?.app==="Application"?"Application":(c.appareil?.nav||"")];})];
+          const csv="﻿"+rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(";")).join("\n");
+          const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=`connexions_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+        };
+        const card={background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:18,padding:mob?"14px":"16px 18px",marginBottom:16};
+        const H=({ico,t,n,col})=><div style={{display:"flex",alignItems:"center",gap:8,fontWeight:800,fontSize:16,color:K.t1}}><i className={`ti ti-${ico}`} style={{fontSize:19,color:col||K.em}}/>{t}{n!=null&&<span style={{fontSize:13,fontWeight:800,color:col||K.em,background:`${col||K.em}14`,borderRadius:99,padding:"1px 9px"}}>{n}</span>}</div>;
+        return <>
+          <div style={{display:"grid",gridTemplateColumns:mob?"repeat(2,1fr)":"repeat(4,1fr)",gap:10,marginBottom:16}}>
+            {[[enLigne.length,"En ligne maintenant","wifi","#16A34A"],[cxJour.length,"Connexions aujourd'hui","login",K.in_],[uniq(7),"Personnes actives (7 j)","users",K.em],[uniq(30),"Personnes actives (30 j)","calendar-stats",K.wa]].map(([v,l,ic,c])=>
+              <div key={l} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}><span style={{fontSize:mob?24:28,fontWeight:900,color:c,lineHeight:1}}>{v}</span><i className={`ti ti-${ic}`} style={{fontSize:22,color:c,opacity:.8}}/></div>
+                <div style={{fontSize:12.5,color:K.t2,fontWeight:600,marginTop:7}}>{l}</div>
+              </div>)}
+          </div>
+          <div style={card}>
+            <div style={{marginBottom:12}}><H ico="wifi" t="En ligne maintenant" n={enLigne.length} col="#16A34A"/></div>
+            {!enLigne.length&&<div style={{fontSize:14,color:K.t3}}>Personne n'est connecté en ce moment.</div>}
+            <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(2,1fr)",gap:10}}>
+              {enLigne.map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:11,padding:"10px 12px",background:K.c2,borderRadius:14,border:`1px solid ${K.b0}`}}>
+                <Av n={a.nom} on/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:800,fontSize:14.5,color:K.t1}}>{a.nom}</span><Role r={a.role}/></div>
+                  <div style={{fontSize:13,color:K.t2,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}><i className="ti ti-eye" style={{fontSize:13,marginRight:4}}/>{a.vue||"—"}</div>
+                  <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:2}}><App_ a={a.appareil}/><span style={{fontSize:12.5,color:"#16A34A",fontWeight:700}}>{ilya(tsMs(a.lastSeen))}</span></div>
+                </div>
+              </div>)}
+            </div>
+            {recents.length>0&&<>
+              <div style={{fontSize:13,fontWeight:800,color:K.t3,textTransform:"uppercase",letterSpacing:.6,margin:"16px 0 8px"}}>Vus récemment (7 jours)</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                {recents.map(a=><div key={a.id} title={`${a.vue||""} · ${a.appareil?.os||""}`} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 12px 6px 6px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:99}}>
+                  <div style={{width:26,height:26,borderRadius:"50%",background:K.b1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:K.t2}}>{(a.nom||"?")[0].toUpperCase()}</div>
+                  <span style={{fontSize:13,fontWeight:700,color:K.t1}}>{a.nom}</span><span style={{fontSize:12,color:K.t3}}>{ilya(tsMs(a.lastSeen))}</span>
+                </div>)}
+              </div>
+            </>}
+          </div>
+          <div style={card}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap",marginBottom:12}}>
+              <H ico="history" t="Journal des connexions" n={journal.length}/>
+              <button onClick={exportJournal} className="bt" style={{background:K.c2,border:`1px solid ${K.b1}`,color:K.t2,borderRadius:10,padding:"7px 12px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}><i className="ti ti-download" style={{fontSize:15}}/>Export Excel (CSV)</button>
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}>
+              {[["jour","Aujourd'hui"],["7","7 jours"],["30","30 jours"],["tout","Tout"]].map(([k,l])=><button key={k} onClick={()=>sAuPer(k)} className="bt" style={{padding:"6px 13px",borderRadius:99,border:`1px solid ${auPer===k?K.em:K.b0}`,background:auPer===k?K.em:K.c2,color:auPer===k?"#fff":K.t2,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>{l}</button>)}
+              <select value={auRole} onChange={e=>sAuRole(e.target.value)} style={{padding:"6px 10px",borderRadius:99,border:`1px solid ${K.b0}`,background:K.c2,color:K.t1,fontSize:13,fontWeight:600,fontFamily:"'Outfit',sans-serif"}}><option value="tous">Tous les rôles</option><option value="apprenant">Apprenants</option><option value="formateur">Formateurs</option><option value="admin">Administrateur</option></select>
+              <input value={auQ} onChange={e=>sAuQ(e.target.value)} placeholder="🔍 Nom ou e-mail…" style={{flex:1,minWidth:160,padding:"6px 12px",borderRadius:99,border:`1px solid ${K.b0}`,background:K.c2,color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",outline:"none"}}/>
+            </div>
+            {!journal.length&&<div style={{fontSize:14,color:K.t3}}>Aucune connexion sur cette période.</div>}
+            <div style={{maxHeight:460,overflowY:"auto"}}>
+              {journal.map((c,i)=>{const t=tsMs(c.ts),d=new Date(t),jour=jourDe(t),prev=i>0?jourDe(tsMs(journal[i-1].ts)):null;
+                return <React.Fragment key={c.id}>
+                  {jour!==prev&&<div style={{fontSize:12.5,fontWeight:800,color:K.t3,textTransform:"capitalize",padding:"10px 2px 6px",position:"sticky",top:0,background:K.card}}>{jour}</div>}
+                  <div style={{display:"grid",gridTemplateColumns:mob?"52px 1fr":"64px 1.4fr auto 1fr",gap:10,alignItems:"center",padding:"9px 4px",borderTop:`1px solid ${K.b0}`}}>
+                    <span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:13,color:K.t1}}>{d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>
+                    <div style={{minWidth:0}}>
+                      <div style={{fontWeight:700,fontSize:14,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.nom}</div>
+                      {!mob&&c.mail&&<div style={{fontSize:12,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.mail}</div>}
+                      {mob&&<div style={{display:"flex",gap:8,alignItems:"center",marginTop:3,flexWrap:"wrap"}}><Role r={c.role}/><App_ a={c.appareil}/></div>}
+                    </div>
+                    {!mob&&<Role r={c.role}/>}{!mob&&<App_ a={c.appareil}/>}
+                  </div>
+                </React.Fragment>;})}
+            </div>
+            <div style={{fontSize:12,color:K.t3,marginTop:10}}>Les {connexions.length} dernières connexions enregistrées. Une connexion est notée à chaque ouverture de l'application.</div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:8,fontWeight:800,fontSize:16,color:K.t1,margin:"6px 0 10px"}}><i className="ti ti-users" style={{fontSize:19,color:K.em}}/>Comptes et engagement</div>
+        </>;
+      })()}
       <div style={{fontSize:13,color:K.t3,marginBottom:8}}>{users.length} compte{users.length>1?"s":""} · {users.filter(u=>u.lastLogin).length} déjà connecté{users.filter(u=>u.lastLogin).length>1?"s":""}</div>
       <div style={{display:"flex",gap:12,marginBottom:13,flexWrap:"wrap"}}>
         {[["#EF4444","🔴 Inactif","+ de 14 jours sans connexion"],["#F59E0B","🟡 À surveiller","peu actif ou 8-14 jours"],["#1E4FA3","🟢 Engagé","actif et progresse"]].map(([c,l,d])=>
@@ -4637,13 +4767,15 @@ function AA({onOut}){
         )}
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:7}}>
-        {[...users].sort((a,b)=>(b.lastLogin||0)-(a.lastLogin||0)).map(u=>{
-          const jamais=!u.lastLogin;
+        {[...users].sort((a,b)=>Math.max(b.lastLogin||0,tsMs(activite.find(x=>x.id===b.uid)?.lastSeen))-Math.max(a.lastLogin||0,tsMs(activite.find(x=>x.id===a.uid)?.lastSeen))).map(u=>{
+          const jamais=!u.lastLogin&&!activite.some(a=>a.id===u.uid);
           const isApprenant=u.role!=="formateur"&&u.mail!==ADM_EMAIL;
           const nMods=Object.values(u.progress||{}).filter(v=>v==="done").length;
           const scoreVals=Object.values(u.scores||{}).map(s=>s?.pct).filter(p=>p!=null);
           const avgScore=scoreVals.length?Math.round(scoreVals.reduce((a,b)=>a+b,0)/scoreVals.length):null;
-          const daysSince=u.lastLogin?Math.floor((Date.now()-u.lastLogin)/86400000):null;
+          const act=activite.find(a=>a.id===u.uid);const vuLe=Math.max(u.lastLogin||0,tsMs(act?.lastSeen));
+          const enL=act&&act.enLigne!==false&&Date.now()-tsMs(act.lastSeen)<ENLIGNE_MS;
+          const daysSince=vuLe?Math.floor((Date.now()-vuLe)/86400000):null;
           const engagement=jamais?{c:"#EF4444",l:"Jamais connecté"}:daysSince>14?{c:"#EF4444",l:"Inactif"}:(daysSince>7||nMods===0)?{c:"#F59E0B",l:"À surveiller"}:{c:"#1E4FA3",l:"Engagé"};
           return <div key={u.uid} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"11px 14px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
             <div style={{width:32,height:32,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",fontWeight:800,fontSize:14,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
@@ -4659,7 +4791,7 @@ function AA({onOut}){
             </div>
             <div style={{textAlign:"right",flexShrink:0}}>
               <div style={{fontSize:11,color:K.t3}}>Créé le {u.createdAt}</div>
-              <div style={{fontSize:11,color:jamais?K.wa:K.em,fontWeight:600}}>{jamais?"Jamais connecté":new Date(u.lastLogin).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
+              <div style={{fontSize:12,color:enL?"#16A34A":jamais?K.wa:K.em,fontWeight:700}}>{enL?"● En ligne":jamais?"Jamais connecté":`Vu ${ilya(vuLe)}`}</div>
             </div>
           </div>;
         })}
