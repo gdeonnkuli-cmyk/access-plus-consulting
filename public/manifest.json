@@ -11,12 +11,12 @@
   "theme_color": "#0A2A5C",
   "categories": ["education", "finance", "business"],
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/icons/ec-192-v2.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/ec-512-v2.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/ec-maskable-512-v2.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Atelier États financiers", "short_name": "États fin.", "url": "/?vue=ef", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Mes cours", "short_name": "Cours", "url": "/?vue=pres", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Atelier États financiers", "short_name": "États fin.", "url": "/?vue=ef", "icons": [{ "src": "/icons/ec-192-v2.png", "sizes": "192x192" }] },
+    { "name": "Mes cours", "short_name": "Cours", "url": "/?vue=pres", "icons": [{ "src": "/icons/ec-192-v2.png", "sizes": "192x192" }] }
   ]
 }
