@@ -1049,19 +1049,19 @@ function LandingPage({onLogin}){
         </div>
         <h2 style={{margin:"0 0 14px",fontSize:mob?"1.8rem":"2.4rem",
           fontWeight:900,color:K.t1,lineHeight:1.2}}>
-          Prêt à maîtriser SYSCOHADA&nbsp;?
+          Prêt à maîtriser la comptabilité et la fiscalité&nbsp;?
         </h2>
         <p style={{margin:"0 auto 32px",fontSize:16,color:K.t2,lineHeight:1.7,maxWidth:560}}>
-          Rejoignez les apprenants Éco-Campus RDC et transformez votre maîtrise de la comptabilité OHADA.
+          Rejoignez les apprenants Éco-Campus RDC : comptabilité SYSCOHADA, états financiers, fiscalité congolaise et audit, avec des cas pratiques adaptés à la RDC.
         </p>
         <button onClick={onLogin} className="bt" style={{
           background:`linear-gradient(135deg,#0A2A5C,#1E4FA3)`,border:"none",
-          borderRadius:13,padding:"16px 36px",color:"#fff",fontWeight:900,
+          borderRadius:14,padding:mob?"16px 26px":"16px 36px",color:"#fff",fontWeight:900,
           fontSize:16,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
-          boxShadow:"0 8px 28px rgba(30,79,163,.4)",minHeight:54,
-          display:"inline-flex",alignItems:"center",gap:10}}>
+          boxShadow:"0 8px 28px rgba(30,79,163,.4)",minHeight:54,whiteSpace:"nowrap",
+          display:"inline-flex",alignItems:"center",justifyContent:"center",gap:10}}>
+          Créer mon compte gratuit
           <i className="ti ti-arrow-right" style={{fontSize:18}}/>
-          Créer mon compte gratuitement
         </button>
         <div style={{marginTop:16,fontSize:13,color:K.t3}}>
           Déjà inscrit ?{" "}
