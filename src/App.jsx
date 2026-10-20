@@ -47,7 +47,7 @@ const facebookProvider=new FacebookAuthProvider();
 
 // ── THÈMES ────────────────────────────────────────────────────────────────────
 const TH={
-  eco:{n:"Éco-Campus",i:"🌿",bg:"#F7F3EC",ca:"#FFFFFF",c2:"#FBF8F2",b0:"rgba(120,90,40,.10)",b1:"rgba(120,90,40,.20)",t1:"#1E1208",t2:"#7A6248",t3:"#A8916E"},
+  eco:{n:"Éco-Campus",i:"📘",bg:"#F4F6FB",ca:"#FFFFFF",c2:"#EEF2F8",b0:"rgba(10,42,92,.09)",b1:"rgba(10,42,92,.17)",t1:"#0B1A33",t2:"#4A5B78",t3:"#8492AB"},
   dark:{n:"Sombre",i:"🌙",bg:"#0C0F19",ca:"#13172A",c2:"#1A1F35",b0:"rgba(255,255,255,.06)",b1:"rgba(255,255,255,.11)",t1:"#F0F3FF",t2:"#8B97BC",t3:"#505A78"},
   light:{n:"Clair",i:"☀️",bg:"#F2F5FC",ca:"#FFFFFF",c2:"#E8EDF7",b0:"rgba(0,0,0,.07)",b1:"rgba(0,0,0,.13)",t1:"#1A1D2E",t2:"#5A6380",t3:"#9BA3BF"},
   sepia:{n:"Sépia",i:"📜",bg:"#F5EFE3",ca:"#FDFAF4",c2:"#EDE6D6",b0:"rgba(120,90,40,.09)",b1:"rgba(120,90,40,.17)",t1:"#2C2416",t2:"#7A6540",t3:"#B09A70"},
@@ -55,7 +55,9 @@ const TH={
   green:{n:"Forêt",i:"🌿",bg:"#0B1A10",ca:"#0F2416",c2:"#13301E",b0:"rgba(80,200,100,.07)",b1:"rgba(80,200,100,.14)",t1:"#E4F5E8",t2:"#72B883",t3:"#3D7A50"},
   purple:{n:"Violet",i:"💜",bg:"#100C1E",ca:"#180E30",c2:"#201244",b0:"rgba(160,100,255,.08)",b1:"rgba(160,100,255,.16)",t1:"#EDE8FF",t2:"#9070C8",t3:"#5E4A88"},
 };
-const ACC={em:"#1A6B3A",emD:"#0C2E1E",emBg:"rgba(26,107,58,.10)",emBd:"rgba(26,107,58,.26)",in_:"#0D7A6B",inD:"#0A5F53",inBg:"rgba(13,122,107,.10)",inBd:"rgba(13,122,107,.26)",wa:"#DAA854",waBg:"rgba(218,168,84,.14)",waBd:"rgba(218,168,84,.30)",er:"#C05A2A",erBg:"rgba(192,90,42,.10)",erBd:"rgba(192,90,42,.26)",rd:"#C05A2A",rdBg:"rgba(192,90,42,.10)",rdBd:"rgba(192,90,42,.26)"};
+const ACC={em:"#0A2A5C",emD:"#001433",emBg:"rgba(10,42,92,.08)",emBd:"rgba(10,42,92,.22)",in_:"#1E4FA3",inD:"#163B7A",inBg:"rgba(30,79,163,.09)",inBd:"rgba(30,79,163,.24)",wa:"#C98A1B",waBg:"rgba(201,138,27,.12)",waBd:"rgba(201,138,27,.30)",er:"#A3122A",erBg:"rgba(163,18,42,.08)",erBd:"rgba(163,18,42,.24)",rd:"#A3122A",rdBg:"rgba(163,18,42,.08)",rdBd:"rgba(163,18,42,.24)",ok:"#0A2A5C"};
+// Thèmes sombres : bleus éclaircis pour rester lisibles
+const ACC_SOMBRE={em:"#7FA8F5",emD:"#1E4FA3",emBg:"rgba(127,168,245,.12)",emBd:"rgba(127,168,245,.30)",in_:"#9CC2FF",inD:"#5B8DEF",inBg:"rgba(156,194,255,.10)",inBd:"rgba(156,194,255,.26)",er:"#F2667C",erBg:"rgba(242,102,124,.12)",erBd:"rgba(242,102,124,.30)",rd:"#F2667C",rdBg:"rgba(242,102,124,.12)",rdBd:"rgba(242,102,124,.30)"};
 const CARD_PALETTES={
   dark:[
     {bg:"rgba(52,211,153,.12)",bd:"rgba(52,211,153,.2)",ac:"#34D399"},
@@ -82,9 +84,9 @@ const CARD_PALETTES={
     {bg:"#F5F0FF",bd:"#D0C0F0",ac:"#6040A0"},
   ],
 };
-const TILE_COLORS={modules:["#1A6B3A","#34A86A"],qcm:["#4F46E5","#8B7CF6"],pres:["#D97706","#F5B342"],stages:["#0D7A6B","#19B39B"],videos:["#C2410C","#F2733F"],ef:["#1D4ED8","#4F8DF7"]};
+const TILE_COLORS={modules:["#1E4FA3","#4F7FD6"],qcm:["#4F46E5","#8B7CF6"],pres:["#D97706","#F5B342"],stages:["#0D7A6B","#19B39B"],videos:["#C2410C","#F2733F"],ef:["#1D4ED8","#4F8DF7"]};
 const getCardPalette=(tid,idx)=>{const p=CARD_PALETTES[tid]||CARD_PALETTES.dark;return p[idx%p.length];};
-const bK=id=>{const t=TH[id]||TH.eco;return{bg:t.bg,card:t.ca,c2:t.c2,b0:t.b0,b1:t.b1,t1:t.t1,t2:t.t2,t3:t.t3,...ACC};};
+const bK=id=>{const t=TH[id]||TH.eco;return{bg:t.bg,card:t.ca,c2:t.c2,b0:t.b0,b1:t.b1,t1:t.t1,t2:t.t2,t3:t.t3,...ACC,...(["dark","blue","green","purple"].includes(id)?ACC_SOMBRE:{})};};
 const Ctx=createContext({K:bK("dark"),tid:"dark",setT:()=>{}});
 const useK=()=>useContext(Ctx).K;
 const mCss=K=>`@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Outfit:wght@500;700;800;900&family=JetBrains+Mono:wght@500&display=swap');
@@ -149,7 +151,7 @@ const dE=j=>{const d=new Date();d.setDate(d.getDate()+j);return d.toISOString();
 const jR=i=>!i?0:Math.max(0,Math.ceil((new Date(i)-new Date())/864e5));
 const fD=i=>!i?"—":new Date(i).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});
 const xp=i=>!i||new Date(i)<new Date();
-const COLS=["#34D399","#818CF8","#FBBF24","#F87171","#60A5FA","#A78BFA","#FB923C","#4ADE80","#F472B6","#38BDF8"];
+const COLS=["#34D399","#818CF8","#FBBF24","#F87171","#60A5FA","#A78BFA","#FB923C","#5B8DEF","#F472B6","#38BDF8"];
 const icoEl=(ico,col,sz=16)=>{
   if(!ico)return null;
   const isTabler=/^[a-z]/.test(ico);
@@ -532,8 +534,8 @@ const Logo=({sm,h})=>{const{tid}=useContext(Ctx);const sombre=["dark","blue","gr
   return <img src={sombre?"/logo-clair.png":"/logo.png"} alt="Éco-Campus" style={{height:h||(sm?28:34),width:"auto",display:"block",flexShrink:0}}/>;};
 const Tg=({c,bg,bd,ch})=>{const K=useK();return <span style={{background:bg||K.c2,color:c||K.t2,border:`1px solid ${bd||K.b0}`,borderRadius:99,padding:"2px 8px",fontSize:12,fontWeight:600,fontFamily:"'JetBrains Mono',monospace",whiteSpace:"nowrap"}}>{ch}</span>;};
 const Bar=({p,col,h=4})=>{const K=useK();return <div style={{background:K.b0,borderRadius:99,height:h,overflow:"hidden"}}><div style={{width:`${Math.min(p,100)}%`,height:"100%",background:col||K.em,borderRadius:99,transition:"width .6s ease"}}/></div>;};
-const Spin=()=>{const K=useK();return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:24,background:K.bg}}><div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{position:"absolute",width:70,height:70,borderRadius:"50%",background:`${K.em}14`,animation:"pulse 2s ease-in-out infinite"}}/><div style={{position:"absolute",width:52,height:52,borderRadius:"50%",background:`${K.em}0D`,animation:"pulse 2s ease-in-out infinite .4s"}}/><div style={{width:46,height:46,borderRadius:14,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 8px 24px ${K.emD}55`,animation:"logofl 2.4s ease-in-out infinite"}}><svg width={22} height={22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="rgba(7,18,9,.5)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 2L18 11L10 20" stroke="#F5EDD8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg></div></div><div style={{textAlign:"center"}}><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:6}}>Éco-Campus</div><div style={{display:"flex",alignItems:"center",gap:5,justifyContent:"center"}}>{[0,1,2].map(i=><span key={i} style={{width:5,height:5,borderRadius:"50%",background:K.em,display:"inline-block",animation:"dotfl 1.4s ease-in-out infinite",animationDelay:`${i*0.22}s`}}/>)}</div></div></div>;};
-function Btn({ch,on,v="p",sm,full,dis,sx}){const K=useK();const M={p:{bg:`linear-gradient(135deg,${K.emD},${K.em})`,col:"#F5EDD8",sh:`0 2px 10px ${K.emD}44`},g:{bg:"transparent",col:K.t2,bo:`1px solid ${K.b1}`},d:{bg:K.erBg,col:K.er,bo:`1px solid ${K.erBd}`},w:{bg:K.waBg,col:K.wa,bo:`1px solid ${K.waBd}`},i:{bg:`linear-gradient(135deg,${K.inD},${K.in_})`,col:"#fff",sh:`0 2px 10px ${K.inD}44`},s:{bg:K.c2,col:K.t2,bo:`1px solid ${K.b0}`},r:{bg:K.rdBg,col:K.rd,bo:`1px solid ${K.rdBd}`}}[v]||{};return <button onClick={dis?null:on} className="bt" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,padding:sm?"7px 11px":"10px 17px",borderRadius:9,fontSize:sm?12:13,fontWeight:700,border:M.bo||"none",background:M.bg,color:M.col,boxShadow:M.sh||"none",width:full?"100%":undefined,opacity:dis?.45:1,cursor:dis?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",minHeight:sm?36:40,...sx}}>{ch}</button>;}
+const Spin=()=>{const K=useK();return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:24,background:K.bg}}><div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{position:"absolute",width:70,height:70,borderRadius:"50%",background:`${K.em}14`,animation:"pulse 2s ease-in-out infinite"}}/><div style={{position:"absolute",width:52,height:52,borderRadius:"50%",background:`${K.em}0D`,animation:"pulse 2s ease-in-out infinite .4s"}}/><div style={{width:46,height:46,borderRadius:14,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 8px 24px ${K.emD}55`,animation:"logofl 2.4s ease-in-out infinite"}}><svg width={22} height={22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="rgba(7,18,9,.5)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 2L18 11L10 20" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg></div></div><div style={{textAlign:"center"}}><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:6}}>Éco-Campus</div><div style={{display:"flex",alignItems:"center",gap:5,justifyContent:"center"}}>{[0,1,2].map(i=><span key={i} style={{width:5,height:5,borderRadius:"50%",background:K.em,display:"inline-block",animation:"dotfl 1.4s ease-in-out infinite",animationDelay:`${i*0.22}s`}}/>)}</div></div></div>;};
+function Btn({ch,on,v="p",sm,full,dis,sx}){const K=useK();const M={p:{bg:`linear-gradient(135deg,${K.emD},${K.em})`,col:"#FFFFFF",sh:`0 2px 10px ${K.emD}44`},g:{bg:"transparent",col:K.t2,bo:`1px solid ${K.b1}`},d:{bg:K.erBg,col:K.er,bo:`1px solid ${K.erBd}`},w:{bg:K.waBg,col:K.wa,bo:`1px solid ${K.waBd}`},i:{bg:`linear-gradient(135deg,${K.inD},${K.in_})`,col:"#fff",sh:`0 2px 10px ${K.inD}44`},s:{bg:K.c2,col:K.t2,bo:`1px solid ${K.b0}`},r:{bg:K.rdBg,col:K.rd,bo:`1px solid ${K.rdBd}`}}[v]||{};return <button onClick={dis?null:on} className="bt" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,padding:sm?"7px 11px":"10px 17px",borderRadius:9,fontSize:sm?12:13,fontWeight:700,border:M.bo||"none",background:M.bg,color:M.col,boxShadow:M.sh||"none",width:full?"100%":undefined,opacity:dis?.45:1,cursor:dis?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",minHeight:sm?36:40,...sx}}>{ch}</button>;}
 function Inp({lb,rf,type,ph,mono,note,ok,def,rows,val,onChange}){const K=useK();const base={width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:mono?"'JetBrains Mono',monospace":"'Outfit',sans-serif",caretColor:K.em};const fe=e=>{e.target.style.borderColor=K.emBd;if(!rows)e.target.style.background=K.card;};const fb=e=>{e.target.style.borderColor=K.b0;if(!rows)e.target.style.background=K.c2;};const props={onFocus:fe,onBlur:fb};if(val!==undefined){props.value=val;props.onChange=onChange||function(){};}else{props.defaultValue=def||"";}return <div style={{marginBottom:13}}>{lb&&<div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:5}}>{lb}</div>}{rows?<textarea ref={rf} rows={rows} placeholder={ph||""} style={{...base,resize:"vertical",lineHeight:1.6,minHeight:44}} {...props}/>:<input ref={rf} type={type||"text"} placeholder={ph||""} style={{...base,minHeight:44,letterSpacing:mono?3:0}} {...props} onKeyDown={ok}/>}{note&&<div style={{color:K.t3,fontSize:12,marginTop:3,lineHeight:1.4}}>{note}</div>}</div>;}
 function Pop({t,m}){const K=useK();if(!m)return null;const s={e:{bg:K.erBg,bd:K.erBd,col:K.er,ic:"⚠"},o:{bg:K.emBg,bd:K.emBd,col:K.em,ic:"✓"}}[t]||{};return <div style={{background:s.bg,border:`1px solid ${s.bd}`,borderRadius:8,color:s.col,fontSize:14,padding:"9px 12px",marginBottom:11,display:"flex",gap:7,lineHeight:1.5,animation:"sc .2s ease"}}><span>{s.ic}</span><span>{m}</span></div>;}
 function Sheet({title,onClose,children,w=460}){const K=useK();return <div onClick={e=>{if(e.target===e.currentTarget)onClose();}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",backdropFilter:"blur(5px)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:999}}><div style={{width:"100%",maxWidth:w,background:K.card,border:`1px solid ${K.b1}`,borderRadius:"16px 16px 0 0",padding:"16px 18px max(16px,env(safe-area-inset-bottom))",maxHeight:"92vh",overflowY:"auto",animation:"su .26s ease"}}><div style={{width:36,height:4,background:K.b1,borderRadius:99,margin:"0 auto 13px"}}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:13}}><div style={{fontWeight:700,fontSize:15,color:K.t1}}>{title}</div><button onClick={onClose} className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:22,cursor:"pointer",lineHeight:1}}>×</button></div>{children}</div></div>;}
@@ -790,7 +792,7 @@ function PrivacyModal({onClose}){
       </div>
       {/* Footer */}
       <div style={{padding:"12px 18px",borderTop:`1px solid ${K.b0}`,flexShrink:0}}>
-        <button onClick={onClose} className="bt" style={{width:"100%",padding:"11px",background:`linear-gradient(135deg,${ACC.emD},${ACC.em})`,border:"none",borderRadius:9,color:"#F5EDD8",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:42}}>
+        <button onClick={onClose} className="bt" style={{width:"100%",padding:"11px",background:`linear-gradient(135deg,${ACC.emD},${ACC.em})`,border:"none",borderRadius:9,color:"#FFFFFF",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:42}}>
           J'ai compris ✓
         </button>
       </div>
@@ -874,7 +876,7 @@ function LandingPage({onLogin}){
     {ico:"briefcase",label:"Professionnels",desc:"Quel que soit votre secteur d'activité"},
   ];
   const features=[
-    {ico:"book-2",     col:"#22C55E",label:"Modules structurés",  desc:"Des modules organisés par thème, du fondamental à l'avancé."},
+    {ico:"book-2",     col:"#1E4FA3",label:"Modules structurés",  desc:"Des modules organisés par thème, du fondamental à l'avancé."},
     {ico:"help-circle",col:"#3B82F6",label:"QCM interactifs",     desc:"Évaluez vos connaissances avec des quiz corrigés et des scores détaillés."},
     {ico:"file-text",  col:"#F59E0B",label:"PDF d'exercices",     desc:"Téléchargez les supports de cours et exercices pratiques par module."},
     {ico:"presentation",col:"#8B5CF6",label:"Présentations",      desc:"Slides professionnelles téléchargeables pour chaque thème de formation."},
@@ -894,10 +896,10 @@ function LandingPage({onLogin}){
         <Logo h={mob?28:34}/>
       </div>
       <button onClick={onLogin} className="bt" style={{
-        background:`linear-gradient(135deg,#16A34A,#22C55E)`,border:"none",
+        background:`linear-gradient(135deg,#0A2A5C,#1E4FA3)`,border:"none",
         borderRadius:9,padding:mob?"8px 16px":"9px 22px",
         color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",
-        fontFamily:"'Outfit',sans-serif",boxShadow:"0 4px 14px rgba(34,197,94,.35)"}}>
+        fontFamily:"'Outfit',sans-serif",boxShadow:"0 4px 14px rgba(30,79,163,.35)"}}>
         Se connecter →
       </button>
     </nav>
@@ -909,7 +911,7 @@ function LandingPage({onLogin}){
 
       {/* Background decorations */}
       <div style={{position:"absolute",top:"10%",left:"5%",width:300,height:300,borderRadius:"50%",
-        background:`radial-gradient(circle,#22C55E18,transparent 70%)`,pointerEvents:"none"}}/>
+        background:`radial-gradient(circle,#1E4FA318,transparent 70%)`,pointerEvents:"none"}}/>
       <div style={{position:"absolute",bottom:"15%",right:"5%",width:250,height:250,borderRadius:"50%",
         background:`radial-gradient(circle,#3B82F618,transparent 70%)`,pointerEvents:"none"}}/>
       <div style={{position:"absolute",top:"40%",right:"15%",width:120,height:120,borderRadius:"50%",
@@ -918,8 +920,8 @@ function LandingPage({onLogin}){
       {/* Badge */}
       <div style={{display:"inline-flex",alignItems:"center",gap:7,background:K.emBg,
         border:`1px solid ${K.emBd}`,borderRadius:99,padding:"6px 16px",marginBottom:28,animation:"up .5s ease"}}>
-        <span style={{width:7,height:7,borderRadius:"50%",background:"#22C55E",display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/>
-        <span style={{fontSize:13,fontWeight:700,color:"#22C55E",letterSpacing:.4}}>🇨🇩 Services et formations en RDC</span>
+        <span style={{width:7,height:7,borderRadius:"50%",background:"#1E4FA3",display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/>
+        <span style={{fontSize:13,fontWeight:700,color:"#1E4FA3",letterSpacing:.4}}>🇨🇩 Services et formations en RDC</span>
       </div>
 
       {/* Logo hero */}
@@ -931,7 +933,7 @@ function LandingPage({onLogin}){
       <h1 style={{margin:"0 0 16px",fontSize:mob?"1.9rem":"3.4rem",fontWeight:900,lineHeight:1.1,
         color:K.t1,letterSpacing:"-1px",maxWidth:720,animation:"up .6s ease .1s both"}}>
         La plateforme de{" "}
-        <span style={{background:"linear-gradient(135deg,#16A34A,#22C55E,#4ADE80)",
+        <span style={{background:"linear-gradient(135deg,#1E4FA3,#A3122A)",
           WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
           services et formations
         </span>
@@ -958,10 +960,10 @@ function LandingPage({onLogin}){
       <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",
         animation:"up .6s ease .3s both",marginBottom:56}}>
         <button onClick={onLogin} className="bt" style={{
-          background:`linear-gradient(135deg,#16A34A,#22C55E)`,border:"none",
+          background:`linear-gradient(135deg,#0A2A5C,#1E4FA3)`,border:"none",
           borderRadius:12,padding:"14px 28px",color:"#fff",fontWeight:800,
           fontSize:15,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
-          boxShadow:"0 8px 24px rgba(34,197,94,.4)",minHeight:50}}>
+          boxShadow:"0 8px 24px rgba(30,79,163,.4)",minHeight:50}}>
           Commencer maintenant →
         </button>
         <button onClick={onLogin} className="bt" style={{
@@ -978,7 +980,7 @@ function LandingPage({onLogin}){
         {stats.map(({val,label,ico})=><div key={label} style={{
           background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,
           padding:"16px 12px",textAlign:"center"}}>
-          <i className={`ti ti-${ico}`} style={{fontSize:20,color:"#22C55E",display:"block",marginBottom:6}}/>
+          <i className={`ti ti-${ico}`} style={{fontSize:20,color:"#1E4FA3",display:"block",marginBottom:6}}/>
           <div style={{fontWeight:900,fontSize:mob?20:24,color:K.t1,lineHeight:1}}>{val}</div>
           <div style={{fontSize:12,color:K.t3,marginTop:4,lineHeight:1.3}}>{label}</div>
         </div>)}
@@ -988,14 +990,14 @@ function LandingPage({onLogin}){
     {/* ── POUR QUI ── */}
     <div style={{padding:mob?"48px 20px":"64px 32px",maxWidth:900,margin:"0 auto"}}>
       <div style={{textAlign:"center",marginBottom:40}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#22C55E",letterSpacing:2,
+        <div style={{fontSize:13,fontWeight:700,color:"#1E4FA3",letterSpacing:2,
           textTransform:"uppercase",marginBottom:10}}>Audience</div>
         <h2 style={{margin:0,fontSize:mob?"1.6rem":"2.2rem",fontWeight:900,color:K.t1}}>
           Conçu pour vous, où que vous soyez
         </h2>
       </div>
       <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(2,1fr)",gap:14}}>
-        {publics.map(({ico,label,desc},i)=>{const c=["#16A34A","#2563EB","#D97706","#7C3AED"][i];return <div key={label} className="tile" style={{
+        {publics.map(({ico,label,desc},i)=>{const c=["#0A2A5C","#2563EB","#D97706","#7C3AED"][i];return <div key={label} className="tile" style={{
           padding:"22px",display:"flex",gap:16,alignItems:"flex-start",cursor:"default"}}>
           <div style={{width:52,height:52,borderRadius:15,flexShrink:0,
             background:`linear-gradient(135deg,${c},${c}B0)`,boxShadow:`0 8px 18px ${c}40`,
@@ -1015,7 +1017,7 @@ function LandingPage({onLogin}){
       background:K.card,borderTop:`1px solid ${K.b0}`,borderBottom:`1px solid ${K.b0}`}}>
       <div style={{maxWidth:900,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:40}}>
-          <div style={{fontSize:13,fontWeight:700,color:"#22C55E",letterSpacing:2,
+          <div style={{fontSize:13,fontWeight:700,color:"#1E4FA3",letterSpacing:2,
             textTransform:"uppercase",marginBottom:10}}>Fonctionnalités</div>
           <h2 style={{margin:0,fontSize:mob?"1.6rem":"2.2rem",fontWeight:900,color:K.t1}}>
             Tout ce dont vous avez besoin
@@ -1050,10 +1052,10 @@ function LandingPage({onLogin}){
           Rejoignez les apprenants Éco-Campus RDC et transformez votre maîtrise de la comptabilité OHADA.
         </p>
         <button onClick={onLogin} className="bt" style={{
-          background:`linear-gradient(135deg,#16A34A,#22C55E)`,border:"none",
+          background:`linear-gradient(135deg,#0A2A5C,#1E4FA3)`,border:"none",
           borderRadius:13,padding:"16px 36px",color:"#fff",fontWeight:900,
           fontSize:16,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
-          boxShadow:"0 8px 28px rgba(34,197,94,.4)",minHeight:54,
+          boxShadow:"0 8px 28px rgba(30,79,163,.4)",minHeight:54,
           display:"inline-flex",alignItems:"center",gap:10}}>
           <i className="ti ti-arrow-right" style={{fontSize:18}}/>
           Créer mon compte gratuitement
@@ -1061,7 +1063,7 @@ function LandingPage({onLogin}){
         <div style={{marginTop:16,fontSize:13,color:K.t3}}>
           Déjà inscrit ?{" "}
           <button onClick={onLogin} className="bt" style={{background:"none",border:"none",
-            color:"#22C55E",fontWeight:700,fontSize:13,cursor:"pointer",
+            color:"#1E4FA3",fontWeight:700,fontSize:13,cursor:"pointer",
             fontFamily:"'Outfit',sans-serif",padding:0}}>
             Se connecter →
           </button>
@@ -1087,7 +1089,7 @@ function Onboarding({u,onDone,mods}){
   const K=useK();const{mob}=useW();
   const[step,setStep]=useState(0);
   const steps=[
-    {ico:"rocket",col:"#22C55E",title:`Bienvenue, ${(u.nom||"").split(" ")[0]} ! 🎉`,
+    {ico:"rocket",col:"#1E4FA3",title:`Bienvenue, ${(u.nom||"").split(" ")[0]} ! 🎉`,
      desc:"Votre espace de formation est prêt. Découvrons ensemble comment en tirer le meilleur."},
     {ico:"book-2",col:"#3B82F6",title:"10 modules structurés",
      desc:"Du fondamental à l'avancé — chaque module contient des leçons, QCM et exercices pratiques alignés sur le plan comptable OHADA."},
@@ -1142,7 +1144,7 @@ function Onboarding({u,onDone,mods}){
           <button onClick={()=>isLast?onDone(firstMod):setStep(s=>s+1)}
             className="bt" style={{width:"100%",padding:"13px",
               background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",
-              borderRadius:12,color:"#F5EDD8",fontWeight:800,fontSize:14,
+              borderRadius:12,color:"#FFFFFF",fontWeight:800,fontSize:14,
               cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:46,
               boxShadow:`0 6px 20px ${K.em}35`}}>
             {isLast?`Commencer ${firstMod?`"${firstMod.titre}"`:""} →`:"Suivant →"}
@@ -1184,7 +1186,7 @@ function EmptyState({ico,title,desc,action,actionLabel}){
 
 // ── BADGES SYSTÈME ────────────────────────────────────────────────────────────
 const BADGES=[
-  {id:"first",ico:"rocket",label:"Premier pas",desc:"Premier module complété",col:"#22C55E",check:(nd)=>nd>=1},
+  {id:"first",ico:"rocket",label:"Premier pas",desc:"Premier module complété",col:"#1E4FA3",check:(nd)=>nd>=1},
   {id:"three",ico:"flame",label:"En feu !",desc:"3 modules complétés",col:"#F59E0B",check:(nd)=>nd>=3},
   {id:"half",ico:"star",label:"Mi-parcours",desc:"5 modules complétés",col:"#8B5CF6",check:(nd)=>nd>=5},
   {id:"master",ico:"crown",label:"Maître OHADA",desc:"Tous les modules complétés",col:"#EF4444",check:(nd,total)=>nd>=total&&total>0},
@@ -1237,7 +1239,7 @@ function ProgressRing({pct,size=80,stroke=7,col,track,txt}){
 
 
 // ── COMPOSANTS COMMUNS ESPACES FORMATEUR / ADMIN ──────────────────────────────
-const ROLE_COL={formateur:["#5B21B6","#8B5CF6"],admin:["#011B33","#1A6B3A"]};
+const ROLE_COL={formateur:["#5B21B6","#8B5CF6"],admin:["#001433","#1E4FA3"]};
 function StaffNav({role,nom,onOut,tabs,active,onTab,extra}){
   const K=useK();const{mob}=useW();const[c1,c2]=ROLE_COL[role];
   return <nav className="nb" style={{background:`${K.card}f4`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99,boxShadow:"0 4px 18px rgba(0,0,0,.04)"}}>
@@ -1401,7 +1403,7 @@ function FA({uid,onOut}){
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
         {myMods.slice(0,4).map(m=>{
-          const statusCol={pending:"#D97706",approved:"#16A34A",rejected:"#DC2626"}[m.status]||K.t3;
+          const statusCol={pending:"#D97706",approved:"#0A2A5C",rejected:"#DC2626"}[m.status]||K.t3;
           const statusLbl={pending:"En attente",approved:"Publié",rejected:"Rejeté"}[m.status]||"Brouillon";
           return <div key={m.id} onClick={()=>sV("mods")} className="tile" style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:13,borderLeft:`4px solid ${statusCol}`}}>
             <div style={{width:40,height:40,borderRadius:12,background:`${statusCol}16`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -1447,7 +1449,7 @@ function FA({uid,onOut}){
 function FAModules({uid,mods,onSubmit,saving,toast}){
   const K=useK();const{mob}=useW();
   const[creating,setCreating]=useState(false);
-  const[form,setForm]=useState({titre:"",mat:"",desc:"",ico:"book-2",col:"#22C55E"});
+  const[form,setForm]=useState({titre:"",mat:"",desc:"",ico:"book-2",col:"#1E4FA3"});
   const[evalType,setEvalType]=useState("qcm");
   const[questions,setQuestions]=useState([{q:"",opts:["","","",""],ans:0}]);
   const[openQuestions,setOpenQuestions]=useState([{q:"",points:10}]);
@@ -1486,7 +1488,7 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
         openQ:evalType==="open"?openQuestions.map((oq,i)=>({id:"OQ"+i,q:oq.q,points:Number(oq.points)||10})):[]
       });
       toast("o","Module créé ! Soumettez-le pour validation.");
-      setCreating(false);setForm({titre:"",mat:"",desc:"",ico:"book-2",col:"#22C55E"});
+      setCreating(false);setForm({titre:"",mat:"",desc:"",ico:"book-2",col:"#1E4FA3"});
       setQuestions([{q:"",opts:["","","",""],ans:0}]);setOpenQuestions([{q:"",points:10}]);setEvalType("qcm");setSlideFile(null);
     }catch(e){toast("e",e.message);setSlideUploading(false);}
     setSavingNew(false);
@@ -1532,7 +1534,7 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
         <input value={qu.q} onChange={e=>updQ(i,"q",e.target.value)} placeholder="Énoncé de la question..."
           style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"8px 10px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",marginBottom:8,boxSizing:"border-box"}}/>
         {qu.opts.map((o,j)=><div key={j} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-          <div onClick={()=>updQ(i,"ans",j)} style={{width:18,height:18,borderRadius:5,border:`2px solid ${qu.ans===j?"#22C55E":K.b1}`,background:qu.ans===j?"#22C55E":"transparent",cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div onClick={()=>updQ(i,"ans",j)} style={{width:18,height:18,borderRadius:5,border:`2px solid ${qu.ans===j?"#1E4FA3":K.b1}`,background:qu.ans===j?"#1E4FA3":"transparent",cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
             {qu.ans===j&&<i className="ti ti-check" style={{fontSize:11,color:"#fff"}}/>}
           </div>
           <input value={o} onChange={e=>updOpt(i,j,e.target.value)} placeholder={`Option ${j+1}${j===0?" (correcte si cochée)":""}`}
@@ -1567,10 +1569,10 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
       <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
         <i className="ti ti-file-text" style={{fontSize:14,color:"#F59E0B"}}/>Slides PDF (optionnel)
       </div>
-      <label style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"18px",border:`2px dashed ${slideFile?"#22C55E":K.b1}`,borderRadius:10,cursor:"pointer",background:slideFile?"#22C55E08":K.bg,transition:"all .2s"}}>
+      <label style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"18px",border:`2px dashed ${slideFile?"#1E4FA3":K.b1}`,borderRadius:10,cursor:"pointer",background:slideFile?"#1E4FA308":K.bg,transition:"all .2s"}}>
         <input type="file" accept=".pdf" style={{display:"none"}} onChange={e=>setSlideFile(e.target.files[0]||null)}/>
-        <i className={`ti ti-${slideFile?"circle-check":"upload"}`} style={{fontSize:28,color:slideFile?"#22C55E":K.t3}}/>
-        <div style={{fontSize:14,fontWeight:600,color:slideFile?"#22C55E":K.t2}}>{slideFile?slideFile.name:"Cliquez pour choisir un PDF"}</div>
+        <i className={`ti ti-${slideFile?"circle-check":"upload"}`} style={{fontSize:28,color:slideFile?"#1E4FA3":K.t3}}/>
+        <div style={{fontSize:14,fontWeight:600,color:slideFile?"#1E4FA3":K.t2}}>{slideFile?slideFile.name:"Cliquez pour choisir un PDF"}</div>
         <div style={{fontSize:12,color:K.t3}}>PDF uniquement · Max 10 MB</div>
       </label>
       {slideFile&&<button onClick={()=>setSlideFile(null)} className="bt"
@@ -1595,7 +1597,7 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {mods.map(m=>{
         const sc={draft:"Brouillon",pending:"En attente",approved:"Publié",rejected:"Rejeté"}[m.status||"draft"];
-        const cc={draft:K.t3,pending:"#F59E0B",approved:"#22C55E",rejected:"#EF4444"}[m.status||"draft"];
+        const cc={draft:K.t3,pending:"#F59E0B",approved:"#1E4FA3",rejected:"#EF4444"}[m.status||"draft"];
         return <div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:13,padding:"14px 16px"}}>
           <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
             <div style={{flex:1,minWidth:0}}>
@@ -1647,9 +1649,9 @@ function FASlides({uid,pres,onSubmit,saving,toast}){
 
   return <div style={{animation:"fadeIn .35s ease"}}>
     <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:14}}>Mes slides ({pres.length})</div>
-    <div style={{background:K.card,border:`1px solid #22C55E30`,borderRadius:14,padding:"18px",marginBottom:16}}>
+    <div style={{background:K.card,border:`1px solid #1E4FA330`,borderRadius:14,padding:"18px",marginBottom:16}}>
       <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
-        <i className="ti ti-presentation" style={{fontSize:15,color:"#22C55E"}}/>Ajouter une présentation
+        <i className="ti ti-presentation" style={{fontSize:15,color:"#1E4FA3"}}/>Ajouter une présentation
       </div>
       {[["Titre","titre","Titre de la présentation"],["URL (PDF/Drive/Slides)","url","https://..."],["Matière","mat","SYSCOHADA"],["Description","desc","Aperçu du contenu..."]].map(([lb,k,ph])=>
         <div key={k} style={{marginBottom:10}}>
@@ -1659,7 +1661,7 @@ function FASlides({uid,pres,onSubmit,saving,toast}){
         </div>
       )}
       <button onClick={savePres} disabled={savingNew} className="bt"
-        style={{width:"100%",padding:"11px",background:"linear-gradient(135deg,#15803D,#22C55E)",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",marginTop:4}}>
+        style={{width:"100%",padding:"11px",background:"linear-gradient(135deg,#0A2A5C,#1E4FA3)",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",marginTop:4}}>
         {savingNew?"Enregistrement...":"+ Ajouter la slide"}
       </button>
     </div>
@@ -1667,11 +1669,11 @@ function FASlides({uid,pres,onSubmit,saving,toast}){
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
       {pres.map(p=>{
         const sc={draft:"Brouillon",pending:"En attente",approved:"Publiée",rejected:"Rejetée"}[p.status||"draft"];
-        const cc={draft:K.t3,pending:"#F59E0B",approved:"#22C55E",rejected:"#EF4444"}[p.status||"draft"];
+        const cc={draft:K.t3,pending:"#F59E0B",approved:"#1E4FA3",rejected:"#EF4444"}[p.status||"draft"];
         return <div key={p.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px"}}>
           <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <div style={{width:36,height:36,borderRadius:9,background:"#22C55E18",border:"1px solid #22C55E30",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-            <i className="ti ti-presentation" style={{fontSize:16,color:"#22C55E"}}/>
+          <div style={{width:36,height:36,borderRadius:9,background:"#1E4FA318",border:"1px solid #1E4FA330",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            <i className="ti ti-presentation" style={{fontSize:16,color:"#1E4FA3"}}/>
           </div>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontWeight:700,fontSize:14,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
@@ -1879,7 +1881,7 @@ function FAVids({uid,vids,onSubmit,saving,toast}){
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
       {vids.map(v=>{
         const sc={draft:"Brouillon",pending:"En attente",approved:"Publiée",rejected:"Rejetée"}[v.status||"draft"];
-        const cc={draft:K.t3,pending:"#F59E0B",approved:"#22C55E",rejected:"#EF4444"}[v.status||"draft"];
+        const cc={draft:K.t3,pending:"#F59E0B",approved:"#1E4FA3",rejected:"#EF4444"}[v.status||"draft"];
         return <div key={v.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px"}}>
           <div style={{display:"flex",alignItems:"center",gap:12}}>
           <div style={{width:36,height:36,borderRadius:9,background:"#3B82F618",border:"1px solid #3B82F630",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -1933,7 +1935,7 @@ function FAStats({uid,myMods,allUsers}){
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
             {[
-              [learners.length,"Complétés","#22C55E"],
+              [learners.length,"Complétés","#1E4FA3"],
               [`${avg}%`,"Score moyen","#3B82F6"],
               [above80,"Score ≥80%","#F59E0B"],
             ].map(([v,l,c])=><div key={l} style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px",textAlign:"center"}}>
@@ -1997,9 +1999,9 @@ const DOC_TYPES = {
   "application/msword":                 {label:"Word",        ico:"file-type-doc",    col:"#3B82F6"},
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                                         {label:"Word",        ico:"file-type-doc",    col:"#3B82F6"},
-  "application/vnd.ms-excel":           {label:"Excel",       ico:"file-spreadsheet", col:"#22C55E"},
+  "application/vnd.ms-excel":           {label:"Excel",       ico:"file-spreadsheet", col:"#1E4FA3"},
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-                                        {label:"Excel",       ico:"file-spreadsheet", col:"#22C55E"},
+                                        {label:"Excel",       ico:"file-spreadsheet", col:"#1E4FA3"},
 };
 const ACCEPT_DOCS=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx";
 const MAX_SIZE_MB=20;
@@ -2077,7 +2079,7 @@ function FADocs({uid,toast}){
   const statusInfo={
     draft:   {label:"Brouillon", col:K.t3},
     pending: {label:"En attente",col:"#F59E0B"},
-    approved:{label:"Publié",    col:"#22C55E"},
+    approved:{label:"Publié",    col:"#1E4FA3"},
     rejected:{label:"Rejeté",    col:"#EF4444"},
   };
 
@@ -2099,9 +2101,9 @@ function FADocs({uid,toast}){
         onDragLeave={()=>setDragOver(false)}
         onDrop={e=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files[0]);}}
         style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,
-          padding:"22px 16px",border:`2px dashed ${dragOver?"#8B5CF6":file?"#22C55E":K.b1}`,
+          padding:"22px 16px",border:`2px dashed ${dragOver?"#8B5CF6":file?"#1E4FA3":K.b1}`,
           borderRadius:12,cursor:"pointer",
-          background:dragOver?"#8B5CF608":file?"#22C55E06":K.bg,
+          background:dragOver?"#8B5CF608":file?"#1E4FA306":K.bg,
           transition:"all .2s",marginBottom:14}}>
         <input type="file" accept={ACCEPT_DOCS} style={{display:"none"}}
           onChange={e=>handleFile(e.target.files[0])}/>
@@ -2110,7 +2112,7 @@ function FADocs({uid,toast}){
             <div style={{width:48,height:48,borderRadius:14,background:`${getFileType(file).col}18`,border:`1px solid ${getFileType(file).col}30`,display:"flex",alignItems:"center",justifyContent:"center"}}>
               <i className={`ti ti-${getFileType(file).ico}`} style={{fontSize:22,color:getFileType(file).col}}/>
             </div>
-            <div style={{fontWeight:700,fontSize:14,color:"#22C55E",textAlign:"center"}}>{file.name}</div>
+            <div style={{fontWeight:700,fontSize:14,color:"#1E4FA3",textAlign:"center"}}>{file.name}</div>
             <div style={{fontSize:12,color:K.t3}}>{getFileType(file).label} · {(file.size/1024/1024).toFixed(1)} MB</div>
           </>
           :<>
@@ -2119,7 +2121,7 @@ function FADocs({uid,toast}){
             <div style={{fontSize:12,color:K.t3}}>PDF · PowerPoint · Word · Excel · Max {MAX_SIZE_MB} MB</div>
             {/* Badges formats */}
             <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center",marginTop:4}}>
-              {[["file-text","PDF","#EF4444"],["presentation","PPT/PPTX","#F59E0B"],["file-type-doc","DOC/DOCX","#3B82F6"],["file-spreadsheet","XLS/XLSX","#22C55E"]].map(([ico,lbl,col])=>
+              {[["file-text","PDF","#EF4444"],["presentation","PPT/PPTX","#F59E0B"],["file-type-doc","DOC/DOCX","#3B82F6"],["file-spreadsheet","XLS/XLSX","#1E4FA3"]].map(([ico,lbl,col])=>
                 <div key={lbl} style={{display:"flex",alignItems:"center",gap:4,background:`${col}14`,border:`1px solid ${col}25`,borderRadius:6,padding:"3px 8px"}}>
                   <i className={`ti ti-${ico}`} style={{fontSize:12,color:col}}/>
                   <span style={{fontSize:11,fontWeight:700,color:col}}>{lbl}</span>
@@ -2353,7 +2355,7 @@ function Auth({onL}){
           {step===1&&tab==="r"&&<div style={{marginBottom:13}}>
             <div onClick={()=>sConsent(c=>!c)} style={{display:"flex",alignItems:"flex-start",gap:10,cursor:"pointer",padding:"10px 12px",background:consent?K.emBg:K.c2,border:`1px solid ${consent?K.emBd:K.b0}`,borderRadius:9,transition:"all .15s"}}>
               <div style={{width:18,height:18,borderRadius:5,border:`2px solid ${consent?K.em:K.b1}`,background:consent?K.em:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1,transition:"all .15s"}}>
-                {consent&&<i className="ti ti-check" style={{fontSize:12,color:"#F5EDD8"}}/>}
+                {consent&&<i className="ti ti-check" style={{fontSize:12,color:"#FFFFFF"}}/>}
               </div>
               <span style={{fontSize:13,color:K.t2,lineHeight:1.55,flex:1}}>
                 J'ai lu et j'accepte la{" "}
@@ -2864,7 +2866,7 @@ function MessagerieApprenant({uid,uNom}){
     {fChans.length>0&&<div style={{display:"flex",gap:6,marginBottom:10,flexShrink:0,flexWrap:"wrap"}}>
       {[{id:"admin",label:"Éco-Campus"},...fChans].map(c=>{
         const unread=msgs.filter(m=>(c.id==="admin"?!m.formateurUid:m.formateurUid===c.id)&&m.fromRole!=="apprenant"&&!m.luApprenant).length;
-        return <button key={c.id} onClick={()=>sChan(c.id)} className="bt" style={{background:chan===c.id?K.em:K.c2,border:`1px solid ${chan===c.id?K.em:K.b0}`,color:chan===c.id?"#F5EDD8":K.t2,borderRadius:99,padding:"5px 13px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>{c.label}{unread>0&&<span style={{background:K.rd,color:"#fff",borderRadius:99,fontSize:10,fontWeight:800,padding:"1px 6px"}}>{unread}</span>}</button>;
+        return <button key={c.id} onClick={()=>sChan(c.id)} className="bt" style={{background:chan===c.id?K.em:K.c2,border:`1px solid ${chan===c.id?K.em:K.b0}`,color:chan===c.id?"#FFFFFF":K.t2,borderRadius:99,padding:"5px 13px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>{c.label}{unread>0&&<span style={{background:K.rd,color:"#fff",borderRadius:99,fontSize:10,fontWeight:800,padding:"1px 6px"}}>{unread}</span>}</button>;
       })}
     </div>}
     <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:9,padding:"4px 2px",marginBottom:12}}>
@@ -2872,7 +2874,7 @@ function MessagerieApprenant({uid,uNom}){
       {shown.map(m=>{
         const mine=m.fromRole==="apprenant";
         return <div key={m.id} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"78%"}}>
-          <div style={{background:mine?K.em:K.c2,color:mine?"#F5EDD8":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:14,lineHeight:1.5}}>{m.texte}</div>
+          <div style={{background:mine?K.em:K.c2,color:mine?"#FFFFFF":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:14,lineHeight:1.5}}>{m.texte}</div>
           <div style={{fontSize:10,color:K.t3,marginTop:3,textAlign:mine?"right":"left"}}>{mine?"Vous":m.fromNom||"Éco-Campus"} · {new Date(m.ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
         </div>;
       })}
@@ -2880,7 +2882,7 @@ function MessagerieApprenant({uid,uNom}){
     </div>
     <div style={{display:"flex",gap:8,flexShrink:0}}>
       <input value={texte} onChange={e=>sTexte(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Écrivez votre message…" style={{flex:1,background:K.c2,border:`1px solid ${K.b0}`,borderRadius:99,padding:"11px 16px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
-      <button onClick={send} disabled={sending||!texte.trim()} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:"50%",width:42,height:42,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",cursor:"pointer",flexShrink:0,opacity:sending||!texte.trim()?.5:1}}>
+      <button onClick={send} disabled={sending||!texte.trim()} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:"50%",width:42,height:42,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",cursor:"pointer",flexShrink:0,opacity:sending||!texte.trim()?.5:1}}>
         <i className="ti ti-send" style={{fontSize:17}}/>
       </button>
     </div>
@@ -2942,12 +2944,12 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           {ok
             ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"3px 9px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:11,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ Actif":"✓ Actif"}</span></div>
-            :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:12,fontWeight:800,color:"#F5EDD8",cursor:"pointer"}}>Accéder</button>
+            :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:12,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>Accéder</button>
           }
           <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:28,height:28,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
             <i className="ti ti-key" style={{fontSize:14,color:K.t2}}/>
           </button>
-          <div onClick={onOut} style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:13,cursor:"pointer",flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
+          <div onClick={onOut} style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",fontWeight:800,fontSize:13,cursor:"pointer",flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
         </div>
       </div>
       {/* Bottom nav : 4 rubriques principales + « Plus » */}
@@ -3009,13 +3011,13 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
       {ok
         ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 11px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:12,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ À vie":"✓ Actif"}</span></div>
-        :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:800,color:"#F5EDD8",cursor:"pointer"}}>Obtenir l'accès</button>
+        :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>Obtenir l'accès</button>
       }
       <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:32,height:32,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
         <i className="ti ti-key" style={{fontSize:15,color:K.t2}}/>
       </button>
       <div onClick={onOut} style={{display:"flex",alignItems:"center",gap:7,padding:"4px 9px 4px 5px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:99,cursor:"pointer"}} className="bt">
-        <div style={{width:26,height:26,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:12}}>{(u.nom||"U")[0].toUpperCase()}</div>
+        <div style={{width:26,height:26,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",fontWeight:800,fontSize:12}}>{(u.nom||"U")[0].toUpperCase()}</div>
         <span style={{color:K.t2,fontSize:13,fontWeight:600}}>{(u.nom||"").split(" ")[0]}</span>
         <i className="ti ti-chevron-down" style={{fontSize:12,color:K.t3}}/>
       </div>
@@ -3092,7 +3094,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
     {ok&&jr<=30&&jr>0&&u.dureeId!=="v"&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"9px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><div style={{fontSize:14,color:K.wa}}>⏰ Expire dans <b>{jr}j</b></div><Btn ch="Renouveler" on={onSub} v="w" sm/></div>}
 
     {/* Bannière principale */}
-    <div className="card-enter" style={{background:`linear-gradient(135deg,${K.emD} 0%,${K.em} 62%,${K.in_} 100%)`,borderRadius:24,padding:mob?"22px 18px 20px":"30px 32px",marginBottom:20,position:"relative",overflow:"hidden",color:"#fff",boxShadow:`0 16px 36px ${K.em}38`}}>
+    <div className="card-enter" style={{background:"linear-gradient(135deg,#001433 0%,#0A2A5C 55%,#1E4FA3 100%)",borderRadius:24,padding:mob?"22px 18px 20px":"30px 32px",marginBottom:20,position:"relative",overflow:"hidden",color:"#fff",boxShadow:"0 16px 36px rgba(10,42,92,.28)"}}>
       <div style={{position:"absolute",top:-60,right:-40,width:220,height:220,borderRadius:"50%",background:"rgba(255,255,255,.07)"}}/>
       <div style={{position:"absolute",bottom:-80,right:mob?-30:120,width:180,height:180,borderRadius:"50%",background:"rgba(255,255,255,.05)"}}/>
       {mob&&<div style={{position:"absolute",top:18,right:18,opacity:.13,fontSize:84,lineHeight:1,pointerEvents:"none"}}><i className="ti ti-school"/></div>}
@@ -3107,7 +3109,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
               <div style={{fontSize:12,color:"rgba(255,255,255,.78)",marginTop:3,display:"flex",alignItems:"center",gap:4}}><i className={`ti ti-${ic}`} style={{fontSize:13}}/>{l}</div>
             </div>)}
           </div>
-          <button onClick={ok?()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'}):onSub} className="bt" style={{background:"#fff",color:K.emD,border:"none",borderRadius:12,padding:"12px 20px",fontSize:15,fontWeight:800,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:8,boxShadow:"0 6px 18px rgba(0,0,0,.18)"}}>
+          <button onClick={ok?()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'}):onSub} className="bt" style={{background:"#fff",color:"#0A2A5C",border:"none",borderRadius:12,padding:"12px 20px",fontSize:15,fontWeight:800,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:8,boxShadow:"0 6px 18px rgba(0,0,0,.18)"}}>
             {ok?(nd===0?"Commencer":"Continuer mes cours"):"Obtenir l'accès"}<i className="ti ti-arrow-right" style={{fontSize:17}}/>
           </button>
         </div>
@@ -3834,7 +3836,7 @@ function ServicesPage({user}){
         <Inp lb="Message (optionnel)" val={form.message} onChange={e=>sForm(f=>({...f,message:e.target.value}))} ph="Décrivez votre situation, vos besoins spécifiques..." rows={4}/>
         {err&&<div style={{background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,color:K.er,fontSize:14,padding:"8px 12px",marginBottom:10,display:"flex",gap:7}}><span>⚠</span><span>{err}</span></div>}
         <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-          <button onClick={send} disabled={sending} className="bt" style={{flex:1,minWidth:180,padding:"12px",background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:10,color:"#F5EDD8",fontWeight:800,fontSize:14,cursor:sending?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:7,minHeight:46,opacity:sending?.7:1}}>
+          <button onClick={send} disabled={sending} className="bt" style={{flex:1,minWidth:180,padding:"12px",background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:10,color:"#FFFFFF",fontWeight:800,fontSize:14,cursor:sending?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:7,minHeight:46,opacity:sending?.7:1}}>
             <i className="ti ti-send" style={{fontSize:16}}/>{sending?"Envoi en cours…":"Envoyer ma demande"}
           </button>
           <a href={`https://wa.me/${WA_NUM.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#25D366,#128C7E)",borderRadius:10,padding:"12px 18px",color:"#fff",fontWeight:700,fontSize:14,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:46}}>
@@ -3878,7 +3880,7 @@ function AdminThread({apprenantUid,apprenantMail,onBack}){
         {msgs.map(m=>{
           const mine=m.fromRole==="admin";
           return <div key={m.id} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"78%"}}>
-            <div style={{background:mine?K.em:K.card,color:mine?"#F5EDD8":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:14,lineHeight:1.5,border:mine?"none":`1px solid ${K.b0}`}}>{m.texte}</div>
+            <div style={{background:mine?K.em:K.card,color:mine?"#FFFFFF":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:14,lineHeight:1.5,border:mine?"none":`1px solid ${K.b0}`}}>{m.texte}</div>
             <div style={{fontSize:10,color:K.t3,marginTop:3,textAlign:mine?"right":"left"}}>{mine?"Vous":m.apprenantNom} · {new Date(m.ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
           </div>;
         })}
@@ -4003,8 +4005,8 @@ function AA({onOut}){
   const[gr,sGr]=useState(true);
   const saveLiveFn=async()=>{sSav(true);await saveLive({on:live.on,url:rLU.current?.value?.trim()||"",titre:rLT.current?.value?.trim()||"",desc:rLD.current?.value?.trim()||""});sSav(false);sMsg({t:"o",m:"Direct enregistré."});setTimeout(()=>sMsg({t:"",m:""}),2000);};
   const addVidFn=async()=>{const url=rVU.current?.value?.trim()||"",titre=rVT.current?.value?.trim()||"";if(!titre||!url){alert("Titre et URL requis");return;}if(!pVid(url)){alert("URL invalide");return;}sSav(true);await saveVideo({titre,url,desc:rVD.current?.value?.trim()||"",mid:rVM.current?.value||null,gr});sSav(false);sAV(false);[rVU,rVT,rVD].forEach(r=>{if(r.current)r.current.value="";});};
-  function RC({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"12px",marginBottom:7}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}><div style={{width:30,height:30,borderRadius:8,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:13,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{u.nom}</div><div style={{color:K.t3,fontSize:12,fontFamily:"'JetBrains Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div></div><Tg c={sc_(st)} bg={`${sc_(st)}12`} bd={`${sc_(st)}28`} ch={sl_(st)}/></div>{u.activationCode&&<div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,padding:"5px 10px",marginBottom:8,display:"flex",alignItems:"center",gap:8}}><span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:14,color:K.em}}>{u.activationCode}</span><span style={{fontSize:11,color:jr<=30?K.wa:K.t3}}>· {jr>0?`${jr}j`:"Exp."}</span></div>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{st==="demande"&&<><Btn ch="✓" on={()=>sVm(u.uid)} sm/><Btn ch="✗" on={()=>ref_(u.uid)} v="d" sm/></>}{st==="actif"&&<><Btn ch="Code" on={()=>sCm(u)} v="s" sm/><Btn ch="✉" on={()=>mL(u)} v="i" sm/><Btn ch="⏸" on={()=>rev(u.uid)} v="d" sm/></>}{(st==="expiré"||st==="aucun")&&<Btn ch="▶" on={()=>sVm(u.uid)} v="s" sm/>}<Btn ch="🗑" on={()=>sDm(u.uid)} v="d" sm/></div></div>;}
-  function RR({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div className="ar" style={{borderBottom:`1px solid ${K.b0}`,background:"transparent"}}><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:22,height:22,borderRadius:7,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:11,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div><div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{u.nom}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{u.createdAt}</div></div></div><div style={{color:K.t3,fontSize:12,fontFamily:"'JetBrains Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div><div>{u.activationCode&&<div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:12,color:K.em,background:K.emBg,borderRadius:5,padding:"1px 5px",display:"inline-block",marginBottom:2}}>{u.activationCode}</div>}{u.dateExpiration&&<div style={{fontSize:10,color:jr<=7?K.er:jr<=30?K.wa:K.t3,fontFamily:"'JetBrains Mono',monospace"}}>{jr>0?`${jr}j`:"Exp."}</div>}</div><div style={{display:"flex",gap:3,justifyContent:"flex-end",flexWrap:"wrap"}}>{st==="demande"&&<><Btn ch="✓" on={()=>sVm(u.uid)} sm/><Btn ch="✗" on={()=>ref_(u.uid)} v="d" sm/></>}{st==="actif"&&<><Btn ch="Code" on={()=>sCm(u)} v="s" sm/><Btn ch="✉" on={()=>mL(u)} v="i" sm/><Btn ch="⏸" on={()=>rev(u.uid)} v="d" sm/></>}{(st==="expiré"||st==="aucun")&&<Btn ch="▶" on={()=>sVm(u.uid)} v="s" sm/>}<Btn ch="🗑" on={()=>sDm(u.uid)} v="d" sm/></div></div>;}
+  function RC({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"12px",marginBottom:7}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}><div style={{width:30,height:30,borderRadius:8,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",fontWeight:800,fontSize:13,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{u.nom}</div><div style={{color:K.t3,fontSize:12,fontFamily:"'JetBrains Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div></div><Tg c={sc_(st)} bg={`${sc_(st)}12`} bd={`${sc_(st)}28`} ch={sl_(st)}/></div>{u.activationCode&&<div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,padding:"5px 10px",marginBottom:8,display:"flex",alignItems:"center",gap:8}}><span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:14,color:K.em}}>{u.activationCode}</span><span style={{fontSize:11,color:jr<=30?K.wa:K.t3}}>· {jr>0?`${jr}j`:"Exp."}</span></div>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{st==="demande"&&<><Btn ch="✓" on={()=>sVm(u.uid)} sm/><Btn ch="✗" on={()=>ref_(u.uid)} v="d" sm/></>}{st==="actif"&&<><Btn ch="Code" on={()=>sCm(u)} v="s" sm/><Btn ch="✉" on={()=>mL(u)} v="i" sm/><Btn ch="⏸" on={()=>rev(u.uid)} v="d" sm/></>}{(st==="expiré"||st==="aucun")&&<Btn ch="▶" on={()=>sVm(u.uid)} v="s" sm/>}<Btn ch="🗑" on={()=>sDm(u.uid)} v="d" sm/></div></div>;}
+  function RR({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div className="ar" style={{borderBottom:`1px solid ${K.b0}`,background:"transparent"}}><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:22,height:22,borderRadius:7,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",fontWeight:800,fontSize:11,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div><div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{u.nom}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{u.createdAt}</div></div></div><div style={{color:K.t3,fontSize:12,fontFamily:"'JetBrains Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div><div>{u.activationCode&&<div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:12,color:K.em,background:K.emBg,borderRadius:5,padding:"1px 5px",display:"inline-block",marginBottom:2}}>{u.activationCode}</div>}{u.dateExpiration&&<div style={{fontSize:10,color:jr<=7?K.er:jr<=30?K.wa:K.t3,fontFamily:"'JetBrains Mono',monospace"}}>{jr>0?`${jr}j`:"Exp."}</div>}</div><div style={{display:"flex",gap:3,justifyContent:"flex-end",flexWrap:"wrap"}}>{st==="demande"&&<><Btn ch="✓" on={()=>sVm(u.uid)} sm/><Btn ch="✗" on={()=>ref_(u.uid)} v="d" sm/></>}{st==="actif"&&<><Btn ch="Code" on={()=>sCm(u)} v="s" sm/><Btn ch="✉" on={()=>mL(u)} v="i" sm/><Btn ch="⏸" on={()=>rev(u.uid)} v="d" sm/></>}{(st==="expiré"||st==="aucun")&&<Btn ch="▶" on={()=>sVm(u.uid)} v="s" sm/>}<Btn ch="🗑" on={()=>sDm(u.uid)} v="d" sm/></div></div>;}
   function Liste({list,empty}){if(list.length===0)return <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"38px",textAlign:"center"}}><div style={{fontSize:26,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>👤</div><div style={{color:K.t3,fontSize:14}}>{empty}</div></div>;if(mob)return <div>{list.map(u=><RC key={u.uid} u={u}/>)}</div>;return <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,overflow:"hidden"}}><div className="ah" style={{background:K.bg,borderBottom:`1px solid ${K.b0}`,color:K.t3,fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",letterSpacing:".7px"}}><div>Nom</div><div>Email</div><div>Code</div><div style={{textAlign:"right"}}>Actions</div></div>{list.map(u=><RR key={u.uid} u={u}/>)}</div>;}
   function ModEditor({mod,onSave,onCancel}){
     const isNew=!mod.id;const[qs,sQs]=useState(mod.q?JSON.parse(JSON.stringify(mod.q)):[{q:"",r:["","","",""],b:0}]);
@@ -4073,11 +4075,11 @@ function AA({onOut}){
       {tab==="home"&&(()=>{
         const dashTiles=[
           {k:"d", ico:"clock",          label:"Demandes",       badge:nD, col:"#D97706"},
-          {k:"a", ico:"circle-check",   label:"Actifs",         badge:nA, col:"#16A34A"},
+          {k:"a", ico:"circle-check",   label:"Actifs",         badge:nA, col:"#0A2A5C"},
           {k:"e", ico:"clock-off",      label:"Expirés",        badge:nE, col:"#DC2626"},
           {k:"t", ico:"users",          label:"Tous les inscrits",badge:users.length, col:"#475569"},
           {k:"s", ico:"chart-bar",      label:"Statistiques",   col:"#0D7A6B"},
-          {k:"m", ico:"book-2",         label:"Cours",          col:"#1A6B3A"},
+          {k:"m", ico:"book-2",         label:"Cours",          col:"#0A2A5C"},
           {k:"v", ico:"video",          label:"Vidéos",         col:"#C2410C"},
           {k:"pr",ico:"presentation",   label:"Présentations",  col:"#CA8A04"},
           {k:"st",ico:"briefcase",      label:"Stages",         col:"#0891B2"},
@@ -4086,7 +4088,7 @@ function AA({onOut}){
           {k:"fo",ico:"school",         label:"Formateurs",     badge:users.filter(u=>u.role==="formateur").length, col:"#7C3AED"},
           {k:"an",ico:"speakerphone",   label:"Annonces",       badge:allAnnonces.filter(a=>a.actif).length, col:"#EA580C"},
           {k:"au",ico:"shield-check",   label:"Audit",          col:"#011B33"},
-          {k:"pl",ico:"calendar-check", label:"Présentiel",     col:"#15803D"},
+          {k:"pl",ico:"calendar-check", label:"Présentiel",     col:"#0A2A5C"},
           {k:"ef",ico:"report-money",   label:"États financiers",col:"#1D4ED8"},
           {k:"msg",ico:"message-circle",label:"Messages",       badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, col:"#BE123C"},
         ];
@@ -4151,7 +4153,7 @@ function AA({onOut}){
           </KpiGroup>
 
           <KpiGroup title="Engagement apprenants" ico="activity">
-            <KpiCard label="🟢 Engagés" val={nEngage} col="#22C55E"/>
+            <KpiCard label="🟢 Engagés" val={nEngage} col="#1E4FA3"/>
             <KpiCard label="🟡 À surveiller" val={nSurveiller} col="#F59E0B"/>
             <KpiCard label="🔴 Inactifs" val={nInactif} col="#EF4444"/>
             <KpiCard label="Ont progressé" val={apprenants.length?Math.round(withProgress/apprenants.length*100):0} suffix="%" col={K.in_}/>
@@ -4162,7 +4164,7 @@ function AA({onOut}){
             <KpiCard label="Modules publiés" val={modsPubliees} col={K.em}/>
             <KpiCard label="Modules en attente" val={modsAttente} col={K.wa}/>
             <KpiCard label="Vidéos" val={vids.length} col={K.in_}/>
-            <KpiCard label="Slides publiées" val={presPubliees} col="#22C55E"/>
+            <KpiCard label="Slides publiées" val={presPubliees} col="#1E4FA3"/>
             <KpiCard label="Slides en attente" val={presAttente} col={K.wa}/>
             <KpiCard label="Documents en attente" val={docsAttente} col={K.wa}/>
             <KpiCard label="Stages" val={allStagesAdmin.length} col={K.t2}/>
@@ -4392,7 +4394,7 @@ function AA({onOut}){
           "application/pdf":{label:"PDF",ico:"file-text",col:"#EF4444"},
           "application/vnd.openxmlformats-officedocument.presentationml.presentation":{label:"PPT",ico:"presentation",col:"#F59E0B"},
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document":{label:"Word",ico:"file-type-doc",col:"#3B82F6"},
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{label:"Excel",ico:"file-spreadsheet",col:"#22C55E"},
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{label:"Excel",ico:"file-spreadsheet",col:"#1E4FA3"},
         };
         return <div style={{marginBottom:20}}>
           <div style={{fontWeight:700,fontSize:14,color:"#F59E0B",marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
@@ -4419,7 +4421,7 @@ function AA({onOut}){
           {/* Slides en attente */}
           {pendingPres.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"13px 15px",marginBottom:8}}>
             <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-              <div style={{background:"#22C55E18",border:"1px solid #22C55E30",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#22C55E"}}>SLIDE</div>
+              <div style={{background:"#1E4FA318",border:"1px solid #1E4FA330",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#1E4FA3"}}>SLIDE</div>
               <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
             </div>
             <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===p.createdBy)?.nom||"—"} · {p.mat||"—"}</div>
@@ -4596,7 +4598,7 @@ function AA({onOut}){
             {convs.map(c=>{
               const unread=allMessages.filter(m=>!m.formateurUid&&m.apprenantUid===c.apprenantUid&&m.fromRole==="apprenant"&&!m.luAdmin).length;
               return <div key={c.apprenantUid} onClick={()=>sActiveThread(c.apprenantUid)} className="bt" style={{background:K.card,border:`1px solid ${unread>0?K.rdBd:K.b0}`,borderRadius:12,padding:"12px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:10}}>
-                <div style={{width:36,height:36,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:14,flexShrink:0}}>{(c.apprenantNom||"?")[0].toUpperCase()}</div>
+                <div style={{width:36,height:36,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",fontWeight:800,fontSize:14,flexShrink:0}}>{(c.apprenantNom||"?")[0].toUpperCase()}</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontWeight:700,fontSize:14,color:K.t1}}>{c.apprenantNom||"Apprenant"}</div>
                   <div style={{fontSize:12,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.fromRole==="admin"?"Vous : ":""}{c.texte}</div>
@@ -4622,7 +4624,7 @@ function AA({onOut}){
       </div>
       <div style={{fontSize:13,color:K.t3,marginBottom:8}}>{users.length} compte{users.length>1?"s":""} · {users.filter(u=>u.lastLogin).length} déjà connecté{users.filter(u=>u.lastLogin).length>1?"s":""}</div>
       <div style={{display:"flex",gap:12,marginBottom:13,flexWrap:"wrap"}}>
-        {[["#EF4444","🔴 Inactif","+ de 14 jours sans connexion"],["#F59E0B","🟡 À surveiller","peu actif ou 8-14 jours"],["#22C55E","🟢 Engagé","actif et progresse"]].map(([c,l,d])=>
+        {[["#EF4444","🔴 Inactif","+ de 14 jours sans connexion"],["#F59E0B","🟡 À surveiller","peu actif ou 8-14 jours"],["#1E4FA3","🟢 Engagé","actif et progresse"]].map(([c,l,d])=>
           <div key={l} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:K.t3}}><span style={{width:7,height:7,borderRadius:"50%",background:c,display:"inline-block"}}/>{l} <span style={{color:K.t3,opacity:.7}}>— {d}</span></div>
         )}
       </div>
@@ -4634,9 +4636,9 @@ function AA({onOut}){
           const scoreVals=Object.values(u.scores||{}).map(s=>s?.pct).filter(p=>p!=null);
           const avgScore=scoreVals.length?Math.round(scoreVals.reduce((a,b)=>a+b,0)/scoreVals.length):null;
           const daysSince=u.lastLogin?Math.floor((Date.now()-u.lastLogin)/86400000):null;
-          const engagement=jamais?{c:"#EF4444",l:"Jamais connecté"}:daysSince>14?{c:"#EF4444",l:"Inactif"}:(daysSince>7||nMods===0)?{c:"#F59E0B",l:"À surveiller"}:{c:"#22C55E",l:"Engagé"};
+          const engagement=jamais?{c:"#EF4444",l:"Jamais connecté"}:daysSince>14?{c:"#EF4444",l:"Inactif"}:(daysSince>7||nMods===0)?{c:"#F59E0B",l:"À surveiller"}:{c:"#1E4FA3",l:"Engagé"};
           return <div key={u.uid} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"11px 14px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-            <div style={{width:32,height:32,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:14,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
+            <div style={{width:32,height:32,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",fontWeight:800,fontSize:14,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
             <div style={{flex:1,minWidth:120}}>
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                 <span style={{fontWeight:700,fontSize:14,color:K.t1}}>{u.nom}</span>
@@ -4711,7 +4713,7 @@ function AA({onOut}){
             const total=plAll.filter(p=>p.present?.includes(u.uid)).length;
             return <div key={u.uid} onClick={()=>toggle(u.uid)} className="bt" style={{background:K.card,border:`1px solid ${isP?K.emBd:K.b0}`,borderRadius:11,padding:"11px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:11}}>
               <div style={{width:22,height:22,borderRadius:6,border:`2px solid ${isP?K.em:K.b1}`,background:isP?K.em:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                {isP&&<i className="ti ti-check" style={{fontSize:14,color:"#F5EDD8"}}/>}
+                {isP&&<i className="ti ti-check" style={{fontSize:14,color:"#FFFFFF"}}/>}
               </div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontWeight:700,fontSize:14,color:K.t1}}>{u.nom}</div>
@@ -4738,14 +4740,14 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(e,info){console.error("ErrorBoundary:",e,info);}
   render(){
     if(this.state.error){
-      const K_EB={bg:"#0A0F0B",card:"#111812",t1:"#E8F5EA",t2:"#A8C4AC",t3:"#5A7A5E",em:"#22C55E",er:"#EF4444",b0:"rgba(255,255,255,.07)"};
+      const K_EB={bg:"#0A0F0B",card:"#111812",t1:"#E8F5EA",t2:"#A8C4AC",t3:"#5A7A5E",em:"#1E4FA3",er:"#EF4444",b0:"rgba(255,255,255,.07)"};
       return <div style={{minHeight:"100vh",background:K_EB.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:24,fontFamily:"'Outfit',sans-serif"}}>
         <div style={{maxWidth:420,width:"100%",background:K_EB.card,border:`1px solid ${K_EB.b0}`,borderRadius:16,padding:28,textAlign:"center"}}>
           <div style={{fontSize:36,marginBottom:16}}>⚠️</div>
           <div style={{fontWeight:800,fontSize:18,color:K_EB.t1,marginBottom:8}}>Une erreur est survenue</div>
           <div style={{fontSize:14,color:K_EB.t2,marginBottom:20,lineHeight:1.6}}>{this.state.error?.message||"Erreur inattendue"}</div>
           <button onClick={()=>window.location.reload()}
-            style={{background:"linear-gradient(135deg,#16A34A,#22C55E)",border:"none",borderRadius:10,padding:"11px 24px",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+            style={{background:"linear-gradient(135deg,#0A2A5C,#1E4FA3)",border:"none",borderRadius:10,padding:"11px 24px",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
             Recharger la page
           </button>
         </div>
@@ -4780,7 +4782,7 @@ function InstallPrompt(){
       <div style={{fontWeight:800,fontSize:14,color:K.t1}}>Installer Éco-Campus</div>
       <div style={{fontSize:12,color:K.t2,lineHeight:1.45,marginTop:2}}>{ios?<>Touchez <b>Partager</b> <i className="ti ti-share-2"/> puis <b>« Sur l'écran d'accueil »</b>.</>:"Accès direct depuis votre écran d'accueil, en plein écran."}</div>
     </div>
-    {!ios&&<button onClick={installer} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,color:"#F5EDD8",border:"none",borderRadius:9,padding:"8px 12px",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",flexShrink:0}}>Installer</button>}
+    {!ios&&<button onClick={installer} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,color:"#FFFFFF",border:"none",borderRadius:9,padding:"8px 12px",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",flexShrink:0}}>Installer</button>}
     <button onClick={fermer} aria-label="Fermer" className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:20,cursor:"pointer",lineHeight:1,flexShrink:0}}>×</button>
   </div>;
 }

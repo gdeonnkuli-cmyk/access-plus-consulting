@@ -23,9 +23,9 @@ android {
             hostName       : siteHost,
             defaultUrl     : "https://" + siteHost + "/?source=android",
             launcherName   : "Éco-Campus RDC",
-            themeColor     : "#1A6B3A",
-            navigationColor: "#0C2E1E",
-            backgroundColor: "#F7F3EC"
+            themeColor     : "#0A2A5C",
+            navigationColor: "#001433",
+            backgroundColor: "#F4F6FB"
         ]
         resValue "string", "app_name", "Éco-Campus RDC"
         resValue "string", "asset_statements",
