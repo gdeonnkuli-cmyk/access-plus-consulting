@@ -2,8 +2,8 @@
    - pages : réseau d'abord (les mises à jour du site sont immédiates), copie locale si hors ligne ;
    - fichiers statiques de l'application (/static, /icons) : copie locale, rafraîchie en arrière-plan ;
    - Firebase, Google et tout autre domaine : jamais mis en cache (données toujours à jour). */
-const VERSION = "ecocampus-v4";
-const SHELL = ["/", "/index.html", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png", "/favicon.png"];
+const VERSION = "ecocampus-v5";
+const SHELL = ["/", "/index.html", "/manifest.json", "/icons/ec-192-v2.png", "/icons/ec-512-v2.png", "/favicon.png"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
