@@ -43,7 +43,7 @@ Sans cette étape, l'application installée depuis le Play Store affiche une bar
 - **Description courte** (80 caractères max.) : Formations SYSCOHADA, cours, QCM et atelier États financiers pour la RDC.
 - **Description complète** :
 
-> Éco-Campus RDC est la plateforme de formation d'Access Plus Consulting, pensée pour la République Démocratique du Congo.
+> Éco-Campus RDC est la plateforme de formation Éco-Campus RDC, pensée pour la République Démocratique du Congo.
 >
 > • Modules de comptabilité SYSCOHADA révisé, avec leçons, QCM et exercices pratiques
 > • Présentations, vidéos et sessions en direct avec les formateurs
@@ -52,7 +52,7 @@ Sans cette étape, l'application installée depuis le Play Store affiche une bar
 > • Dossiers partagés en temps réel entre apprenants, corrigés et validés par les formateurs
 > • Suivi de progression, badges, tests psychotechniques et offres de stages
 >
-> L'accès aux contenus de formation est réservé aux apprenants disposant d'un abonnement actif, délivré par Access Plus Consulting.
+> L'accès aux contenus de formation est réservé aux apprenants disposant d'un abonnement actif, délivré par Éco-Campus RDC.
 
 - **Catégorie** : Enseignement · **Tags** : formation, comptabilité, finance
 - **Coordonnées** : contact@accessplusconsulting.com
