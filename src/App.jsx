@@ -2899,6 +2899,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
   const rHc=useRef();
   const[hcErr,sHcErr]=useState("");
   const[hcBusy,sHcBusy]=useState(false);
+  const[showMore,sShowMore]=useState(false);
   const submitNavCode=async()=>{
     const c=rHc.current?.value?.trim()||"";
     sHcErr("");if(!c)return sHcErr("Entrez votre code");
@@ -2939,7 +2940,6 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
   ];
   if(mob){
     // ── BOTTOM NAV MOBILE ──
-    const visible=NAV_ITEMS;
     return <>
       {/* Top bar mobile : logo + statut + avatar */}
       <div className="nb" style={{background:`${K.card}f0`,backdropFilter:"blur(16px)",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"space-between",height:50,position:"sticky",top:0,zIndex:99}}>
@@ -2955,22 +2955,40 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
           <div onClick={onOut} style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:13,cursor:"pointer",flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
         </div>
       </div>
-      {/* Bottom nav */}
-      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:99,background:`${K.card}f5`,backdropFilter:"blur(20px)",borderTop:`1px solid ${K.b0}`,display:"flex",alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",paddingBottom:"max(6px,env(safe-area-inset-bottom))"}}>
-        {visible.map(({k,ico,label,live:isLive,badgeCount})=>{
-          const active=vue===k;
-          const hasLive=isLive&&live;
-          return <button key={k} onClick={()=>sV(k)} className="bt" style={{flex:"1 0 auto",minWidth:62,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,padding:"8px 6px 4px",background:"none",border:"none",cursor:"pointer",position:"relative",minHeight:52}}>
-            {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:3,borderRadius:"0 0 3px 3px",background:K.em}}/>}
-            <div style={{position:"relative"}}>
-              <i className={`ti ti-${ico}`} style={{fontSize:20,color:active?K.em:K.t3,display:"block"}}/>
-              {hasLive&&<span style={{position:"absolute",top:-2,right:-4,width:7,height:7,borderRadius:"50%",background:K.rd,border:`1.5px solid ${K.card}`,animation:"blink 1.5s ease-in-out infinite"}}/>}
-              {!!badgeCount&&<span style={{position:"absolute",top:-5,right:-7,minWidth:14,height:14,borderRadius:99,background:K.rd,color:"#fff",fontSize:8,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px",border:`1.5px solid ${K.card}`}}>{badgeCount>9?"9+":badgeCount}</span>}
+      {/* Bottom nav : 4 rubriques principales + « Plus » */}
+      {(()=>{
+        const MAIN=["home","pres","ef","msg"];
+        const main=NAV_ITEMS.filter(n=>MAIN.includes(n.k)).sort((x,y)=>MAIN.indexOf(x.k)-MAIN.indexOf(y.k));
+        const more=NAV_ITEMS.filter(n=>!MAIN.includes(n.k));
+        const moreActive=more.some(n=>n.k===vue);
+        const moreLive=live&&more.some(n=>n.live);
+        const Item=({ico,label,active,onClick,dot,badge})=><button onClick={onClick} className="bt" style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,padding:"7px 2px 5px",background:"none",border:"none",cursor:"pointer",position:"relative",minHeight:56,fontFamily:"'Outfit',sans-serif"}}>
+          <div style={{position:"relative",width:52,height:30,borderRadius:99,display:"flex",alignItems:"center",justifyContent:"center",background:active?K.emBg:"transparent",transition:"background .2s"}}>
+            <i className={`ti ti-${ico}`} style={{fontSize:22,color:active?K.em:K.t2,display:"block"}}/>
+            {dot&&<span style={{position:"absolute",top:2,right:12,width:8,height:8,borderRadius:"50%",background:K.rd,border:`1.5px solid ${K.card}`,animation:"blink 1.5s ease-in-out infinite"}}/>}
+            {!!badge&&<span style={{position:"absolute",top:-3,right:8,minWidth:17,height:17,borderRadius:99,background:K.rd,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px",border:`1.5px solid ${K.card}`}}>{badge>9?"9+":badge}</span>}
+          </div>
+          <span style={{fontSize:12,fontWeight:active?800:600,color:active?K.em:K.t2,whiteSpace:"nowrap"}}>{label}</span>
+        </button>;
+        return <>
+          <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:99,background:`${K.card}f7`,backdropFilter:"blur(20px)",borderTop:`1px solid ${K.b0}`,boxShadow:"0 -6px 20px rgba(0,0,0,.06)",display:"flex",alignItems:"stretch",paddingBottom:"max(4px,env(safe-area-inset-bottom))"}}>
+            {main.map(n=><Item key={n.k} ico={n.ico} label={n.label} active={vue===n.k&&!showMore} badge={n.badgeCount} dot={n.live&&live} onClick={()=>{sShowMore(false);sV(n.k);}}/>)}
+            <Item ico={showMore?"x":"layout-grid"} label="Plus" active={showMore||moreActive} dot={moreLive} onClick={()=>sShowMore(v=>!v)}/>
+          </div>
+          {showMore&&<div onClick={()=>sShowMore(false)} style={{position:"fixed",inset:0,zIndex:98,background:"rgba(0,0,0,.35)",backdropFilter:"blur(2px)",animation:"fadeIn .2s ease"}}>
+            <div onClick={e=>e.stopPropagation()} style={{position:"absolute",left:10,right:10,bottom:"calc(72px + env(safe-area-inset-bottom))",background:K.card,border:`1px solid ${K.b0}`,borderRadius:22,padding:"16px 14px 14px",boxShadow:"0 18px 40px rgba(0,0,0,.25)",animation:"slideUp .25s cubic-bezier(.22,1,.36,1)"}}>
+              <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:12,paddingLeft:4}}>Toutes les rubriques</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+                {more.map(n=>{const active=vue===n.k;const c={stages:"#0D7A6B",videos:"#C2410C",psycho:"#7C3AED",services:"#1D4ED8",prog:"#D97706",res:"#B45309"}[n.k]||K.em;return <button key={n.k} onClick={()=>{sShowMore(false);sV(n.k);}} className="bt" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:7,padding:"14px 6px 12px",background:active?K.emBg:K.c2,border:`1px solid ${active?K.emBd:K.b0}`,borderRadius:16,cursor:"pointer",fontFamily:"'Outfit',sans-serif",position:"relative"}}>
+                  <div style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${c},${c}B0)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 6px 14px ${c}35`}}><i className={`ti ti-${n.ico}`} style={{fontSize:21,color:"#fff"}}/></div>
+                  <span style={{fontSize:13,fontWeight:700,color:active?K.em:K.t1}}>{n.label}</span>
+                  {n.live&&live&&<span style={{position:"absolute",top:8,right:8,fontSize:10,fontWeight:800,color:"#fff",background:K.rd,borderRadius:99,padding:"1px 6px"}}>LIVE</span>}
+                </button>;})}
+              </div>
             </div>
-            <span style={{fontSize:10,fontWeight:active?800:600,color:active?K.em:K.t3,letterSpacing:.2}}>{label}</span>
-          </button>;
-        })}
-      </div>
+          </div>}
+        </>;
+      })()}
       {codeModal}
     </>;
   }
