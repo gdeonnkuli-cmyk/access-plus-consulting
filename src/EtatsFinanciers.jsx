@@ -46,7 +46,7 @@ const downloadCSV=(name,rows)=>{
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name.replace(/[^\w.-]+/g,"_")+".csv";a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 };
-const PRINT_CSS=`@media print{body *{visibility:hidden!important;}.ef-print,.ef-print *{visibility:visible!important;color:#000!important;background:#fff!important;border-color:#999!important;}.ef-print{position:absolute;left:0;top:0;width:100%;}.ef-noprint{display:none!important;}.ef-printonly{display:block!important;}.ef-pb{break-before:page;}}.ef-printonly{display:none;}`;
+const PRINT_CSS=`@media print{body *{visibility:hidden!important;}.ef-print,.ef-print *{visibility:visible!important;color:#000!important;background:#fff!important;border-color:#999!important;}.ef-print{position:absolute;left:0;top:0;width:100%;}.ef-noprint{display:none!important;}.ef-printonly{display:block!important;}table.ef-printonly{display:table!important;}.ef-pb{break-before:page;}}.ef-printonly{display:none;}.ef-swipe{display:none;}@media(max-width:639px){.ef-swipe{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;opacity:.65;padding:6px 12px;}}`;
 
 // ── Petits composants ──────────────────────────────────────────────────────────
 function B({K,ch,on,v="p",sm,dis,ico,title}){
@@ -246,7 +246,9 @@ function Dossier({db,K,mob,me,staff,d,onBack}){
 const th=K=>({padding:"7px 8px",fontSize:10,fontWeight:800,color:K.t3,textAlign:"right",textTransform:"uppercase",letterSpacing:.4,borderBottom:`1px solid ${K.b1}`,whiteSpace:"nowrap",background:K.c2,position:"sticky",top:0});
 const td=K=>({padding:"5px 8px",fontSize:12,color:K.t1,borderBottom:`1px solid ${K.b0}`,textAlign:"right",fontFamily:mono,whiteSpace:"nowrap"});
 const Wrap=({K,children,print})=><div className={print?"ef-print":undefined} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,overflow:"hidden"}}>{children}</div>;
-const Scroll=({children,max})=><div style={{overflowX:"auto",maxHeight:max,overflowY:max?"auto":undefined,WebkitOverflowScrolling:"touch"}}>{children}</div>;
+const Scroll=({children,max})=><><div className="ef-swipe ef-noprint"><i className="ti ti-arrows-horizontal"/> Faites glisser le tableau pour voir toutes les colonnes</div><div style={{overflowX:"auto",maxHeight:max,overflowY:max?"auto":undefined,WebkitOverflowScrolling:"touch"}}>{children}</div></>;
+const SIGLES=["HAO","TVA","IBP","RDC","OHADA","SYSCOHADA","CNSS","INPP","ONEM","DGI","TFT"];
+const casPhrase=t=>(t.charAt(0)+t.slice(1).toLowerCase()).replace(/[a-zà-ÿ]+/gi,w=>SIGLES.includes(w.toUpperCase())?w.toUpperCase():w);
 const PrintHead=({K,meta,titre})=>{const i=meta.ident||{};const ids=[i.nif&&`NIF : ${i.nif}`,i.rccm&&`RCCM : ${i.rccm}`,i.idnat&&`Id. Nat. : ${i.idnat}`].filter(Boolean).join(" · ");
   return <div style={{padding:"12px 14px",borderBottom:`1px solid ${K.b0}`,display:"flex",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
   <div><div style={{fontWeight:800,fontSize:15,color:K.t1}}>{titre}</div><div style={{color:K.t3,fontSize:11}}>{meta.societe}{i.sigle?` (${i.sigle})`:""} · Exercice clos le 31/12/{meta.exercice} · Montants en {meta.devise==="USD"?"dollars américains (USD)":"francs congolais (CDF)"}</div>{ids&&<div style={{color:K.t3,fontSize:11}}>{ids}</div>}</div>
@@ -645,7 +647,21 @@ function NotesTab({K,mob,R,saisies,setN,canEdit,meta}){
   const exportAll=()=>downloadCSV(`NotesAnnexes_${meta.societe}_${meta.exercice}`,[["FICHE R4 : FICHE RÉCAPITULATIVE DES NOTES ANNEXES"],["Note","Intitulé","A / N/A"],...notes.map(n=>[n.id,n.titre,n.applicable?"A":"N/A"]),[],...notes.filter(n=>n.applicable).flatMap(noteCsv)]);
   const R4=<div className={sel==="R4"||all?"":"ef-noprint"}>
     <PrintHead K={K} meta={meta} titre="FICHE R4 : FICHE RÉCAPITULATIVE DES NOTES ANNEXES"/>
-    <table style={{width:"100%",borderCollapse:"collapse"}}>
+    {mob&&<div className="ef-noprint">{notes.map(n=><div key={n.id} onClick={()=>{sSel(n.id);sAll(false);}} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"10px 12px",borderBottom:`1px solid ${K.b0}`,cursor:"pointer"}}>
+      <div style={{flex:"0 0 46px",fontFamily:mono,fontWeight:800,fontSize:13,color:K.t1,paddingTop:2}}>{n.id}</div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:13,fontWeight:600,color:K.t1,lineHeight:1.35,textTransform:"none"}}>{casPhrase(n.titre)}</div>
+        {ko(n)&&n.applicable&&<div style={{color:K.er,fontWeight:800,fontSize:12,marginTop:2}}>Contrôle à revoir</div>}
+        <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6}} onClick={e=>e.stopPropagation()}>
+          <span style={{fontSize:11,fontWeight:800,borderRadius:99,padding:"2px 9px",whiteSpace:"nowrap",background:n.applicable?K.emBg:K.c2,color:n.applicable?K.em:K.t3,border:`1px solid ${n.applicable?K.emBd:K.b0}`}}>{n.applicable?"Applicable":"Non applicable"}</span>
+          <select disabled={!canEdit} value={n.force||""} onChange={e=>upd(n.id,{a:e.target.value||null})} style={{...fieldSt(K),minHeight:28,padding:"2px 6px",fontSize:12,width:"auto",flex:"0 1 auto"}}>
+            <option value="">Auto</option><option value="A">Forcer : applicable</option><option value="NA">Forcer : non applicable</option>
+          </select>
+        </div>
+      </div>
+      <i className="ti ti-chevron-right" style={{color:K.t3,fontSize:16,paddingTop:2}}/>
+    </div>)}</div>}
+    <table className={mob?"ef-printonly":undefined} style={{width:"100%",borderCollapse:"collapse"}}>
       <thead><tr><th style={{...th(K),textAlign:"left",width:70}}>Notes</th><th style={{...th(K),textAlign:"left"}}>Intitulés</th><th style={{...th(K),textAlign:"center",width:50}}>A</th><th style={{...th(K),textAlign:"center",width:50}}>N/A</th><th className="ef-noprint" style={{...th(K),textAlign:"center",width:130}}>Applicabilité</th></tr></thead>
       <tbody>{notes.map(n=><tr key={n.id} onClick={()=>{sSel(n.id);sAll(false);}} style={{cursor:"pointer"}}>
         <td style={{...td(K),textAlign:"left",fontWeight:700}}>NOTE {n.id}</td>
@@ -672,7 +688,7 @@ function NotesTab({K,mob,R,saisies,setN,canEdit,meta}){
       :<div className="ef-noprint" style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:6,maxHeight:"70vh",overflowY:"auto"}}>
         {[{id:"R4",titre:"Fiche récapitulative",applicable:true},...notes].map(n=>{const a=sel===n.id;return <button key={n.id} onClick={()=>sSel(n.id)} className="bt" style={{display:"flex",gap:7,alignItems:"center",width:"100%",textAlign:"left",padding:"6px 8px",border:"none",borderRadius:7,background:a?K.c2:"transparent",cursor:"pointer",fontFamily:"'Outfit',sans-serif",opacity:n.applicable?1:.5}}>
           <span style={{fontFamily:mono,fontSize:10,fontWeight:800,color:a?K.em:K.t3,minWidth:30}}>{n.id}</span>
-          <span style={{fontSize:11,color:K.t1,flex:1,lineHeight:1.3}}>{n.titre.charAt(0)+n.titre.slice(1).toLowerCase()}</span>
+          <span style={{fontSize:11,color:K.t1,flex:1,lineHeight:1.3}}>{casPhrase(n.titre)}</span>
           {n.id!=="R4"&&ko(n)&&n.applicable&&<i className="ti ti-alert-triangle" style={{color:K.er,fontSize:13}}/>}
         </button>;})}
       </div>}
