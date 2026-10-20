@@ -128,6 +128,7 @@ body{background:${K.bg};color:${K.t1};font-family:'Outfit',sans-serif;-webkit-fo
 .tile{background:${K.card};border:1px solid ${K.b0};border-radius:20px;position:relative;overflow:hidden;cursor:pointer;box-shadow:0 1px 2px rgba(30,18,8,.04),0 8px 22px rgba(30,18,8,.07);transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s,border-color .25s;}
 .tile:hover{transform:translateY(-4px);border-color:${K.b1};box-shadow:0 2px 4px rgba(30,18,8,.05),0 18px 38px rgba(30,18,8,.13);}
 .tile:active{transform:scale(.98);}
+@media(max-width:639px){.tp-btn{bottom:calc(88px + env(safe-area-inset-bottom))!important;right:12px!important;width:38px!important;height:38px!important;font-size:17px!important;}}
 .h-sec{font-family:'Fraunces',serif;font-weight:700;font-size:20px;letter-spacing:-.3px;line-height:1.2;}
 .gv{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;}
 .gs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
@@ -4860,7 +4861,7 @@ export default function App(){
     <style>{mCss(K)}</style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css"/>
     <ThemePicker open={showTP} onClose={()=>sShowTP(false)}/>
-    <button onClick={()=>sShowTP(true)} className="bt"
+    <button onClick={()=>sShowTP(true)} className="bt tp-btn" title="Changer de thème"
       style={{position:"fixed",bottom:18,right:18,zIndex:998,width:44,height:44,borderRadius:"50%",background:K.card,border:`1px solid ${K.b1}`,color:K.t2,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 16px rgba(0,0,0,.25)"}}>
       {TH[tid]?.i||"🎨"}
     </button>
