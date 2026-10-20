@@ -1,7 +1,7 @@
 import React,{useState,useRef,useEffect,useCallback,createContext,useContext}from"react";
 import{initializeApp,deleteApp}from"firebase/app";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup}from"firebase/auth";
-import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,orderBy,limit,deleteField}from"firebase/firestore";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,orderBy,limit,deleteField,writeBatch}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
 import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
 import{htmlCodeAcces,htmlNotification}from"./emails";
@@ -230,6 +230,17 @@ function useActiviteAll(){
   useEffect(()=>onSnapshot(collection(db,"activite"),snap=>sA(snap.docs.map(d=>({id:d.id,...d.data()}))),()=>{}),[]);
   return a;
 }
+// Supprime les lignes du journal plus anciennes que la date limite (par lots de 400) ; renvoie le nombre supprimé
+const purgerConnexions=async(avant)=>{
+  let total=0;
+  for(;;){
+    const snap=await getDocs(query(collection(db,"connexions"),where("ts","<",avant),limit(400)));
+    if(snap.empty)break;
+    const b=writeBatch(db);snap.docs.forEach(d=>b.delete(d.ref));await b.commit();
+    total+=snap.size;if(snap.size<400)break;
+  }
+  return total;
+};
 function useConnexions(n=400){
   const[c,sC]=useState([]);
   useEffect(()=>onSnapshot(query(collection(db,"connexions"),orderBy("ts","desc"),limit(n)),snap=>sC(snap.docs.map(d=>({id:d.id,...d.data()}))),()=>{}),[n]);
@@ -3976,6 +3987,15 @@ function AA({onOut}){
   const allMessages=useAllMessages();
   const activite=useActiviteAll(),connexions=useConnexions();
   const[auPer,sAuPer]=useState("7"),[auQ,sAuQ]=useState(""),[auRole,sAuRole]=useState("tous"),[,sTick]=useState(0);
+  const[auGarde,sAuGarde]=useState("12"),[auPurge,sAuPurge]=useState(false);
+  const lancerPurge=async()=>{
+    const mois=+auGarde,limite=new Date();limite.setMonth(limite.getMonth()-mois);
+    if(!window.confirm(`Supprimer définitivement les connexions antérieures au ${limite.toLocaleDateString("fr-FR")} (plus de ${mois} mois) ?\n\nCette action est irréversible. Pensez à exporter le journal avant si vous souhaitez le conserver.`))return;
+    sAuPurge(true);
+    try{const n=await purgerConnexions(limite);window.alert(n?`${n} connexion${n>1?"s":""} de plus de ${mois} mois supprimée${n>1?"s":""}.`:`Aucune connexion de plus de ${mois} mois à supprimer.`);}
+    catch(e){window.alert("Purge impossible : "+e.message);}
+    sAuPurge(false);
+  };
   useEffect(()=>{const t=setInterval(()=>sTick(x=>x+1),30000);return()=>clearInterval(t);},[]);
   const[activeThread,sActiveThread]=useState(null);
   const[plDate,sPlDate]=useState(new Date().toISOString().slice(0,10));
@@ -4758,6 +4778,14 @@ function AA({onOut}){
                 </React.Fragment>;})}
             </div>
             <div style={{fontSize:12,color:K.t3,marginTop:10}}>Les {connexions.length} dernières connexions enregistrées. Une connexion est notée à chaque ouverture de l'application.</div>
+            <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginTop:14,padding:"12px 14px",background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:14}}>
+              <i className="ti ti-trash" style={{fontSize:18,color:K.er}}/>
+              <span style={{fontSize:13.5,fontWeight:700,color:K.t1,flex:1,minWidth:180}}>Purger le journal : supprimer les connexions de plus de</span>
+              <select value={auGarde} onChange={e=>sAuGarde(e.target.value)} style={{padding:"6px 10px",borderRadius:10,border:`1px solid ${K.erBd}`,background:K.card,color:K.t1,fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
+                {[["3","3 mois"],["6","6 mois"],["12","12 mois"],["24","24 mois"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}
+              </select>
+              <button onClick={lancerPurge} disabled={auPurge} className="bt" style={{background:K.er,border:"none",color:"#fff",borderRadius:10,padding:"8px 14px",cursor:auPurge?"wait":"pointer",fontSize:13,fontWeight:800,fontFamily:"'Outfit',sans-serif",opacity:auPurge?.6:1}}>{auPurge?"Suppression…":"Purger"}</button>
+            </div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8,fontWeight:800,fontSize:16,color:K.t1,margin:"6px 0 10px"}}><i className="ti ti-users" style={{fontSize:19,color:K.em}}/>Comptes et engagement</div>
         </>;
