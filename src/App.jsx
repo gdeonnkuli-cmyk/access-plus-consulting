@@ -1049,10 +1049,10 @@ function LandingPage({onLogin}){
         </div>
         <h2 style={{margin:"0 0 14px",fontSize:mob?"1.8rem":"2.4rem",
           fontWeight:900,color:K.t1,lineHeight:1.2}}>
-          Prêt à maîtriser la comptabilité et la fiscalité&nbsp;?
+          Passez de la théorie à la pratique.
         </h2>
         <p style={{margin:"0 auto 32px",fontSize:16,color:K.t2,lineHeight:1.7,maxWidth:560}}>
-          Rejoignez les apprenants Éco-Campus RDC : comptabilité SYSCOHADA, états financiers, fiscalité congolaise et audit, avec des cas pratiques adaptés à la RDC.
+          Comptabilité SYSCOHADA, états financiers, fiscalité congolaise et audit : formez-vous sur des cas réels de la RDC, à votre rythme.
         </p>
         <button onClick={onLogin} className="bt" style={{
           background:`linear-gradient(135deg,#0A2A5C,#1E4FA3)`,border:"none",
