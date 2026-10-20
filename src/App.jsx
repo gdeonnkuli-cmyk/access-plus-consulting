@@ -82,6 +82,7 @@ const CARD_PALETTES={
     {bg:"#F5F0FF",bd:"#D0C0F0",ac:"#6040A0"},
   ],
 };
+const TILE_COLORS={modules:["#1A6B3A","#34A86A"],qcm:["#4F46E5","#8B7CF6"],pres:["#D97706","#F5B342"],stages:["#0D7A6B","#19B39B"],videos:["#C2410C","#F2733F"],ef:["#1D4ED8","#4F8DF7"]};
 const getCardPalette=(tid,idx)=>{const p=CARD_PALETTES[tid]||CARD_PALETTES.dark;return p[idx%p.length];};
 const bK=id=>{const t=TH[id]||TH.eco;return{bg:t.bg,card:t.ca,c2:t.c2,b0:t.b0,b1:t.b1,t1:t.t1,t2:t.t2,t3:t.t3,...ACC};};
 const Ctx=createContext({K:bK("dark"),tid:"dark",setT:()=>{}});
@@ -120,7 +121,14 @@ body{background:${K.bg};color:${K.t1};font-family:'Outfit',sans-serif;-webkit-fo
 .shimmer{background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.08) 50%,transparent 100%);background-size:200% 100%;animation:shimmer 1.6s infinite}
 .hv{transition:transform .2s,box-shadow .2s;cursor:pointer;}.hv:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.3);}.hv:active{transform:scale(.98);}
 .bt{transition:filter .15s,transform .12s;cursor:pointer;}.bt:hover{filter:brightness(1.08);}.bt:active{transform:scale(.96);}
-.gm{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;}
+.gm{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+@media(min-width:760px){.gm{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}}
+.gq{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+@media(min-width:760px){.gq{grid-template-columns:repeat(3,1fr);gap:16px;}}
+.tile{background:${K.card};border:1px solid ${K.b0};border-radius:20px;position:relative;overflow:hidden;cursor:pointer;box-shadow:0 1px 2px rgba(30,18,8,.04),0 8px 22px rgba(30,18,8,.07);transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s,border-color .25s;}
+.tile:hover{transform:translateY(-4px);border-color:${K.b1};box-shadow:0 2px 4px rgba(30,18,8,.05),0 18px 38px rgba(30,18,8,.13);}
+.tile:active{transform:scale(.98);}
+.h-sec{font-family:'Fraunces',serif;font-weight:700;font-size:20px;letter-spacing:-.3px;line-height:1.2;}
 .gv{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;}
 .gs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .hf{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;}
@@ -529,14 +537,14 @@ const Logo=({sm})=>{const K=useK();return <div style={{display:"flex",alignItems
     <div><div style={{fontWeight:800,fontSize:sm?13:15,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>{!sm&&<div style={{fontSize:8,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>RDC</div>}</div>
   </div>
 </div>;};
-const Tg=({c,bg,bd,ch})=>{const K=useK();return <span style={{background:bg||K.c2,color:c||K.t2,border:`1px solid ${bd||K.b0}`,borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:600,fontFamily:"'JetBrains Mono',monospace",whiteSpace:"nowrap"}}>{ch}</span>;};
+const Tg=({c,bg,bd,ch})=>{const K=useK();return <span style={{background:bg||K.c2,color:c||K.t2,border:`1px solid ${bd||K.b0}`,borderRadius:99,padding:"2px 8px",fontSize:12,fontWeight:600,fontFamily:"'JetBrains Mono',monospace",whiteSpace:"nowrap"}}>{ch}</span>;};
 const Bar=({p,col,h=4})=>{const K=useK();return <div style={{background:K.b0,borderRadius:99,height:h,overflow:"hidden"}}><div style={{width:`${Math.min(p,100)}%`,height:"100%",background:col||K.em,borderRadius:99,transition:"width .6s ease"}}/></div>;};
 const Spin=()=>{const K=useK();return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:24,background:K.bg}}><div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{position:"absolute",width:70,height:70,borderRadius:"50%",background:`${K.em}14`,animation:"pulse 2s ease-in-out infinite"}}/><div style={{position:"absolute",width:52,height:52,borderRadius:"50%",background:`${K.em}0D`,animation:"pulse 2s ease-in-out infinite .4s"}}/><div style={{width:46,height:46,borderRadius:14,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 8px 24px ${K.emD}55`,animation:"logofl 2.4s ease-in-out infinite"}}><svg width={22} height={22} viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="rgba(7,18,9,.5)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 2L18 11L10 20" stroke="#F5EDD8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg></div></div><div style={{textAlign:"center"}}><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:6}}>Éco-Campus</div><div style={{display:"flex",alignItems:"center",gap:5,justifyContent:"center"}}>{[0,1,2].map(i=><span key={i} style={{width:5,height:5,borderRadius:"50%",background:K.em,display:"inline-block",animation:"dotfl 1.4s ease-in-out infinite",animationDelay:`${i*0.22}s`}}/>)}</div></div></div>;};
 function Btn({ch,on,v="p",sm,full,dis,sx}){const K=useK();const M={p:{bg:`linear-gradient(135deg,${K.emD},${K.em})`,col:"#F5EDD8",sh:`0 2px 10px ${K.emD}44`},g:{bg:"transparent",col:K.t2,bo:`1px solid ${K.b1}`},d:{bg:K.erBg,col:K.er,bo:`1px solid ${K.erBd}`},w:{bg:K.waBg,col:K.wa,bo:`1px solid ${K.waBd}`},i:{bg:`linear-gradient(135deg,${K.inD},${K.in_})`,col:"#fff",sh:`0 2px 10px ${K.inD}44`},s:{bg:K.c2,col:K.t2,bo:`1px solid ${K.b0}`},r:{bg:K.rdBg,col:K.rd,bo:`1px solid ${K.rdBd}`}}[v]||{};return <button onClick={dis?null:on} className="bt" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,padding:sm?"7px 11px":"10px 17px",borderRadius:9,fontSize:sm?12:13,fontWeight:700,border:M.bo||"none",background:M.bg,color:M.col,boxShadow:M.sh||"none",width:full?"100%":undefined,opacity:dis?.45:1,cursor:dis?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",minHeight:sm?36:40,...sx}}>{ch}</button>;}
-function Inp({lb,rf,type,ph,mono,note,ok,def,rows,val,onChange}){const K=useK();const base={width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:mono?"'JetBrains Mono',monospace":"'Outfit',sans-serif",caretColor:K.em};const fe=e=>{e.target.style.borderColor=K.emBd;if(!rows)e.target.style.background=K.card;};const fb=e=>{e.target.style.borderColor=K.b0;if(!rows)e.target.style.background=K.c2;};const props={onFocus:fe,onBlur:fb};if(val!==undefined){props.value=val;props.onChange=onChange||function(){};}else{props.defaultValue=def||"";}return <div style={{marginBottom:13}}>{lb&&<div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>{lb}</div>}{rows?<textarea ref={rf} rows={rows} placeholder={ph||""} style={{...base,resize:"vertical",lineHeight:1.6,minHeight:44}} {...props}/>:<input ref={rf} type={type||"text"} placeholder={ph||""} style={{...base,minHeight:44,letterSpacing:mono?3:0}} {...props} onKeyDown={ok}/>}{note&&<div style={{color:K.t3,fontSize:11,marginTop:3,lineHeight:1.4}}>{note}</div>}</div>;}
-function Pop({t,m}){const K=useK();if(!m)return null;const s={e:{bg:K.erBg,bd:K.erBd,col:K.er,ic:"⚠"},o:{bg:K.emBg,bd:K.emBd,col:K.em,ic:"✓"}}[t]||{};return <div style={{background:s.bg,border:`1px solid ${s.bd}`,borderRadius:8,color:s.col,fontSize:13,padding:"9px 12px",marginBottom:11,display:"flex",gap:7,lineHeight:1.5,animation:"sc .2s ease"}}><span>{s.ic}</span><span>{m}</span></div>;}
+function Inp({lb,rf,type,ph,mono,note,ok,def,rows,val,onChange}){const K=useK();const base={width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:mono?"'JetBrains Mono',monospace":"'Outfit',sans-serif",caretColor:K.em};const fe=e=>{e.target.style.borderColor=K.emBd;if(!rows)e.target.style.background=K.card;};const fb=e=>{e.target.style.borderColor=K.b0;if(!rows)e.target.style.background=K.c2;};const props={onFocus:fe,onBlur:fb};if(val!==undefined){props.value=val;props.onChange=onChange||function(){};}else{props.defaultValue=def||"";}return <div style={{marginBottom:13}}>{lb&&<div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:5}}>{lb}</div>}{rows?<textarea ref={rf} rows={rows} placeholder={ph||""} style={{...base,resize:"vertical",lineHeight:1.6,minHeight:44}} {...props}/>:<input ref={rf} type={type||"text"} placeholder={ph||""} style={{...base,minHeight:44,letterSpacing:mono?3:0}} {...props} onKeyDown={ok}/>}{note&&<div style={{color:K.t3,fontSize:12,marginTop:3,lineHeight:1.4}}>{note}</div>}</div>;}
+function Pop({t,m}){const K=useK();if(!m)return null;const s={e:{bg:K.erBg,bd:K.erBd,col:K.er,ic:"⚠"},o:{bg:K.emBg,bd:K.emBd,col:K.em,ic:"✓"}}[t]||{};return <div style={{background:s.bg,border:`1px solid ${s.bd}`,borderRadius:8,color:s.col,fontSize:14,padding:"9px 12px",marginBottom:11,display:"flex",gap:7,lineHeight:1.5,animation:"sc .2s ease"}}><span>{s.ic}</span><span>{m}</span></div>;}
 function Sheet({title,onClose,children,w=460}){const K=useK();return <div onClick={e=>{if(e.target===e.currentTarget)onClose();}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",backdropFilter:"blur(5px)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:999}}><div style={{width:"100%",maxWidth:w,background:K.card,border:`1px solid ${K.b1}`,borderRadius:"16px 16px 0 0",padding:"16px 18px max(16px,env(safe-area-inset-bottom))",maxHeight:"92vh",overflowY:"auto",animation:"su .26s ease"}}><div style={{width:36,height:4,background:K.b1,borderRadius:99,margin:"0 auto 13px"}}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:13}}><div style={{fontWeight:700,fontSize:15,color:K.t1}}>{title}</div><button onClick={onClose} className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:22,cursor:"pointer",lineHeight:1}}>×</button></div>{children}</div></div>;}
-function Donut({pct}){const K=useK();const[p,sP]=useState(0);useEffect(()=>{const t=setTimeout(()=>sP(pct),200);return()=>clearTimeout(t);},[pct]);const r=38,c=2*Math.PI*r;return <svg width={84} height={84} viewBox="0 0 84 84" style={{flexShrink:0}}><circle cx={42} cy={42} r={r} fill="none" stroke={K.c2} strokeWidth={7}/><circle cx={42} cy={42} r={r} fill="none" stroke={K.em} strokeWidth={7} strokeDasharray={`${c*p/100} ${c}`} strokeLinecap="round" transform="rotate(-90 42 42)" style={{transition:"stroke-dasharray .8s ease"}}/><text x={42} y={39} textAnchor="middle" fill={K.t1} style={{fontFamily:"'Outfit',sans-serif",fontSize:14,fontWeight:700}}>{p}%</text><text x={42} y={51} textAnchor="middle" fill={K.t3} style={{fontFamily:"'Outfit',sans-serif",fontSize:9}}>global</text></svg>;}
+function Donut({pct}){const K=useK();const[p,sP]=useState(0);useEffect(()=>{const t=setTimeout(()=>sP(pct),200);return()=>clearTimeout(t);},[pct]);const r=38,c=2*Math.PI*r;return <svg width={84} height={84} viewBox="0 0 84 84" style={{flexShrink:0}}><circle cx={42} cy={42} r={r} fill="none" stroke={K.c2} strokeWidth={7}/><circle cx={42} cy={42} r={r} fill="none" stroke={K.em} strokeWidth={7} strokeDasharray={`${c*p/100} ${c}`} strokeLinecap="round" transform="rotate(-90 42 42)" style={{transition:"stroke-dasharray .8s ease"}}/><text x={42} y={39} textAnchor="middle" fill={K.t1} style={{fontFamily:"'Outfit',sans-serif",fontSize:14,fontWeight:700}}>{p}%</text><text x={42} y={51} textAnchor="middle" fill={K.t3} style={{fontFamily:"'Outfit',sans-serif",fontSize:10}}>global</text></svg>;}
 function Player({url,titre,onClose,playlist,startIdx=0}){
   const K=useK();const{mob}=useW();
   const[idx,sIdx]=useState(startIdx);
@@ -561,12 +569,12 @@ function Player({url,titre,onClose,playlist,startIdx=0}){
     <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0,minHeight:50}}>
       <button onClick={onClose} className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:20,cursor:"pointer",lineHeight:1,padding:"2px 6px",flexShrink:0}}>✕</button>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cur.titre||"Vidéo"}</div>
-        {list.length>1&&<div style={{color:K.t3,fontSize:10,marginTop:1}}>{idx+1}/{list.length} · {list[idx]?.mat||""}</div>}
+        <div style={{color:K.t1,fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cur.titre||"Vidéo"}</div>
+        {list.length>1&&<div style={{color:K.t3,fontSize:11,marginTop:1}}>{idx+1}/{list.length} · {list[idx]?.mat||""}</div>}
       </div>
       <div style={{display:"flex",gap:6,flexShrink:0,alignItems:"center"}}>
-        {list.length>1&&<button onClick={()=>sShowPlan(p=>!p)} className="bt" style={{background:showPlan?K.emBg:K.c2,border:`1px solid ${showPlan?K.emBd:K.b0}`,color:showPlan?K.em:K.t3,borderRadius:7,padding:"5px 9px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:30}}>📋 Plan</button>}
-        <button onClick={()=>sAuto(a=>!a)} className="bt" style={{background:autoPlay?K.emBg:K.c2,border:`1px solid ${autoPlay?K.emBd:K.b0}`,color:autoPlay?K.em:K.t3,borderRadius:7,padding:"5px 9px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:30,display:list.length>1?"flex":"none",alignItems:"center",gap:4}}><i className="ti ti-player-skip-forward" style={{fontSize:12}}/>Auto</button>
+        {list.length>1&&<button onClick={()=>sShowPlan(p=>!p)} className="bt" style={{background:showPlan?K.emBg:K.c2,border:`1px solid ${showPlan?K.emBd:K.b0}`,color:showPlan?K.em:K.t3,borderRadius:7,padding:"5px 9px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:30}}>📋 Plan</button>}
+        <button onClick={()=>sAuto(a=>!a)} className="bt" style={{background:autoPlay?K.emBg:K.c2,border:`1px solid ${autoPlay?K.emBd:K.b0}`,color:autoPlay?K.em:K.t3,borderRadius:7,padding:"5px 9px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:30,display:list.length>1?"flex":"none",alignItems:"center",gap:4}}><i className="ti ti-player-skip-forward" style={{fontSize:13}}/>Auto</button>
       </div>
     </div>
     {/* Main content */}
@@ -578,16 +586,16 @@ function Player({url,titre,onClose,playlist,startIdx=0}){
         </div>
         {/* Nav controls */}
         {list.length>1&&<div style={{background:`${K.card}ee`,backdropFilter:"blur(8px)",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexShrink:0,borderTop:`1px solid ${K.b0}`}}>
-          <button onClick={()=>go(idx-1)} disabled={!hasPrev} className="bt" style={{background:hasPrev?K.c2:"transparent",border:`1px solid ${hasPrev?K.b1:K.b0}`,color:hasPrev?K.t1:K.t3,borderRadius:8,padding:"7px 13px",cursor:hasPrev?"pointer":"default",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,minHeight:36,opacity:hasPrev?1:.4}}>
+          <button onClick={()=>go(idx-1)} disabled={!hasPrev} className="bt" style={{background:hasPrev?K.c2:"transparent",border:`1px solid ${hasPrev?K.b1:K.b0}`,color:hasPrev?K.t1:K.t3,borderRadius:8,padding:"7px 13px",cursor:hasPrev?"pointer":"default",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,minHeight:36,opacity:hasPrev?1:.4}}>
             <i className="ti ti-chevron-left" style={{fontSize:14}}/>Précédent
           </button>
           <div style={{textAlign:"center"}}>
             <div style={{display:"flex",gap:5,justifyContent:"center",marginBottom:3}}>
               {list.slice(Math.max(0,idx-2),idx+3).map((_,i)=>{const realI=Math.max(0,idx-2)+i;return <button key={realI} onClick={()=>go(realI)} className="bt" style={{width:realI===idx?22:8,height:8,borderRadius:99,background:realI===idx?K.em:K.b1,border:"none",padding:0,cursor:"pointer",transition:"all .2s"}}/>;})}
             </div>
-            <div style={{color:K.t3,fontSize:10}}>{idx+1} / {list.length}</div>
+            <div style={{color:K.t3,fontSize:11}}>{idx+1} / {list.length}</div>
           </div>
-          <button onClick={()=>go(idx+1)} disabled={!hasNext} className="bt" style={{background:hasNext?K.emBg:"transparent",border:`1px solid ${hasNext?K.emBd:K.b0}`,color:hasNext?K.em:K.t3,borderRadius:8,padding:"7px 13px",cursor:hasNext?"pointer":"default",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,minHeight:36,opacity:hasNext?1:.4}}>
+          <button onClick={()=>go(idx+1)} disabled={!hasNext} className="bt" style={{background:hasNext?K.emBg:"transparent",border:`1px solid ${hasNext?K.emBd:K.b0}`,color:hasNext?K.em:K.t3,borderRadius:8,padding:"7px 13px",cursor:hasNext?"pointer":"default",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,minHeight:36,opacity:hasNext?1:.4}}>
             Suivant<i className="ti ti-chevron-right" style={{fontSize:14}}/>
           </button>
         </div>}
@@ -595,18 +603,18 @@ function Player({url,titre,onClose,playlist,startIdx=0}){
       {/* Plan sidebar */}
       {showPlan&&list.length>1&&<div style={{width:mob?"100%":260,background:K.card,borderLeft:`1px solid ${K.b0}`,overflowY:"auto",flexShrink:0,display:"flex",flexDirection:"column"}}>
         <div style={{padding:"12px 14px",borderBottom:`1px solid ${K.b0}`,flexShrink:0}}>
-          <div style={{fontWeight:800,fontSize:13,color:K.t1,marginBottom:1}}>Plan du cours</div>
-          <div style={{fontSize:11,color:K.t3}}>{list.length} vidéos</div>
+          <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:1}}>Plan du cours</div>
+          <div style={{fontSize:12,color:K.t3}}>{list.length} vidéos</div>
         </div>
         <div style={{flex:1,overflowY:"auto"}}>
           {list.map((v,i)=>{const pv=pVid(v.url);const isCur=i===idx;return <div key={i} onClick={()=>{go(i);if(mob)sShowPlan(false);}} className="bt" style={{padding:"10px 14px",borderBottom:`1px solid ${K.b0}`,cursor:"pointer",background:isCur?K.emBg:"transparent",borderLeft:isCur?`3px solid ${K.em}`:"3px solid transparent",display:"flex",gap:9,alignItems:"flex-start"}}>
             <div style={{width:48,height:32,borderRadius:5,background:K.c2,flexShrink:0,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
               {pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:null}
-              <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.3)",display:"flex",alignItems:"center",justifyContent:"center"}}><i className={isCur?"ti ti-player-play-filled":"ti ti-player-play"} style={{fontSize:11,color:isCur?K.em:"#fff"}}/></div>
+              <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.3)",display:"flex",alignItems:"center",justifyContent:"center"}}><i className={isCur?"ti ti-player-play-filled":"ti ti-player-play"} style={{fontSize:12,color:isCur?K.em:"#fff"}}/></div>
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:12,fontWeight:isCur?700:500,color:isCur?K.em:K.t1,lineHeight:1.35,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{v.titre}</div>
-              <div style={{fontSize:10,color:K.t3,marginTop:3}}>{i+1}/{list.length}</div>
+              <div style={{fontSize:13,fontWeight:isCur?700:500,color:isCur?K.em:K.t1,lineHeight:1.35,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{v.titre}</div>
+              <div style={{fontSize:11,color:K.t3,marginTop:3}}>{i+1}/{list.length}</div>
             </div>
           </div>;})}
         </div>
@@ -665,35 +673,35 @@ function RatingPanel({modId,uid,K,mob}){
       <div style={{fontWeight:900,fontSize:28,color:"#F59E0B",lineHeight:1}}>{avgRating}</div>
       <div>
         <StarRating value={Math.round(avgRating)} readonly size={14}/>
-        <div style={{fontSize:11,color:K.t3,marginTop:3}}>{ratings.length} avis</div>
+        <div style={{fontSize:12,color:K.t3,marginTop:3}}>{ratings.length} avis</div>
       </div>
     </div>}
     {/* Ma notation */}
     <div style={{marginBottom:10}}>
-      <div style={{fontSize:12,fontWeight:700,color:K.t1,marginBottom:8}}>{submitted?"Votre avis":"Notez ce cours"}</div>
+      <div style={{fontSize:13,fontWeight:700,color:K.t1,marginBottom:8}}>{submitted?"Votre avis":"Notez ce cours"}</div>
       <StarRating value={myRating} onChange={submitted?null:setMyRating} readonly={submitted} size={24}/>
     </div>
     {!submitted&&<>
       <textarea value={myComment} onChange={e=>setMyComment(e.target.value)}
         placeholder="Commentaire optionnel..."
-        style={{width:"100%",background:K.card,border:`1px solid ${K.b1}`,borderRadius:8,padding:"8px 10px",color:K.t1,fontSize:12,fontFamily:"'Outfit',sans-serif",resize:"vertical",minHeight:60,boxSizing:"border-box",marginBottom:8}}/>
+        style={{width:"100%",background:K.card,border:`1px solid ${K.b1}`,borderRadius:8,padding:"8px 10px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",resize:"vertical",minHeight:60,boxSizing:"border-box",marginBottom:8}}/>
       <button onClick={submitRating} disabled={saving||!myRating} className="bt"
-        style={{width:"100%",padding:"10px",background:myRating?"linear-gradient(135deg,#D97706,#F59E0B)":"#333",border:"none",borderRadius:8,color:myRating?"#fff":K.t3,fontWeight:700,fontSize:13,cursor:myRating?"pointer":"not-allowed",fontFamily:"'Outfit',sans-serif"}}>
+        style={{width:"100%",padding:"10px",background:myRating?"linear-gradient(135deg,#D97706,#F59E0B)":"#333",border:"none",borderRadius:8,color:myRating?"#fff":K.t3,fontWeight:700,fontSize:14,cursor:myRating?"pointer":"not-allowed",fontFamily:"'Outfit',sans-serif"}}>
         {saving?"Enregistrement...":"⭐ Soumettre mon avis"}
       </button>
     </>}
-    {submitted&&<div style={{fontSize:12,color:K.em,display:"flex",alignItems:"center",gap:5,marginTop:6}}>
-      <i className="ti ti-check" style={{fontSize:13}}/>Merci pour votre avis !
+    {submitted&&<div style={{fontSize:13,color:K.em,display:"flex",alignItems:"center",gap:5,marginTop:6}}>
+      <i className="ti ti-check" style={{fontSize:14}}/>Merci pour votre avis !
     </div>}
     {/* Derniers avis */}
     {ratings.filter(r=>r.comment).length>0&&<div style={{marginTop:12,paddingTop:12,borderTop:`1px solid ${K.b0}`}}>
-      <div style={{fontSize:11,fontWeight:700,color:K.t3,marginBottom:8,textTransform:"uppercase",letterSpacing:.8}}>Avis récents</div>
+      <div style={{fontSize:12,fontWeight:700,color:K.t3,marginBottom:8,textTransform:"uppercase",letterSpacing:.8}}>Avis récents</div>
       {ratings.filter(r=>r.comment).slice(0,3).map(r=><div key={r.id} style={{marginBottom:8,padding:"8px 10px",background:K.card,borderRadius:8}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:3}}>
           <StarRating value={r.note} readonly size={11}/>
-          <span style={{fontSize:10,color:K.t3}}>{r.date}</span>
+          <span style={{fontSize:11,color:K.t3}}>{r.date}</span>
         </div>
-        <div style={{fontSize:12,color:K.t2,lineHeight:1.5}}>{r.comment}</div>
+        <div style={{fontSize:13,color:K.t2,lineHeight:1.5}}>{r.comment}</div>
       </div>)}
     </div>}
   </div>;
@@ -714,16 +722,16 @@ function PdfV({url,name,onClose,modId,uid,showRating=false}){
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <i className="ti ti-file-text" style={{fontSize:16,color:K.em}}/>
         <div>
-          <div style={{color:K.t1,fontWeight:700,fontSize:13}}>{name}</div>
-          <div style={{color:K.t3,fontSize:10,display:"flex",alignItems:"center",gap:4}}>
-            <i className="ti ti-lock" style={{fontSize:9}}/>Lecture seule · Non téléchargeable
+          <div style={{color:K.t1,fontWeight:700,fontSize:14}}>{name}</div>
+          <div style={{color:K.t3,fontSize:11,display:"flex",alignItems:"center",gap:4}}>
+            <i className="ti ti-lock" style={{fontSize:10}}/>Lecture seule · Non téléchargeable
           </div>
         </div>
       </div>
       <div style={{display:"flex",gap:6,alignItems:"center"}}>
         {showRating&&uid&&<button onClick={()=>setTab(t=>t==="pdf"?"rating":"pdf")} className="bt"
-          style={{background:tab==="rating"?"#F59E0B18":"rgba(255,255,255,.08)",border:`1px solid ${tab==="rating"?"#F59E0B30":"rgba(255,255,255,.15)"}`,borderRadius:7,padding:"5px 9px",color:tab==="rating"?"#F59E0B":"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
-          <i className="ti ti-star" style={{fontSize:11}}/>Notes
+          style={{background:tab==="rating"?"#F59E0B18":"rgba(255,255,255,.08)",border:`1px solid ${tab==="rating"?"#F59E0B30":"rgba(255,255,255,.15)"}`,borderRadius:7,padding:"5px 9px",color:tab==="rating"?"#F59E0B":"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
+          <i className="ti ti-star" style={{fontSize:12}}/>Notes
         </button>}
         <Btn ch="✕" on={onClose} v="g" sm/>
       </div>
@@ -737,7 +745,7 @@ function PdfV({url,name,onClose,modId,uid,showRating=false}){
       </div>
       :<div style={{flex:1,overflowY:"auto",padding:mob?"14px":"20px 28px",maxWidth:560,margin:"0 auto",width:"100%"}}>
         <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:4}}>{name}</div>
-        <div style={{fontSize:12,color:K.t3,marginBottom:12}}>Donnez votre avis sur ce cours</div>
+        <div style={{fontSize:13,color:K.t3,marginBottom:12}}>Donnez votre avis sur ce cours</div>
         <RatingPanel modId={modId} uid={uid} K={K} mob={mob}/>
       </div>
     }
@@ -764,14 +772,14 @@ function PrivacyModal({onClose}){
       <div style={{padding:"16px 18px 12px",borderBottom:`1px solid ${K.b0}`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{display:"flex",alignItems:"center",gap:9}}>
           <div style={{width:34,height:34,borderRadius:10,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className="ti ti-shield-check" style={{fontSize:17,color:K.in_}}/></div>
-          <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Politique de confidentialité</div><div style={{fontSize:10,color:K.t3}}>Éco-Campus RDC · v{PRIVACY_VERSION}</div></div>
+          <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Politique de confidentialité</div><div style={{fontSize:11,color:K.t3}}>Éco-Campus RDC · v{PRIVACY_VERSION}</div></div>
         </div>
         <button onClick={onClose} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:7,width:30,height:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>✕</button>
       </div>
       {/* Body scrollable */}
       <div style={{overflowY:"auto",padding:"14px 18px",flex:1}}>
-        <div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:10,padding:"10px 13px",marginBottom:14,fontSize:12,color:K.t2,lineHeight:1.6}}>
-          <i className="ti ti-info-circle" style={{fontSize:13,color:K.em,verticalAlign:"middle",marginRight:5}}/>
+        <div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:10,padding:"10px 13px",marginBottom:14,fontSize:13,color:K.t2,lineHeight:1.6}}>
+          <i className="ti ti-info-circle" style={{fontSize:14,color:K.em,verticalAlign:"middle",marginRight:5}}/>
           En créant un compte sur Éco-Campus RDC, vous acceptez que vos données soient traitées conformément à la présente politique.
         </div>
         {sections.map((s,i)=><div key={i} style={{marginBottom:13,display:"flex",gap:11,alignItems:"flex-start"}}>
@@ -779,17 +787,17 @@ function PrivacyModal({onClose}){
             <i className={`ti ${s.ico}`} style={{fontSize:14,color:K.in_}}/>
           </div>
           <div>
-            <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:3}}>{s.title}</div>
-            <div style={{fontSize:12,color:K.t2,lineHeight:1.65}}>{s.body}</div>
+            <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:3}}>{s.title}</div>
+            <div style={{fontSize:13,color:K.t2,lineHeight:1.65}}>{s.body}</div>
           </div>
         </div>)}
-        <div style={{marginTop:6,padding:"9px 12px",background:K.c2,borderRadius:8,fontSize:10,color:K.t3,textAlign:"center"}}>
+        <div style={{marginTop:6,padding:"9px 12px",background:K.c2,borderRadius:8,fontSize:11,color:K.t3,textAlign:"center"}}>
           Dernière mise à jour : mai 2026 · Version {PRIVACY_VERSION}
         </div>
       </div>
       {/* Footer */}
       <div style={{padding:"12px 18px",borderTop:`1px solid ${K.b0}`,flexShrink:0}}>
-        <button onClick={onClose} className="bt" style={{width:"100%",padding:"11px",background:`linear-gradient(135deg,${ACC.emD},${ACC.em})`,border:"none",borderRadius:9,color:"#F5EDD8",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:42}}>
+        <button onClick={onClose} className="bt" style={{width:"100%",padding:"11px",background:`linear-gradient(135deg,${ACC.emD},${ACC.em})`,border:"none",borderRadius:9,color:"#F5EDD8",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:42}}>
           J'ai compris ✓
         </button>
       </div>
@@ -817,19 +825,19 @@ function PresViewer({url,titre,desc,onClose}){
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 15px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}>
       <div style={{display:"flex",alignItems:"center",gap:9}}>
         <div style={{width:32,height:32,borderRadius:8,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className="ti ti-presentation" style={{fontSize:16,color:K.in_}}/></div>
-        <div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{titre}</div>{desc&&<div style={{color:K.t3,fontSize:10,marginTop:1}}>{desc}</div>}</div>
+        <div><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{titre}</div>{desc&&<div style={{color:K.t3,fontSize:11,marginTop:1}}>{desc}</div>}</div>
       </div>
       <Btn ch="✕" on={onClose} v="g" sm/>
     </div>
     <div style={{flex:1,background:"#1a1a2e",display:"flex",alignItems:"center",justifyContent:"center"}}>
       {embedUrl
         ?<iframe src={embedUrl} title={titre} style={{width:"100%",height:"100%",border:"none"}} allowFullScreen/>
-        :<div style={{textAlign:"center",color:K.t3,padding:40}}><div style={{fontSize:40,marginBottom:10}}>⚠️</div><div>URL non supportée.</div><div style={{fontSize:12,marginTop:5}}>Utilisez un lien Google Slides ou Canva.</div></div>
+        :<div style={{textAlign:"center",color:K.t3,padding:40}}><div style={{fontSize:40,marginBottom:10}}>⚠️</div><div>URL non supportée.</div><div style={{fontSize:13,marginTop:5}}>Utilisez un lien Google Slides ou Canva.</div></div>
       }
     </div>
     <div style={{background:K.card,borderTop:`1px solid ${K.b0}`,padding:"8px 15px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-      <div style={{fontSize:11,color:K.t3}}>💡 Utilisez les flèches du clavier pour naviguer dans la présentation</div>
-      <a href={url} target="_blank" rel="noreferrer" style={{fontSize:11,color:K.in_,fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}><i className="ti ti-external-link" style={{fontSize:12}}/>Ouvrir dans un nouvel onglet</a>
+      <div style={{fontSize:12,color:K.t3}}>💡 Utilisez les flèches du clavier pour naviguer dans la présentation</div>
+      <a href={url} target="_blank" rel="noreferrer" style={{fontSize:12,color:K.in_,fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}><i className="ti ti-external-link" style={{fontSize:13}}/>Ouvrir dans un nouvel onglet</a>
     </div>
   </div>;
 }
@@ -841,11 +849,11 @@ function ThemePicker({open,onClose}){
     <div style={{width:"100%",maxWidth:500,background:K.card,border:`1px solid ${K.b1}`,borderRadius:"16px 16px 0 0",padding:"16px 18px max(16px,env(safe-area-inset-bottom))",animation:"su .25s ease"}}>
       <div style={{width:36,height:4,background:K.b1,borderRadius:99,margin:"0 auto 14px"}}/>
       <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:3}}>🎨 Apparence</div>
-      <div style={{color:K.t3,fontSize:12,marginBottom:16}}>Choisissez votre thème d'affichage.</div>
+      <div style={{color:K.t3,fontSize:13,marginBottom:16}}>Choisissez votre thème d'affichage.</div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9,marginBottom:16}}>
-        {Object.entries(TH).map(([id,t])=>{const sel=tid===id;return <button key={id} onClick={()=>{setT(id);}} className="bt" style={{background:t.bg,border:`2px solid ${sel?ACC.em:t.b0}`,borderRadius:12,padding:"13px 8px 11px",cursor:"pointer",textAlign:"center",position:"relative",minHeight:76}}>{sel&&<span style={{position:"absolute",top:4,right:6,fontSize:10,color:ACC.em,fontWeight:800}}>✓</span>}<div style={{fontSize:20,marginBottom:4}}>{t.i}</div><div style={{fontSize:11,fontWeight:700,color:t.t1,lineHeight:1,marginBottom:6}}>{t.n}</div><div style={{display:"flex",justifyContent:"center",gap:3}}>{[t.bg,t.ca,t.c2].map((c,i)=><span key={i} style={{width:8,height:8,borderRadius:"50%",background:c,border:`1px solid ${t.b1}`,display:"inline-block"}}/>)}</div></button>;})}
+        {Object.entries(TH).map(([id,t])=>{const sel=tid===id;return <button key={id} onClick={()=>{setT(id);}} className="bt" style={{background:t.bg,border:`2px solid ${sel?ACC.em:t.b0}`,borderRadius:12,padding:"13px 8px 11px",cursor:"pointer",textAlign:"center",position:"relative",minHeight:76}}>{sel&&<span style={{position:"absolute",top:4,right:6,fontSize:11,color:ACC.em,fontWeight:800}}>✓</span>}<div style={{fontSize:20,marginBottom:4}}>{t.i}</div><div style={{fontSize:12,fontWeight:700,color:t.t1,lineHeight:1,marginBottom:6}}>{t.n}</div><div style={{display:"flex",justifyContent:"center",gap:3}}>{[t.bg,t.ca,t.c2].map((c,i)=><span key={i} style={{width:8,height:8,borderRadius:"50%",background:c,border:`1px solid ${t.b1}`,display:"inline-block"}}/>)}</div></button>;})}
       </div>
-      <button onClick={onClose} className="bt" style={{width:"100%",padding:"11px",background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:9,cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:42}}>Fermer</button>
+      <button onClick={onClose} className="bt" style={{width:"100%",padding:"11px",background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:9,cursor:"pointer",fontSize:14,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:42}}>Fermer</button>
     </div>
   </div>;
 }
@@ -893,13 +901,13 @@ function LandingPage({onLogin}){
         <svg width="24" height="24" viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
         <div>
           <div style={{fontWeight:800,fontSize:16,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>
-          <div style={{fontSize:9,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>RDC</div>
+          <div style={{fontSize:10,color:K.t3,letterSpacing:"1.5px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>RDC</div>
         </div>
       </div>
       <button onClick={onLogin} className="bt" style={{
         background:`linear-gradient(135deg,#16A34A,#22C55E)`,border:"none",
         borderRadius:9,padding:mob?"8px 16px":"9px 22px",
-        color:"#fff",fontWeight:800,fontSize:13,cursor:"pointer",
+        color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",
         fontFamily:"'Outfit',sans-serif",boxShadow:"0 4px 14px rgba(34,197,94,.35)"}}>
         Se connecter →
       </button>
@@ -922,7 +930,7 @@ function LandingPage({onLogin}){
       <div style={{display:"inline-flex",alignItems:"center",gap:7,background:K.emBg,
         border:`1px solid ${K.emBd}`,borderRadius:99,padding:"6px 16px",marginBottom:28,animation:"up .5s ease"}}>
         <span style={{width:7,height:7,borderRadius:"50%",background:"#22C55E",display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/>
-        <span style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:.4}}>🇨🇩 Services et formations en RDC</span>
+        <span style={{fontSize:13,fontWeight:700,color:"#22C55E",letterSpacing:.4}}>🇨🇩 Services et formations en RDC</span>
       </div>
 
       {/* Logo hero */}
@@ -955,7 +963,7 @@ function LandingPage({onLogin}){
       {/* Preuves sociales */}
       <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:32,flexWrap:"wrap",justifyContent:"center",animation:"up .6s ease .25s both"}}>
         {[["🎓","Certifiante"],["📱","100% en ligne"],["🇨🇩","Pensée pour la RDC"]].map(([e,l])=>
-          <div key={l} style={{display:"flex",alignItems:"center",gap:6,fontSize:13,color:K.t2,fontWeight:600}}>
+          <div key={l} style={{display:"flex",alignItems:"center",gap:6,fontSize:14,color:K.t2,fontWeight:600}}>
             <span>{e}</span><span>{l}</span>
           </div>
         )}
@@ -987,7 +995,7 @@ function LandingPage({onLogin}){
           padding:"16px 12px",textAlign:"center"}}>
           <i className={`ti ti-${ico}`} style={{fontSize:20,color:"#22C55E",display:"block",marginBottom:6}}/>
           <div style={{fontWeight:900,fontSize:mob?20:24,color:K.t1,lineHeight:1}}>{val}</div>
-          <div style={{fontSize:11,color:K.t3,marginTop:4,lineHeight:1.3}}>{label}</div>
+          <div style={{fontSize:12,color:K.t3,marginTop:4,lineHeight:1.3}}>{label}</div>
         </div>)}
       </div>
     </div>
@@ -995,27 +1003,25 @@ function LandingPage({onLogin}){
     {/* ── POUR QUI ── */}
     <div style={{padding:mob?"48px 20px":"64px 32px",maxWidth:900,margin:"0 auto"}}>
       <div style={{textAlign:"center",marginBottom:40}}>
-        <div style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:2,
+        <div style={{fontSize:13,fontWeight:700,color:"#22C55E",letterSpacing:2,
           textTransform:"uppercase",marginBottom:10}}>Audience</div>
         <h2 style={{margin:0,fontSize:mob?"1.6rem":"2.2rem",fontWeight:900,color:K.t1}}>
           Conçu pour vous, où que vous soyez
         </h2>
       </div>
       <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(2,1fr)",gap:14}}>
-        {publics.map(({ico,label,desc},i)=><div key={label} style={{
-          background:K.card,border:`1px solid ${K.b0}`,borderRadius:16,
-          padding:"20px",display:"flex",gap:14,alignItems:"flex-start"}}>
-          <div style={{width:44,height:44,borderRadius:12,flexShrink:0,
-            background:["#22C55E18","#3B82F618","#F59E0B18","#8B5CF618"][i],
-            border:`1px solid ${["#22C55E30","#3B82F630","#F59E0B30","#8B5CF630"][i]}`,
+        {publics.map(({ico,label,desc},i)=>{const c=["#16A34A","#2563EB","#D97706","#7C3AED"][i];return <div key={label} className="tile" style={{
+          padding:"22px",display:"flex",gap:16,alignItems:"flex-start",cursor:"default"}}>
+          <div style={{width:52,height:52,borderRadius:15,flexShrink:0,
+            background:`linear-gradient(135deg,${c},${c}B0)`,boxShadow:`0 8px 18px ${c}40`,
             display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <i className={`ti ti-${ico}`} style={{fontSize:20,color:["#22C55E","#3B82F6","#F59E0B","#8B5CF6"][i]}}/>
+            <i className={`ti ti-${ico}`} style={{fontSize:25,color:"#fff"}}/>
           </div>
           <div>
-            <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:5}}>{label}</div>
-            <div style={{fontSize:13,color:K.t2,lineHeight:1.55}}>{desc}</div>
+            <div style={{fontWeight:800,fontSize:17,color:K.t1,marginBottom:5}}>{label}</div>
+            <div style={{fontSize:14.5,color:K.t2,lineHeight:1.55}}>{desc}</div>
           </div>
-        </div>)}
+        </div>;})}
       </div>
     </div>
 
@@ -1024,25 +1030,22 @@ function LandingPage({onLogin}){
       background:K.card,borderTop:`1px solid ${K.b0}`,borderBottom:`1px solid ${K.b0}`}}>
       <div style={{maxWidth:900,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:40}}>
-          <div style={{fontSize:12,fontWeight:700,color:"#22C55E",letterSpacing:2,
+          <div style={{fontSize:13,fontWeight:700,color:"#22C55E",letterSpacing:2,
             textTransform:"uppercase",marginBottom:10}}>Fonctionnalités</div>
           <h2 style={{margin:0,fontSize:mob?"1.6rem":"2.2rem",fontWeight:900,color:K.t1}}>
             Tout ce dont vous avez besoin
           </h2>
         </div>
         <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(3,1fr)",gap:14}}>
-          {features.map(({ico,col,label,desc})=><div key={label} style={{
-            background:K.bg,border:`1px solid ${K.b0}`,borderRadius:16,padding:"20px",
-            transition:"transform .2s ease,box-shadow .2s ease"}}
-            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow=`0 12px 32px ${col}20`;}}
-            onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
-            <div style={{width:42,height:42,borderRadius:12,
-              background:`${col}18`,border:`1px solid ${col}30`,
-              display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14}}>
-              <i className={`ti ti-${ico}`} style={{fontSize:20,color:col}}/>
+          {features.map(({ico,col,label,desc})=><div key={label} className="tile" style={{padding:"24px 22px",cursor:"default"}}>
+            <div style={{position:"absolute",top:-40,right:-40,width:130,height:130,borderRadius:"50%",background:`radial-gradient(circle,${col}20,transparent 70%)`}}/>
+            <div style={{width:54,height:54,borderRadius:16,position:"relative",
+              background:`linear-gradient(135deg,${col},${col}B0)`,boxShadow:`0 8px 18px ${col}40`,
+              display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16}}>
+              <i className={`ti ti-${ico}`} style={{fontSize:26,color:"#fff"}}/>
             </div>
-            <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:6}}>{label}</div>
-            <div style={{fontSize:12,color:K.t2,lineHeight:1.6}}>{desc}</div>
+            <div style={{fontWeight:800,fontSize:17,color:K.t1,marginBottom:7}}>{label}</div>
+            <div style={{fontSize:14.5,color:K.t2,lineHeight:1.6}}>{desc}</div>
           </div>)}
         </div>
       </div>
@@ -1055,14 +1058,14 @@ function LandingPage({onLogin}){
           <svg width="30" height="30" viewBox="0 0 22 22" fill="none"><path d="M3 2L11 11L3 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity=".4"/><path d="M10 2L18 11L10 20" stroke="#22C55E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           <div style={{textAlign:"left"}}>
             <div style={{fontWeight:900,fontSize:22,color:K.t1,lineHeight:1,fontFamily:"'Fraunces',serif"}}>Éco-Campus</div>
-            <div style={{fontSize:9,color:K.t3,letterSpacing:"2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginTop:3}}>RDC</div>
+            <div style={{fontSize:10,color:K.t3,letterSpacing:"2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginTop:3}}>RDC</div>
           </div>
         </div>
         <h2 style={{margin:"0 0 14px",fontSize:mob?"1.8rem":"2.4rem",
           fontWeight:900,color:K.t1,lineHeight:1.2}}>
-          Prêt à maîtriser SYSCOHADA ?
+          Prêt à maîtriser SYSCOHADA&nbsp;?
         </h2>
-        <p style={{margin:"0 0 32px",fontSize:14,color:K.t2,lineHeight:1.7}}>
+        <p style={{margin:"0 auto 32px",fontSize:16,color:K.t2,lineHeight:1.7,maxWidth:560}}>
           Rejoignez les apprenants Éco-Campus RDC et transformez votre maîtrise de la comptabilité OHADA.
         </p>
         <button onClick={onLogin} className="bt" style={{
@@ -1074,10 +1077,10 @@ function LandingPage({onLogin}){
           <i className="ti ti-arrow-right" style={{fontSize:18}}/>
           Créer mon compte gratuitement
         </button>
-        <div style={{marginTop:16,fontSize:12,color:K.t3}}>
+        <div style={{marginTop:16,fontSize:13,color:K.t3}}>
           Déjà inscrit ?{" "}
           <button onClick={onLogin} className="bt" style={{background:"none",border:"none",
-            color:"#22C55E",fontWeight:700,fontSize:12,cursor:"pointer",
+            color:"#22C55E",fontWeight:700,fontSize:13,cursor:"pointer",
             fontFamily:"'Outfit',sans-serif",padding:0}}>
             Se connecter →
           </button>
@@ -1089,8 +1092,8 @@ function LandingPage({onLogin}){
     <div style={{borderTop:`1px solid ${K.b0}`,padding:"20px 32px",
       display:"flex",alignItems:"center",justifyContent:"space-between",
       flexWrap:"wrap",gap:10}}>
-      <div style={{fontSize:12,color:K.t3}}>© 2026 Éco-Campus RDC · Tous droits réservés</div>
-      <div style={{fontSize:12,color:K.t3,display:"flex",gap:16}}>
+      <div style={{fontSize:13,color:K.t3}}>© 2026 Éco-Campus RDC · Tous droits réservés</div>
+      <div style={{fontSize:13,color:K.t3,display:"flex",gap:16}}>
         <span>contact@accessplusconsulting.com</span>
       </div>
     </div>
@@ -1164,7 +1167,7 @@ function Onboarding({u,onDone,mods}){
             {isLast?`Commencer ${firstMod?`"${firstMod.titre}"`:""} →`:"Suivant →"}
           </button>
           {!isLast&&<button onClick={()=>onDone()} className="bt"
-            style={{background:"none",border:"none",color:K.t3,fontSize:13,
+            style={{background:"none",border:"none",color:K.t3,fontSize:14,
               cursor:"pointer",fontFamily:"'Outfit',sans-serif",padding:"6px"}}>
             Passer l'introduction
           </button>}
@@ -1187,11 +1190,11 @@ function EmptyState({ico,title,desc,action,actionLabel}){
       <i className={`ti ti-${ico}`} style={{fontSize:30,color:K.t3}}/>
     </div>
     <div style={{fontWeight:800,fontSize:16,color:K.t1,marginBottom:8}}>{title}</div>
-    <div style={{fontSize:13,color:K.t2,lineHeight:1.6,maxWidth:280,marginBottom:action?20:0}}>{desc}</div>
+    <div style={{fontSize:14,color:K.t2,lineHeight:1.6,maxWidth:280,marginBottom:action?20:0}}>{desc}</div>
     {action&&<button onClick={action} className="bt" style={{
       background:`linear-gradient(135deg,${K.emD},K.em)`,
       border:`1px solid ${K.emBd}`,borderRadius:9,padding:"9px 20px",
-      color:K.em,fontWeight:700,fontSize:13,cursor:"pointer",
+      color:K.em,fontWeight:700,fontSize:14,cursor:"pointer",
       fontFamily:"'Outfit',sans-serif"}}>
       {actionLabel}
     </button>}
@@ -1212,44 +1215,41 @@ function BadgesPanel({nd,total,sc}){
   const K=useK();
   const unlocked=BADGES.filter(b=>b.check(nd,total,sc));
   const locked=BADGES.filter(b=>!b.check(nd,total,sc));
-  return <div style={{marginTop:20}}>
-    <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
-      <i className="ti ti-trophy" style={{fontSize:15,color:"#F59E0B"}}/>
-      Badges <span style={{fontSize:12,fontWeight:400,color:K.t3,marginLeft:4}}>{unlocked.length}/{BADGES.length} débloqués</span>
+  return <div style={{marginTop:26}}>
+    <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:12}}>
+      <div className="h-sec" style={{color:K.t1}}>Mes badges</div>
+      <span style={{fontSize:13,fontWeight:600,color:K.t3}}>{unlocked.length}/{BADGES.length} débloqués</span>
     </div>
-    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+    <div className="tn" style={{gap:10,paddingBottom:6}}>
       {[...unlocked,...locked].map(b=>{
         const earned=b.check(nd,total,sc);
-        return <div key={b.id} style={{display:"flex",alignItems:"center",gap:8,
-          background:earned?`${b.col}14`:K.c2,border:`1px solid ${earned?b.col+"33":K.b0}`,
-          borderRadius:10,padding:"8px 12px",opacity:earned?1:.5,
-          transition:"all .2s ease",animation:earned?"popIn .35s ease both":"none"}}>
-          <div style={{width:30,height:30,borderRadius:8,background:earned?`${b.col}20`:K.b0,
-            display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-            <i className={`ti ti-${b.ico}`} style={{fontSize:15,color:earned?b.col:K.t3}}/>
+        return <div key={b.id} title={b.desc} style={{flex:"0 0 auto",width:118,textAlign:"center",background:K.card,
+          border:`1px solid ${earned?b.col+"40":K.b0}`,borderRadius:18,padding:"14px 10px 12px",
+          boxShadow:earned?`0 8px 20px ${b.col}22`:"none",opacity:earned?1:.55,animation:earned?"popIn .35s ease both":"none"}}>
+          <div style={{width:52,height:52,margin:"0 auto 9px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",
+            background:earned?`linear-gradient(135deg,${b.col},${b.col}AA)`:K.c2,border:earned?"3px solid #fff":`2px dashed ${K.b1}`,
+            boxShadow:earned?`0 0 0 2px ${b.col}55`:"none"}}>
+            <i className={`ti ti-${earned?b.ico:"lock"}`} style={{fontSize:23,color:earned?"#fff":K.t3}}/>
           </div>
-          <div>
-            <div style={{fontWeight:700,fontSize:12,color:earned?K.t1:K.t3,lineHeight:1}}>{b.label}</div>
-            <div style={{fontSize:10,color:K.t3,marginTop:2}}>{b.desc}</div>
-          </div>
-          {earned&&<i className="ti ti-check" style={{fontSize:12,color:b.col,marginLeft:2}}/>}
+          <div style={{fontWeight:800,fontSize:13,color:earned?K.t1:K.t3,lineHeight:1.2}}>{b.label}</div>
+          <div style={{fontSize:11,color:K.t3,marginTop:3,lineHeight:1.3}}>{b.desc}</div>
         </div>;
       })}
     </div>
   </div>;
 }
 
-function ProgressRing({pct,size=80,stroke=7,col}){
+function ProgressRing({pct,size=80,stroke=7,col,track,txt}){
   const K=useK();
   const r=( size-stroke*2)/2,circ=2*Math.PI*r;
   const offset=circ-(pct/100)*circ;
   return <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
-    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={K.b0} strokeWidth={stroke}/>
+    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={track||K.b0} strokeWidth={stroke}/>
     <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={col||K.em} strokeWidth={stroke}
       strokeDasharray={circ} strokeDashoffset={offset}
       strokeLinecap="round" style={{transition:"stroke-dashoffset .8s cubic-bezier(.22,1,.36,1)"}}/>
     <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="central"
-      fill={K.t1} fontSize={size*0.22} fontWeight="800" fontFamily="Outfit,sans-serif"
+      fill={txt||K.t1} fontSize={size*0.22} fontWeight="800" fontFamily="Outfit,sans-serif"
       style={{transform:"rotate(90deg)",transformOrigin:"50% 50%"}}>{pct}%</text>
   </svg>;
 }
@@ -1324,14 +1324,14 @@ function FA({uid,onOut}){
           <Logo sm={mob}/>
           <div style={{width:1,height:16,background:K.b0}}/>
           <div style={{display:"flex",alignItems:"center",gap:5,background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:99,padding:"2px 10px"}}>
-            <i className="ti ti-school" style={{fontSize:11,color:"#8B5CF6"}}/>
-            <span style={{fontSize:10,fontWeight:800,color:"#8B5CF6",letterSpacing:.4}}>FORMATEUR</span>
+            <i className="ti ti-school" style={{fontSize:12,color:"#8B5CF6"}}/>
+            <span style={{fontSize:11,fontWeight:800,color:"#8B5CF6",letterSpacing:.4}}>FORMATEUR</span>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:12,color:K.t2,fontWeight:600}}>{(fData.nom||"").split(" ")[0]}</span>
-          <button onClick={onOut} className="bt" style={{display:"flex",alignItems:"center",gap:5,background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
-            <i className="ti ti-logout" style={{fontSize:12}}/>
+          <span style={{fontSize:13,color:K.t2,fontWeight:600}}>{(fData.nom||"").split(" ")[0]}</span>
+          <button onClick={onOut} className="bt" style={{display:"flex",alignItems:"center",gap:5,background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
+            <i className="ti ti-logout" style={{fontSize:13}}/>
             {!mob&&"Quitter"}
           </button>
         </div>
@@ -1343,18 +1343,18 @@ function FA({uid,onOut}){
           return <button key={k} onClick={()=>sV(k)} className="bt"
             style={{display:"flex",alignItems:"center",gap:5,padding:"6px 12px",border:"none",cursor:"pointer",
               background:active?K.c2:"transparent",color:active?K.t1:K.t3,
-              fontWeight:active?700:500,fontSize:12,whiteSpace:"nowrap",
+              fontWeight:active?700:500,fontSize:13,whiteSpace:"nowrap",
               fontFamily:"'Outfit',sans-serif",borderBottom:active?`2px solid #8B5CF6`:"2px solid transparent",
               borderRadius:"6px 6px 0 0",minHeight:34}}>
-            <i className={`ti ti-${ico}`} style={{fontSize:13,color:active?"#8B5CF6":K.t3}}/>
+            <i className={`ti ti-${ico}`} style={{fontSize:14,color:active?"#8B5CF6":K.t3}}/>
             {label}
-            {!!badge&&<span style={{background:"#EF4444",color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,padding:"1px 6px",marginLeft:2}}>{badge}</span>}
+            {!!badge&&<span style={{background:"#EF4444",color:"#fff",borderRadius:99,fontSize:10,fontWeight:800,padding:"1px 6px",marginLeft:2}}>{badge}</span>}
           </button>;
         })}
       </div>
     </nav>
     <main style={{maxWidth:960,margin:"0 auto",padding:mob?"16px 14px 80px":"20px 24px"}}>
-      {msg.m&&<div style={{background:msg.t==="o"?K.emBg:K.erBg,border:`1px solid ${msg.t==="o"?K.emBd:K.erBd}`,borderRadius:9,padding:"9px 14px",marginBottom:12,fontSize:13,color:msg.t==="o"?K.em:K.er,display:"flex",gap:7}}><i className={`ti ti-${msg.t==="o"?"check":"alert-triangle"}`} style={{fontSize:14}}/>{msg.m}</div>}
+      {msg.m&&<div style={{background:msg.t==="o"?K.emBg:K.erBg,border:`1px solid ${msg.t==="o"?K.emBd:K.erBd}`,borderRadius:9,padding:"9px 14px",marginBottom:12,fontSize:14,color:msg.t==="o"?K.em:K.er,display:"flex",gap:7}}><i className={`ti ti-${msg.t==="o"?"check":"alert-triangle"}`} style={{fontSize:14}}/>{msg.m}</div>}
       {ch}
     </main>
   </div>;
@@ -1363,11 +1363,11 @@ function FA({uid,onOut}){
   if(vue==="home")return W(<div style={{animation:"fadeIn .35s ease"}}>
     {/* Bannière bienvenue */}
     <div style={{background:`linear-gradient(135deg,#8B5CF618,#6D28D918)`,border:`1px solid #8B5CF630`,borderRadius:16,padding:"20px 22px",marginBottom:16}}>
-      <div style={{fontSize:12,color:"#8B5CF6",fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:5}}>
-        <i className="ti ti-school" style={{fontSize:13}}/>Espace Formateur
+      <div style={{fontSize:13,color:"#8B5CF6",fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:5}}>
+        <i className="ti ti-school" style={{fontSize:14}}/>Espace Formateur
       </div>
       <div style={{fontSize:mob?18:22,fontWeight:900,color:K.t1,marginBottom:4}}>Bonjour, {(fData.nom||"").split(" ")[0]} 👋</div>
-      <div style={{fontSize:13,color:K.t2,marginBottom:16}}>Créez du contenu de qualité pour vos apprenants SYSCOHADA.</div>
+      <div style={{fontSize:14,color:K.t2,marginBottom:16}}>Créez du contenu de qualité pour vos apprenants SYSCOHADA.</div>
       <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
         {[
           [`${myMods.length}`,"Modules créés","#8B5CF6"],
@@ -1376,7 +1376,7 @@ function FA({uid,onOut}){
           [`${avgScore}%`,"Score moyen","#F59E0B"],
         ].map(([v,l,c])=><div key={l} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:"10px 14px"}}>
           <div style={{fontWeight:900,fontSize:18,color:c,lineHeight:1}}>{v}</div>
-          <div style={{fontSize:11,color:K.t3,marginTop:3}}>{l}</div>
+          <div style={{fontSize:12,color:K.t3,marginTop:3}}>{l}</div>
         </div>)}
       </div>
     </div>
@@ -1396,7 +1396,7 @@ function FA({uid,onOut}){
         </div>
         <div>
           <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:3}}>{label}</div>
-          <div style={{fontSize:12,color:K.t2}}>{desc}</div>
+          <div style={{fontSize:13,color:K.t2}}>{desc}</div>
         </div>
       </div>)}
     </div>
@@ -1413,10 +1413,10 @@ function FA({uid,onOut}){
               <i className="ti ti-book-2" style={{fontSize:16,color:statusCol}}/>
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontWeight:700,fontSize:13,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>
-              <div style={{fontSize:11,color:K.t3}}>{m.q?.length||0} questions</div>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>
+              <div style={{fontSize:12,color:K.t3}}>{m.q?.length||0} questions</div>
             </div>
-            <div style={{background:`${statusCol}18`,border:`1px solid ${statusCol}30`,borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700,color:statusCol,flexShrink:0}}>{statusLbl}</div>
+            <div style={{background:`${statusCol}18`,border:`1px solid ${statusCol}30`,borderRadius:99,padding:"2px 9px",fontSize:12,fontWeight:700,color:statusCol,flexShrink:0}}>{statusLbl}</div>
           </div>;
         })}
       </div>
@@ -1499,69 +1499,69 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
 
   if(creating)return <div style={{animation:"fadeIn .3s ease"}}>
     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
-      <button onClick={()=>setCreating(false)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-        <i className="ti ti-arrow-left" style={{fontSize:13}}/>Retour
+      <button onClick={()=>setCreating(false)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:13,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+        <i className="ti ti-arrow-left" style={{fontSize:14}}/>Retour
       </button>
       <div style={{fontWeight:800,fontSize:15,color:K.t1}}>Nouveau module</div>
     </div>
     <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"18px",marginBottom:14}}>
-      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:12}}>Informations</div>
+      <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:12}}>Informations</div>
       {[["Titre du module","titre","Fondements SYSCOHADA..."],["Matière","mat","SYSCOHADA Révisé"],["Description courte","desc","Aperçu du module..."]].map(([lb,k,ph])=>
         <div key={k} style={{marginBottom:10}}>
-          <div style={{fontSize:11,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
+          <div style={{fontSize:12,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
           <input value={form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))}
-            placeholder={ph} style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+            placeholder={ph} style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
         </div>
       )}
     </div>
     <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"18px",marginBottom:14}}>
-      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:12}}>Type d'encadrement</div>
+      <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:12}}>Type d'encadrement</div>
       <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:2}}>
         {[["none","Sans évaluation","circle-off"],["qcm","QCM","list-check"],["open","Questions ouvertes","message-2"]].map(([v,lb,ic])=>
           <button key={v} onClick={()=>setEvalType(v)} className="bt" style={{flex:"1 1 100px",padding:"10px 8px",borderRadius:9,background:evalType===v?"#8B5CF618":K.bg,border:`1.5px solid ${evalType===v?"#8B5CF6":K.b0}`,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:5}}>
             <i className={`ti ti-${ic}`} style={{fontSize:16,color:evalType===v?"#8B5CF6":K.t3}}/>
-            <span style={{fontSize:11,fontWeight:700,color:evalType===v?"#8B5CF6":K.t2,textAlign:"center"}}>{lb}</span>
+            <span style={{fontSize:12,fontWeight:700,color:evalType===v?"#8B5CF6":K.t2,textAlign:"center"}}>{lb}</span>
           </button>
         )}
       </div>
     </div>
     {evalType==="qcm"&&<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"18px",marginBottom:14}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:K.t1}}>Questions QCM ({questions.length})</div>
-        <button onClick={addQ} className="bt" style={{background:"#8B5CF618",border:"1px solid #8B5CF630",color:"#8B5CF6",borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:12,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-          <i className="ti ti-plus" style={{fontSize:12}}/>Question
+        <div style={{fontWeight:700,fontSize:14,color:K.t1}}>Questions QCM ({questions.length})</div>
+        <button onClick={addQ} className="bt" style={{background:"#8B5CF618",border:"1px solid #8B5CF630",color:"#8B5CF6",borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:13,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+          <i className="ti ti-plus" style={{fontSize:13}}/>Question
         </button>
       </div>
       {questions.map((qu,i)=><div key={i} style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px",marginBottom:10}}>
-        <div style={{fontSize:11,color:K.t3,marginBottom:5,fontWeight:600}}>Question {i+1}</div>
+        <div style={{fontSize:12,color:K.t3,marginBottom:5,fontWeight:600}}>Question {i+1}</div>
         <input value={qu.q} onChange={e=>updQ(i,"q",e.target.value)} placeholder="Énoncé de la question..."
-          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"8px 10px",color:K.t1,fontSize:12,fontFamily:"'Outfit',sans-serif",marginBottom:8,boxSizing:"border-box"}}/>
+          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"8px 10px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",marginBottom:8,boxSizing:"border-box"}}/>
         {qu.opts.map((o,j)=><div key={j} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
           <div onClick={()=>updQ(i,"ans",j)} style={{width:18,height:18,borderRadius:5,border:`2px solid ${qu.ans===j?"#22C55E":K.b1}`,background:qu.ans===j?"#22C55E":"transparent",cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            {qu.ans===j&&<i className="ti ti-check" style={{fontSize:10,color:"#fff"}}/>}
+            {qu.ans===j&&<i className="ti ti-check" style={{fontSize:11,color:"#fff"}}/>}
           </div>
           <input value={o} onChange={e=>updOpt(i,j,e.target.value)} placeholder={`Option ${j+1}${j===0?" (correcte si cochée)":""}`}
-            style={{flex:1,background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"7px 9px",color:K.t1,fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
+            style={{flex:1,background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"7px 9px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif"}}/>
         </div>)}
       </div>)}
     </div>}
     {evalType==="open"&&<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"18px",marginBottom:14}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:K.t1}}>Questions ouvertes ({openQuestions.length})</div>
-        <button onClick={addOQ} className="bt" style={{background:"#8B5CF618",border:"1px solid #8B5CF630",color:"#8B5CF6",borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:12,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-          <i className="ti ti-plus" style={{fontSize:12}}/>Question
+        <div style={{fontWeight:700,fontSize:14,color:K.t1}}>Questions ouvertes ({openQuestions.length})</div>
+        <button onClick={addOQ} className="bt" style={{background:"#8B5CF618",border:"1px solid #8B5CF630",color:"#8B5CF6",borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:13,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+          <i className="ti ti-plus" style={{fontSize:13}}/>Question
         </button>
       </div>
-      <div style={{fontSize:11,color:K.t3,marginBottom:12}}>Réponse libre de l'apprenant. Vous noterez chaque réponse manuellement — le score final sera calculé automatiquement.</div>
+      <div style={{fontSize:12,color:K.t3,marginBottom:12}}>Réponse libre de l'apprenant. Vous noterez chaque réponse manuellement — le score final sera calculé automatiquement.</div>
       {openQuestions.map((oq,i)=><div key={i} style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px",marginBottom:10,display:"flex",gap:8,alignItems:"flex-start"}}>
         <div style={{flex:1}}>
-          <div style={{fontSize:11,color:K.t3,marginBottom:5,fontWeight:600}}>Question {i+1}</div>
+          <div style={{fontSize:12,color:K.t3,marginBottom:5,fontWeight:600}}>Question {i+1}</div>
           <textarea value={oq.q} onChange={e=>updOQ(i,"q",e.target.value)} placeholder="Énoncé de la question ouverte..." rows={2}
-            style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"8px 10px",color:K.t1,fontSize:12,fontFamily:"'Outfit',sans-serif",marginBottom:6,boxSizing:"border-box",resize:"vertical"}}/>
+            style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"8px 10px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",marginBottom:6,boxSizing:"border-box",resize:"vertical"}}/>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
-            <span style={{fontSize:11,color:K.t3}}>Points :</span>
+            <span style={{fontSize:12,color:K.t3}}>Points :</span>
             <input type="number" min="1" value={oq.points} onChange={e=>updOQ(i,"points",e.target.value)}
-              style={{width:60,background:K.c2,border:`1px solid ${K.b1}`,borderRadius:6,padding:"5px 7px",color:K.t1,fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
+              style={{width:60,background:K.c2,border:`1px solid ${K.b1}`,borderRadius:6,padding:"5px 7px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif"}}/>
           </div>
         </div>
         {openQuestions.length>1&&<button onClick={()=>rmOQ(i)} className="bt" style={{background:"none",border:"none",color:K.er,cursor:"pointer",fontSize:16,padding:2,flexShrink:0}}>✕</button>}
@@ -1569,18 +1569,18 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
     </div>}
     {/* Upload slides */}
     <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"18px",marginBottom:14}}>
-      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
+      <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
         <i className="ti ti-file-text" style={{fontSize:14,color:"#F59E0B"}}/>Slides PDF (optionnel)
       </div>
       <label style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"18px",border:`2px dashed ${slideFile?"#22C55E":K.b1}`,borderRadius:10,cursor:"pointer",background:slideFile?"#22C55E08":K.bg,transition:"all .2s"}}>
         <input type="file" accept=".pdf" style={{display:"none"}} onChange={e=>setSlideFile(e.target.files[0]||null)}/>
         <i className={`ti ti-${slideFile?"circle-check":"upload"}`} style={{fontSize:28,color:slideFile?"#22C55E":K.t3}}/>
-        <div style={{fontSize:13,fontWeight:600,color:slideFile?"#22C55E":K.t2}}>{slideFile?slideFile.name:"Cliquez pour choisir un PDF"}</div>
-        <div style={{fontSize:11,color:K.t3}}>PDF uniquement · Max 10 MB</div>
+        <div style={{fontSize:14,fontWeight:600,color:slideFile?"#22C55E":K.t2}}>{slideFile?slideFile.name:"Cliquez pour choisir un PDF"}</div>
+        <div style={{fontSize:12,color:K.t3}}>PDF uniquement · Max 10 MB</div>
       </label>
       {slideFile&&<button onClick={()=>setSlideFile(null)} className="bt"
-        style={{marginTop:8,background:"none",border:"none",color:K.er,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
-        <i className="ti ti-x" style={{fontSize:12}}/>Supprimer
+        style={{marginTop:8,background:"none",border:"none",color:K.er,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
+        <i className="ti ti-x" style={{fontSize:13}}/>Supprimer
       </button>}
     </div>
     <button onClick={saveModule} disabled={savingNew||slideUploading} className="bt"
@@ -1592,7 +1592,7 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
   return <div style={{animation:"fadeIn .35s ease"}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
       <div style={{fontWeight:800,fontSize:15,color:K.t1}}>Mes modules ({mods.length})</div>
-      <button onClick={()=>setCreating(true)} className="bt" style={{background:`linear-gradient(135deg,#7C3AED,#8B5CF6)`,border:"none",color:"#fff",borderRadius:9,padding:"7px 14px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:6}}>
+      <button onClick={()=>setCreating(true)} className="bt" style={{background:`linear-gradient(135deg,#7C3AED,#8B5CF6)`,border:"none",color:"#fff",borderRadius:9,padding:"7px 14px",cursor:"pointer",fontSize:14,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:6}}>
         <i className="ti ti-plus" style={{fontSize:14}}/>Nouveau module
       </button>
     </div>
@@ -1605,23 +1605,23 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
           <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:3}}>{m.titre}</div>
-              <div style={{fontSize:12,color:K.t3}}>{m.mat||"SYSCOHADA"} · {m.evalType==="open"?`${m.openQ?.length||0} question(s) ouverte(s)`:m.evalType==="none"?"Sans évaluation":`${m.q?.length||0} questions QCM`}</div>
+              <div style={{fontSize:13,color:K.t3}}>{m.mat||"SYSCOHADA"} · {m.evalType==="open"?`${m.openQ?.length||0} question(s) ouverte(s)`:m.evalType==="none"?"Sans évaluation":`${m.q?.length||0} questions QCM`}</div>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:7,flexShrink:0}}>
-              <span style={{background:`${cc}18`,border:`1px solid ${cc}30`,borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700,color:cc}}>{sc}</span>
+              <span style={{background:`${cc}18`,border:`1px solid ${cc}30`,borderRadius:99,padding:"2px 9px",fontSize:12,fontWeight:700,color:cc}}>{sc}</span>
               {(m.status==="draft"||m.status==="rejected")&&
                 <button onClick={()=>onSubmit("mod",m.id)} disabled={saving} className="bt"
-                  style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
+                  style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
                   Soumettre
                 </button>
               }
               {m.status!=="approved"&&<button onClick={()=>{if(window.confirm(`Supprimer "${m.titre}" ?`))deleteModule(m.id);}} className="bt"
                 style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
-                <i className="ti ti-trash" style={{fontSize:12}}/>
+                <i className="ti ti-trash" style={{fontSize:13}}/>
               </button>}
             </div>
           </div>
-          {m.status==="rejected"&&m.rejectReason&&<div style={{marginTop:9,background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,padding:"8px 11px",fontSize:12,color:K.er}}><i className="ti ti-alert-circle" style={{fontSize:12,marginRight:5}}/>{m.rejectReason}</div>}
+          {m.status==="rejected"&&m.rejectReason&&<div style={{marginTop:9,background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,padding:"8px 11px",fontSize:13,color:K.er}}><i className="ti ti-alert-circle" style={{fontSize:13,marginRight:5}}/>{m.rejectReason}</div>}
         </div>;
       })}
     </div>
@@ -1653,18 +1653,18 @@ function FASlides({uid,pres,onSubmit,saving,toast}){
   return <div style={{animation:"fadeIn .35s ease"}}>
     <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:14}}>Mes slides ({pres.length})</div>
     <div style={{background:K.card,border:`1px solid #22C55E30`,borderRadius:14,padding:"18px",marginBottom:16}}>
-      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
+      <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
         <i className="ti ti-presentation" style={{fontSize:15,color:"#22C55E"}}/>Ajouter une présentation
       </div>
       {[["Titre","titre","Titre de la présentation"],["URL (PDF/Drive/Slides)","url","https://..."],["Matière","mat","SYSCOHADA"],["Description","desc","Aperçu du contenu..."]].map(([lb,k,ph])=>
         <div key={k} style={{marginBottom:10}}>
-          <div style={{fontSize:11,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
+          <div style={{fontSize:12,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
           <input value={form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} placeholder={ph}
-            style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+            style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
         </div>
       )}
       <button onClick={savePres} disabled={savingNew} className="bt"
-        style={{width:"100%",padding:"11px",background:"linear-gradient(135deg,#15803D,#22C55E)",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",marginTop:4}}>
+        style={{width:"100%",padding:"11px",background:"linear-gradient(135deg,#15803D,#22C55E)",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",marginTop:4}}>
         {savingNew?"Enregistrement...":"+ Ajouter la slide"}
       </button>
     </div>
@@ -1679,24 +1679,24 @@ function FASlides({uid,pres,onSubmit,saving,toast}){
             <i className="ti ti-presentation" style={{fontSize:16,color:"#22C55E"}}/>
           </div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontWeight:700,fontSize:13,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
-            <div style={{fontSize:11,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.url}</div>
+            <div style={{fontWeight:700,fontSize:14,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
+            <div style={{fontSize:12,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.url}</div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
-            <span style={{background:`${cc}18`,border:`1px solid ${cc}30`,borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700,color:cc}}>{sc}</span>
+            <span style={{background:`${cc}18`,border:`1px solid ${cc}30`,borderRadius:99,padding:"2px 9px",fontSize:12,fontWeight:700,color:cc}}>{sc}</span>
             {(p.status==="draft"||p.status==="rejected")&&
               <button onClick={()=>onSubmit("pres",p.id)} disabled={saving} className="bt"
-                style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
+                style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
                 Soumettre
               </button>
             }
             {p.status!=="approved"&&<button onClick={()=>{if(window.confirm(`Supprimer "${p.titre}" ?`))deletePresentation(p.id);}} className="bt"
               style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
-              <i className="ti ti-trash" style={{fontSize:12}}/>
+              <i className="ti ti-trash" style={{fontSize:13}}/>
             </button>}
           </div>
           </div>
-          {p.status==="rejected"&&p.rejectReason&&<div style={{marginTop:9,background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,padding:"8px 11px",fontSize:12,color:K.er}}><i className="ti ti-alert-circle" style={{fontSize:12,marginRight:5}}/>{p.rejectReason}</div>}
+          {p.status==="rejected"&&p.rejectReason&&<div style={{marginTop:9,background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,padding:"8px 11px",fontSize:13,color:K.er}}><i className="ti ti-alert-circle" style={{fontSize:13,marginRight:5}}/>{p.rejectReason}</div>}
         </div>;
       })}
     </div>
@@ -1729,20 +1729,20 @@ function FAMessages({msgs,uid,fNom}){
     };
     return <div style={{animation:"fadeIn .3s ease"}}>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-        <button onClick={()=>sThread(null)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"6px 10px",cursor:"pointer",color:K.t2,display:"flex",alignItems:"center",gap:4,fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-arrow-left" style={{fontSize:13}}/>Retour</button>
+        <button onClick={()=>sThread(null)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"6px 10px",cursor:"pointer",color:K.t2,display:"flex",alignItems:"center",gap:4,fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-arrow-left" style={{fontSize:14}}/>Retour</button>
         <div style={{fontWeight:800,fontSize:14,color:K.t1}}>{aNom}</div>
       </div>
       <div style={{background:K.c2,borderRadius:12,padding:14,marginBottom:12}}>
         <div style={{height:340,overflowY:"auto",display:"flex",flexDirection:"column",gap:9}}>
           {tMsgs.map(m=>{const mine=m.fromRole==="formateur";return <div key={m.id} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"78%"}}>
-            <div style={{background:mine?"#8B5CF6":K.card,color:mine?"#fff":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:13,lineHeight:1.5,border:mine?"none":`1px solid ${K.b0}`}}>{m.texte}</div>
-            <div style={{fontSize:9,color:K.t3,marginTop:3,textAlign:mine?"right":"left"}}>{mine?"Vous":m.apprenantNom} · {new Date(m.ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
+            <div style={{background:mine?"#8B5CF6":K.card,color:mine?"#fff":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:14,lineHeight:1.5,border:mine?"none":`1px solid ${K.b0}`}}>{m.texte}</div>
+            <div style={{fontSize:10,color:K.t3,marginTop:3,textAlign:mine?"right":"left"}}>{mine?"Vous":m.apprenantNom} · {new Date(m.ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
           </div>;})}
           <div ref={endRef}/>
         </div>
       </div>
       <div style={{display:"flex",gap:8}}>
-        <input value={texte} onChange={e=>sTexte(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Répondre…" style={{flex:1,background:K.card,border:`1px solid ${K.b0}`,borderRadius:99,padding:"10px 15px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}/>
+        <input value={texte} onChange={e=>sTexte(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Répondre…" style={{flex:1,background:K.card,border:`1px solid ${K.b0}`,borderRadius:99,padding:"10px 15px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
         <Btn ch={sending?"…":"Envoyer"} on={send} v="i" sx={{minHeight:40}}/>
       </div>
     </div>;
@@ -1756,10 +1756,10 @@ function FAMessages({msgs,uid,fNom}){
         return <div key={c.apprenantUid} onClick={()=>sThread(c.apprenantUid)} className="bt" style={{background:K.card,border:`1px solid ${unread>0?"#8B5CF640":K.b0}`,borderRadius:12,padding:"12px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,#7C3AED,#8B5CF6)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:14,flexShrink:0}}>{(c.apprenantNom||"?")[0].toUpperCase()}</div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontWeight:700,fontSize:13,color:K.t1}}>{c.apprenantNom||"Apprenant"}</div>
-            <div style={{fontSize:11,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.fromRole==="formateur"?"Vous : ":""}{c.texte}</div>
+            <div style={{fontWeight:700,fontSize:14,color:K.t1}}>{c.apprenantNom||"Apprenant"}</div>
+            <div style={{fontSize:12,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.fromRole==="formateur"?"Vous : ":""}{c.texte}</div>
           </div>
-          {unread>0&&<span style={{background:"#EF4444",color:"#fff",fontSize:10,fontWeight:800,borderRadius:99,padding:"2px 7px",flexShrink:0}}>{unread}</span>}
+          {unread>0&&<span style={{background:"#EF4444",color:"#fff",fontSize:11,fontWeight:800,borderRadius:99,padding:"2px 7px",flexShrink:0}}>{unread}</span>}
         </div>;
       })}
     </div>
@@ -1780,24 +1780,24 @@ function FACorrections({answers}){
     const overMax=totalNotes>grading.maxPoints;
     return <div style={{animation:"fadeIn .3s ease",maxWidth:640,margin:"0 auto"}}>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
-        <button onClick={()=>setGrading(null)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-          <i className="ti ti-arrow-left" style={{fontSize:13}}/>Retour
+        <button onClick={()=>setGrading(null)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:13,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+          <i className="ti ti-arrow-left" style={{fontSize:14}}/>Retour
         </button>
         <div style={{fontWeight:800,fontSize:14,color:K.t1}}>{grading.apprenantNom} — {grading.modTitre}</div>
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:16}}>
         {grading.answers.map(a=><div key={a.qId} style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:12,padding:"14px 16px"}}>
-          <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:8}}>{a.q}</div>
-          <div style={{background:K.c2,borderRadius:9,padding:"10px 12px",color:K.t2,fontSize:13,lineHeight:1.6,marginBottom:10,whiteSpace:"pre-wrap"}}>{a.texte}</div>
+          <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:8}}>{a.q}</div>
+          <div style={{background:K.c2,borderRadius:9,padding:"10px 12px",color:K.t2,fontSize:14,lineHeight:1.6,marginBottom:10,whiteSpace:"pre-wrap"}}>{a.texte}</div>
           <div style={{display:"flex",alignItems:"center",gap:7}}>
-            <span style={{fontSize:11,color:K.t3,fontWeight:600}}>Note :</span>
+            <span style={{fontSize:12,color:K.t3,fontWeight:600}}>Note :</span>
             <input type="number" min="0" value={notes[a.qId]} onChange={e=>setNotes(n=>({...n,[a.qId]:e.target.value}))} placeholder="0"
-              style={{width:70,background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"6px 9px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif"}}/>
+              style={{width:70,background:K.c2,border:`1px solid ${K.b1}`,borderRadius:7,padding:"6px 9px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif"}}/>
           </div>
         </div>)}
       </div>
       <div style={{background:overMax?K.erBg:K.emBg,border:`1px solid ${overMax?K.erBd:K.emBd}`,borderRadius:10,padding:"11px 14px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <span style={{fontSize:13,color:K.t2,fontWeight:600}}>Total</span>
+        <span style={{fontSize:14,color:K.t2,fontWeight:600}}>Total</span>
         <span style={{fontSize:16,fontWeight:800,color:overMax?K.er:K.em}}>{totalNotes} / {grading.maxPoints} pts</span>
       </div>
       <Btn ch={saving?"Enregistrement…":"✓ Valider la correction"} dis={saving||overMax} on={async()=>{
@@ -1813,27 +1813,27 @@ function FACorrections({answers}){
     <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:14}}>Corrections ({ungraded.length} à faire)</div>
     {!ungraded.length&&!graded.length&&<EmptyState ico="checkbox" title="Aucune soumission" desc="Les réponses aux questions ouvertes de vos apprenants apparaîtront ici."/>}
     {ungraded.length>0&&<div style={{marginBottom:20}}>
-      <div style={{fontSize:11,fontWeight:700,color:K.wa,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>⏳ À corriger</div>
+      <div style={{fontSize:12,fontWeight:700,color:K.wa,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>⏳ À corriger</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {ungraded.map(a=><div key={a.id} onClick={()=>openGrading(a)} className="bt" style={{cursor:"pointer",background:K.card,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"13px 15px",display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:34,height:34,borderRadius:9,background:K.waBg,border:`1px solid ${K.waBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-message-circle" style={{fontSize:15,color:K.wa}}/></div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontWeight:700,fontSize:13,color:K.t1}}>{a.apprenantNom}</div>
-            <div style={{fontSize:11,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.modTitre} · {a.answers.length} réponse(s)</div>
+            <div style={{fontWeight:700,fontSize:14,color:K.t1}}>{a.apprenantNom}</div>
+            <div style={{fontSize:12,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.modTitre} · {a.answers.length} réponse(s)</div>
           </div>
           <i className="ti ti-chevron-right" style={{fontSize:16,color:K.t3,flexShrink:0}}/>
         </div>)}
       </div>
     </div>}
     {graded.length>0&&<div>
-      <div style={{fontSize:11,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>✓ Corrigées</div>
+      <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>✓ Corrigées</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {graded.map(a=><div key={a.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 15px",display:"flex",alignItems:"center",gap:10,opacity:.75}}>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontWeight:700,fontSize:13,color:K.t1}}>{a.apprenantNom}</div>
-            <div style={{fontSize:11,color:K.t3}}>{a.modTitre}</div>
+            <div style={{fontWeight:700,fontSize:14,color:K.t1}}>{a.apprenantNom}</div>
+            <div style={{fontSize:12,color:K.t3}}>{a.modTitre}</div>
           </div>
-          <span style={{fontSize:13,fontWeight:800,color:K.em,flexShrink:0}}>{a.totalPoints}/{a.maxPoints} · {a.pct}%</span>
+          <span style={{fontSize:14,fontWeight:800,color:K.em,flexShrink:0}}>{a.totalPoints}/{a.maxPoints} · {a.pct}%</span>
         </div>)}
       </div>
     </div>}
@@ -1864,18 +1864,18 @@ function FAVids({uid,vids,onSubmit,saving,toast}){
     <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:14}}>Mes vidéos ({vids.length})</div>
     {/* Formulaire ajout */}
     <div style={{background:K.card,border:`1px solid #3B82F630`,borderRadius:14,padding:"18px",marginBottom:16}}>
-      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
+      <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
         <i className="ti ti-video-plus" style={{fontSize:15,color:"#3B82F6"}}/>Ajouter une vidéo
       </div>
       {[["Titre","titre","Titre de la vidéo"],["URL (YouTube/Drive)","url","https://..."],["Description","desc","Aperçu du contenu..."]].map(([lb,k,ph])=>
         <div key={k} style={{marginBottom:10}}>
-          <div style={{fontSize:11,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
+          <div style={{fontSize:12,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
           <input value={form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} placeholder={ph}
-            style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+            style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
         </div>
       )}
       <button onClick={saveVid} disabled={savingNew} className="bt"
-        style={{width:"100%",padding:"11px",background:"linear-gradient(135deg,#1D4ED8,#3B82F6)",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",marginTop:4}}>
+        style={{width:"100%",padding:"11px",background:"linear-gradient(135deg,#1D4ED8,#3B82F6)",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",marginTop:4}}>
         {savingNew?"Enregistrement...":"+ Ajouter la vidéo"}
       </button>
     </div>
@@ -1891,24 +1891,24 @@ function FAVids({uid,vids,onSubmit,saving,toast}){
             <i className="ti ti-video" style={{fontSize:16,color:"#3B82F6"}}/>
           </div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontWeight:700,fontSize:13,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div>
-            <div style={{fontSize:11,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.url}</div>
+            <div style={{fontWeight:700,fontSize:14,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div>
+            <div style={{fontSize:12,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.url}</div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
-            <span style={{background:`${cc}18`,border:`1px solid ${cc}30`,borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700,color:cc}}>{sc}</span>
+            <span style={{background:`${cc}18`,border:`1px solid ${cc}30`,borderRadius:99,padding:"2px 9px",fontSize:12,fontWeight:700,color:cc}}>{sc}</span>
             {(v.status==="draft"||v.status==="rejected")&&
               <button onClick={()=>onSubmit("vid",v.id)} disabled={saving} className="bt"
-                style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
+                style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
                 Soumettre
               </button>
             }
             {v.status!=="approved"&&<button onClick={()=>{if(window.confirm(`Supprimer "${v.titre}" ?`))deleteVideo(v.id);}} className="bt"
               style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
-              <i className="ti ti-trash" style={{fontSize:12}}/>
+              <i className="ti ti-trash" style={{fontSize:13}}/>
             </button>}
           </div>
           </div>
-          {v.status==="rejected"&&v.rejectReason&&<div style={{marginTop:9,background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,padding:"8px 11px",fontSize:12,color:K.er}}><i className="ti ti-alert-circle" style={{fontSize:12,marginRight:5}}/>{v.rejectReason}</div>}
+          {v.status==="rejected"&&v.rejectReason&&<div style={{marginTop:9,background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,padding:"8px 11px",fontSize:13,color:K.er}}><i className="ti ti-alert-circle" style={{fontSize:13,marginRight:5}}/>{v.rejectReason}</div>}
         </div>;
       })}
     </div>
@@ -1943,11 +1943,11 @@ function FAStats({uid,myMods,allUsers}){
               [above80,"Score ≥80%","#F59E0B"],
             ].map(([v,l,c])=><div key={l} style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px",textAlign:"center"}}>
               <div style={{fontWeight:900,fontSize:18,color:c,lineHeight:1}}>{v}</div>
-              <div style={{fontSize:10,color:K.t3,marginTop:3}}>{l}</div>
+              <div style={{fontSize:11,color:K.t3,marginTop:3}}>{l}</div>
             </div>)}
           </div>
           {scores.length>0&&<>
-            <div style={{fontSize:11,color:K.t3,marginTop:10,marginBottom:4}}>Distribution des scores</div>
+            <div style={{fontSize:12,color:K.t3,marginTop:10,marginBottom:4}}>Distribution des scores</div>
             <div style={{height:6,background:K.b0,borderRadius:99,overflow:"hidden"}}>
               <div style={{height:"100%",width:`${avg}%`,background:`linear-gradient(90deg,#3B82F6,#8B5CF6)`,borderRadius:99,transition:"width .6s ease"}}/>
             </div>
@@ -2094,7 +2094,7 @@ function FADocs({uid,toast}){
 
     {/* Zone upload */}
     <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:16,padding:"18px",marginBottom:16}}>
-      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:14,display:"flex",alignItems:"center",gap:7}}>
+      <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:14,display:"flex",alignItems:"center",gap:7}}>
         <i className="ti ti-upload" style={{fontSize:14,color:"#8B5CF6"}}/>Uploader un document
       </div>
 
@@ -2115,19 +2115,19 @@ function FADocs({uid,toast}){
             <div style={{width:48,height:48,borderRadius:14,background:`${getFileType(file).col}18`,border:`1px solid ${getFileType(file).col}30`,display:"flex",alignItems:"center",justifyContent:"center"}}>
               <i className={`ti ti-${getFileType(file).ico}`} style={{fontSize:22,color:getFileType(file).col}}/>
             </div>
-            <div style={{fontWeight:700,fontSize:13,color:"#22C55E",textAlign:"center"}}>{file.name}</div>
-            <div style={{fontSize:11,color:K.t3}}>{getFileType(file).label} · {(file.size/1024/1024).toFixed(1)} MB</div>
+            <div style={{fontWeight:700,fontSize:14,color:"#22C55E",textAlign:"center"}}>{file.name}</div>
+            <div style={{fontSize:12,color:K.t3}}>{getFileType(file).label} · {(file.size/1024/1024).toFixed(1)} MB</div>
           </>
           :<>
             <i className="ti ti-cloud-upload" style={{fontSize:36,color:K.t3}}/>
-            <div style={{fontWeight:600,fontSize:13,color:K.t2}}>Glissez un fichier ou cliquez pour choisir</div>
-            <div style={{fontSize:11,color:K.t3}}>PDF · PowerPoint · Word · Excel · Max {MAX_SIZE_MB} MB</div>
+            <div style={{fontWeight:600,fontSize:14,color:K.t2}}>Glissez un fichier ou cliquez pour choisir</div>
+            <div style={{fontSize:12,color:K.t3}}>PDF · PowerPoint · Word · Excel · Max {MAX_SIZE_MB} MB</div>
             {/* Badges formats */}
             <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center",marginTop:4}}>
               {[["file-text","PDF","#EF4444"],["presentation","PPT/PPTX","#F59E0B"],["file-word","DOC/DOCX","#3B82F6"],["file-spreadsheet","XLS/XLSX","#22C55E"]].map(([ico,lbl,col])=>
                 <div key={lbl} style={{display:"flex",alignItems:"center",gap:4,background:`${col}14`,border:`1px solid ${col}25`,borderRadius:6,padding:"3px 8px"}}>
-                  <i className={`ti ti-${ico}`} style={{fontSize:11,color:col}}/>
-                  <span style={{fontSize:10,fontWeight:700,color:col}}>{lbl}</span>
+                  <i className={`ti ti-${ico}`} style={{fontSize:12,color:col}}/>
+                  <span style={{fontSize:11,fontWeight:700,color:col}}>{lbl}</span>
                 </div>
               )}
             </div>
@@ -2138,17 +2138,17 @@ function FADocs({uid,toast}){
       {/* Formulaire */}
       {[["Titre du document","titre","Fondements SYSCOHADA — Chapitre 1"],["Description (optionnel)","desc","Résumé du contenu..."]].map(([lb,k,ph])=>
         <div key={k} style={{marginBottom:10}}>
-          <div style={{fontSize:11,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
+          <div style={{fontSize:12,color:K.t3,marginBottom:4,fontWeight:600}}>{lb}</div>
           <input value={form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))}
-            placeholder={ph} style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+            placeholder={ph} style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
         </div>
       )}
 
       {/* Associer à un module */}
       {myMods.length>0&&<div style={{marginBottom:12}}>
-        <div style={{fontSize:11,color:K.t3,marginBottom:4,fontWeight:600}}>Associer à un module (optionnel)</div>
+        <div style={{fontSize:12,color:K.t3,marginBottom:4,fontWeight:600}}>Associer à un module (optionnel)</div>
         <select value={form.modId} onChange={e=>setForm(f=>({...f,modId:e.target.value}))}
-          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif"}}>
+          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif"}}>
           <option value="">Aucun module associé</option>
           {myMods.map(m=><option key={m.id} value={m.id}>{m.titre}</option>)}
         </select>
@@ -2156,11 +2156,11 @@ function FADocs({uid,toast}){
 
       <div style={{display:"flex",gap:8}}>
         {file&&<button onClick={()=>{setFile(null);setForm({titre:"",desc:"",modId:""});}} className="bt"
-          style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:9,padding:"10px 14px",cursor:"pointer",fontSize:12,fontFamily:"'Outfit',sans-serif"}}>
+          style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:9,padding:"10px 14px",cursor:"pointer",fontSize:13,fontFamily:"'Outfit',sans-serif"}}>
           Annuler
         </button>}
         <button onClick={uploadDoc} disabled={uploading||!file} className="bt"
-          style={{flex:1,padding:"12px",background:file?"linear-gradient(135deg,#7C3AED,#8B5CF6)":"#333",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:13,cursor:file?"pointer":"not-allowed",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
+          style={{flex:1,padding:"12px",background:file?"linear-gradient(135deg,#7C3AED,#8B5CF6)":"#333",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:14,cursor:file?"pointer":"not-allowed",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
           {uploading?<><i className="ti ti-loader-2" style={{fontSize:14,animation:"spin .8s linear infinite"}}/>Upload en cours...</>:<><i className="ti ti-upload" style={{fontSize:14}}/>Uploader le document</>}
         </button>
       </div>
@@ -2178,29 +2178,29 @@ function FADocs({uid,toast}){
               <i className={`ti ti-${ft.ico}`} style={{fontSize:19,color:ft.col}}/>
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.titre}</div>
-              <div style={{fontSize:11,color:K.t3,display:"flex",gap:8,alignItems:"center"}}>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.titre}</div>
+              <div style={{fontSize:12,color:K.t3,display:"flex",gap:8,alignItems:"center"}}>
                 <span>{ft.label}</span>
                 {d.size&&<span>{(d.size/1024/1024).toFixed(1)} MB</span>}
                 {d.modId&&mods.find(m=>m.id===d.modId)&&<span>· {mods.find(m=>m.id===d.modId)?.titre}</span>}
               </div>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
-              <span style={{background:`${si.col}18`,border:`1px solid ${si.col}30`,borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700,color:si.col,whiteSpace:"nowrap"}}>{si.label}</span>
+              <span style={{background:`${si.col}18`,border:`1px solid ${si.col}30`,borderRadius:99,padding:"2px 9px",fontSize:12,fontWeight:700,color:si.col,whiteSpace:"nowrap"}}>{si.label}</span>
               {(d.status==="draft"||d.status==="rejected")&&
                 <button onClick={()=>submitDoc(d.id)} className="bt"
-                  style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap"}}>
+                  style={{background:"#F59E0B18",border:"1px solid #F59E0B30",color:"#F59E0B",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap"}}>
                   Soumettre
                 </button>
               }
               {d.status!=="approved"&&<button onClick={()=>{if(window.confirm(`Supprimer "${d.titre}" ?`))deleteDoc(doc(db,"documents",d.id));}} className="bt"
                 style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
-                <i className="ti ti-trash" style={{fontSize:12}}/>
+                <i className="ti ti-trash" style={{fontSize:13}}/>
               </button>}
             </div>
           </div>
-          {d.desc&&<div style={{fontSize:12,color:K.t2,marginTop:8,paddingTop:8,borderTop:`1px solid ${K.b0}`,lineHeight:1.5}}>{d.desc}</div>}
-          {d.status==="rejected"&&d.rejectReason&&<div style={{marginTop:9,background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,padding:"8px 11px",fontSize:12,color:K.er}}><i className="ti ti-alert-circle" style={{fontSize:12,marginRight:5}}/>{d.rejectReason}</div>}
+          {d.desc&&<div style={{fontSize:13,color:K.t2,marginTop:8,paddingTop:8,borderTop:`1px solid ${K.b0}`,lineHeight:1.5}}>{d.desc}</div>}
+          {d.status==="rejected"&&d.rejectReason&&<div style={{marginTop:9,background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,padding:"8px 11px",fontSize:13,color:K.er}}><i className="ti ti-alert-circle" style={{fontSize:13,marginRight:5}}/>{d.rejectReason}</div>}
         </div>;
       })}
     </div>
@@ -2226,10 +2226,10 @@ function AutoLogoutBanner({warning, mob}){
   }}>
     <i className="ti ti-clock-exclamation" style={{fontSize:20,color:"#F59E0B",flexShrink:0}}/>
     <div style={{flex:1}}>
-      <div style={{fontWeight:700,fontSize:13,color:"#fff",marginBottom:2}}>Déconnexion imminente</div>
-      <div style={{fontSize:12,color:"#A8A29E"}}>Déconnexion dans <strong style={{color:"#F59E0B"}}>{mins}:{String(rem).padStart(2,"0")}</strong></div>
+      <div style={{fontWeight:700,fontSize:14,color:"#fff",marginBottom:2}}>Déconnexion imminente</div>
+      <div style={{fontSize:13,color:"#A8A29E"}}>Déconnexion dans <strong style={{color:"#F59E0B"}}>{mins}:{String(rem).padStart(2,"0")}</strong></div>
     </div>
-    <button onClick={()=>{}} style={{background:"#F59E0B",border:"none",borderRadius:8,padding:"6px 12px",color:"#1C1917",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",flexShrink:0}}>
+    <button onClick={()=>{}} style={{background:"#F59E0B",border:"none",borderRadius:8,padding:"6px 12px",color:"#1C1917",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",flexShrink:0}}>
       Rester connecté
     </button>
   </div>;
@@ -2342,13 +2342,13 @@ function Auth({onL}){
     <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:mob?"10px 14px 22px":"18px",position:"relative",zIndex:1}}>
       <div style={{width:"100%",maxWidth:385,animation:"sc .3s ease"}}>
         <div style={{textAlign:"center",marginBottom:mob?17:23}}>
-          <div style={{display:"inline-flex",alignItems:"center",gap:5,background:K.card,border:`1px solid ${K.b0}`,borderRadius:99,padding:"4px 12px",marginBottom:12}}><span style={{width:5,height:5,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:11,color:K.t2}}>Plateforme active</span></div>
+          <div style={{display:"inline-flex",alignItems:"center",gap:5,background:K.card,border:`1px solid ${K.b0}`,borderRadius:99,padding:"4px 12px",marginBottom:12}}><span style={{width:5,height:5,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:12,color:K.t2}}>Plateforme active</span></div>
           <h1 style={{fontSize:mob?20:25,fontWeight:900,color:K.t1,lineHeight:1.15,letterSpacing:"-.4px",marginBottom:5}}><span style={{background:`linear-gradient(135deg,${K.em},${K.in_})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Éco-Campus</span><br/><span style={{fontSize:mob?14:17,fontWeight:700,color:K.t2}}>Consulting</span></h1>
-          <p style={{color:K.t3,fontSize:12,lineHeight:1.6}}>Modules · QCM · Exercices · Vidéos · Direct</p>
+          <p style={{color:K.t3,fontSize:13,lineHeight:1.6}}>Modules · QCM · Exercices · Vidéos · Direct</p>
         </div>
         <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:14,padding:mob?"17px 15px":"21px 19px",boxShadow:"0 20px 55px rgba(0,0,0,.3)"}}>
-          {step===1&&<div style={{display:"flex",background:K.bg,borderRadius:9,padding:3,marginBottom:17,gap:2}}>{[["l","Connexion"],["r","Inscription"]].map(([k,l])=><button key={k} onClick={()=>sw(k)} className="bt" style={{flex:1,padding:"9px",borderRadius:7,border:"none",fontWeight:700,fontSize:13,fontFamily:"'Outfit',sans-serif",cursor:"pointer",background:tab===k?K.c2:"transparent",color:tab===k?K.t1:K.t3,minHeight:38}}>{l}</button>)}</div>}
-          <div style={{marginBottom:15}}><div style={{fontSize:15,fontWeight:800,color:K.t1,marginBottom:3}}>{step===2?"🔐 Code d'activation":tab==="l"?"Bon retour 👋":"Créer un compte"}</div><div style={{fontSize:12,color:K.t3,lineHeight:1.5}}>{step===2?"Code reçu de l'administrateur":tab==="l"?"Accédez à votre formation":"Inscription gratuite · Accès sur abonnement"}</div></div>
+          {step===1&&<div style={{display:"flex",background:K.bg,borderRadius:9,padding:3,marginBottom:17,gap:2}}>{[["l","Connexion"],["r","Inscription"]].map(([k,l])=><button key={k} onClick={()=>sw(k)} className="bt" style={{flex:1,padding:"9px",borderRadius:7,border:"none",fontWeight:700,fontSize:14,fontFamily:"'Outfit',sans-serif",cursor:"pointer",background:tab===k?K.c2:"transparent",color:tab===k?K.t1:K.t3,minHeight:38}}>{l}</button>)}</div>}
+          <div style={{marginBottom:15}}><div style={{fontSize:15,fontWeight:800,color:K.t1,marginBottom:3}}>{step===2?"🔐 Code d'activation":tab==="l"?"Bon retour 👋":"Créer un compte"}</div><div style={{fontSize:13,color:K.t3,lineHeight:1.5}}>{step===2?"Code reçu de l'administrateur":tab==="l"?"Accédez à votre formation":"Inscription gratuite · Accès sur abonnement"}</div></div>
           {step===2&&<Inp lb="Mot de passe" rf={rP} type="password" ph="Le même qu'à l'inscription" ok={hk}/>}
           {step===2&&<Inp lb="Code d'activation" rf={rC} ph="ACC-001" mono note="Communiqué par Éco-Campus" ok={hk}/>}
           {step===1&&tab==="r"&&<Inp lb="Nom complet" rf={rN} ph="Votre nom" ok={hk}/>}
@@ -2358,40 +2358,40 @@ function Auth({onL}){
           {step===1&&tab==="r"&&<div style={{marginBottom:13}}>
             <div onClick={()=>sConsent(c=>!c)} style={{display:"flex",alignItems:"flex-start",gap:10,cursor:"pointer",padding:"10px 12px",background:consent?K.emBg:K.c2,border:`1px solid ${consent?K.emBd:K.b0}`,borderRadius:9,transition:"all .15s"}}>
               <div style={{width:18,height:18,borderRadius:5,border:`2px solid ${consent?K.em:K.b1}`,background:consent?K.em:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1,transition:"all .15s"}}>
-                {consent&&<i className="ti ti-check" style={{fontSize:11,color:"#F5EDD8"}}/>}
+                {consent&&<i className="ti ti-check" style={{fontSize:12,color:"#F5EDD8"}}/>}
               </div>
-              <span style={{fontSize:12,color:K.t2,lineHeight:1.55,flex:1}}>
+              <span style={{fontSize:13,color:K.t2,lineHeight:1.55,flex:1}}>
                 J'ai lu et j'accepte la{" "}
-                <button onClick={e=>{e.stopPropagation();sShowPrivacy(true);}} style={{background:"none",border:"none",color:K.em,fontWeight:700,fontSize:12,cursor:"pointer",padding:0,textDecoration:"underline",fontFamily:"'Outfit',sans-serif"}}>
+                <button onClick={e=>{e.stopPropagation();sShowPrivacy(true);}} style={{background:"none",border:"none",color:K.em,fontWeight:700,fontSize:13,cursor:"pointer",padding:0,textDecoration:"underline",fontFamily:"'Outfit',sans-serif"}}>
                   politique de confidentialité
                 </button>
                 {" "}d'Éco-Campus RDC.
               </span>
             </div>
-            {needConsent&&<div style={{marginTop:6,fontSize:11,color:K.wa,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-alert-triangle" style={{fontSize:12}}/>Acceptez la politique avant de continuer avec Google ou Facebook.</div>}
+            {needConsent&&<div style={{marginTop:6,fontSize:12,color:K.wa,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-alert-triangle" style={{fontSize:13}}/>Acceptez la politique avant de continuer avec Google ou Facebook.</div>}
           </div>}
-          {step===1&&tab==="l"&&<div style={{textAlign:"right",marginTop:-5,marginBottom:11}}><button onClick={()=>{const m=rM.current?.value?.trim()||"";if(!m.includes("@"))return sE("Saisissez votre email d'abord");pm.current=m;sS(2);sE("");}} className="bt" style={{background:"none",border:"none",color:K.em,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>J'ai un code →</button></div>}
+          {step===1&&tab==="l"&&<div style={{textAlign:"right",marginTop:-5,marginBottom:11}}><button onClick={()=>{const m=rM.current?.value?.trim()||"";if(!m.includes("@"))return sE("Saisissez votre email d'abord");pm.current=m;sS(2);sE("");}} className="bt" style={{background:"none",border:"none",color:K.em,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>J'ai un code →</button></div>}
           <Pop t="e" m={err}/><Pop t="o" m={ok}/>
           <Btn ch={busy?"…":step===2?"Valider →":tab==="l"?"Se connecter →":"Créer →"} on={go} full sx={{padding:"12px",fontSize:14,minHeight:46}} dis={busy}/>
-          {step===2&&<button onClick={()=>{sS(1);sE("");}} className="bt" style={{width:"100%",marginTop:7,padding:"10px",background:"none",border:`1px solid ${K.b0}`,color:K.t3,borderRadius:8,fontFamily:"'Outfit',sans-serif",fontSize:12,cursor:"pointer",minHeight:40}}>← Retour</button>}
+          {step===2&&<button onClick={()=>{sS(1);sE("");}} className="bt" style={{width:"100%",marginTop:7,padding:"10px",background:"none",border:`1px solid ${K.b0}`,color:K.t3,borderRadius:8,fontFamily:"'Outfit',sans-serif",fontSize:13,cursor:"pointer",minHeight:40}}>← Retour</button>}
           {showPrivacy&&<PrivacyModal onClose={()=>sShowPrivacy(false)}/>}
-          {tab==="r"&&step===1&&<div style={{marginBottom:6,padding:"7px 10px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,fontSize:11,color:K.t3,display:"flex",alignItems:"center",gap:6}}>
-            <i className="ti ti-lock" style={{fontSize:12,color:K.em}}/>Données protégées · Firebase sécurisé · Jamais revendues
+          {tab==="r"&&step===1&&<div style={{marginBottom:6,padding:"7px 10px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,fontSize:12,color:K.t3,display:"flex",alignItems:"center",gap:6}}>
+            <i className="ti ti-lock" style={{fontSize:13,color:K.em}}/>Données protégées · Firebase sécurisé · Jamais revendues
           </div>}
           {step===1&&<>
             <div style={{display:"flex",alignItems:"center",gap:8,margin:"12px 0"}}>
               <div style={{flex:1,height:1,background:K.b0}}/>
-              <span style={{fontSize:11,color:K.t3}}>{tab==="r"?"ou s'inscrire avec":"ou continuer avec"}</span>
+              <span style={{fontSize:12,color:K.t3}}>{tab==="r"?"ou s'inscrire avec":"ou continuer avec"}</span>
               <div style={{flex:1,height:1,background:K.b0}}/>
             </div>
             <div style={{display:"flex",gap:8,marginBottom:8}}>
               <button onClick={()=>socialLogin(googleProvider)} disabled={busy} className="bt"
-                style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:9,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:13,color:K.t1,minHeight:44}}>
+                style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:9,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:K.t1,minHeight:44}}>
                 <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.86l6.08-6.08C34.46 3.05 29.5 1 24 1 14.82 1 7.07 6.48 3.64 14.22l7.08 5.5C12.43 13.72 17.76 9.5 24 9.5z"/><path fill="#4285F4" d="M46.14 24.5c0-1.64-.15-3.22-.42-4.75H24v9h12.46c-.54 2.9-2.18 5.36-4.64 7.01l7.14 5.54C43.27 37.22 46.14 31.28 46.14 24.5z"/><path fill="#FBBC05" d="M10.72 28.28A14.5 14.5 0 0 1 9.5 24c0-1.49.26-2.93.72-4.28l-7.08-5.5A23.93 23.93 0 0 0 0 24c0 3.87.93 7.53 2.57 10.75l8.15-6.47z"/><path fill="#34A853" d="M24 47c5.5 0 10.12-1.82 13.49-4.95l-7.14-5.54C28.57 38.3 26.4 39 24 39c-6.24 0-11.57-4.22-13.28-9.93l-8.15 6.47C6.07 43.48 14.54 47 24 47z"/></svg>
                 Google
               </button>
               <button onClick={()=>socialLogin(facebookProvider)} disabled={busy} className="bt"
-                style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",background:"#1877F2",border:"none",borderRadius:9,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:13,color:"#fff",minHeight:44}}>
+                style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",background:"#1877F2",border:"none",borderRadius:9,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:"#fff",minHeight:44}}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.514c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
                 Facebook
               </button>
@@ -2714,11 +2714,11 @@ function PsychoPage({uid,u}){
   // ── ÉCRAN : CHOIX DU NIVEAU (tuiles) ──
   if(phase==="level")return <div style={{padding:mob?"14px":"24px 0",animation:"fadeIn .35s ease"}}>
     <div style={{textAlign:"center",marginBottom:22}}>
-      <div style={{display:"inline-flex",alignItems:"center",gap:6,background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:99,padding:"4px 13px",marginBottom:12,fontSize:11,fontWeight:700,color:K.in_,letterSpacing:.5}}>
-        <i className="ti ti-brain" style={{fontSize:13}}/>AUTO-ÉVALUATION CHRONOMÉTRÉE
+      <div style={{display:"inline-flex",alignItems:"center",gap:6,background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:99,padding:"4px 13px",marginBottom:12,fontSize:12,fontWeight:700,color:K.in_,letterSpacing:.5}}>
+        <i className="ti ti-brain" style={{fontSize:14}}/>AUTO-ÉVALUATION CHRONOMÉTRÉE
       </div>
       <div style={{fontSize:mob?22:27,fontWeight:900,color:K.t1,marginBottom:6}}>Tests psychotechniques</div>
-      <div style={{fontSize:13,color:K.t2,lineHeight:1.6,maxWidth:460,margin:"0 auto"}}>Choisissez votre niveau · 9 catégories : suites, logique, figures, dominos, calcul, français, anglais, attention… · QCM et réponses libres · 5 à 15 minutes</div>
+      <div style={{fontSize:14,color:K.t2,lineHeight:1.6,maxWidth:460,margin:"0 auto"}}>Choisissez votre niveau · 9 catégories : suites, logique, figures, dominos, calcul, français, anglais, attention… · QCM et réponses libres · 5 à 15 minutes</div>
     </div>
 
     {/* Tuiles de niveau */}
@@ -2728,30 +2728,30 @@ function PsychoPage({uid,u}){
         <div style={{width:40,height:40,borderRadius:11,background:`${l.col}1e`,border:`1px solid ${l.col}44`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px"}}>
           <i className={`ti ti-${l.ico}`} style={{fontSize:19,color:l.col}}/>
         </div>
-        <div style={{fontSize:13,fontWeight:800,color:K.t1,marginBottom:6}}>{l.label}</div>
-        <div style={{fontSize:10,color:K.t3,fontWeight:600}}>{Math.round(l.dur/60)} min · {l.n} questions</div>
+        <div style={{fontSize:14,fontWeight:800,color:K.t1,marginBottom:6}}>{l.label}</div>
+        <div style={{fontSize:11,color:K.t3,fontWeight:600}}>{Math.round(l.dur/60)} min · {l.n} questions</div>
       </div>)}
     </div>
 
     {/* Matières couvertes */}
-    <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:10,paddingLeft:2}}>Matières mélangées à chaque test</div>
+    <div style={{fontSize:13,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:10,paddingLeft:2}}>Matières mélangées à chaque test</div>
     <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:26}}>
-      {PSY_CATS.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:6,background:`${c.col}12`,border:`1px solid ${c.col}30`,borderRadius:99,padding:"6px 12px",fontSize:11,fontWeight:700,color:c.col}}>
-        <i className={`ti ti-${c.ico}`} style={{fontSize:13}}/>{c.label}
+      {PSY_CATS.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:6,background:`${c.col}12`,border:`1px solid ${c.col}30`,borderRadius:99,padding:"6px 12px",fontSize:12,fontWeight:700,color:c.col}}>
+        <i className={`ti ti-${c.ico}`} style={{fontSize:14}}/>{c.label}
       </div>)}
     </div>
 
     {/* Historique personnel */}
     {uid&&<div>
-      <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:10,paddingLeft:2}}>Historique complet ({hist.length})</div>
-      {histLoading?<div style={{fontSize:12,color:K.t3,padding:"10px 2px"}}>Chargement…</div>
-      :hist.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"18px",textAlign:"center",fontSize:12,color:K.t3}}>Aucun test passé pour l'instant. Lancez-vous !</div>
+      <div style={{fontSize:13,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:10,paddingLeft:2}}>Historique complet ({hist.length})</div>
+      {histLoading?<div style={{fontSize:13,color:K.t3,padding:"10px 2px"}}>Chargement…</div>
+      :hist.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"18px",textAlign:"center",fontSize:13,color:K.t3}}>Aucun test passé pour l'instant. Lancez-vous !</div>
       :<div style={{display:"flex",flexDirection:"column",gap:8,maxHeight:hist.length>6?420:"none",overflowY:hist.length>6?"auto":"visible",paddingRight:hist.length>6?4:0}}>
         {hist.map(h=>{const lc=PSY_LEVELS.find(l=>l.id===h.niveau)?.col||K.em;return <div key={h.id} style={{display:"flex",alignItems:"center",gap:10,background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"10px 13px"}}>
           <div style={{width:8,height:8,borderRadius:"50%",background:lc,flexShrink:0}}/>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:13,fontWeight:700,color:K.t1}}>{h.niveauLabel||h.niveau}</div>
-            <div style={{fontSize:10,color:K.t3}}>{psyRelTime(h.ts)}</div>
+            <div style={{fontSize:14,fontWeight:700,color:K.t1}}>{h.niveauLabel||h.niveau}</div>
+            <div style={{fontSize:11,color:K.t3}}>{psyRelTime(h.ts)}</div>
           </div>
           <div style={{fontSize:14,fontWeight:900,color:h.pct>=70?K.em:h.pct>=40?K.wa:K.rd}}>{h.score}/{h.total}</div>
         </div>;})}
@@ -2765,7 +2765,7 @@ function PsychoPage({uid,u}){
     return <div style={{padding:mob?"12px":"22px 0",animation:"fadeIn .3s ease",maxWidth:640,margin:"0 auto"}}>
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
         <div style={{flex:1}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:11,fontWeight:700,color:K.t3}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:12,fontWeight:700,color:K.t3}}>
             <span>Question {idx+1} / {qs.length} · {curLvl?.label}</span>
             <span style={{color:ci.col}}>{ci.label}</span>
           </div>
@@ -2783,12 +2783,12 @@ function PsychoPage({uid,u}){
           {q.libre?<div>
             <input value={typeof ans[idx]==="string"?ans[idx]:""} onChange={e=>{const v=e.target.value;setAns(a=>{const b=[...a];b[idx]=v;return b;});}} placeholder="Tapez votre réponse…"
               style={{width:"100%",background:K.c2,border:`1.5px solid ${ci.col}60`,borderRadius:11,padding:"13px 15px",color:K.t1,fontSize:15,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
-            <div style={{fontSize:11,color:K.t3,marginTop:7}}>✍️ Réponse libre — corrigée automatiquement (majuscules et accents ignorés).</div>
+            <div style={{fontSize:12,color:K.t3,marginTop:7}}>✍️ Réponse libre — corrigée automatiquement (majuscules et accents ignorés).</div>
           </div>
           :q.opts.map((o,oi)=>{
             const sel=ans[idx]===oi;
             return <button key={oi} onClick={()=>pick(oi)} className="bt" style={{display:"flex",alignItems:"center",gap:12,padding:"13px 15px",borderRadius:11,border:`1.5px solid ${sel?ci.col:K.b0}`,background:sel?`${ci.col}18`:K.c2,cursor:"pointer",textAlign:"left",fontFamily:"'Outfit',sans-serif",transition:"all .15s"}}>
-              <div style={{width:26,height:26,borderRadius:"50%",flexShrink:0,border:`1.5px solid ${sel?ci.col:K.b1}`,background:sel?ci.col:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:sel?"#071209":K.t3}}>{String.fromCharCode(65+oi)}</div>
+              <div style={{width:26,height:26,borderRadius:"50%",flexShrink:0,border:`1.5px solid ${sel?ci.col:K.b1}`,background:sel?ci.col:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:sel?"#071209":K.t3}}>{String.fromCharCode(65+oi)}</div>
               <span style={{fontSize:14,fontWeight:600,color:K.t1}}>{o}</span>
             </button>;
           })}
@@ -2796,7 +2796,7 @@ function PsychoPage({uid,u}){
       </div>
 
       <div style={{display:"flex",gap:10}}>
-        <button onClick={prev} disabled={idx===0} className="bt" style={{flex:1,padding:"12px",background:"transparent",border:`1px solid ${K.b0}`,borderRadius:10,color:idx===0?K.t3:K.t2,fontFamily:"'Outfit',sans-serif",fontSize:13,fontWeight:700,cursor:idx===0?"default":"pointer",opacity:idx===0?.4:1,minHeight:46}}>← Précédent</button>
+        <button onClick={prev} disabled={idx===0} className="bt" style={{flex:1,padding:"12px",background:"transparent",border:`1px solid ${K.b0}`,borderRadius:10,color:idx===0?K.t3:K.t2,fontFamily:"'Outfit',sans-serif",fontSize:14,fontWeight:700,cursor:idx===0?"default":"pointer",opacity:idx===0?.4:1,minHeight:46}}>← Précédent</button>
         <div style={{flex:2}}><Btn ch={idx<qs.length-1?"Suivant →":"Terminer le test ✓"} on={next} full sx={{padding:"12px",fontSize:14,minHeight:46}}/></div>
       </div>
     </div>;
@@ -2810,24 +2810,24 @@ function PsychoPage({uid,u}){
       <div style={{display:"flex",justifyContent:"center",marginBottom:14}}><ProgressRing pct={pct} size={104} stroke={9} col={msgCol}/></div>
       <div style={{fontSize:22,fontWeight:900,color:K.t1,marginBottom:4}}>{score} / {qs.length} bonnes réponses</div>
       <div style={{fontSize:14,fontWeight:700,color:msgCol,marginBottom:2}}>{msg}</div>
-      <div style={{fontSize:12,color:K.t3}}>Niveau {curLvl?.label} · {psyFmt((curLvl?.dur||0)-tLeft)} utilisées</div>
+      <div style={{fontSize:13,color:K.t3}}>Niveau {curLvl?.label} · {psyFmt((curLvl?.dur||0)-tLeft)} utilisées</div>
     </div>
 
-    <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:12,paddingLeft:2}}>Correction détaillée</div>
+    <div style={{fontSize:13,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:12,paddingLeft:2}}>Correction détaillée</div>
     <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:18}}>
       {qs.map((q,i)=>{
         const good=q.libre?psyNorm(ans[i])===psyNorm(q.a):ans[i]===q.a;const given=ans[i];const ci=catInfo(q.cat);
         return <div key={q.id} style={{background:K.card,border:`1px solid ${good?K.emBd:K.rdBd}`,borderRadius:12,padding:"14px 16px"}}>
           <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:8}}>
             <div style={{width:20,height:20,borderRadius:"50%",flexShrink:0,background:good?K.em:K.rd,display:"flex",alignItems:"center",justifyContent:"center",marginTop:1}}>
-              <i className={good?"ti ti-check":"ti ti-x"} style={{fontSize:12,color:"#fff"}}/>
+              <i className={good?"ti ti-check":"ti ti-x"} style={{fontSize:13,color:"#fff"}}/>
             </div>
             <div style={{flex:1}}>
-              <div style={{fontSize:9,fontWeight:800,color:ci.col,textTransform:"uppercase",letterSpacing:.5,marginBottom:3}}>{ci.label}</div>
-              <div style={{fontSize:13,fontWeight:700,color:K.t1,lineHeight:1.4}}>{i+1}. {q.q}</div>
+              <div style={{fontSize:10,fontWeight:800,color:ci.col,textTransform:"uppercase",letterSpacing:.5,marginBottom:3}}>{ci.label}</div>
+              <div style={{fontSize:14,fontWeight:700,color:K.t1,lineHeight:1.4}}>{i+1}. {q.q}</div>
             </div>
           </div>
-          <div style={{fontSize:12,color:K.t2,paddingLeft:28,lineHeight:1.6}}>
+          <div style={{fontSize:13,color:K.t2,paddingLeft:28,lineHeight:1.6}}>
             {given==null
               ?<div style={{color:K.wa}}>Sans réponse</div>
               :!good&&<div>Votre réponse : <span style={{color:K.rd,fontWeight:700}}>{q.libre?(given||"—"):q.opts[given]}</span></div>}
@@ -2839,7 +2839,7 @@ function PsychoPage({uid,u}){
     </div>
 
     <div style={{display:"flex",gap:10}}>
-      <button onClick={backToLevels} className="bt" style={{flex:1,padding:"13px",background:"transparent",border:`1px solid ${K.b1}`,borderRadius:11,color:K.t2,fontFamily:"'Outfit',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer",minHeight:46}}>Autres niveaux</button>
+      <button onClick={backToLevels} className="bt" style={{flex:1,padding:"13px",background:"transparent",border:`1px solid ${K.b1}`,borderRadius:11,color:K.t2,fontFamily:"'Outfit',sans-serif",fontSize:14,fontWeight:700,cursor:"pointer",minHeight:46}}>Autres niveaux</button>
       <div style={{flex:1}}><Btn ch="↻ Recommencer" on={()=>start(niv)} full sx={{padding:"13px",fontSize:14,minHeight:46}}/></div>
     </div>
   </div>;
@@ -2869,22 +2869,22 @@ function MessagerieApprenant({uid,uNom}){
     {fChans.length>0&&<div style={{display:"flex",gap:6,marginBottom:10,flexShrink:0,flexWrap:"wrap"}}>
       {[{id:"admin",label:"Éco-Campus"},...fChans].map(c=>{
         const unread=msgs.filter(m=>(c.id==="admin"?!m.formateurUid:m.formateurUid===c.id)&&m.fromRole!=="apprenant"&&!m.luApprenant).length;
-        return <button key={c.id} onClick={()=>sChan(c.id)} className="bt" style={{background:chan===c.id?K.em:K.c2,border:`1px solid ${chan===c.id?K.em:K.b0}`,color:chan===c.id?"#F5EDD8":K.t2,borderRadius:99,padding:"5px 13px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>{c.label}{unread>0&&<span style={{background:K.rd,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,padding:"1px 6px"}}>{unread}</span>}</button>;
+        return <button key={c.id} onClick={()=>sChan(c.id)} className="bt" style={{background:chan===c.id?K.em:K.c2,border:`1px solid ${chan===c.id?K.em:K.b0}`,color:chan===c.id?"#F5EDD8":K.t2,borderRadius:99,padding:"5px 13px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>{c.label}{unread>0&&<span style={{background:K.rd,color:"#fff",borderRadius:99,fontSize:10,fontWeight:800,padding:"1px 6px"}}>{unread}</span>}</button>;
       })}
     </div>}
     <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:9,padding:"4px 2px",marginBottom:12}}>
-      {shown.length===0&&<div style={{textAlign:"center",color:K.t3,fontSize:13,marginTop:40}}>Aucun message dans cette conversation. Écrivez le premier !</div>}
+      {shown.length===0&&<div style={{textAlign:"center",color:K.t3,fontSize:14,marginTop:40}}>Aucun message dans cette conversation. Écrivez le premier !</div>}
       {shown.map(m=>{
         const mine=m.fromRole==="apprenant";
         return <div key={m.id} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"78%"}}>
-          <div style={{background:mine?K.em:K.c2,color:mine?"#F5EDD8":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:13,lineHeight:1.5}}>{m.texte}</div>
-          <div style={{fontSize:9,color:K.t3,marginTop:3,textAlign:mine?"right":"left"}}>{mine?"Vous":m.fromNom||"Éco-Campus"} · {new Date(m.ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
+          <div style={{background:mine?K.em:K.c2,color:mine?"#F5EDD8":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:14,lineHeight:1.5}}>{m.texte}</div>
+          <div style={{fontSize:10,color:K.t3,marginTop:3,textAlign:mine?"right":"left"}}>{mine?"Vous":m.fromNom||"Éco-Campus"} · {new Date(m.ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
         </div>;
       })}
       <div ref={endRef}/>
     </div>
     <div style={{display:"flex",gap:8,flexShrink:0}}>
-      <input value={texte} onChange={e=>sTexte(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Écrivez votre message…" style={{flex:1,background:K.c2,border:`1px solid ${K.b0}`,borderRadius:99,padding:"11px 16px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}/>
+      <input value={texte} onChange={e=>sTexte(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Écrivez votre message…" style={{flex:1,background:K.c2,border:`1px solid ${K.b0}`,borderRadius:99,padding:"11px 16px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
       <button onClick={send} disabled={sending||!texte.trim()} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:"50%",width:42,height:42,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",cursor:"pointer",flexShrink:0,opacity:sending||!texte.trim()?.5:1}}>
         <i className="ti ti-send" style={{fontSize:17}}/>
       </button>
@@ -2899,6 +2899,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
   const rHc=useRef();
   const[hcErr,sHcErr]=useState("");
   const[hcBusy,sHcBusy]=useState(false);
+  const[showMore,sShowMore]=useState(false);
   const submitNavCode=async()=>{
     const c=rHc.current?.value?.trim()||"";
     sHcErr("");if(!c)return sHcErr("Entrez votre code");
@@ -2922,7 +2923,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
   };
   const codeModal=showCode&&<Sheet title="🔑 J'ai un code" onClose={()=>sShowCode(false)}>
     <Inp lb="Code d'activation" rf={rHc} ph="AP-XXXXXXXX ou FO-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
-    {hcErr&&<div style={{color:K.er,fontSize:12,marginBottom:10}}>{hcErr}</div>}
+    {hcErr&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{hcErr}</div>}
     <Btn ch={hcBusy?"…":"Valider →"} on={submitNavCode} full dis={hcBusy}/>
   </Sheet>;
   const NAV_ITEMS=[
@@ -2939,38 +2940,55 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
   ];
   if(mob){
     // ── BOTTOM NAV MOBILE ──
-    const visible=NAV_ITEMS;
     return <>
       {/* Top bar mobile : logo + statut + avatar */}
       <div className="nb" style={{background:`${K.card}f0`,backdropFilter:"blur(16px)",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"space-between",height:50,position:"sticky",top:0,zIndex:99}}>
         <Logo sm/>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           {ok
-            ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"3px 9px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:10,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ Actif":"✓ Actif"}</span></div>
-            :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:11,fontWeight:800,color:"#F5EDD8",cursor:"pointer"}}>Accéder</button>
+            ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"3px 9px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:11,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ Actif":"✓ Actif"}</span></div>
+            :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:12,fontWeight:800,color:"#F5EDD8",cursor:"pointer"}}>Accéder</button>
           }
           <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:28,height:28,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
             <i className="ti ti-key" style={{fontSize:14,color:K.t2}}/>
           </button>
-          <div onClick={onOut} style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:12,cursor:"pointer",flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
+          <div onClick={onOut} style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:13,cursor:"pointer",flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
         </div>
       </div>
-      {/* Bottom nav */}
-      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:99,background:`${K.card}f5`,backdropFilter:"blur(20px)",borderTop:`1px solid ${K.b0}`,display:"flex",alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",paddingBottom:"max(6px,env(safe-area-inset-bottom))"}}>
-        {visible.map(({k,ico,label,live:isLive,badgeCount})=>{
-          const active=vue===k;
-          const hasLive=isLive&&live;
-          return <button key={k} onClick={()=>sV(k)} className="bt" style={{flex:"1 0 auto",minWidth:62,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,padding:"8px 6px 4px",background:"none",border:"none",cursor:"pointer",position:"relative",minHeight:52}}>
-            {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:3,borderRadius:"0 0 3px 3px",background:K.em}}/>}
-            <div style={{position:"relative"}}>
-              <i className={`ti ti-${ico}`} style={{fontSize:20,color:active?K.em:K.t3,display:"block"}}/>
-              {hasLive&&<span style={{position:"absolute",top:-2,right:-4,width:7,height:7,borderRadius:"50%",background:K.rd,border:`1.5px solid ${K.card}`,animation:"blink 1.5s ease-in-out infinite"}}/>}
-              {!!badgeCount&&<span style={{position:"absolute",top:-5,right:-7,minWidth:14,height:14,borderRadius:99,background:K.rd,color:"#fff",fontSize:8,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px",border:`1.5px solid ${K.card}`}}>{badgeCount>9?"9+":badgeCount}</span>}
+      {/* Bottom nav : 4 rubriques principales + « Plus » */}
+      {(()=>{
+        const MAIN=["home","pres","ef","msg"];
+        const main=NAV_ITEMS.filter(n=>MAIN.includes(n.k)).sort((x,y)=>MAIN.indexOf(x.k)-MAIN.indexOf(y.k));
+        const more=NAV_ITEMS.filter(n=>!MAIN.includes(n.k));
+        const moreActive=more.some(n=>n.k===vue);
+        const moreLive=live&&more.some(n=>n.live);
+        const Item=({ico,label,active,onClick,dot,badge})=><button onClick={onClick} className="bt" style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,padding:"7px 2px 5px",background:"none",border:"none",cursor:"pointer",position:"relative",minHeight:56,fontFamily:"'Outfit',sans-serif"}}>
+          <div style={{position:"relative",width:52,height:30,borderRadius:99,display:"flex",alignItems:"center",justifyContent:"center",background:active?K.emBg:"transparent",transition:"background .2s"}}>
+            <i className={`ti ti-${ico}`} style={{fontSize:22,color:active?K.em:K.t2,display:"block"}}/>
+            {dot&&<span style={{position:"absolute",top:2,right:12,width:8,height:8,borderRadius:"50%",background:K.rd,border:`1.5px solid ${K.card}`,animation:"blink 1.5s ease-in-out infinite"}}/>}
+            {!!badge&&<span style={{position:"absolute",top:-3,right:8,minWidth:17,height:17,borderRadius:99,background:K.rd,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px",border:`1.5px solid ${K.card}`}}>{badge>9?"9+":badge}</span>}
+          </div>
+          <span style={{fontSize:12,fontWeight:active?800:600,color:active?K.em:K.t2,whiteSpace:"nowrap"}}>{label}</span>
+        </button>;
+        return <>
+          <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:99,background:`${K.card}f7`,backdropFilter:"blur(20px)",borderTop:`1px solid ${K.b0}`,boxShadow:"0 -6px 20px rgba(0,0,0,.06)",display:"flex",alignItems:"stretch",paddingBottom:"max(4px,env(safe-area-inset-bottom))"}}>
+            {main.map(n=><Item key={n.k} ico={n.ico} label={n.label} active={vue===n.k&&!showMore} badge={n.badgeCount} dot={n.live&&live} onClick={()=>{sShowMore(false);sV(n.k);}}/>)}
+            <Item ico={showMore?"x":"layout-grid"} label="Plus" active={showMore||moreActive} dot={moreLive} onClick={()=>sShowMore(v=>!v)}/>
+          </div>
+          {showMore&&<div onClick={()=>sShowMore(false)} style={{position:"fixed",inset:0,zIndex:98,background:"rgba(0,0,0,.35)",backdropFilter:"blur(2px)",animation:"fadeIn .2s ease"}}>
+            <div onClick={e=>e.stopPropagation()} style={{position:"absolute",left:10,right:10,bottom:"calc(72px + env(safe-area-inset-bottom))",background:K.card,border:`1px solid ${K.b0}`,borderRadius:22,padding:"16px 14px 14px",boxShadow:"0 18px 40px rgba(0,0,0,.25)",animation:"slideUp .25s cubic-bezier(.22,1,.36,1)"}}>
+              <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:12,paddingLeft:4}}>Toutes les rubriques</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+                {more.map(n=>{const active=vue===n.k;const c={stages:"#0D7A6B",videos:"#C2410C",psycho:"#7C3AED",services:"#1D4ED8",prog:"#D97706",res:"#B45309"}[n.k]||K.em;return <button key={n.k} onClick={()=>{sShowMore(false);sV(n.k);}} className="bt" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:7,padding:"14px 6px 12px",background:active?K.emBg:K.c2,border:`1px solid ${active?K.emBd:K.b0}`,borderRadius:16,cursor:"pointer",fontFamily:"'Outfit',sans-serif",position:"relative"}}>
+                  <div style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${c},${c}B0)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 6px 14px ${c}35`}}><i className={`ti ti-${n.ico}`} style={{fontSize:21,color:"#fff"}}/></div>
+                  <span style={{fontSize:13,fontWeight:700,color:active?K.em:K.t1}}>{n.label}</span>
+                  {n.live&&live&&<span style={{position:"absolute",top:8,right:8,fontSize:10,fontWeight:800,color:"#fff",background:K.rd,borderRadius:99,padding:"1px 6px"}}>LIVE</span>}
+                </button>;})}
+              </div>
             </div>
-            <span style={{fontSize:9,fontWeight:active?800:600,color:active?K.em:K.t3,letterSpacing:.2}}>{label}</span>
-          </button>;
-        })}
-      </div>
+          </div>}
+        </>;
+      })()}
       {codeModal}
     </>;
   }
@@ -2982,7 +3000,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
       {NAV_ITEMS.map(({k,ico,label,live:isLive,badgeCount})=>{
         const active=vue===k;
         const hasLive=isLive&&live;
-        return <button key={k} onClick={()=>sV(k)} className="bt" style={{display:"flex",alignItems:"center",gap:6,padding:"6px 11px",borderRadius:8,border:"none",cursor:"pointer",background:active?K.c2:"transparent",color:active?K.t1:K.t3,fontWeight:active?700:600,fontSize:12,whiteSpace:"nowrap",minHeight:34,fontFamily:"'Outfit',sans-serif",position:"relative",transition:"background .15s,color .15s"}}>
+        return <button key={k} onClick={()=>sV(k)} className="bt" style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",borderRadius:8,border:"none",cursor:"pointer",background:active?K.c2:"transparent",color:active?K.t1:K.t3,fontWeight:active?700:600,fontSize:13,whiteSpace:"nowrap",minHeight:34,fontFamily:"'Outfit',sans-serif",position:"relative",transition:"background .15s,color .15s"}}>
           <div style={{position:"relative"}}>
             <i className={`ti ti-${ico}`} style={{fontSize:15,color:active?K.em:K.t3}}/>
             {hasLive&&<span style={{position:"absolute",top:-3,right:-4,width:7,height:7,borderRadius:"50%",background:K.rd,border:`1.5px solid ${K.card}`,animation:"blink 1.5s ease-in-out infinite"}}/>}
@@ -2995,16 +3013,16 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     </div>
     <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
       {ok
-        ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 11px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:11,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ À vie":"✓ Actif"}</span></div>
-        :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:800,color:"#F5EDD8",cursor:"pointer"}}>Obtenir l'accès</button>
+        ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 11px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:12,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ À vie":"✓ Actif"}</span></div>
+        :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:800,color:"#F5EDD8",cursor:"pointer"}}>Obtenir l'accès</button>
       }
       <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:32,height:32,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
         <i className="ti ti-key" style={{fontSize:15,color:K.t2}}/>
       </button>
       <div onClick={onOut} style={{display:"flex",alignItems:"center",gap:7,padding:"4px 9px 4px 5px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:99,cursor:"pointer"}} className="bt">
-        <div style={{width:26,height:26,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:11}}>{(u.nom||"U")[0].toUpperCase()}</div>
-        <span style={{color:K.t2,fontSize:12,fontWeight:600}}>{(u.nom||"").split(" ")[0]}</span>
-        <i className="ti ti-chevron-down" style={{fontSize:11,color:K.t3}}/>
+        <div style={{width:26,height:26,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:12}}>{(u.nom||"U")[0].toUpperCase()}</div>
+        <span style={{color:K.t2,fontSize:13,fontWeight:600}}>{(u.nom||"").split(" ")[0]}</span>
+        <i className="ti ti-chevron-down" style={{fontSize:12,color:K.t3}}/>
       </div>
     </div>
     {codeModal}
@@ -3068,106 +3086,125 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
       return <div key={a.id} style={{background:typeInfo.bg,border:`1px solid ${typeInfo.bd}`,borderRadius:12,padding:"12px 14px",marginBottom:10,display:"flex",alignItems:"flex-start",gap:10}}>
         <i className={`ti ti-${typeInfo.ico}`} style={{fontSize:16,color:typeInfo.col,marginTop:1,flexShrink:0}}/>
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:2}}>{a.titre}</div>
-          <div style={{fontSize:12,color:K.t2,lineHeight:1.5}}>{a.contenu}</div>
+          <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:2}}>{a.titre}</div>
+          <div style={{fontSize:13,color:K.t2,lineHeight:1.5}}>{a.contenu}</div>
         </div>
         <button onClick={()=>sDismissed(d=>[...d,a.id])} className="bt" style={{background:"none",border:"none",color:K.t3,cursor:"pointer",fontSize:16,lineHeight:1,padding:2,flexShrink:0}}>×</button>
       </div>;
     })}
     {/* Alertes */}
-    {!ok&&<div style={{background:u.abonnement==="expiré"?K.erBg:K.waBg,border:`1px solid ${u.abonnement==="expiré"?K.erBd:K.waBd}`,borderRadius:12,padding:"11px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:700,fontSize:13,color:u.abonnement==="expiré"?K.er:K.wa,marginBottom:2}}>{u.abonnement==="expiré"?"Accès expiré":"Cours verrouillés"}</div><div style={{fontSize:12,color:K.t3}}>{u.abonnement==="demande"?"Demande en cours — code sous 24h.":u.abonnement==="expiré"?"Contactez Éco-Campus.":"Effectuez le paiement."}</div></div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{isSocial&&<Btn ch="J'ai un code" on={()=>sShowCode(true)} v="s" sm/>}{u.abonnement!=="demande"&&<Btn ch="Obtenir l'accès" on={onSub} v="w" sm/>}</div></div>}
-    {ok&&jr<=30&&jr>0&&u.dureeId!=="v"&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"9px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><div style={{fontSize:13,color:K.wa}}>⏰ Expire dans <b>{jr}j</b></div><Btn ch="Renouveler" on={onSub} v="w" sm/></div>}
+    {!ok&&<div style={{background:u.abonnement==="expiré"?K.erBg:K.waBg,border:`1px solid ${u.abonnement==="expiré"?K.erBd:K.waBd}`,borderRadius:12,padding:"11px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:700,fontSize:14,color:u.abonnement==="expiré"?K.er:K.wa,marginBottom:2}}>{u.abonnement==="expiré"?"Accès expiré":"Cours verrouillés"}</div><div style={{fontSize:13,color:K.t3}}>{u.abonnement==="demande"?"Demande en cours — code sous 24h.":u.abonnement==="expiré"?"Contactez Éco-Campus.":"Effectuez le paiement."}</div></div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{isSocial&&<Btn ch="J'ai un code" on={()=>sShowCode(true)} v="s" sm/>}{u.abonnement!=="demande"&&<Btn ch="Obtenir l'accès" on={onSub} v="w" sm/>}</div></div>}
+    {ok&&jr<=30&&jr>0&&u.dureeId!=="v"&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"9px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><div style={{fontSize:14,color:K.wa}}>⏰ Expire dans <b>{jr}j</b></div><Btn ch="Renouveler" on={onSub} v="w" sm/></div>}
 
     {/* Bannière principale */}
-    <div style={{background:`linear-gradient(135deg,${K.em}18,${K.in_}10)`,border:`1px solid ${K.emBd}`,borderRadius:16,padding:mob?"18px 16px":"22px 24px",marginBottom:16,position:"relative",overflow:"hidden"}}>
-      <div style={{position:"absolute",top:-20,right:-20,width:100,height:100,borderRadius:"50%",background:`${K.em}10`}}/>
-      <div style={{position:"absolute",bottom:-30,right:30,width:70,height:70,borderRadius:"50%",background:`${K.in_}0D`}}/>
-      <div style={{fontSize:12,color:K.em,fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-star" style={{fontSize:13}}/> Tableau de bord</div>
-      <div style={{fontSize:mob?19:24,fontWeight:900,color:K.t1,marginBottom:4,letterSpacing:"-.3px",lineHeight:1.2}}>Bonjour, {(u.nom||"").split(" ")[0]} 👋</div>
-      <div style={{fontSize:13,color:K.t2,marginBottom:16,lineHeight:1.5}}>{!ok?"Abonnez-vous pour accéder à tous les cours.":nd===0?"Commencez votre parcours de formation.":`${nd}/${mods.length} modules complétés — continuez !`}</div>
-      <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-        <div style={{display:"flex",gap:8,flex:1,flexWrap:"wrap"}}>
-          {[[`${nd}/${mods.length}`,"Modules",K.em],[`${gp}%`,"Progression",K.in_],[`${mats.length}`,"Matières",K.wa]].map(([v,l,c])=><div key={l} className="card-enter" style={{background:isLight?"rgba(255,255,255,.7)":K.b0,backdropFilter:"blur(8px)",borderRadius:10,padding:"8px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
+    <div className="card-enter" style={{background:`linear-gradient(135deg,${K.emD} 0%,${K.em} 62%,${K.in_} 100%)`,borderRadius:24,padding:mob?"22px 18px 20px":"30px 32px",marginBottom:20,position:"relative",overflow:"hidden",color:"#fff",boxShadow:`0 16px 36px ${K.em}38`}}>
+      <div style={{position:"absolute",top:-60,right:-40,width:220,height:220,borderRadius:"50%",background:"rgba(255,255,255,.07)"}}/>
+      <div style={{position:"absolute",bottom:-80,right:mob?-30:120,width:180,height:180,borderRadius:"50%",background:"rgba(255,255,255,.05)"}}/>
+      {mob&&<div style={{position:"absolute",top:18,right:18,opacity:.13,fontSize:84,lineHeight:1,pointerEvents:"none"}}><i className="ti ti-school"/></div>}
+      <div style={{position:"relative",display:"flex",gap:18,alignItems:"center",justifyContent:"space-between",flexWrap:mob?"wrap":"nowrap"}}>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:12,fontWeight:700,letterSpacing:.4,textTransform:"uppercase",background:"rgba(255,255,255,.14)",border:"1px solid rgba(255,255,255,.22)",borderRadius:99,padding:"5px 11px",marginBottom:12}}><i className="ti ti-sparkles" style={{fontSize:14}}/>Tableau de bord</div>
+          <div style={{fontFamily:"'Fraunces',serif",fontSize:mob?27:34,fontWeight:800,marginBottom:6,letterSpacing:"-.4px",lineHeight:1.15}}>Bonjour, {(u.nom||"").split(" ")[0]} 👋</div>
+          <div style={{fontSize:mob?15:16,color:"rgba(255,255,255,.86)",marginBottom:18,lineHeight:1.55,maxWidth:520}}>{!ok?"Abonnez-vous pour accéder à tous les cours.":nd===0?"Commencez votre parcours de formation dès aujourd'hui.":`${nd} module${nd>1?"s":""} sur ${mods.length} complété${nd>1?"s":""}. Continuez sur votre lancée !`}</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:18}}>
+            {[[`${nd}/${mods.length}`,"Modules","book-2"],[`${gp}%`,"Progression","trending-up"],[`${mats.length}`,"Matières","category"]].map(([v,l,ic])=><div key={l} style={{background:"rgba(255,255,255,.13)",backdropFilter:"blur(8px)",borderRadius:14,padding:"10px 14px",border:"1px solid rgba(255,255,255,.2)",minWidth:mob?0:96,flex:mob?1:"0 0 auto"}}>
+              <div style={{fontSize:mob?20:22,fontWeight:900,lineHeight:1.1}}>{v}</div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,.78)",marginTop:3,display:"flex",alignItems:"center",gap:4}}><i className={`ti ti-${ic}`} style={{fontSize:13}}/>{l}</div>
+            </div>)}
+          </div>
+          <button onClick={ok?()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'}):onSub} className="bt" style={{background:"#fff",color:K.emD,border:"none",borderRadius:12,padding:"12px 20px",fontSize:15,fontWeight:800,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:8,boxShadow:"0 6px 18px rgba(0,0,0,.18)"}}>
+            {ok?(nd===0?"Commencer":"Continuer mes cours"):"Obtenir l'accès"}<i className="ti ti-arrow-right" style={{fontSize:17}}/>
+          </button>
         </div>
-        <div style={{flexShrink:0}}><ProgressRing pct={gp} size={76} stroke={6} col={K.em}/></div>
+        {!mob&&<div style={{flexShrink:0,background:"rgba(255,255,255,.1)",borderRadius:"50%",padding:10,border:"1px solid rgba(255,255,255,.18)"}}><ProgressRing pct={gp} size={124} stroke={10} col="#fff" track="rgba(255,255,255,.18)" txt="#fff"/></div>}
       </div>
     </div>
-    {/* Badges */}
-    <BadgesPanel nd={nd} total={mods.length} sc={sc}/>
 
     {/* Bannière live */}
-    {live.on&&<div onClick={onVid} className="hv" style={{background:`linear-gradient(135deg,${K.rdBg},${K.c2})`,border:`1px solid ${K.rdBd}`,borderRadius:13,padding:"13px 16px",marginBottom:14,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}><div style={{width:42,height:42,borderRadius:12,background:K.rdBg,border:`1px solid ${K.rdBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-broadcast" style={{fontSize:20,color:K.rd,animation:"blink 1.5s ease-in-out infinite"}}/></div><div style={{flex:1}}><div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:1}}>{live.titre||"Cours en direct"}</div><div style={{fontSize:11,color:K.t3}}>En cours maintenant · Rejoindre</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
+    {live.on&&<div onClick={onVid} className="hv" style={{background:`linear-gradient(135deg,${K.rdBg},${K.c2})`,border:`1px solid ${K.rdBd}`,borderRadius:13,padding:"13px 16px",marginBottom:14,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}><div style={{width:42,height:42,borderRadius:12,background:K.rdBg,border:`1px solid ${K.rdBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-broadcast" style={{fontSize:20,color:K.rd,animation:"blink 1.5s ease-in-out infinite"}}/></div><div style={{flex:1}}><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:1}}>{live.titre||"Cours en direct"}</div><div style={{fontSize:12,color:K.t3}}>En cours maintenant · Rejoindre</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
 
     {/* Cartes fonctionnalités */}
-    <div style={{marginBottom:6}}><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:12}}>Accès rapide</div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:16}}>
-      {features.map((f,i)=>{const cp=getCardPalette(tid,i);return <div key={f.key} onClick={f.action} className="hv" style={{background:cp.bg,border:`1px solid ${cp.bd}`,borderRadius:14,padding:"16px 14px",cursor:"pointer",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:-10,right:-10,width:50,height:50,borderRadius:"50%",background:`${cp.ac}15`}}/>
-        <div style={{width:38,height:38,borderRadius:11,background:isLight?"rgba(255,255,255,.8)":K.b1,border:`1px solid ${cp.bd}`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:10}}><i className={"ti ti-"+f.ico} style={{fontSize:19,color:cp.ac}}/></div>
-        <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3}}>{f.label}</div>
-        <div style={{fontSize:11,color:K.t2,lineHeight:1.4,marginBottom:10}}>{f.desc}</div>
-        <div style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,fontWeight:700,color:cp.ac}}><span>Accéder</span><i className="ti ti-arrow-right" style={{fontSize:12}}/></div>
-      </div>;})}
-    </div></div>
+    <div style={{marginBottom:22}}>
+      <div className="h-sec" style={{color:K.t1,marginBottom:12}}>Accès rapide</div>
+      <div className="gq">
+        {features.map((f,i)=>{const[c1,c2]=TILE_COLORS[f.key]||TILE_COLORS.modules;return <div key={f.key} onClick={f.action} className="tile" style={{padding:mob?"16px 14px":"20px 18px",minHeight:mob?150:170,display:"flex",flexDirection:"column",animation:`slideUp .4s cubic-bezier(.22,1,.36,1) ${i*50}ms both`}}>
+          <div style={{position:"absolute",top:-34,right:-34,width:110,height:110,borderRadius:"50%",background:`radial-gradient(circle,${c1}22,transparent 70%)`}}/>
+          <div style={{width:mob?46:52,height:mob?46:52,borderRadius:15,background:`linear-gradient(135deg,${c1},${c2})`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14,boxShadow:`0 8px 18px ${c1}45`,position:"relative"}}><i className={"ti ti-"+f.ico} style={{fontSize:mob?23:26,color:"#fff"}}/></div>
+          <div style={{fontWeight:800,fontSize:mob?16:17,color:K.t1,marginBottom:4,letterSpacing:"-.2px"}}>{f.label}</div>
+          <div style={{fontSize:13,color:K.t2,lineHeight:1.45,flex:1}}>{f.desc}</div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:12}}>
+            <span style={{fontSize:13,fontWeight:700,color:c1}}>Accéder</span>
+            <span style={{width:30,height:30,borderRadius:"50%",background:`${c1}16`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className="ti ti-arrow-right" style={{fontSize:16,color:c1}}/></span>
+          </div>
+        </div>;})}
+      </div>
+    </div>
 
     {/* Modules */}
     <div id="modules-section">
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:7}}>
-        <div style={{fontWeight:800,fontSize:14,color:K.t1}}>Modules <span style={{color:K.t3,fontWeight:400,fontSize:13}}>({fil.length})</span></div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:7}}>
+        <div className="h-sec" style={{color:K.t1}}>Mes modules <span style={{color:K.t3,fontWeight:500,fontSize:15,fontFamily:"'Outfit',sans-serif"}}>({fil.length})</span></div>
         {!ok&&<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="🔒 Abonnement requis"/>}
       </div>
       <div style={{position:"relative",marginBottom:11}}>
         <i className="ti ti-search" style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",fontSize:14,color:K.t3}}/>
         <input value={modQ} onChange={e=>sModQ(e.target.value)} placeholder="Rechercher un module…"
-          style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"9px 12px 9px 32px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+          style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"9px 12px 9px 32px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
         {modQ&&<button onClick={()=>sModQ("")} style={{position:"absolute",right:9,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:K.t3,cursor:"pointer",fontSize:15,padding:2}}>×</button>}
       </div>
-      {mats.length>1&&<div className="tn" style={{gap:6,marginBottom:11,paddingBottom:3}}>{["Toutes",...mats].map(m=><button key={m} onClick={()=>sF(m)} className="bt" style={{background:fi===m?K.c2:"transparent",border:`1px solid ${fi===m?K.b1:K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:11,fontWeight:600,color:fi===m?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{m}</button>)}</div>}
-      {fil.length===0&&modQ&&<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"20px",textAlign:"center",fontSize:13,color:K.t3,marginBottom:11}}>Aucun module ne correspond à « {modQ} ».</div>}
+      {mats.length>1&&<div className="tn" style={{gap:6,marginBottom:11,paddingBottom:3}}>{["Toutes",...mats].map(m=><button key={m} onClick={()=>sF(m)} className="bt" style={{background:fi===m?K.c2:"transparent",border:`1px solid ${fi===m?K.b1:K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:12,fontWeight:600,color:fi===m?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{m}</button>)}</div>}
+      {fil.length===0&&modQ&&<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"20px",textAlign:"center",fontSize:14,color:K.t3,marginBottom:11}}>Aucun module ne correspond à « {modQ} ».</div>}
       <div className="gm">
         {fil.map((m,i)=>{
           const f=pr[m.id]==="done",s=sc[m.id],lk=!ok;
-          const cp=getCardPalette(tid,i);
-          const hasPdf=m.slideUrl&&m.slideUrl.length>0;
-          return <div key={m.id} className="hv"
-            style={{background:f?cp.bg:K.card,border:`1px solid ${f?cp.bd:K.b0}`,borderRadius:13,padding:"13px",cursor:"pointer",position:"relative",overflow:"hidden",animation:`slideUp .4s cubic-bezier(.22,1,.36,1) ${i*40}ms both`,opacity:lk?.65:1,transition:"transform .2s ease,box-shadow .2s ease"}}>
-            <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:f?cp.ac:"transparent",borderRadius:"13px 13px 0 0"}}/>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-              <div style={{width:32,height:32,borderRadius:9,background:f?`${cp.ac}20`:isLight?"rgba(0,0,0,.05)":"rgba(255,255,255,.06)",border:`1px solid ${f?cp.bd:K.b0}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                {lk?<i className="ti ti-lock" style={{fontSize:14,color:K.t3}}/>:icoEl(m.ico,f?cp.ac:m.col,15)}
+          const c=lk?K.t3:(m.col||K.em);
+          return <div key={m.id} onClick={()=>onOpen(m)} className="tile" style={{display:"flex",flexDirection:"column",animation:`slideUp .4s cubic-bezier(.22,1,.36,1) ${i*40}ms both`,opacity:lk?.72:1}}>
+            <div style={{height:6,background:lk?K.b1:`linear-gradient(90deg,${c},${c}88)`}}/>
+            <div style={{padding:"14px 14px 15px",display:"flex",flexDirection:"column",flex:1}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:11}}>
+                <div style={{width:42,height:42,borderRadius:13,background:lk?K.c2:`${c}16`,border:`1px solid ${lk?K.b0:c+"30"}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  {lk?<i className="ti ti-lock" style={{fontSize:18,color:K.t3}}/>:icoEl(m.ico,c,20)}
+                </div>
+                {f&&s?<Tg c={s.pct>=60?K.em:K.er} bg={s.pct>=60?K.emBg:K.erBg} bd={s.pct>=60?K.emBd:K.erBd} ch={`${s.pct}%`}/>:f?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="✓"/>:null}
               </div>
-              {f&&s&&<Tg c={s.pct>=60?K.em:K.er} bg={s.pct>=60?K.emBg:K.erBg} bd={s.pct>=60?K.emBd:K.erBd} ch={`${s.pct}%`}/>}
+              {m.mat&&<div style={{fontSize:11,color:c,marginBottom:4,fontWeight:800,textTransform:"uppercase",letterSpacing:.5}}>{m.mat}</div>}
+              <div style={{fontWeight:800,fontSize:15,color:lk?K.t2:K.t1,marginBottom:6,lineHeight:1.3,flex:1}}>{m.titre}</div>
+              <div style={{fontSize:12,color:K.t3,marginBottom:10,display:"flex",alignItems:"center",gap:10}}>
+                <span style={{display:"inline-flex",alignItems:"center",gap:3}}><i className="ti ti-help-circle" style={{fontSize:13}}/>{m.q?.length||0} question{(m.q?.length||0)>1?"s":""}</span>
+                {vids.some(v=>v.mid===m.id)&&<span style={{display:"inline-flex",alignItems:"center",gap:3}}><i className="ti ti-video" style={{fontSize:13}}/>Vidéo</span>}
+              </div>
+              <Bar p={lk?0:f?100:0} col={c} h={5}/>
+              <div style={{marginTop:10,fontSize:13,fontWeight:700,color:lk?K.t3:c,display:"flex",alignItems:"center",gap:4}}>
+                {lk?<><i className="ti ti-lock" style={{fontSize:13}}/><span>Verrouillé</span></>:f?<><i className="ti ti-circle-check" style={{fontSize:14}}/><span>Complété</span></>:<><span>Commencer</span><i className="ti ti-arrow-right" style={{fontSize:14}}/></>}
+              </div>
+              {m.slideUrl&&!lk&&<button onClick={e=>{e.stopPropagation();setPdfMod(m);}} className="bt"
+                style={{marginTop:10,width:"100%",background:"#F59E0B14",border:"1px solid #F59E0B30",borderRadius:9,padding:"7px 8px",color:"#D97706",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+                <i className="ti ti-file-text" style={{fontSize:13}}/>Slides PDF
+              </button>}
             </div>
-            <div style={{fontWeight:700,fontSize:12,color:lk?K.t3:K.t1,marginBottom:2,lineHeight:1.3}}>{m.titre}</div>
-            {m.mat&&<div style={{fontSize:10,color:f?cp.ac:K.in_,marginBottom:5,fontWeight:600}}>{m.mat}</div>}
-            <div style={{fontSize:10,color:K.t3,marginBottom:8}}>{m.q?.length||0}q{vids.some(v=>v.mid===m.id)?" · 🎬":""}</div>
-            <Bar p={lk?0:f?100:0} col={f?cp.ac:m.col} h={3}/>
-            {!lk&&!f&&<div style={{marginTop:8,fontSize:11,fontWeight:600,color:cp.ac,display:"flex",alignItems:"center",gap:3}}><span>Commencer</span><i className="ti ti-arrow-right" style={{fontSize:11}}/></div>}
-            {f&&<div style={{marginTop:8,fontSize:11,fontWeight:600,color:cp.ac,display:"flex",alignItems:"center",gap:3}}><i className="ti ti-check" style={{fontSize:11}}/><span>Complété</span></div>}
-            {m.slideUrl&&!lk&&<button onClick={e=>{e.stopPropagation();setPdfMod(m);}} className="bt"
-              style={{marginTop:6,width:"100%",background:"#F59E0B14",border:"1px solid #F59E0B30",borderRadius:7,padding:"5px 8px",color:"#F59E0B",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-              <i className="ti ti-file-text" style={{fontSize:11}}/>Slides PDF
-            </button>}
           </div>;
         })}
       </div>
     </div>
+
+    {/* Badges */}
+    <BadgesPanel nd={nd} total={mods.length} sc={sc}/>
     {pdfMod&&<PdfV url={pdfMod.slideUrl} name={pdfMod.titre} onClose={()=>setPdfMod(null)} modId={pdfMod.id} uid={uid} showRating={true}/>}
 
     {/* Récents */}
-    {recentMods.length>0&&<div style={{marginTop:18}}>
-      <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10}}>Récemment complétés</div>
+    {recentMods.length>0&&<div style={{marginTop:24}}>
+      <div className="h-sec" style={{color:K.t1,marginBottom:12}}>Récemment complétés</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {recentMods.map((m,i)=>{const s=sc[m.id];const cp=getCardPalette(tid,i);return <div key={m.id} onClick={()=>onOpen(m)} className="hv" style={{background:cp.bg,border:`1px solid ${cp.bd}`,borderRadius:12,padding:"11px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
+        {recentMods.map((m,i)=>{const s=sc[m.id];const cp=getCardPalette(tid,i);return <div key={m.id} onClick={()=>onOpen(m)} className="tile" style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:13,borderLeft:`4px solid ${cp.ac}`}}>
           <div style={{width:36,height:36,borderRadius:10,background:isLight?"rgba(255,255,255,.8)":K.b1,border:`1px solid ${cp.bd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{icoEl(m.ico,cp.ac,16)}</div>
-          <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:13,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div><div style={{fontSize:11,color:K.t2,marginTop:1}}>{m.mat||"SYSCOHADA"}</div></div>
-          {s&&<div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:800,fontSize:15,color:s.pct>=60?K.em:K.er}}>{s.pct}%</div><div style={{fontSize:10,color:K.t3}}>Score</div></div>}
+          <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:14,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div><div style={{fontSize:12,color:K.t2,marginTop:1}}>{m.mat||"SYSCOHADA"}</div></div>
+          {s&&<div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:800,fontSize:15,color:s.pct>=60?K.em:K.er}}>{s.pct}%</div><div style={{fontSize:11,color:K.t3}}>Score</div></div>}
         </div>;})}
       </div>
     </div>}
     {showCode&&<Sheet title="🔐 Code d'activation" onClose={()=>sShowCode(false)}>
       <Inp lb="Code d'activation" rf={rHc} ph="AP-XXXXXXXX ou FO-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
-      {hcErr&&<div style={{color:K.er,fontSize:12,marginBottom:10}}>{hcErr}</div>}
+      {hcErr&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{hcErr}</div>}
       <Btn ch={hcBusy?"…":"Valider →"} on={submitHomeCode} full dis={hcBusy}/>
     </Sheet>}
   </div>;
@@ -3177,10 +3214,10 @@ function SubM({onClose,uid,u}){
   const K=useK();const a=u.abonnement==="demande";
   const ask=async()=>{await saveUserData(uid,{abonnement:"demande",demandeDate:new Date().toLocaleDateString("fr-FR")});onClose();};
   return <Sheet title="Obtenir l'accès" onClose={onClose}>
-    {a?<div style={{textAlign:"center",padding:"5px 0"}}><div style={{fontSize:40,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>⏳</div><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:5}}>Demande en cours</div><div style={{color:K.t3,fontSize:13,lineHeight:1.7,marginBottom:12}}>Demande du <b style={{color:K.t2}}>{u.demandeDate}</b>. Code sous 24h.</div><div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:9,padding:"8px 11px",marginBottom:12,fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:K.t2,lineHeight:1.9}}>📱 +243 XXX XXX XXX<br/>✉️ contact@accessplusconsulting.com</div><Btn ch="Fermer" on={onClose} v="g" full sx={{minHeight:44}}/></div>:<>
-      <div style={{color:K.t3,fontSize:13,marginBottom:12}}>Paiement unique · Durée définie après validation.</div>
-      <div style={{background:K.bg,border:`1px solid ${K.emBd}`,borderRadius:11,padding:"12px 14px",marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{fontWeight:900,fontSize:18,color:K.t1}}>50 USD</div><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Paiement unique"/></div>{["Tous les modules actifs","QCM + Exercices + PDF","Vidéos premium + Direct","Accès selon durée validée"].map(f=><div key={f} style={{display:"flex",gap:7,fontSize:13,color:K.t2,marginBottom:3}}><span style={{color:K.em}}>✓</span>{f}</div>)}</div>
-      <div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:9,padding:"8px 11px",marginBottom:12,fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:K.t2,lineHeight:1.9}}>💳 M-Pesa · Airtel Money · Orange Money<br/>✉️ contact@accessplusconsulting.com</div>
+    {a?<div style={{textAlign:"center",padding:"5px 0"}}><div style={{fontSize:40,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>⏳</div><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:5}}>Demande en cours</div><div style={{color:K.t3,fontSize:14,lineHeight:1.7,marginBottom:12}}>Demande du <b style={{color:K.t2}}>{u.demandeDate}</b>. Code sous 24h.</div><div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:9,padding:"8px 11px",marginBottom:12,fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:K.t2,lineHeight:1.9}}>📱 +243 XXX XXX XXX<br/>✉️ contact@accessplusconsulting.com</div><Btn ch="Fermer" on={onClose} v="g" full sx={{minHeight:44}}/></div>:<>
+      <div style={{color:K.t3,fontSize:14,marginBottom:12}}>Paiement unique · Durée définie après validation.</div>
+      <div style={{background:K.bg,border:`1px solid ${K.emBd}`,borderRadius:11,padding:"12px 14px",marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{fontWeight:900,fontSize:18,color:K.t1}}>50 USD</div><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Paiement unique"/></div>{["Tous les modules actifs","QCM + Exercices + PDF","Vidéos premium + Direct","Accès selon durée validée"].map(f=><div key={f} style={{display:"flex",gap:7,fontSize:14,color:K.t2,marginBottom:3}}><span style={{color:K.em}}>✓</span>{f}</div>)}</div>
+      <div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:9,padding:"8px 11px",marginBottom:12,fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:K.t2,lineHeight:1.9}}>💳 M-Pesa · Airtel Money · Orange Money<br/>✉️ contact@accessplusconsulting.com</div>
       <Btn ch="J'ai payé — Soumettre" on={ask} full sx={{padding:"12px",fontSize:14,minHeight:46}}/>
     </>}
   </Sheet>;
@@ -3194,41 +3231,41 @@ function MV({mod,sc,ok,onQ,onOpenQ,onMarkDone,doneNoEval,openAnswer,onBack,onSub
   return <div style={{maxWidth:640,margin:"0 auto",animation:"up .25s ease"}}>
     {pl&&<Player url={pl.url} titre={pl.titre} onClose={()=>{sPl(null);sPlIdx(0);}} playlist={vids.map(v=>({url:v.url,titre:v.titre,gr:v.gr}))} startIdx={plIdx}/>}
     {pdfO&&pdf&&<PdfV url={pdf.url} name={pdf.name} onClose={()=>sPdfO(false)}/>}
-    <button onClick={onBack} className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:13,cursor:"pointer",marginBottom:13,padding:"5px 0",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>← Retour</button>
-    {mod.createdBy&&ok&&<button onClick={()=>{sContact(true);sCSent(false);}} className="bt" style={{background:K.c2,border:`1px solid ${K.b1}`,color:K.t2,borderRadius:99,padding:"5px 13px",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:13,marginLeft:10,fontFamily:"'Outfit',sans-serif"}}>💬 Contacter le formateur</button>}
+    <button onClick={onBack} className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:14,cursor:"pointer",marginBottom:13,padding:"5px 0",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>← Retour</button>
+    {mod.createdBy&&ok&&<button onClick={()=>{sContact(true);sCSent(false);}} className="bt" style={{background:K.c2,border:`1px solid ${K.b1}`,color:K.t2,borderRadius:99,padding:"5px 13px",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:13,marginLeft:10,fontFamily:"'Outfit',sans-serif"}}>💬 Contacter le formateur</button>}
     {contact&&<Sheet title="💬 Message au formateur" onClose={()=>sContact(false)}>
-      {cSent?<div style={{textAlign:"center",padding:"14px 0"}}><div style={{fontSize:30,marginBottom:8}}>✅</div><div style={{fontSize:13,color:K.t1,fontWeight:700,marginBottom:4}}>Message envoyé !</div><div style={{fontSize:12,color:K.t3}}>Retrouvez la réponse dans votre onglet Messages.</div></div>
-      :<><div style={{fontSize:12,color:K.t3,marginBottom:10}}>À propos de : <b style={{color:K.t1}}>{mod.titre}</b></div>
-      <textarea value={cTxt} onChange={e=>sCTxt(e.target.value)} rows={4} placeholder="Votre question au formateur…" style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",resize:"vertical",boxSizing:"border-box",marginBottom:12}}/>
+      {cSent?<div style={{textAlign:"center",padding:"14px 0"}}><div style={{fontSize:30,marginBottom:8}}>✅</div><div style={{fontSize:14,color:K.t1,fontWeight:700,marginBottom:4}}>Message envoyé !</div><div style={{fontSize:13,color:K.t3}}>Retrouvez la réponse dans votre onglet Messages.</div></div>
+      :<><div style={{fontSize:13,color:K.t3,marginBottom:10}}>À propos de : <b style={{color:K.t1}}>{mod.titre}</b></div>
+      <textarea value={cTxt} onChange={e=>sCTxt(e.target.value)} rows={4} placeholder="Votre question au formateur…" style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",resize:"vertical",boxSizing:"border-box",marginBottom:12}}/>
       <Btn ch={cSending?"Envoi…":"Envoyer"} dis={cSending||!cTxt.trim()} on={async()=>{sCSending(true);try{await sendMessage({apprenantUid:uid,apprenantNom:uNom,from:uid,fromNom:uNom,fromRole:"apprenant",texte:`[${mod.titre}] ${cTxt.trim()}`,formateurUid:mod.createdBy});sCTxt("");sCSent(true);}catch(e){alert(e.message);}sCSending(false);}} full/></>}
     </Sheet>}
     <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:13,padding:mob?"13px":"18px 20px",marginBottom:10}}>
-      <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:12}}><div style={{width:42,height:42,borderRadius:11,background:`${mod.col}18`,border:`1px solid ${mod.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{icoEl(mod.ico,mod.col,20)}</div><div><Tg c={K.t3} bg="none" bd={K.b0} ch={mod.code}/>{mod.mat&&<span style={{marginLeft:7}}><Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={mod.mat}/></span>}<div style={{fontWeight:800,fontSize:mob?14:17,color:K.t1,marginTop:5,marginBottom:3}}>{mod.titre}</div><div style={{color:K.t3,fontSize:12}}>{mod.desc||""}</div></div></div>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{[["❓",`${mod.q?.length||0}q`],["📝","Exercice"],vids.length>0?["🎬",`${vids.length} vid.`]:null,pdf?["📄","PDF"]:null].filter(Boolean).map(([ic,v])=><div key={v} style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,padding:"4px 9px",fontSize:11,color:K.t2,display:"flex",alignItems:"center",gap:3}}>{ic} {v}</div>)}</div>
+      <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:12}}><div style={{width:42,height:42,borderRadius:11,background:`${mod.col}18`,border:`1px solid ${mod.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{icoEl(mod.ico,mod.col,20)}</div><div><Tg c={K.t3} bg="none" bd={K.b0} ch={mod.code}/>{mod.mat&&<span style={{marginLeft:7}}><Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={mod.mat}/></span>}<div style={{fontWeight:800,fontSize:mob?14:17,color:K.t1,marginTop:5,marginBottom:3}}>{mod.titre}</div><div style={{color:K.t3,fontSize:13}}>{mod.desc||""}</div></div></div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{[["❓",`${mod.q?.length||0}q`],["📝","Exercice"],vids.length>0?["🎬",`${vids.length} vid.`]:null,pdf?["📄","PDF"]:null].filter(Boolean).map(([ic,v])=><div key={v} style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,padding:"4px 9px",fontSize:12,color:K.t2,display:"flex",alignItems:"center",gap:3}}>{ic} {v}</div>)}</div>
     </div>
-    {sc&&ok&&<div style={{background:sc.pct>=60?K.emBg:K.erBg,border:`1px solid ${sc.pct>=60?K.emBd:K.erBd}`,borderRadius:11,padding:"10px 13px",marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{color:K.t2,fontSize:13}}>Dernier résultat</span><span style={{color:sc.pct>=60?K.em:K.er,fontWeight:700,fontSize:13}}>{sc.s}/{sc.t} — {sc.pct}%</span></div><Bar p={sc.pct} col={sc.pct>=60?K.em:K.er} h={4}/></div>}
-    {vids.length>0&&<div style={{background:K.card,border:`1px solid ${K.rdBd}`,borderRadius:12,marginBottom:10,overflow:"hidden"}}><div style={{padding:"11px 13px",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",gap:7}}><span>🎬</span><span style={{fontWeight:700,fontSize:13,color:K.t1}}>Vidéos</span><Tg c={K.rd} bg={K.rdBg} bd={K.rdBd} ch={`${vids.length}`}/></div><div style={{padding:"9px 11px",display:"flex",flexDirection:"column",gap:6}}>{vids.map(v=>{const lk=!v.gr&&!ok;const pv=pVid(v.url);return <div key={v.id} onClick={()=>lk?onSub():(sPlIdx(vids.indexOf(v)),sPl({url:v.url,titre:v.titre}))} className="bt" style={{display:"flex",alignItems:"center",gap:10,padding:"8px 11px",background:K.c2,borderRadius:9,cursor:"pointer",border:`1px solid ${K.b0}`,opacity:lk?.7:1}}><div style={{width:34,height:26,borderRadius:6,background:"rgba(0,0,0,.3)",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:<span style={{fontSize:12}}>{lk?"🔒":"▶"}</span>}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:12,color:lk?K.t3:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div></div>{v.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}</div>;})} </div></div>}
+    {sc&&ok&&<div style={{background:sc.pct>=60?K.emBg:K.erBg,border:`1px solid ${sc.pct>=60?K.emBd:K.erBd}`,borderRadius:11,padding:"10px 13px",marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{color:K.t2,fontSize:14}}>Dernier résultat</span><span style={{color:sc.pct>=60?K.em:K.er,fontWeight:700,fontSize:14}}>{sc.s}/{sc.t} — {sc.pct}%</span></div><Bar p={sc.pct} col={sc.pct>=60?K.em:K.er} h={4}/></div>}
+    {vids.length>0&&<div style={{background:K.card,border:`1px solid ${K.rdBd}`,borderRadius:12,marginBottom:10,overflow:"hidden"}}><div style={{padding:"11px 13px",borderBottom:`1px solid ${K.b0}`,display:"flex",alignItems:"center",gap:7}}><span>🎬</span><span style={{fontWeight:700,fontSize:14,color:K.t1}}>Vidéos</span><Tg c={K.rd} bg={K.rdBg} bd={K.rdBd} ch={`${vids.length}`}/></div><div style={{padding:"9px 11px",display:"flex",flexDirection:"column",gap:6}}>{vids.map(v=>{const lk=!v.gr&&!ok;const pv=pVid(v.url);return <div key={v.id} onClick={()=>lk?onSub():(sPlIdx(vids.indexOf(v)),sPl({url:v.url,titre:v.titre}))} className="bt" style={{display:"flex",alignItems:"center",gap:10,padding:"8px 11px",background:K.c2,borderRadius:9,cursor:"pointer",border:`1px solid ${K.b0}`,opacity:lk?.7:1}}><div style={{width:34,height:26,borderRadius:6,background:"rgba(0,0,0,.3)",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:<span style={{fontSize:13}}>{lk?"🔒":"▶"}</span>}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:13,color:lk?K.t3:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div></div>{v.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}</div>;})} </div></div>}
     {ex&&<div style={{background:K.card,border:`1px solid ${exO?K.inBd:K.b0}`,borderRadius:12,marginBottom:10,overflow:"hidden"}}>
       <button onClick={()=>sExO(o=>!o)} className="bt" style={{width:"100%",background:"none",border:"none",cursor:"pointer",padding:"12px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
-        <div style={{display:"flex",alignItems:"center",gap:9}}><div style={{width:30,height:30,borderRadius:8,background:ok?K.inBg:"rgba(128,128,128,.08)",border:`1px solid ${ok?K.inBd:K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{ok?"📝":"🔒"}</div><div style={{textAlign:"left"}}><div style={{fontWeight:700,fontSize:13,color:K.t1}}>Exercice pratique</div><div style={{fontSize:11,color:K.t3,marginTop:1}}>{ex.ti}</div></div></div>
+        <div style={{display:"flex",alignItems:"center",gap:9}}><div style={{width:30,height:30,borderRadius:8,background:ok?K.inBg:"rgba(128,128,128,.08)",border:`1px solid ${ok?K.inBd:K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{ok?"📝":"🔒"}</div><div style={{textAlign:"left"}}><div style={{fontWeight:700,fontSize:14,color:K.t1}}>Exercice pratique</div><div style={{fontSize:12,color:K.t3,marginTop:1}}>{ex.ti}</div></div></div>
         <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>{pdf&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch="📄 PDF"/>}<span style={{color:K.t3,fontSize:15,transform:exO?"rotate(180deg)":"rotate(0deg)",transition:"transform .2s"}}>▾</span></div>
       </button>
       {exO&&<div style={{borderTop:`1px solid ${K.b0}`,padding:"13px"}}>
-        {!ok?<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:22,marginBottom:5}}>🔒</div><div style={{color:K.t3,fontSize:13}}>Abonnés actifs uniquement.</div></div>:<>
-          <div style={{background:K.c2,borderRadius:9,padding:"10px 12px",marginBottom:10}}><div style={{color:K.t3,fontSize:10,fontWeight:700,letterSpacing:"1.2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginBottom:5}}>Énoncé</div><div style={{color:K.t1,fontSize:13,lineHeight:1.7}}>{ex.en}</div></div>
-          {ex.dn?.length>0&&<div style={{marginBottom:10}}><div style={{color:K.t3,fontSize:10,fontWeight:700,letterSpacing:"1.2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginBottom:5}}>Données</div><div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:8,overflow:"hidden"}}>{ex.dn.map((row,i)=><div key={i} style={{display:"flex",padding:"7px 11px",borderBottom:i<ex.dn.length-1?`1px solid ${K.b0}`:"none",gap:9}}>{[row.a,row.b,row.c].filter(v=>v!==undefined).map((v,j)=><span key={j} style={{color:j===0?K.t2:K.t1,fontFamily:j>0?"'JetBrains Mono',monospace":"'Outfit',sans-serif",fontSize:j>0?12:13,flex:j===0?1:"none",fontWeight:j>0?600:400}}>{v}</span>)}</div>)}</div></div>}
-          {ex.tv?.length>0&&<div style={{marginBottom:10}}><div style={{color:K.t3,fontSize:10,fontWeight:700,letterSpacing:"1.2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginBottom:5}}>Travail demandé</div>{ex.tv.map((t,i)=><div key={i} style={{display:"flex",gap:8,background:K.c2,borderRadius:8,padding:"8px 11px",marginBottom:4}}><div style={{width:18,height:18,borderRadius:5,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,color:K.in_,flexShrink:0}}>{i+1}</div><div style={{color:K.t1,fontSize:13,lineHeight:1.6}}>{t}</div></div>)}</div>}
-          <button onClick={()=>sCorr(c=>!c)} className="bt" style={{background:corr?K.emBg:K.c2,border:`1px solid ${corr?K.emBd:K.b0}`,borderRadius:8,padding:"7px 11px",cursor:"pointer",color:corr?K.em:K.t3,fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,width:"100%",minHeight:34}}><span>{corr?"🔼":"🔽"}</span><span>{corr?"Masquer le corrigé":"Voir le corrigé"}</span></button>
-          {corr&&<div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:8,padding:"10px 12px",marginTop:6}}><div style={{color:K.em,fontSize:12,lineHeight:1.7,fontFamily:"'JetBrains Mono',monospace"}}>{ex.co}</div></div>}
-          {pdf&&<div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${K.b0}`}}><Btn ch="📄 Ouvrir PDF" on={()=>sPdfO(true)} v="i" full sx={{minHeight:40,fontSize:13}}/></div>}
+        {!ok?<div style={{textAlign:"center",padding:"10px 0"}}><div style={{fontSize:22,marginBottom:5}}>🔒</div><div style={{color:K.t3,fontSize:14}}>Abonnés actifs uniquement.</div></div>:<>
+          <div style={{background:K.c2,borderRadius:9,padding:"10px 12px",marginBottom:10}}><div style={{color:K.t3,fontSize:11,fontWeight:700,letterSpacing:"1.2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginBottom:5}}>Énoncé</div><div style={{color:K.t1,fontSize:14,lineHeight:1.7}}>{ex.en}</div></div>
+          {ex.dn?.length>0&&<div style={{marginBottom:10}}><div style={{color:K.t3,fontSize:11,fontWeight:700,letterSpacing:"1.2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginBottom:5}}>Données</div><div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:8,overflow:"hidden"}}>{ex.dn.map((row,i)=><div key={i} style={{display:"flex",padding:"7px 11px",borderBottom:i<ex.dn.length-1?`1px solid ${K.b0}`:"none",gap:9}}>{[row.a,row.b,row.c].filter(v=>v!==undefined).map((v,j)=><span key={j} style={{color:j===0?K.t2:K.t1,fontFamily:j>0?"'JetBrains Mono',monospace":"'Outfit',sans-serif",fontSize:j>0?12:13,flex:j===0?1:"none",fontWeight:j>0?600:400}}>{v}</span>)}</div>)}</div></div>}
+          {ex.tv?.length>0&&<div style={{marginBottom:10}}><div style={{color:K.t3,fontSize:11,fontWeight:700,letterSpacing:"1.2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginBottom:5}}>Travail demandé</div>{ex.tv.map((t,i)=><div key={i} style={{display:"flex",gap:8,background:K.c2,borderRadius:8,padding:"8px 11px",marginBottom:4}}><div style={{width:18,height:18,borderRadius:5,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:K.in_,flexShrink:0}}>{i+1}</div><div style={{color:K.t1,fontSize:14,lineHeight:1.6}}>{t}</div></div>)}</div>}
+          <button onClick={()=>sCorr(c=>!c)} className="bt" style={{background:corr?K.emBg:K.c2,border:`1px solid ${corr?K.emBd:K.b0}`,borderRadius:8,padding:"7px 11px",cursor:"pointer",color:corr?K.em:K.t3,fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,width:"100%",minHeight:34}}><span>{corr?"🔼":"🔽"}</span><span>{corr?"Masquer le corrigé":"Voir le corrigé"}</span></button>
+          {corr&&<div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:8,padding:"10px 12px",marginTop:6}}><div style={{color:K.em,fontSize:13,lineHeight:1.7,fontFamily:"'JetBrains Mono',monospace"}}>{ex.co}</div></div>}
+          {pdf&&<div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${K.b0}`}}><Btn ch="📄 Ouvrir PDF" on={()=>sPdfO(true)} v="i" full sx={{minHeight:40,fontSize:14}}/></div>}
         </>}
       </div>}
     </div>}
     <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:13,padding:mob?"13px":"16px 18px"}}>
-      {!ok?<div style={{textAlign:"center",padding:"7px 0"}}><div style={{fontSize:28,marginBottom:7}}>🔒</div><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Module verrouillé</div><div style={{color:K.t3,fontSize:12,marginBottom:12}}>Abonnement requis (50 USD).</div><Btn ch="Obtenir l'accès →" on={onSub} v="w" sx={{minHeight:44}}/></div>
-      :mod.evalType==="none"?<><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Sans évaluation</div><div style={{color:K.t3,fontSize:12,marginBottom:13}}>Ce module ne comporte pas de test noté.</div><Btn ch={doneNoEval?"✓ Terminé":"Marquer comme terminé"} on={onMarkDone} dis={doneNoEval} sx={{minHeight:44,fontSize:14}}/></>
-      :mod.evalType==="open"?<><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Questions ouvertes</div><div style={{color:K.t3,fontSize:12,marginBottom:13}}>{mod.openQ?.length||0} question(s) · Corrigé par votre formateur</div>{openAnswer?<div style={{background:openAnswer.graded?K.emBg:K.waBg,border:`1px solid ${openAnswer.graded?K.emBd:K.waBd}`,borderRadius:9,padding:"9px 12px",fontSize:12,color:openAnswer.graded?K.em:K.wa,fontWeight:600}}>{openAnswer.graded?`✓ Corrigé — ${openAnswer.totalPoints}/${openAnswer.maxPoints} pts (${openAnswer.pct}%)`:"⏳ En attente de correction par le formateur"}</div>:<Btn ch="Répondre →" on={onOpenQ} sx={{minHeight:44,fontSize:14}} dis={!mod.openQ?.length}/>}</>
-      :<><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Évaluation QCM</div><div style={{color:K.t3,fontSize:12,marginBottom:13}}>{mod.q?.length||0} questions · Feedback immédiat</div><Btn ch={sc?"Repasser →":"Commencer →"} on={onQ} sx={{minHeight:44,fontSize:14}} dis={!mod.q?.length}/></>}
+      {!ok?<div style={{textAlign:"center",padding:"7px 0"}}><div style={{fontSize:28,marginBottom:7}}>🔒</div><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Module verrouillé</div><div style={{color:K.t3,fontSize:13,marginBottom:12}}>Abonnement requis (50 USD).</div><Btn ch="Obtenir l'accès →" on={onSub} v="w" sx={{minHeight:44}}/></div>
+      :mod.evalType==="none"?<><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Sans évaluation</div><div style={{color:K.t3,fontSize:13,marginBottom:13}}>Ce module ne comporte pas de test noté.</div><Btn ch={doneNoEval?"✓ Terminé":"Marquer comme terminé"} on={onMarkDone} dis={doneNoEval} sx={{minHeight:44,fontSize:14}}/></>
+      :mod.evalType==="open"?<><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Questions ouvertes</div><div style={{color:K.t3,fontSize:13,marginBottom:13}}>{mod.openQ?.length||0} question(s) · Corrigé par votre formateur</div>{openAnswer?<div style={{background:openAnswer.graded?K.emBg:K.waBg,border:`1px solid ${openAnswer.graded?K.emBd:K.waBd}`,borderRadius:9,padding:"9px 12px",fontSize:13,color:openAnswer.graded?K.em:K.wa,fontWeight:600}}>{openAnswer.graded?`✓ Corrigé — ${openAnswer.totalPoints}/${openAnswer.maxPoints} pts (${openAnswer.pct}%)`:"⏳ En attente de correction par le formateur"}</div>:<Btn ch="Répondre →" on={onOpenQ} sx={{minHeight:44,fontSize:14}} dis={!mod.openQ?.length}/>}</>
+      :<><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Évaluation QCM</div><div style={{color:K.t3,fontSize:13,marginBottom:13}}>{mod.q?.length||0} questions · Feedback immédiat</div><Btn ch={sc?"Repasser →":"Commencer →"} on={onQ} sx={{minHeight:44,fontSize:14}} dis={!mod.q?.length}/></>}
     </div>
   </div>;
 }
@@ -3254,19 +3291,19 @@ function OpenQuiz({mod,uid,uNom,onDone,onBack}){
   return <div style={{maxWidth:600,margin:"0 auto"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:15}}>
       <Btn ch="Quitter" on={onBack} v="g" sm/>
-      <span style={{color:K.t3,fontSize:12,fontFamily:"'JetBrains Mono',monospace"}}>{qs.length} question{qs.length>1?"s":""} · {maxPoints} pts</span>
+      <span style={{color:K.t3,fontSize:13,fontFamily:"'JetBrains Mono',monospace"}}>{qs.length} question{qs.length>1?"s":""} · {maxPoints} pts</span>
     </div>
-    <div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:10,padding:"10px 13px",marginBottom:15,fontSize:12,color:K.t2}}>
+    <div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:10,padding:"10px 13px",marginBottom:15,fontSize:13,color:K.t2}}>
       ✍️ Répondez librement à chaque question. Votre formateur corrigera et notera vos réponses — le score final apparaîtra dans votre progression une fois la correction faite.
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
       {qs.map((q,i)=><div key={q.id} style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:13,padding:mob?"14px":"16px 18px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:9,gap:8}}>
           <div style={{color:K.t1,fontSize:mob?13:14,fontWeight:700,lineHeight:1.45}}>{i+1}. {q.q}</div>
-          <span style={{flexShrink:0,fontSize:10,fontWeight:700,color:K.t3,background:K.c2,borderRadius:99,padding:"2px 8px"}}>{q.points} pts</span>
+          <span style={{flexShrink:0,fontSize:11,fontWeight:700,color:K.t3,background:K.c2,borderRadius:99,padding:"2px 8px"}}>{q.points} pts</span>
         </div>
         <textarea value={answers[q.id]} onChange={e=>setAnswers(a=>({...a,[q.id]:e.target.value}))} placeholder="Votre réponse..." rows={4}
-          style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",resize:"vertical",boxSizing:"border-box"}}/>
+          style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",resize:"vertical",boxSizing:"border-box"}}/>
       </div>)}
     </div>
     <div style={{marginTop:16}}><Btn ch={sending?"Envoi…":"Soumettre mes réponses →"} on={submit} dis={sending} full sx={{minHeight:46,fontSize:14}}/></div>
@@ -3280,15 +3317,15 @@ function QZ({mod,onDone,onBack}){
   if(!tot)return <div style={{textAlign:"center",padding:40,color:K.t3}}>Aucune question.<br/><br/><Btn ch="← Retour" on={onBack} v="g"/></div>;
   const val=()=>{if(sel===null)return;sCf(true);sLog(l=>[...l,{sel,bon:q.b,ok:sel===q.b,txt:q.q,r:q.r}]);};
   const nxt=()=>{if(qi+1>=tot)sFin(true);else{sQi(i=>i+1);sSel(null);sCf(false);}};
-  if(fin){const s=log.filter(l=>l.ok).length,p=Math.round(s/tot*100),w=p>=60;return <div style={{maxWidth:530,margin:"0 auto",animation:"sc .28s ease"}}><div style={{background:K.card,border:`1px solid ${w?K.emBd:K.erBd}`,borderRadius:14,padding:mob?"19px 15px":"26px 22px",textAlign:"center"}}><div style={{fontSize:48,marginBottom:8}}>{w?"🏆":"📚"}</div><div style={{fontWeight:800,fontSize:19,color:K.t1,marginBottom:3}}>{w?"Réussi !":"À retravailler"}</div><div style={{color:K.t3,fontSize:12,marginBottom:15}}>{mod.titre}</div><div style={{fontWeight:900,fontSize:40,letterSpacing:"-.5px",marginBottom:3,background:`linear-gradient(135deg,${w?K.em:K.er},${w?K.in_:"#FCA5A5"})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{s}/{tot}</div><div style={{color:K.t3,fontFamily:"'JetBrains Mono',monospace",marginBottom:3}}>{p}%</div><div style={{color:w?K.em:K.er,fontWeight:700,marginBottom:17}}>{p>=80?"Excellent":p>=60?"Bien":p>=40?"Passable":"Insuffisant"}</div><div style={{maxWidth:190,margin:"0 auto 18px"}}><Bar p={p} col={w?K.em:K.er} h={5}/></div><div style={{textAlign:"left",marginBottom:17}}><div style={{color:K.t3,fontSize:12,marginBottom:6,fontWeight:600}}>Correction</div>{log.map((l,i)=><div key={i} style={{background:l.ok?K.emBg:K.erBg,border:`1px solid ${l.ok?K.emBd:K.erBd}`,borderRadius:8,padding:"7px 10px",marginBottom:4}}><div style={{color:K.t3,fontSize:11,marginBottom:2}}>Q{i+1} · {l.txt}</div><div style={{color:l.ok?K.em:K.er,fontWeight:600,fontSize:12}}>{l.ok?"✓ Correct":`✗ Faux · ${l.r[l.bon]}`}</div></div>)}</div><div style={{display:"flex",gap:7,justifyContent:"center",flexWrap:"wrap"}}><Btn ch="Recommencer" on={()=>{sQi(0);sSel(null);sCf(false);sLog([]);sFin(false);}} v="g" sx={{minHeight:42}}/><Btn ch="Enregistrer →" on={()=>onDone(s,tot)} sx={{minHeight:42}}/></div></div></div>;}
+  if(fin){const s=log.filter(l=>l.ok).length,p=Math.round(s/tot*100),w=p>=60;return <div style={{maxWidth:530,margin:"0 auto",animation:"sc .28s ease"}}><div style={{background:K.card,border:`1px solid ${w?K.emBd:K.erBd}`,borderRadius:14,padding:mob?"19px 15px":"26px 22px",textAlign:"center"}}><div style={{fontSize:48,marginBottom:8}}>{w?"🏆":"📚"}</div><div style={{fontWeight:800,fontSize:19,color:K.t1,marginBottom:3}}>{w?"Réussi !":"À retravailler"}</div><div style={{color:K.t3,fontSize:13,marginBottom:15}}>{mod.titre}</div><div style={{fontWeight:900,fontSize:40,letterSpacing:"-.5px",marginBottom:3,background:`linear-gradient(135deg,${w?K.em:K.er},${w?K.in_:"#FCA5A5"})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{s}/{tot}</div><div style={{color:K.t3,fontFamily:"'JetBrains Mono',monospace",marginBottom:3}}>{p}%</div><div style={{color:w?K.em:K.er,fontWeight:700,marginBottom:17}}>{p>=80?"Excellent":p>=60?"Bien":p>=40?"Passable":"Insuffisant"}</div><div style={{maxWidth:190,margin:"0 auto 18px"}}><Bar p={p} col={w?K.em:K.er} h={5}/></div><div style={{textAlign:"left",marginBottom:17}}><div style={{color:K.t3,fontSize:13,marginBottom:6,fontWeight:600}}>Correction</div>{log.map((l,i)=><div key={i} style={{background:l.ok?K.emBg:K.erBg,border:`1px solid ${l.ok?K.emBd:K.erBd}`,borderRadius:8,padding:"7px 10px",marginBottom:4}}><div style={{color:K.t3,fontSize:12,marginBottom:2}}>Q{i+1} · {l.txt}</div><div style={{color:l.ok?K.em:K.er,fontWeight:600,fontSize:13}}>{l.ok?"✓ Correct":`✗ Faux · ${l.r[l.bon]}`}</div></div>)}</div><div style={{display:"flex",gap:7,justifyContent:"center",flexWrap:"wrap"}}><Btn ch="Recommencer" on={()=>{sQi(0);sSel(null);sCf(false);sLog([]);sFin(false);}} v="g" sx={{minHeight:42}}/><Btn ch="Enregistrer →" on={()=>onDone(s,tot)} sx={{minHeight:42}}/></div></div></div>;}
   return <div style={{maxWidth:600,margin:"0 auto"}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:15}}><Btn ch="Quitter" on={onBack} v="g" sm/><span style={{color:K.t3,fontSize:12,fontFamily:"'JetBrains Mono',monospace"}}>{mod.code} · {qi+1}/{tot}</span><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={`${log.filter(l=>l.ok).length} ✓`}/></div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:15}}><Btn ch="Quitter" on={onBack} v="g" sm/><span style={{color:K.t3,fontSize:13,fontFamily:"'JetBrains Mono',monospace"}}>{mod.code} · {qi+1}/{tot}</span><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={`${log.filter(l=>l.ok).length} ✓`}/></div>
     <div style={{marginBottom:17}}><Bar p={Math.round(qi/tot*100)} col={mod.col} h={3}/></div>
     <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:13,padding:mob?"15px 13px":"20px 18px"}}>
-      <div style={{color:K.t3,fontSize:10,fontWeight:700,letterSpacing:"1.5px",marginBottom:8,textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>Question {qi+1}</div>
+      <div style={{color:K.t3,fontSize:11,fontWeight:700,letterSpacing:"1.5px",marginBottom:8,textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace"}}>Question {qi+1}</div>
       <div style={{color:K.t1,fontSize:mob?14:15,fontWeight:700,lineHeight:1.45,marginBottom:19}}>{q.q}</div>
       <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:19}}>
-        {q.r.map((op,oi)=>{let bg=K.c2,bd=K.b0,col=K.t2;if(conf){if(oi===q.b){bg=K.emBg;bd=K.em;col=K.em;}else if(oi===sel){bg=K.erBg;bd=K.er;col=K.er;}}else if(sel===oi){bg=`${mod.col}15`;bd=mod.col;col=K.t1;}return <button key={oi} onClick={()=>{if(!conf)sSel(oi);}} style={{padding:"11px 12px",background:bg,border:`1.5px solid ${bd}`,borderRadius:10,cursor:conf?"default":"pointer",color:col,fontSize:13,fontWeight:600,textAlign:"left",transition:"all .15s",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:8,minHeight:46}}><span style={{width:22,height:22,borderRadius:6,background:`${bd}20`,border:`1px solid ${bd}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:bd,flexShrink:0}}>{["A","B","C","D"][oi]}</span><span style={{flex:1}}>{op}</span>{conf&&oi===q.b&&<span style={{color:K.em}}>✓</span>}{conf&&oi===sel&&oi!==q.b&&<span style={{color:K.er}}>✗</span>}</button>;})}
+        {q.r.map((op,oi)=>{let bg=K.c2,bd=K.b0,col=K.t2;if(conf){if(oi===q.b){bg=K.emBg;bd=K.em;col=K.em;}else if(oi===sel){bg=K.erBg;bd=K.er;col=K.er;}}else if(sel===oi){bg=`${mod.col}15`;bd=mod.col;col=K.t1;}return <button key={oi} onClick={()=>{if(!conf)sSel(oi);}} style={{padding:"11px 12px",background:bg,border:`1.5px solid ${bd}`,borderRadius:10,cursor:conf?"default":"pointer",color:col,fontSize:14,fontWeight:600,textAlign:"left",transition:"all .15s",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:8,minHeight:46}}><span style={{width:22,height:22,borderRadius:6,background:`${bd}20`,border:`1px solid ${bd}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:bd,flexShrink:0}}>{["A","B","C","D"][oi]}</span><span style={{flex:1}}>{op}</span>{conf&&oi===q.b&&<span style={{color:K.em}}>✓</span>}{conf&&oi===sel&&oi!==q.b&&<span style={{color:K.er}}>✗</span>}</button>;})}
       </div>
       {!conf?<Btn ch="Valider" on={val} dis={sel===null} full sx={{minHeight:44,fontSize:14}}/>:<Btn ch={qi+1<tot?"Suivant →":"Résultats →"} on={nxt} full sx={{minHeight:44,fontSize:14}}/>}
     </div>
@@ -3315,7 +3352,7 @@ function Prog({pr,sc,gp,nd,ok,mods}){
     <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:16,padding:"20px",marginBottom:16,display:"flex",justifyContent:"space-around",alignItems:"center",flexWrap:"wrap",gap:16}}>
       {rings.map(({label,pct,col})=><div key={label} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
         <ProgressRing pct={pct} size={72} stroke={6} col={col}/>
-        <div style={{fontSize:11,color:K.t2,fontWeight:600,textAlign:"center"}}>{label}</div>
+        <div style={{fontSize:12,color:K.t2,fontWeight:600,textAlign:"center"}}>{label}</div>
       </div>)}
     </div>
     {/* Badges */}
@@ -3323,12 +3360,12 @@ function Prog({pr,sc,gp,nd,ok,mods}){
     <div style={{marginTop:20}}>
     {/* Header bannière */}
     <div style={{background:`linear-gradient(135deg,${K.in_}18,${K.em}10)`,border:`1px solid ${K.inBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
-      <div style={{fontSize:12,color:K.in_,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-chart-line" style={{fontSize:13}}/> Progression globale</div>
+      <div style={{fontSize:13,color:K.in_,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-chart-line" style={{fontSize:14}}/> Progression globale</div>
       <div style={{fontSize:mob?20:26,fontWeight:900,color:K.t1,marginBottom:4}}>{gp}% accompli</div>
-      <div style={{fontSize:13,color:K.t2,marginBottom:14}}>{nd} module{nd>1?"s":""} terminé{nd>1?"s":""} sur {mods.length}</div>
+      <div style={{fontSize:14,color:K.t2,marginBottom:14}}>{nd} module{nd>1?"s":""} terminé{nd>1?"s":""} sur {mods.length}</div>
       <Bar p={gp} col={K.in_} h={6}/>
       <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
-        {[[`${nd}`,"Complétés",K.em],[`${mods.length-nd}`,"Restants",K.t3],[`${Object.values(sc).filter(s=>s.pct>=60).length}`,"Réussis",K.in_]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
+        {[[`${nd}`,"Complétés",K.em],[`${mods.length-nd}`,"Restants",K.t3],[`${Object.values(sc).filter(s=>s.pct>=60).length}`,"Réussis",K.in_]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}
       </div>
     </div>
 
@@ -3337,8 +3374,8 @@ function Prog({pr,sc,gp,nd,ok,mods}){
     <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
       {done.map((m,i)=>{const s=sc[m.id];const cp=getCardPalette(tid,i);return <div key={m.id} style={{background:cp.bg,border:`1px solid ${cp.bd}`,borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,animation:`up .25s ease ${i*15}ms both`}}>
         <div style={{width:38,height:38,borderRadius:11,background:isLight?"rgba(255,255,255,.8)":K.b1,border:`1px solid ${cp.bd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{icoEl(m.ico,cp.ac,17)}</div>
-        <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:13,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>{m.mat&&<div style={{fontSize:10,color:cp.ac,fontWeight:600,marginTop:1}}>{m.mat}</div>}</div>
-        {s&&<div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:800,fontSize:17,color:s.pct>=60?K.em:K.er}}>{s.pct}%</div><div style={{fontSize:9,color:K.t3}}>Score QCM</div></div>}
+        <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:14,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>{m.mat&&<div style={{fontSize:11,color:cp.ac,fontWeight:600,marginTop:1}}>{m.mat}</div>}</div>
+        {s&&<div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:800,fontSize:17,color:s.pct>=60?K.em:K.er}}>{s.pct}%</div><div style={{fontSize:10,color:K.t3}}>Score QCM</div></div>}
         <i className="ti ti-check-circle" style={{fontSize:18,color:K.em,flexShrink:0}}/>
       </div>;})}
     </div></>}
@@ -3348,8 +3385,8 @@ function Prog({pr,sc,gp,nd,ok,mods}){
     <div style={{display:"flex",flexDirection:"column",gap:7}}>
       {todo.map((m,i)=><div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"11px 14px",display:"flex",alignItems:"center",gap:11,opacity:.75,animation:`up .25s ease ${i*12}ms both`}}>
         <div style={{width:36,height:36,borderRadius:10,background:K.c2,border:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{!ok?<i className="ti ti-lock" style={{fontSize:14,color:K.t3}}/>:icoEl(m.ico,K.t3,15)}</div>
-        <div style={{flex:1,minWidth:0}}><div style={{fontWeight:600,fontSize:13,color:K.t2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>{m.mat&&<div style={{fontSize:10,color:K.t3,marginTop:1}}>{m.mat}</div>}</div>
-        <div style={{fontSize:11,color:K.t3,flexShrink:0}}>{m.q?.length||0} questions</div>
+        <div style={{flex:1,minWidth:0}}><div style={{fontWeight:600,fontSize:14,color:K.t2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>{m.mat&&<div style={{fontSize:11,color:K.t3,marginTop:1}}>{m.mat}</div>}</div>
+        <div style={{fontSize:12,color:K.t3,flexShrink:0}}>{m.q?.length||0} questions</div>
       </div>)}
     </div></>}
   </div></div>;}
@@ -3370,33 +3407,33 @@ function Res({sc,ok,mods,u,pr,nd,gp}){
       </div>
       <div style={{flex:1,minWidth:150}}>
         <div style={{fontWeight:800,fontSize:14,color:K.t1}}>Attestation de formation</div>
-        <div style={{fontSize:12,color:K.t3}}>{attReady?"Félicitations ! Votre attestation est prête.":`Terminez tous les modules pour la débloquer (${nd}/${mods.length}).`}</div>
+        <div style={{fontSize:13,color:K.t3}}>{attReady?"Félicitations ! Votre attestation est prête.":`Terminez tous les modules pour la débloquer (${nd}/${mods.length}).`}</div>
       </div>
       <Btn ch={attBusy?"Génération…":"📜 Télécharger (PDF)"} dis={!attReady||attBusy} on={async()=>{sAttBusy(true);try{await genAttestation({nom:u?.nom,mods,pr,sc});}catch(e){alert(e.message);}sAttBusy(false);}} v={attReady?"p":"g"} sm/>
     </div>}
     {/* Header */}
     <div style={{background:`linear-gradient(135deg,${K.wa}18,${K.em}10)`,border:`1px solid ${K.waBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
-      <div style={{fontSize:12,color:K.wa,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-trophy" style={{fontSize:13}}/> Tableau des résultats</div>
+      <div style={{fontSize:13,color:K.wa,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-trophy" style={{fontSize:14}}/> Tableau des résultats</div>
       <div style={{fontSize:mob?20:26,fontWeight:900,color:K.t1,marginBottom:4}}>Moyenne : {avg}%</div>
-      <div style={{fontSize:13,color:K.t2,marginBottom:14}}>{att.length} évaluation{att.length>1?"s":""} passée{att.length>1?"s":""}</div>
+      <div style={{fontSize:14,color:K.t2,marginBottom:14}}>{att.length} évaluation{att.length>1?"s":""} passée{att.length>1?"s":""}</div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        {[[`${att.length}`,"Évaluations",K.t2],[`${pass}`,"Réussies",K.em],[`${fail}`,"À retravailler",K.er],[`${avg}%`,"Moyenne",avg>=60?K.em:K.er]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
+        {[[`${att.length}`,"Évaluations",K.t2],[`${pass}`,"Réussies",K.em],[`${fail}`,"À retravailler",K.er],[`${avg}%`,"Moyenne",avg>=60?K.em:K.er]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}
       </div>
     </div>
 
-    {!ok||att.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"44px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:10,animation:"fl 3s ease-in-out infinite"}}>{!ok?"🔒":"📊"}</div><div style={{color:K.t2,fontSize:14,fontWeight:700,marginBottom:4}}>{!ok?"Accès requis":"Aucun résultat"}</div><div style={{color:K.t3,fontSize:12}}>{!ok?"Abonnez-vous.":"Commencez un module !"}</div></div>:
+    {!ok||att.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"44px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:10,animation:"fl 3s ease-in-out infinite"}}>{!ok?"🔒":"📊"}</div><div style={{color:K.t2,fontSize:14,fontWeight:700,marginBottom:4}}>{!ok?"Accès requis":"Aucun résultat"}</div><div style={{color:K.t3,fontSize:13}}>{!ok?"Abonnez-vous.":"Commencez un module !"}</div></div>:
     <div style={{display:"flex",flexDirection:"column",gap:9}}>
       {att.map((m,i)=>{const s=sc[m.id];const w=s.pct>=60;const cp=getCardPalette(tid,i);return <div key={m.id} style={{background:w?cp.bg:K.card,border:`1px solid ${w?cp.bd:K.erBd}`,borderRadius:13,padding:"14px 16px",animation:`up .25s ease ${i*22}ms both`}}>
         <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:10}}>
           <div style={{width:40,height:40,borderRadius:11,background:isLight?w?"rgba(255,255,255,.8)":K.erBg:K.b1,border:`1px solid ${w?cp.bd:K.erBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{icoEl(m.ico,w?cp.ac:K.er,17)}</div>
-          <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace",marginTop:1}}>{m.code}{m.mat?` · ${m.mat}`:""}</div></div>
+          <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace",marginTop:1}}>{m.code}{m.mat?` · ${m.mat}`:""}</div></div>
           <div style={{textAlign:"right",flexShrink:0}}>
             <div style={{fontWeight:900,fontSize:22,color:w?cp.ac:K.er,letterSpacing:"-.5px"}}>{s.pct}%</div>
-            <div style={{fontSize:10,color:K.t3}}>{s.s}/{s.t} bonnes</div>
+            <div style={{fontSize:11,color:K.t3}}>{s.s}/{s.t} bonnes</div>
           </div>
         </div>
         <Bar p={s.pct} col={w?cp.ac:K.er} h={4}/>
-        <div style={{marginTop:8,display:"flex",alignItems:"center",gap:6}}>{w?<><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/><span style={{fontSize:12,color:K.em,fontWeight:600}}>{s.pct>=80?"Excellent !":s.pct>=70?"Très bien":"Bien"}</span></>:<><i className="ti ti-alert-circle" style={{fontSize:14,color:K.er}}/><span style={{fontSize:12,color:K.er,fontWeight:600}}>À retravailler</span></>}</div>
+        <div style={{marginTop:8,display:"flex",alignItems:"center",gap:6}}>{w?<><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/><span style={{fontSize:13,color:K.em,fontWeight:600}}>{s.pct>=80?"Excellent !":s.pct>=70?"Très bien":"Bien"}</span></>:<><i className="ti ti-alert-circle" style={{fontSize:14,color:K.er}}/><span style={{fontSize:13,color:K.er,fontWeight:600}}>À retravailler</span></>}</div>
       </div>;})}
     </div>}
   </div>;
@@ -3408,14 +3445,14 @@ function VidsPage({ok,onSub,vids,live}){
   if(!vids.length&&!live.on)return <EmptyState ico="video" title="Aucune vidéo pour le moment" desc="Les vidéos de cours et replays apparaîtront ici dès que votre formateur les publiera."/>;
   return <div style={{animation:"up .3s ease"}}>
     {pl&&<Player url={pl.url} titre={pl.titre} onClose={()=>{sPl(null);}} playlist={fil.map(v=>({url:v.url,titre:v.titre,gr:v.gr}))} startIdx={fil.findIndex(v=>v.url===pl.url)}/>}
-    {live.on&&<div onClick={()=>ok||live.gr?sPl({url:live.url,titre:live.titre||"Direct"}):onSub()} className="hv" style={{background:K.rdBg,border:`1px solid ${K.rdBd}`,borderRadius:12,padding:"13px 15px",marginBottom:13,cursor:"pointer",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}><span style={{fontSize:20,animation:"blink 1.5s ease-in-out infinite",flexShrink:0}}>🔴</span><div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}><span style={{fontWeight:800,fontSize:14,color:K.t1}}>{live.titre||"Cours en direct"}</span><Tg c={K.rd} bg={K.rdBg} bd={K.rdBd} ch="EN DIRECT"/></div><div style={{fontSize:12,color:K.t3}}>{live.desc||""}</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
-    <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:10}}>Vidéothèque {vids.length>0&&<span style={{color:K.t3,fontWeight:400,fontSize:13}}>({vids.length})</span>}</div>
-    <div className="tn" style={{gap:6,marginBottom:12,paddingBottom:3}}>{[["tous","Toutes"],["gr","Gratuites"],["pm","Premium"]].map(([k,l])=><button key={k} onClick={()=>sF(k)} className="bt" style={{background:fi===k?K.c2:"transparent",border:`1px solid ${fi===k?K.b1:K.b0}`,borderRadius:99,padding:"4px 10px",fontSize:11,fontWeight:600,color:fi===k?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{l}</button>)}</div>
-    {fil.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"44px 20px",textAlign:"center"}}><div style={{fontSize:32,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>🎬</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune vidéo</div><div style={{color:K.t3,fontSize:12}}>L'admin n'a pas encore ajouté de vidéos.</div></div>
+    {live.on&&<div onClick={()=>ok||live.gr?sPl({url:live.url,titre:live.titre||"Direct"}):onSub()} className="hv" style={{background:K.rdBg,border:`1px solid ${K.rdBd}`,borderRadius:12,padding:"13px 15px",marginBottom:13,cursor:"pointer",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}><span style={{fontSize:20,animation:"blink 1.5s ease-in-out infinite",flexShrink:0}}>🔴</span><div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}><span style={{fontWeight:800,fontSize:14,color:K.t1}}>{live.titre||"Cours en direct"}</span><Tg c={K.rd} bg={K.rdBg} bd={K.rdBd} ch="EN DIRECT"/></div><div style={{fontSize:13,color:K.t3}}>{live.desc||""}</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
+    <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:10}}>Vidéothèque {vids.length>0&&<span style={{color:K.t3,fontWeight:400,fontSize:14}}>({vids.length})</span>}</div>
+    <div className="tn" style={{gap:6,marginBottom:12,paddingBottom:3}}>{[["tous","Toutes"],["gr","Gratuites"],["pm","Premium"]].map(([k,l])=><button key={k} onClick={()=>sF(k)} className="bt" style={{background:fi===k?K.c2:"transparent",border:`1px solid ${fi===k?K.b1:K.b0}`,borderRadius:99,padding:"4px 10px",fontSize:12,fontWeight:600,color:fi===k?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{l}</button>)}</div>
+    {fil.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"44px 20px",textAlign:"center"}}><div style={{fontSize:32,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>🎬</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune vidéo</div><div style={{color:K.t3,fontSize:13}}>L'admin n'a pas encore ajouté de vidéos.</div></div>
     :<div className="gv">{fil.map(v=>{const lk=!v.gr&&!ok;const pv=pVid(v.url);const th=pv?.t==="yt"?`https://img.youtube.com/vi/${pv.id}/mqdefault.jpg`:null;
       return <div key={v.id} className="hv" onClick={()=>lk?onSub():sPl({url:v.url,titre:v.titre})} style={{background:K.card,border:`1px solid ${lk?K.b0:K.b1}`,borderRadius:12,overflow:"hidden",cursor:"pointer",opacity:lk?.7:1}}>
         <div style={{width:"100%",paddingTop:"56.25%",position:"relative",background:K.c2}}>{th?<img src={th} alt={v.titre} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:null}<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.32)",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{width:40,height:40,borderRadius:"50%",background:lk?"rgba(0,0,0,.55)":"rgba(52,211,153,.7)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{lk?"🔒":"▶"}</div></div><div style={{position:"absolute",top:6,right:6}}>{v.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}</div></div>
-        <div style={{padding:"10px 12px"}}><div style={{fontWeight:700,fontSize:13,color:lk?K.t3:K.t1,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div>{v.desc&&<div style={{fontSize:11,color:K.t3,lineHeight:1.4,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",marginBottom:5}}>{v.desc}</div>}</div>
+        <div style={{padding:"10px 12px"}}><div style={{fontWeight:700,fontSize:14,color:lk?K.t3:K.t1,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div>{v.desc&&<div style={{fontSize:12,color:K.t3,lineHeight:1.4,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",marginBottom:5}}>{v.desc}</div>}</div>
       </div>;})}
     </div>}
   </div>;
@@ -3436,14 +3473,14 @@ function PresPage({ok,onSub,pres}){
     {open&&<PresViewer url={open.url} titre={open.titre} desc={open.desc} onClose={()=>sOpen(null)}/>}
     {/* Bannière */}
     <div style={{background:`linear-gradient(135deg,${K.in_}18,${K.inD}10)`,border:`1px solid ${K.inBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
-      <div style={{fontSize:12,color:K.in_,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-presentation" style={{fontSize:13}}/> Présentations</div>
+      <div style={{fontSize:13,color:K.in_,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-presentation" style={{fontSize:14}}/> Présentations</div>
       <div style={{fontSize:mob?18:22,fontWeight:900,color:K.t1,marginBottom:4}}>Supports de cours</div>
-      <div style={{fontSize:13,color:K.t2}}>{pres.length} présentation{pres.length>1?"s":""} disponible{pres.length>1?"s":""}</div>
+      <div style={{fontSize:14,color:K.t2}}>{pres.length} présentation{pres.length>1?"s":""} disponible{pres.length>1?"s":""}</div>
     </div>
     {/* Filtres */}
-    {mats.length>1&&<div className="tn" style={{gap:6,marginBottom:12,paddingBottom:3}}>{["Toutes",...mats].map(m=><button key={m} onClick={()=>sF(m)} className="bt" style={{background:fi===m?K.c2:"transparent",border:`1px solid ${fi===m?K.b1:K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:11,fontWeight:600,color:fi===m?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{m}</button>)}</div>}
+    {mats.length>1&&<div className="tn" style={{gap:6,marginBottom:12,paddingBottom:3}}>{["Toutes",...mats].map(m=><button key={m} onClick={()=>sF(m)} className="bt" style={{background:fi===m?K.c2:"transparent",border:`1px solid ${fi===m?K.b1:K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:12,fontWeight:600,color:fi===m?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{m}</button>)}</div>}
     {fil.length===0
-      ?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"44px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>📊</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune présentation</div><div style={{color:K.t3,fontSize:12}}>L'admin n'a pas encore ajouté de présentations.</div></div>
+      ?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"44px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>📊</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune présentation</div><div style={{color:K.t3,fontSize:13}}>L'admin n'a pas encore ajouté de présentations.</div></div>
       :<div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
         {fil.map((p,i)=>{
           const lk=!p.gr&&!ok;
@@ -3463,9 +3500,9 @@ function PresPage({ok,onSub,pres}){
             </div>
             {/* Footer carte */}
             <div style={{padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-              {p.desc?<div style={{fontSize:11,color:K.t2,flex:1,marginRight:8,lineHeight:1.4,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{p.desc}</div>:<div style={{flex:1}}/>}
-              {!lk&&<div style={{display:"flex",alignItems:"center",gap:4,fontSize:12,fontWeight:700,color:K.in_,flexShrink:0}}><span>Voir</span><i className="ti ti-arrow-right" style={{fontSize:12}}/></div>}
-              {lk&&<div style={{fontSize:11,color:K.t3}}>🔒 Abonnement</div>}
+              {p.desc?<div style={{fontSize:12,color:K.t2,flex:1,marginRight:8,lineHeight:1.4,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{p.desc}</div>:<div style={{flex:1}}/>}
+              {!lk&&<div style={{display:"flex",alignItems:"center",gap:4,fontSize:13,fontWeight:700,color:K.in_,flexShrink:0}}><span>Voir</span><i className="ti ti-arrow-right" style={{fontSize:13}}/></div>}
+              {lk&&<div style={{fontSize:12,color:K.t3}}>🔒 Abonnement</div>}
             </div>
           </div>;
         })}
@@ -3521,11 +3558,11 @@ function StagePage({stages,plats,ok}){
   return <div style={{animation:"up .3s ease"}}>
     {/* Bannière */}
     <div style={{background:`linear-gradient(135deg,${K.wa}18,${K.em}10)`,border:`1px solid ${K.waBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
-      <div style={{fontSize:12,color:K.wa,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-briefcase" style={{fontSize:13}}/> Stages Virtuels</div>
+      <div style={{fontSize:13,color:K.wa,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-briefcase" style={{fontSize:14}}/> Stages Virtuels</div>
       <div style={{fontSize:mob?18:22,fontWeight:900,color:K.t1,marginBottom:4}}>Développez votre expérience</div>
-      <div style={{fontSize:13,color:K.t2,marginBottom:14}}>Plateformes internationales · Offres structurées · Certifications reconnues</div>
+      <div style={{fontSize:14,color:K.t2,marginBottom:14}}>Plateformes internationales · Offres structurées · Certifications reconnues</div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        {[[`${plats.length}`,"Plateformes",K.wa],[`${stages.length}`,"Offres",K.em],["4","Catégories",K.in_]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}
+        {[[`${plats.length}`,"Plateformes",K.wa],[`${stages.length}`,"Offres",K.em],["4","Catégories",K.in_]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}
       </div>
     </div>
 
@@ -3536,13 +3573,13 @@ function StagePage({stages,plats,ok}){
 
     {/* Filtres catégories */}
     <div className="tn" style={{gap:6,marginBottom:12,paddingBottom:3}}>
-      {cats.map(c=>{const cc=CAT_COLORS[c];return <button key={c} onClick={()=>sCat(c)} className="bt" style={{background:cat===c?(cc?cc.bg:K.c2):"transparent",border:`1px solid ${cat===c?(cc?cc.bd:K.b1):K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:11,fontWeight:600,color:cat===c?(cc?cc.ac:K.t1):K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28,display:"flex",alignItems:"center",gap:5}}>{cc&&<i className={"ti ti-"+cc.ic} style={{fontSize:12}}/>}{c}</button>;})}
+      {cats.map(c=>{const cc=CAT_COLORS[c];return <button key={c} onClick={()=>sCat(c)} className="bt" style={{background:cat===c?(cc?cc.bg:K.c2):"transparent",border:`1px solid ${cat===c?(cc?cc.bd:K.b1):K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:12,fontWeight:600,color:cat===c?(cc?cc.ac:K.t1):K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28,display:"flex",alignItems:"center",gap:5}}>{cc&&<i className={"ti ti-"+cc.ic} style={{fontSize:13}}/>}{c}</button>;})}
     </div>
 
     {/* OFFRES */}
     {tab==="offres"&&<>
-      <div style={{marginBottom:11}}><input value={search} onChange={e=>sSearch(e.target.value)} placeholder="🔍 Rechercher une offre ou entreprise..." style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,color:K.t1,fontSize:13,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box",minHeight:42,caretColor:K.em}} onFocus={e=>e.target.style.borderColor=K.emBd} onBlur={e=>e.target.style.borderColor=K.b0}/></div>
-      {filStages.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"44px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>🎯</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune offre</div><div style={{color:K.t3,fontSize:12}}>L'admin n'a pas encore posté d'offres de stages.</div></div>
+      <div style={{marginBottom:11}}><input value={search} onChange={e=>sSearch(e.target.value)} placeholder="🔍 Rechercher une offre ou entreprise..." style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,color:K.t1,fontSize:14,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box",minHeight:42,caretColor:K.em}} onFocus={e=>e.target.style.borderColor=K.emBd} onBlur={e=>e.target.style.borderColor=K.b0}/></div>
+      {filStages.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:14,padding:"44px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>🎯</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune offre</div><div style={{color:K.t3,fontSize:13}}>L'admin n'a pas encore posté d'offres de stages.</div></div>
       :<div style={{display:"flex",flexDirection:"column",gap:10}}>
         {filStages.map((s,i)=>{
           const cc=CAT_COLORS[s.cat]||{bg:K.c2,bd:K.b0,ac:K.em,ic:"briefcase"};
@@ -3559,12 +3596,12 @@ function StagePage({stages,plats,ok}){
                   {s.gratuit?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Payant"/>}
                   {exp?<Tg c={K.er} bg={K.erBg} bd={K.erBd} ch="Expiré"/>:s.dateFin?<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch={"📅 "+s.dateFin}/>:null}
                 </div>
-                {s.desc&&<div style={{fontSize:12,color:K.t2,lineHeight:1.5,marginBottom:8}}>{s.desc}</div>}
-                {s.competences&&s.competences.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:8}}>{s.competences.map(c=><span key={c} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,border:`1px solid ${K.b1}`,borderRadius:5,padding:"2px 7px",fontSize:10,color:K.t2}}>{c}</span>)}</div>}
+                {s.desc&&<div style={{fontSize:13,color:K.t2,lineHeight:1.5,marginBottom:8}}>{s.desc}</div>}
+                {s.competences&&s.competences.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:8}}>{s.competences.map(c=><span key={c} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,border:`1px solid ${K.b1}`,borderRadius:5,padding:"2px 7px",fontSize:11,color:K.t2}}>{c}</span>)}</div>}
               </div>
             </div>
-            <a href={s.url} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:6,background:`linear-gradient(135deg,${cc.ac}22,${cc.ac}11)`,border:`1px solid ${cc.bd}`,borderRadius:8,padding:"8px 14px",color:cc.ac,fontWeight:700,fontSize:12,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}>
-              <i className="ti ti-external-link" style={{fontSize:13}}/>Postuler / Voir l'offre
+            <a href={s.url} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:6,background:`linear-gradient(135deg,${cc.ac}22,${cc.ac}11)`,border:`1px solid ${cc.bd}`,borderRadius:8,padding:"8px 14px",color:cc.ac,fontWeight:700,fontSize:13,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}>
+              <i className="ti ti-external-link" style={{fontSize:14}}/>Postuler / Voir l'offre
             </a>
           </div>;
         })}
@@ -3579,17 +3616,17 @@ function StagePage({stages,plats,ok}){
           <div style={{padding:"16px 16px 12px",borderBottom:`1px solid ${cc.bd}`}}>
             <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
               <div style={{width:44,height:44,borderRadius:12,background:isLight?"rgba(255,255,255,.9)":K.b1,border:`1px solid ${cc.bd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{p.logo}</div>
-              <div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:14,color:K.t1}}>{p.nom}</div><div style={{fontSize:10,color:K.t3,marginTop:1}}>🌐 {p.langue||"EN"} · {p.gratuit?"Gratuit":"Payant/Freemium"}</div></div>
+              <div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:14,color:K.t1}}>{p.nom}</div><div style={{fontSize:11,color:K.t3,marginTop:1}}>🌐 {p.langue||"EN"} · {p.gratuit?"Gratuit":"Payant/Freemium"}</div></div>
               {p.gratuit?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Freemium"/>}
             </div>
-            <div style={{fontSize:12,color:K.t2,lineHeight:1.55,marginBottom:10}}>{p.desc}</div>
+            <div style={{fontSize:13,color:K.t2,lineHeight:1.55,marginBottom:10}}>{p.desc}</div>
             <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-              {p.cats?.map(c=>{const ccc=CAT_COLORS[c];return <span key={c} style={{background:ccc?ccc.bg:K.c2,border:`1px solid ${ccc?ccc.bd:K.b0}`,borderRadius:5,padding:"2px 7px",fontSize:10,color:ccc?ccc.ac:K.t2,display:"flex",alignItems:"center",gap:3}}><i className={"ti ti-"+(ccc?ccc.ic:"tag")} style={{fontSize:10}}/>{c}</span>;})}
+              {p.cats?.map(c=>{const ccc=CAT_COLORS[c];return <span key={c} style={{background:ccc?ccc.bg:K.c2,border:`1px solid ${ccc?ccc.bd:K.b0}`,borderRadius:5,padding:"2px 7px",fontSize:11,color:ccc?ccc.ac:K.t2,display:"flex",alignItems:"center",gap:3}}><i className={"ti ti-"+(ccc?ccc.ic:"tag")} style={{fontSize:11}}/>{c}</span>;})}
             </div>
           </div>
           <div style={{padding:"10px 14px"}}>
-            <a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,background:`linear-gradient(135deg,${cc.ac},${cc.ac}CC)`,borderRadius:8,padding:"9px",color:"#fff",fontWeight:700,fontSize:12,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:36}}>
-              <i className="ti ti-external-link" style={{fontSize:13}}/>Accéder à {p.nom}
+            <a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,background:`linear-gradient(135deg,${cc.ac},${cc.ac}CC)`,borderRadius:8,padding:"9px",color:"#fff",fontWeight:700,fontSize:13,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:36}}>
+              <i className="ti ti-external-link" style={{fontSize:14}}/>Accéder à {p.nom}
             </a>
           </div>
         </div>;
@@ -3714,12 +3751,12 @@ function ServicesPage({user}){
       <div style={{position:"absolute",top:-40,right:-40,width:180,height:180,borderRadius:"50%",background:`${K.em}0A`}}/>
       <div style={{position:"absolute",bottom:-30,left:20,width:100,height:100,borderRadius:"50%",background:`${K.in_}08`}}/>
       <div style={{position:"relative",zIndex:1}}>
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:isLight?"rgba(255,255,255,.7)":K.b0,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 12px",marginBottom:14}}><i className="ti ti-building" style={{fontSize:12,color:K.em}}/><span style={{fontSize:11,color:K.em,fontWeight:700}}>Éco-Campus RDC</span></div>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:isLight?"rgba(255,255,255,.7)":K.b0,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 12px",marginBottom:14}}><i className="ti ti-building" style={{fontSize:13,color:K.em}}/><span style={{fontSize:12,color:K.em,fontWeight:700}}>Éco-Campus RDC</span></div>
         <div style={{fontSize:mob?22:30,fontWeight:900,color:K.t1,lineHeight:1.2,marginBottom:10,letterSpacing:"-.5px"}}>Nos Services<br/><span style={{background:`linear-gradient(135deg,${K.em},${K.in_})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Professionnels</span></div>
         <div style={{fontSize:14,color:K.t2,lineHeight:1.6,marginBottom:18,maxWidth:520}}>Expertise comptable, fiscale et financière au service des entreprises de la zone OHADA. Des solutions sur mesure pour votre croissance.</div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <a href={`https://wa.me/${WA_NUM.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,background:`linear-gradient(135deg,#25D366,#128C7E)`,borderRadius:10,padding:"10px 18px",color:"#fff",fontWeight:700,fontSize:13,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-brand-whatsapp" style={{fontSize:16}}/>WhatsApp</a>
-          <a href={`mailto:${EMAIL}`} style={{display:"inline-flex",alignItems:"center",gap:7,background:isLight?"rgba(255,255,255,.8)":K.c2,border:`1px solid ${K.b1}`,borderRadius:10,padding:"10px 18px",color:K.t1,fontWeight:700,fontSize:13,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-mail" style={{fontSize:16}}/>Email</a>
+          <a href={`https://wa.me/${WA_NUM.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,background:`linear-gradient(135deg,#25D366,#128C7E)`,borderRadius:10,padding:"10px 18px",color:"#fff",fontWeight:700,fontSize:14,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-brand-whatsapp" style={{fontSize:16}}/>WhatsApp</a>
+          <a href={`mailto:${EMAIL}`} style={{display:"inline-flex",alignItems:"center",gap:7,background:isLight?"rgba(255,255,255,.8)":K.c2,border:`1px solid ${K.b1}`,borderRadius:10,padding:"10px 18px",color:K.t1,fontWeight:700,fontSize:14,textDecoration:"none",fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-mail" style={{fontSize:16}}/>Email</a>
         </div>
       </div>
     </div>
@@ -3733,28 +3770,28 @@ function ServicesPage({user}){
         <div style={{background:`linear-gradient(135deg,${s.col}20,${s.col}08)`,padding:"18px 18px 14px",borderBottom:`1px solid ${s.colBd}`}}>
           <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:10}}>
             <div style={{width:46,height:46,borderRadius:13,background:isLight?"rgba(255,255,255,.9)":K.b1,border:`1px solid ${s.colBd}`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className={"ti ti-"+s.ico} style={{fontSize:22,color:s.col}}/></div>
-            <span style={{background:s.colBg,border:`1px solid ${s.colBd}`,borderRadius:99,padding:"3px 10px",fontSize:10,fontWeight:700,color:s.col}}>{s.badge}</span>
+            <span style={{background:s.colBg,border:`1px solid ${s.colBd}`,borderRadius:99,padding:"3px 10px",fontSize:11,fontWeight:700,color:s.col}}>{s.badge}</span>
           </div>
           <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:4}}>{s.titre}</div>
-          <div style={{fontSize:12,color:s.col,fontWeight:600,fontStyle:"italic",marginBottom:8}}>{s.tagline}</div>
-          <div style={{fontSize:12,color:K.t2,lineHeight:1.55}}>{s.desc}</div>
+          <div style={{fontSize:13,color:s.col,fontWeight:600,fontStyle:"italic",marginBottom:8}}>{s.tagline}</div>
+          <div style={{fontSize:13,color:K.t2,lineHeight:1.55}}>{s.desc}</div>
         </div>
         {/* Prestations (expandable) */}
         <div style={{padding:"12px 16px"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:sel?.id===s.id?10:0}}>
-            <div style={{fontSize:11,color:K.t3,fontWeight:600,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-list-check" style={{fontSize:12,color:s.col}}/>{s.prestations.length} prestations incluses</div>
+            <div style={{fontSize:12,color:K.t3,fontWeight:600,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-list-check" style={{fontSize:13,color:s.col}}/>{s.prestations.length} prestations incluses</div>
             <i className={"ti ti-chevron-"+(sel?.id===s.id?"up":"down")} style={{fontSize:14,color:K.t3}}/>
           </div>
           {sel?.id===s.id&&<div style={{animation:"up .2s ease"}}>
             {s.prestations.map((p,j)=><div key={j} style={{display:"flex",gap:8,padding:"5px 0",borderBottom:j<s.prestations.length-1?`1px solid ${s.colBd}`:"none"}}>
-              <i className="ti ti-check" style={{fontSize:13,color:s.col,flexShrink:0,marginTop:2}}/>
-              <span style={{fontSize:12,color:K.t1,lineHeight:1.5}}>{p}</span>
+              <i className="ti ti-check" style={{fontSize:14,color:s.col,flexShrink:0,marginTop:2}}/>
+              <span style={{fontSize:13,color:K.t1,lineHeight:1.5}}>{p}</span>
             </div>)}
             <div style={{marginTop:12}}>
-              <div style={{fontSize:11,color:K.t3,fontWeight:600,marginBottom:6}}>Public cible</div>
-              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{s.cibles.map(c=><span key={c} style={{background:isLight?"rgba(255,255,255,.8)":K.b0,border:`1px solid ${s.colBd}`,borderRadius:5,padding:"2px 8px",fontSize:10,color:s.col,fontWeight:600}}>{c}</span>)}</div>
+              <div style={{fontSize:12,color:K.t3,fontWeight:600,marginBottom:6}}>Public cible</div>
+              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{s.cibles.map(c=><span key={c} style={{background:isLight?"rgba(255,255,255,.8)":K.b0,border:`1px solid ${s.colBd}`,borderRadius:5,padding:"2px 8px",fontSize:11,color:s.col,fontWeight:600}}>{c}</span>)}</div>
             </div>
-            <button onClick={e=>{e.stopPropagation();document.getElementById("contact-form")?.scrollIntoView({behavior:"smooth"});sForm(f=>({...f,service:s.titre}));}} className="bt" style={{width:"100%",marginTop:12,padding:"10px",background:`linear-gradient(135deg,${s.col},${s.col}BB)`,border:"none",borderRadius:9,color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:6,minHeight:38}}>
+            <button onClick={e=>{e.stopPropagation();document.getElementById("contact-form")?.scrollIntoView({behavior:"smooth"});sForm(f=>({...f,service:s.titre}));}} className="bt" style={{width:"100%",marginTop:12,padding:"10px",background:`linear-gradient(135deg,${s.col},${s.col}BB)`,border:"none",borderRadius:9,color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:6,minHeight:38}}>
               <i className="ti ti-send" style={{fontSize:14}}/>Demander ce service
             </button>
           </div>}
@@ -3765,12 +3802,12 @@ function ServicesPage({user}){
     {/* Pourquoi nous choisir */}
     <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:16,padding:mob?"16px":"22px 24px",marginBottom:24}}>
       <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:4,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-star" style={{fontSize:16,color:K.wa}}/>Pourquoi choisir Éco-Campus ?</div>
-      <div style={{color:K.t3,fontSize:12,marginBottom:16}}>Notre engagement envers l'excellence et la proximité</div>
+      <div style={{color:K.t3,fontSize:13,marginBottom:16}}>Notre engagement envers l'excellence et la proximité</div>
       <div style={{display:"grid",gridTemplateColumns:mob?"1fr 1fr":"repeat(4,1fr)",gap:10}}>
         {WHY.map((w,i)=><div key={i} style={{background:isLight?K.c2:K.c2,borderRadius:12,padding:"14px 12px",textAlign:"center",border:`1px solid ${K.b0}`}}>
           <div style={{width:40,height:40,borderRadius:11,background:K.emBg,border:`1px solid ${K.emBd}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px"}}><i className={"ti ti-"+w.ico} style={{fontSize:19,color:K.em}}/></div>
-          <div style={{fontWeight:700,fontSize:12,color:K.t1,marginBottom:4}}>{w.titre}</div>
-          <div style={{fontSize:11,color:K.t3,lineHeight:1.5}}>{w.desc}</div>
+          <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:4}}>{w.titre}</div>
+          <div style={{fontSize:12,color:K.t3,lineHeight:1.5}}>{w.desc}</div>
         </div>)}
       </div>
     </div>
@@ -3778,12 +3815,12 @@ function ServicesPage({user}){
     {/* Formulaire de contact */}
     <div id="contact-form" style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:16,padding:mob?"18px 16px":"24px 28px",marginBottom:16}}>
       <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-message-circle" style={{fontSize:16,color:K.in_}}/>Demande de service</div>
-      <div style={{color:K.t3,fontSize:12,marginBottom:18}}>Remplissez le formulaire — nous vous répondons sous 24h.</div>
+      <div style={{color:K.t3,fontSize:13,marginBottom:18}}>Remplissez le formulaire — nous vous répondons sous 24h.</div>
       {sent?<div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:12,padding:"24px",textAlign:"center"}}>
         <div style={{fontSize:40,marginBottom:10,animation:"fl 3s ease-in-out infinite"}}>✅</div>
         <div style={{fontWeight:800,fontSize:16,color:K.t1,marginBottom:4}}>Demande envoyée !</div>
-        <div style={{color:K.t2,fontSize:13,lineHeight:1.6,marginBottom:16}}>Nous avons bien reçu votre demande. Notre équipe vous contactera sous <b>24 heures ouvrables</b>.</div>
-        <button onClick={()=>{sSent(false);sForm({nom:"",email:"",tel:"",service:"",message:""}); }} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"9px 18px",color:K.t2,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Nouvelle demande</button>
+        <div style={{color:K.t2,fontSize:14,lineHeight:1.6,marginBottom:16}}>Nous avons bien reçu votre demande. Notre équipe vous contactera sous <b>24 heures ouvrables</b>.</div>
+        <button onClick={()=>{sSent(false);sForm({nom:"",email:"",tel:"",service:"",message:""}); }} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"9px 18px",color:K.t2,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Nouvelle demande</button>
       </div>:<>
         <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"1fr 1fr",gap:10,marginBottom:10}}>
           <Inp lb="Nom complet *" val={form.nom||userNom} onChange={e=>sForm(f=>({...f,nom:e.target.value}))} ph="Votre nom"/>
@@ -3791,8 +3828,8 @@ function ServicesPage({user}){
         </div>
         <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"1fr 1fr",gap:10,marginBottom:10}}>
           <Inp lb="Téléphone / WhatsApp" val={form.tel} onChange={e=>sForm(f=>({...f,tel:e.target.value}))} ph="+243 XXX XXX XXX"/>
-          <div style={{marginBottom:13}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>Service souhaité *</div>
-            <select value={form.service} onChange={e=>sForm(f=>({...f,service:e.target.value}))} style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:form.service?K.t1:K.t3,fontSize:13,outline:"none",minHeight:44,fontFamily:"'Outfit',sans-serif"}}>
+          <div style={{marginBottom:13}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:5}}>Service souhaité *</div>
+            <select value={form.service} onChange={e=>sForm(f=>({...f,service:e.target.value}))} style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:form.service?K.t1:K.t3,fontSize:14,outline:"none",minHeight:44,fontFamily:"'Outfit',sans-serif"}}>
               <option value="">-- Choisir un service --</option>
               {SERVICES.map(s=><option key={s.id} value={s.titre}>{s.titre}</option>)}
               <option value="Autre">Autre / Non listé</option>
@@ -3800,19 +3837,19 @@ function ServicesPage({user}){
           </div>
         </div>
         <Inp lb="Message (optionnel)" val={form.message} onChange={e=>sForm(f=>({...f,message:e.target.value}))} ph="Décrivez votre situation, vos besoins spécifiques..." rows={4}/>
-        {err&&<div style={{background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,color:K.er,fontSize:13,padding:"8px 12px",marginBottom:10,display:"flex",gap:7}}><span>⚠</span><span>{err}</span></div>}
+        {err&&<div style={{background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:8,color:K.er,fontSize:14,padding:"8px 12px",marginBottom:10,display:"flex",gap:7}}><span>⚠</span><span>{err}</span></div>}
         <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
           <button onClick={send} disabled={sending} className="bt" style={{flex:1,minWidth:180,padding:"12px",background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:10,color:"#F5EDD8",fontWeight:800,fontSize:14,cursor:sending?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:7,minHeight:46,opacity:sending?.7:1}}>
             <i className="ti ti-send" style={{fontSize:16}}/>{sending?"Envoi en cours…":"Envoyer ma demande"}
           </button>
-          <a href={`https://wa.me/${WA_NUM.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#25D366,#128C7E)",borderRadius:10,padding:"12px 18px",color:"#fff",fontWeight:700,fontSize:13,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:46}}>
+          <a href={`https://wa.me/${WA_NUM.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#25D366,#128C7E)",borderRadius:10,padding:"12px 18px",color:"#fff",fontWeight:700,fontSize:14,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:46}}>
             <i className="ti ti-brand-whatsapp" style={{fontSize:16}}/>WhatsApp
           </a>
-          <a href={`mailto:${EMAIL}?subject=Demande de service — ${form.service||"Éco-Campus"}`} style={{display:"inline-flex",alignItems:"center",gap:6,background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:10,padding:"12px 18px",color:K.in_,fontWeight:700,fontSize:13,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:46}}>
+          <a href={`mailto:${EMAIL}?subject=Demande de service — ${form.service||"Éco-Campus"}`} style={{display:"inline-flex",alignItems:"center",gap:6,background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:10,padding:"12px 18px",color:K.in_,fontWeight:700,fontSize:14,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:46}}>
             <i className="ti ti-mail" style={{fontSize:16}}/>Email
           </a>
         </div>
-        <div style={{marginTop:12,padding:"9px 12px",background:K.c2,borderRadius:8,fontSize:11,color:K.t3,display:"flex",alignItems:"center",gap:6}}><i className="ti ti-lock" style={{fontSize:12,color:K.em}}/>Vos informations sont confidentielles et ne seront jamais partagées.</div>
+        <div style={{marginTop:12,padding:"9px 12px",background:K.c2,borderRadius:8,fontSize:12,color:K.t3,display:"flex",alignItems:"center",gap:6}}><i className="ti ti-lock" style={{fontSize:13,color:K.em}}/>Vos informations sont confidentielles et ne seront jamais partagées.</div>
       </>}
     </div>
   </div>;
@@ -3838,7 +3875,7 @@ function AdminThread({apprenantUid,apprenantMail,onBack}){
   };
   return <div>
     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-      <button onClick={onBack} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"6px 10px",cursor:"pointer",color:K.t2,display:"flex",alignItems:"center",gap:4,fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-arrow-left" style={{fontSize:13}}/>Retour</button>
+      <button onClick={onBack} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"6px 10px",cursor:"pointer",color:K.t2,display:"flex",alignItems:"center",gap:4,fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-arrow-left" style={{fontSize:14}}/>Retour</button>
       <div style={{fontWeight:800,fontSize:14,color:K.t1}}>{apprenantNom}</div>
     </div>
     <div style={{background:K.c2,borderRadius:12,padding:14,marginBottom:12}}>
@@ -3846,15 +3883,15 @@ function AdminThread({apprenantUid,apprenantMail,onBack}){
         {msgs.map(m=>{
           const mine=m.fromRole==="admin";
           return <div key={m.id} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"78%"}}>
-            <div style={{background:mine?K.em:K.card,color:mine?"#F5EDD8":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:13,lineHeight:1.5,border:mine?"none":`1px solid ${K.b0}`}}>{m.texte}</div>
-            <div style={{fontSize:9,color:K.t3,marginTop:3,textAlign:mine?"right":"left"}}>{mine?"Vous":m.apprenantNom} · {new Date(m.ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
+            <div style={{background:mine?K.em:K.card,color:mine?"#F5EDD8":K.t1,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"9px 13px",fontSize:14,lineHeight:1.5,border:mine?"none":`1px solid ${K.b0}`}}>{m.texte}</div>
+            <div style={{fontSize:10,color:K.t3,marginTop:3,textAlign:mine?"right":"left"}}>{mine?"Vous":m.apprenantNom} · {new Date(m.ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
           </div>;
         })}
         <div ref={endRef}/>
       </div>
     </div>
     <div style={{display:"flex",gap:8}}>
-      <input value={texte} onChange={e=>sTexte(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Répondre…" style={{flex:1,background:K.card,border:`1px solid ${K.b0}`,borderRadius:99,padding:"10px 15px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}/>
+      <input value={texte} onChange={e=>sTexte(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Répondre…" style={{flex:1,background:K.card,border:`1px solid ${K.b0}`,borderRadius:99,padding:"10px 15px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
       <Btn ch={sending?"…":"Envoyer"} on={send} v="i" sx={{minHeight:40}}/>
     </div>
   </div>;
@@ -3971,9 +4008,9 @@ function AA({onOut}){
   const[gr,sGr]=useState(true);
   const saveLiveFn=async()=>{sSav(true);await saveLive({on:live.on,url:rLU.current?.value?.trim()||"",titre:rLT.current?.value?.trim()||"",desc:rLD.current?.value?.trim()||""});sSav(false);sMsg({t:"o",m:"Direct enregistré."});setTimeout(()=>sMsg({t:"",m:""}),2000);};
   const addVidFn=async()=>{const url=rVU.current?.value?.trim()||"",titre=rVT.current?.value?.trim()||"";if(!titre||!url){alert("Titre et URL requis");return;}if(!pVid(url)){alert("URL invalide");return;}sSav(true);await saveVideo({titre,url,desc:rVD.current?.value?.trim()||"",mid:rVM.current?.value||null,gr});sSav(false);sAV(false);[rVU,rVT,rVD].forEach(r=>{if(r.current)r.current.value="";});};
-  function RC({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"12px",marginBottom:7}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}><div style={{width:30,height:30,borderRadius:8,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:12,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{u.nom}</div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div></div><Tg c={sc_(st)} bg={`${sc_(st)}12`} bd={`${sc_(st)}28`} ch={sl_(st)}/></div>{u.activationCode&&<div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,padding:"5px 10px",marginBottom:8,display:"flex",alignItems:"center",gap:8}}><span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:13,color:K.em}}>{u.activationCode}</span><span style={{fontSize:10,color:jr<=30?K.wa:K.t3}}>· {jr>0?`${jr}j`:"Exp."}</span></div>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{st==="demande"&&<><Btn ch="✓" on={()=>sVm(u.uid)} sm/><Btn ch="✗" on={()=>ref_(u.uid)} v="d" sm/></>}{st==="actif"&&<><Btn ch="Code" on={()=>sCm(u)} v="s" sm/><Btn ch="✉" on={()=>mL(u)} v="i" sm/><Btn ch="⏸" on={()=>rev(u.uid)} v="d" sm/></>}{(st==="expiré"||st==="aucun")&&<Btn ch="▶" on={()=>sVm(u.uid)} v="s" sm/>}<Btn ch="🗑" on={()=>sDm(u.uid)} v="d" sm/></div></div>;}
-  function RR({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div className="ar" style={{borderBottom:`1px solid ${K.b0}`,background:"transparent"}}><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:22,height:22,borderRadius:7,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:10,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div><div><div style={{color:K.t1,fontWeight:700,fontSize:12}}>{u.nom}</div><div style={{color:K.t3,fontSize:9,fontFamily:"'JetBrains Mono',monospace"}}>{u.createdAt}</div></div></div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div><div>{u.activationCode&&<div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:11,color:K.em,background:K.emBg,borderRadius:5,padding:"1px 5px",display:"inline-block",marginBottom:2}}>{u.activationCode}</div>}{u.dateExpiration&&<div style={{fontSize:9,color:jr<=7?K.er:jr<=30?K.wa:K.t3,fontFamily:"'JetBrains Mono',monospace"}}>{jr>0?`${jr}j`:"Exp."}</div>}</div><div style={{display:"flex",gap:3,justifyContent:"flex-end",flexWrap:"wrap"}}>{st==="demande"&&<><Btn ch="✓" on={()=>sVm(u.uid)} sm/><Btn ch="✗" on={()=>ref_(u.uid)} v="d" sm/></>}{st==="actif"&&<><Btn ch="Code" on={()=>sCm(u)} v="s" sm/><Btn ch="✉" on={()=>mL(u)} v="i" sm/><Btn ch="⏸" on={()=>rev(u.uid)} v="d" sm/></>}{(st==="expiré"||st==="aucun")&&<Btn ch="▶" on={()=>sVm(u.uid)} v="s" sm/>}<Btn ch="🗑" on={()=>sDm(u.uid)} v="d" sm/></div></div>;}
-  function Liste({list,empty}){if(list.length===0)return <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"38px",textAlign:"center"}}><div style={{fontSize:26,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>👤</div><div style={{color:K.t3,fontSize:13}}>{empty}</div></div>;if(mob)return <div>{list.map(u=><RC key={u.uid} u={u}/>)}</div>;return <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,overflow:"hidden"}}><div className="ah" style={{background:K.bg,borderBottom:`1px solid ${K.b0}`,color:K.t3,fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",letterSpacing:".7px"}}><div>Nom</div><div>Email</div><div>Code</div><div style={{textAlign:"right"}}>Actions</div></div>{list.map(u=><RR key={u.uid} u={u}/>)}</div>;}
+  function RC({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"12px",marginBottom:7}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}><div style={{width:30,height:30,borderRadius:8,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:13,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{u.nom}</div><div style={{color:K.t3,fontSize:12,fontFamily:"'JetBrains Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div></div><Tg c={sc_(st)} bg={`${sc_(st)}12`} bd={`${sc_(st)}28`} ch={sl_(st)}/></div>{u.activationCode&&<div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,padding:"5px 10px",marginBottom:8,display:"flex",alignItems:"center",gap:8}}><span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:14,color:K.em}}>{u.activationCode}</span><span style={{fontSize:11,color:jr<=30?K.wa:K.t3}}>· {jr>0?`${jr}j`:"Exp."}</span></div>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{st==="demande"&&<><Btn ch="✓" on={()=>sVm(u.uid)} sm/><Btn ch="✗" on={()=>ref_(u.uid)} v="d" sm/></>}{st==="actif"&&<><Btn ch="Code" on={()=>sCm(u)} v="s" sm/><Btn ch="✉" on={()=>mL(u)} v="i" sm/><Btn ch="⏸" on={()=>rev(u.uid)} v="d" sm/></>}{(st==="expiré"||st==="aucun")&&<Btn ch="▶" on={()=>sVm(u.uid)} v="s" sm/>}<Btn ch="🗑" on={()=>sDm(u.uid)} v="d" sm/></div></div>;}
+  function RR({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div className="ar" style={{borderBottom:`1px solid ${K.b0}`,background:"transparent"}}><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:22,height:22,borderRadius:7,background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:11,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div><div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{u.nom}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{u.createdAt}</div></div></div><div style={{color:K.t3,fontSize:12,fontFamily:"'JetBrains Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div><div>{u.activationCode&&<div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:12,color:K.em,background:K.emBg,borderRadius:5,padding:"1px 5px",display:"inline-block",marginBottom:2}}>{u.activationCode}</div>}{u.dateExpiration&&<div style={{fontSize:10,color:jr<=7?K.er:jr<=30?K.wa:K.t3,fontFamily:"'JetBrains Mono',monospace"}}>{jr>0?`${jr}j`:"Exp."}</div>}</div><div style={{display:"flex",gap:3,justifyContent:"flex-end",flexWrap:"wrap"}}>{st==="demande"&&<><Btn ch="✓" on={()=>sVm(u.uid)} sm/><Btn ch="✗" on={()=>ref_(u.uid)} v="d" sm/></>}{st==="actif"&&<><Btn ch="Code" on={()=>sCm(u)} v="s" sm/><Btn ch="✉" on={()=>mL(u)} v="i" sm/><Btn ch="⏸" on={()=>rev(u.uid)} v="d" sm/></>}{(st==="expiré"||st==="aucun")&&<Btn ch="▶" on={()=>sVm(u.uid)} v="s" sm/>}<Btn ch="🗑" on={()=>sDm(u.uid)} v="d" sm/></div></div>;}
+  function Liste({list,empty}){if(list.length===0)return <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"38px",textAlign:"center"}}><div style={{fontSize:26,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>👤</div><div style={{color:K.t3,fontSize:14}}>{empty}</div></div>;if(mob)return <div>{list.map(u=><RC key={u.uid} u={u}/>)}</div>;return <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,overflow:"hidden"}}><div className="ah" style={{background:K.bg,borderBottom:`1px solid ${K.b0}`,color:K.t3,fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",letterSpacing:".7px"}}><div>Nom</div><div>Email</div><div>Code</div><div style={{textAlign:"right"}}>Actions</div></div>{list.map(u=><RR key={u.uid} u={u}/>)}</div>;}
   function ModEditor({mod,onSave,onCancel}){
     const isNew=!mod.id;const[qs,sQs]=useState(mod.q?JSON.parse(JSON.stringify(mod.q)):[{q:"",r:["","","",""],b:0}]);
     const[ex,sEx]=useState(mod.ex?JSON.parse(JSON.stringify(mod.ex)):{ti:"",en:"",tv:[""],dn:[],co:""});
@@ -3985,24 +4022,24 @@ function AA({onOut}){
       <div style={{background:K.c2,borderRadius:11,padding:"13px",marginBottom:12}}>
         <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}><div style={{flex:"0 0 100px"}}><Inp lb="Code *" rf={rC} ph="M11" def={mod.code||""}/></div><div style={{flex:1,minWidth:140}}><Inp lb="Titre *" rf={rT} ph="Nom du cours" def={mod.titre||""}/></div></div>
         <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}><div style={{flex:1,minWidth:120}}><Inp lb="Matière" rf={rM} ph="SYSCOHADA, Droit..." def={mod.mat||""}/></div><div style={{flex:1,minWidth:140}}><Inp lb="Description" rf={rD} ph="Résumé court" def={mod.desc||""}/></div></div>
-        <div style={{marginBottom:10}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:6}}>Icône</div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{ICOS.map(i=><button key={i} onClick={()=>sIco(i)} className="bt" style={{width:34,height:34,borderRadius:8,background:ico===i?K.emBg:K.bg,border:`1px solid ${ico===i?K.emBd:K.b0}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{icoEl(i,ico===i?K.em:K.t2,16)}</button>)}</div></div>
-        <div style={{marginBottom:10}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:6}}>Couleur</div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{COLS.map(c=><button key={c} onClick={()=>sCol(c)} className="bt" style={{width:26,height:26,borderRadius:"50%",background:c,border:`2px solid ${col===c?"#fff":"transparent"}`,cursor:"pointer"}}/>)}</div></div>
-        <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{color:K.t2,fontSize:13,fontWeight:600}}>Actif</span><button onClick={()=>sOn(a=>!a)} className="bt" style={{width:42,height:22,borderRadius:99,background:on?K.em:K.c2,border:`1px solid ${on?K.emBd:K.b0}`,position:"relative",cursor:"pointer",transition:"background .2s"}}><span style={{position:"absolute",top:2,left:on?20:2,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left .2s",display:"block"}}/></button><span style={{fontSize:12,color:on?K.em:K.t3}}>{on?"Visible":"Masqué"}</span></div>
+        <div style={{marginBottom:10}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:6}}>Icône</div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{ICOS.map(i=><button key={i} onClick={()=>sIco(i)} className="bt" style={{width:34,height:34,borderRadius:8,background:ico===i?K.emBg:K.bg,border:`1px solid ${ico===i?K.emBd:K.b0}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{icoEl(i,ico===i?K.em:K.t2,16)}</button>)}</div></div>
+        <div style={{marginBottom:10}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:6}}>Couleur</div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{COLS.map(c=><button key={c} onClick={()=>sCol(c)} className="bt" style={{width:26,height:26,borderRadius:"50%",background:c,border:`2px solid ${col===c?"#fff":"transparent"}`,cursor:"pointer"}}/>)}</div></div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{color:K.t2,fontSize:14,fontWeight:600}}>Actif</span><button onClick={()=>sOn(a=>!a)} className="bt" style={{width:42,height:22,borderRadius:99,background:on?K.em:K.c2,border:`1px solid ${on?K.emBd:K.b0}`,position:"relative",cursor:"pointer",transition:"background .2s"}}><span style={{position:"absolute",top:2,left:on?20:2,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left .2s",display:"block"}}/></button><span style={{fontSize:13,color:on?K.em:K.t3}}>{on?"Visible":"Masqué"}</span></div>
       </div>
       <div style={{background:K.c2,borderRadius:11,padding:"13px",marginBottom:12}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}><div style={{fontWeight:700,fontSize:13,color:K.t1}}>QCM ({qs.length})</div><Btn ch="+ Question" on={()=>sQs(q=>[...q,{q:"",r:["","","",""],b:0}])} sm v="s"/></div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}><div style={{fontWeight:700,fontSize:14,color:K.t1}}>QCM ({qs.length})</div><Btn ch="+ Question" on={()=>sQs(q=>[...q,{q:"",r:["","","",""],b:0}])} sm v="s"/></div>
         {qs.map((qi_,idx)=><div key={idx} style={{background:K.bg,borderRadius:9,padding:"10px",marginBottom:8,border:`1px solid ${K.b0}`}}>
-          <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:7}}><span style={{color:K.t3,fontSize:11,fontWeight:700,flexShrink:0}}>Q{idx+1}</span><input value={qi_.q} onChange={e=>{const n=[...qs];n[idx]={...n[idx],q:e.target.value};sQs(n);}} placeholder="Question..." style={{flex:1,padding:"7px 10px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif"}}/><Btn ch="✕" on={()=>sQs(q=>q.filter((_,j)=>j!==idx))} v="d" sm/></div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>{qi_.r.map((r,ri)=><div key={ri} style={{display:"flex",alignItems:"center",gap:4}}><button onClick={()=>{const n=[...qs];n[idx]={...n[idx],b:ri};sQs(n);}} className="bt" style={{width:18,height:18,borderRadius:"50%",background:qi_.b===ri?K.em:K.c2,border:`2px solid ${qi_.b===ri?K.em:K.b1}`,cursor:"pointer",flexShrink:0}}/><input value={r} onChange={e=>{const n=[...qs];const rr=[...n[idx].r];rr[ri]=e.target.value;n[idx]={...n[idx],r:rr};sQs(n);}} placeholder={`Option ${["A","B","C","D"][ri]}`} style={{flex:1,padding:"5px 8px",background:K.c2,border:`1px solid ${qi_.b===ri?K.emBd:K.b0}`,borderRadius:6,color:qi_.b===ri?K.em:K.t1,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}/></div>)}</div>
+          <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:7}}><span style={{color:K.t3,fontSize:12,fontWeight:700,flexShrink:0}}>Q{idx+1}</span><input value={qi_.q} onChange={e=>{const n=[...qs];n[idx]={...n[idx],q:e.target.value};sQs(n);}} placeholder="Question..." style={{flex:1,padding:"7px 10px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:13,outline:"none",fontFamily:"'Outfit',sans-serif"}}/><Btn ch="✕" on={()=>sQs(q=>q.filter((_,j)=>j!==idx))} v="d" sm/></div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>{qi_.r.map((r,ri)=><div key={ri} style={{display:"flex",alignItems:"center",gap:4}}><button onClick={()=>{const n=[...qs];n[idx]={...n[idx],b:ri};sQs(n);}} className="bt" style={{width:18,height:18,borderRadius:"50%",background:qi_.b===ri?K.em:K.c2,border:`2px solid ${qi_.b===ri?K.em:K.b1}`,cursor:"pointer",flexShrink:0}}/><input value={r} onChange={e=>{const n=[...qs];const rr=[...n[idx].r];rr[ri]=e.target.value;n[idx]={...n[idx],r:rr};sQs(n);}} placeholder={`Option ${["A","B","C","D"][ri]}`} style={{flex:1,padding:"5px 8px",background:K.c2,border:`1px solid ${qi_.b===ri?K.emBd:K.b0}`,borderRadius:6,color:qi_.b===ri?K.em:K.t1,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif"}}/></div>)}</div>
         </div>)}
       </div>
       <div style={{background:K.c2,borderRadius:11,padding:"13px",marginBottom:12}}>
-        <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:10}}>Exercice</div>
-        <div style={{marginBottom:8}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:4}}>Titre</div><input value={ex.ti} onChange={e=>sEx(x=>({...x,ti:e.target.value}))} placeholder="Titre de l'exercice" style={{width:"100%",padding:"8px 10px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/></div>
-        <div style={{marginBottom:8}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:4}}>Énoncé</div><textarea value={ex.en} onChange={e=>sEx(x=>({...x,en:e.target.value}))} rows={2} placeholder="Situation pratique..." style={{width:"100%",padding:"8px 10px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif",resize:"vertical",boxSizing:"border-box"}}/></div>
-        <div style={{marginBottom:8}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}><div style={{color:K.t2,fontSize:12,fontWeight:600}}>Travail</div><Btn ch="+" on={()=>sEx(x=>({...x,tv:[...x.tv,""]}))} sm v="s"/></div>{ex.tv.map((t,i)=><div key={i} style={{display:"flex",gap:5,marginBottom:4}}><input value={t} onChange={e=>{const tv=[...ex.tv];tv[i]=e.target.value;sEx(x=>({...x,tv}));}} placeholder={`Étape ${i+1}`} style={{flex:1,padding:"7px 9px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:6,color:K.t1,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}/><Btn ch="✕" on={()=>sEx(x=>({...x,tv:x.tv.filter((_,j)=>j!==i)}))} v="d" sm/></div>)}</div>
-        <div style={{marginBottom:8}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}><div style={{color:K.t2,fontSize:12,fontWeight:600}}>Données</div><Btn ch="+ Ligne" on={()=>sEx(x=>({...x,dn:[...x.dn,{a:"",b:"",c:""}]}))} sm v="s"/></div>{ex.dn.map((row,i)=><div key={i} style={{display:"flex",gap:4,marginBottom:3,alignItems:"center"}}>{["a","b","c"].map((k,j)=><input key={k} value={row[k]||""} onChange={e=>{const dn=[...ex.dn];dn[i]={...dn[i],[k]:e.target.value};sEx(x=>({...x,dn}));}} placeholder={j===0?"Libellé":j===1?"Valeur":"Unité (opt.)"} style={{flex:1,padding:"6px 8px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:6,color:K.t1,fontSize:11,outline:"none",fontFamily:j>0?"'JetBrains Mono',monospace":"'Outfit',sans-serif"}}/>)}<Btn ch="✕" on={()=>sEx(x=>({...x,dn:x.dn.filter((_,j)=>j!==i)}))} v="d" sm/></div>)}</div>
-        <div><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:4}}>Corrigé</div><textarea value={ex.co} onChange={e=>sEx(x=>({...x,co:e.target.value}))} rows={2} placeholder="Résultats attendus..." style={{width:"100%",padding:"8px 10px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:11,outline:"none",fontFamily:"'JetBrains Mono',monospace",resize:"vertical",boxSizing:"border-box"}}/></div>
+        <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:10}}>Exercice</div>
+        <div style={{marginBottom:8}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:4}}>Titre</div><input value={ex.ti} onChange={e=>sEx(x=>({...x,ti:e.target.value}))} placeholder="Titre de l'exercice" style={{width:"100%",padding:"8px 10px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:13,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/></div>
+        <div style={{marginBottom:8}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:4}}>Énoncé</div><textarea value={ex.en} onChange={e=>sEx(x=>({...x,en:e.target.value}))} rows={2} placeholder="Situation pratique..." style={{width:"100%",padding:"8px 10px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:13,outline:"none",fontFamily:"'Outfit',sans-serif",resize:"vertical",boxSizing:"border-box"}}/></div>
+        <div style={{marginBottom:8}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}><div style={{color:K.t2,fontSize:13,fontWeight:600}}>Travail</div><Btn ch="+" on={()=>sEx(x=>({...x,tv:[...x.tv,""]}))} sm v="s"/></div>{ex.tv.map((t,i)=><div key={i} style={{display:"flex",gap:5,marginBottom:4}}><input value={t} onChange={e=>{const tv=[...ex.tv];tv[i]=e.target.value;sEx(x=>({...x,tv}));}} placeholder={`Étape ${i+1}`} style={{flex:1,padding:"7px 9px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:6,color:K.t1,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif"}}/><Btn ch="✕" on={()=>sEx(x=>({...x,tv:x.tv.filter((_,j)=>j!==i)}))} v="d" sm/></div>)}</div>
+        <div style={{marginBottom:8}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}><div style={{color:K.t2,fontSize:13,fontWeight:600}}>Données</div><Btn ch="+ Ligne" on={()=>sEx(x=>({...x,dn:[...x.dn,{a:"",b:"",c:""}]}))} sm v="s"/></div>{ex.dn.map((row,i)=><div key={i} style={{display:"flex",gap:4,marginBottom:3,alignItems:"center"}}>{["a","b","c"].map((k,j)=><input key={k} value={row[k]||""} onChange={e=>{const dn=[...ex.dn];dn[i]={...dn[i],[k]:e.target.value};sEx(x=>({...x,dn}));}} placeholder={j===0?"Libellé":j===1?"Valeur":"Unité (opt.)"} style={{flex:1,padding:"6px 8px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:6,color:K.t1,fontSize:12,outline:"none",fontFamily:j>0?"'JetBrains Mono',monospace":"'Outfit',sans-serif"}}/>)}<Btn ch="✕" on={()=>sEx(x=>({...x,dn:x.dn.filter((_,j)=>j!==i)}))} v="d" sm/></div>)}</div>
+        <div><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:4}}>Corrigé</div><textarea value={ex.co} onChange={e=>sEx(x=>({...x,co:e.target.value}))} rows={2} placeholder="Résultats attendus..." style={{width:"100%",padding:"8px 10px",background:K.bg,border:`1px solid ${K.b0}`,borderRadius:7,color:K.t1,fontSize:12,outline:"none",fontFamily:"'JetBrains Mono',monospace",resize:"vertical",boxSizing:"border-box"}}/></div>
       </div>
       <div style={{display:"flex",gap:8}}><Btn ch="Annuler" on={onCancel} v="g" full/><Btn ch={saving?"Enregistrement…":isNew?"Créer →":"Enregistrer →"} on={save} full dis={saving}/></div>
     </div>;
@@ -4018,22 +4055,22 @@ function AA({onOut}){
           <Logo sm={mob}/>
           <div style={{width:1,height:16,background:K.b0,flexShrink:0}}/>
           <div style={{display:"flex",alignItems:"center",gap:5,background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:99,padding:"2px 9px"}}>
-            <i className="ti ti-shield-check" style={{fontSize:11,color:K.wa}}/>
-            <span style={{fontSize:10,fontWeight:800,color:K.wa,letterSpacing:.4}}>ADMIN</span>
+            <i className="ti ti-shield-check" style={{fontSize:12,color:K.wa}}/>
+            <span style={{fontSize:11,fontWeight:800,color:K.wa,letterSpacing:.4}}>ADMIN</span>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
           <div style={{display:"flex",gap:10,alignItems:"center"}}>
             {[[`${users.length}`,"ti-users",K.t2],[`${nD}`,"ti-clock",K.wa],[`${nA}`,"ti-check-circle",K.em]].map(([v,ic,c])=>(
               <div key={ic} style={{display:"flex",alignItems:"center",gap:3}}>
-                <i className={`ti ${ic}`} style={{fontSize:12,color:c}}/>
-                <span style={{fontSize:11,fontWeight:700,color:c}}>{v}</span>
+                <i className={`ti ${ic}`} style={{fontSize:13,color:c}}/>
+                <span style={{fontSize:12,fontWeight:700,color:c}}>{v}</span>
               </div>
             ))}
           </div>
           <div style={{width:1,height:16,background:K.b0}}/>
-          <button onClick={onOut} className="bt" style={{display:"flex",alignItems:"center",gap:5,background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontSize:11,fontWeight:700,minHeight:28,fontFamily:"'Outfit',sans-serif"}}>
-            <i className="ti ti-logout" style={{fontSize:12}}/>
+          <button onClick={onOut} className="bt" style={{display:"flex",alignItems:"center",gap:5,background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontSize:12,fontWeight:700,minHeight:28,fontFamily:"'Outfit',sans-serif"}}>
+            <i className="ti ti-logout" style={{fontSize:13}}/>
             {!mob&&"Quitter"}
           </button>
         </div>
@@ -4066,13 +4103,13 @@ function AA({onOut}){
             return <button key={k} onClick={()=>sT(k)} className="bt"
               style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",border:"none",cursor:"pointer",
                 background:active?K.c2:"transparent",color:active?K.t1:K.t3,
-                fontWeight:active?700:500,fontSize:11,whiteSpace:"nowrap",
+                fontWeight:active?700:500,fontSize:12,whiteSpace:"nowrap",
                 fontFamily:"'Outfit',sans-serif",position:"relative",minHeight:34,
                 borderBottom:active?`2px solid ${K.em}`:"2px solid transparent",
                 borderRadius:"6px 6px 0 0",transition:"background .12s,color .12s"}}>
-              <i className={`ti ${ico}`} style={{fontSize:13,color:active?K.em:K.t3}}/>
+              <i className={`ti ${ico}`} style={{fontSize:14,color:active?K.em:K.t3}}/>
               {label}
-              {badge>0&&<span style={{background:bc,color:"#F5EDD8",borderRadius:99,fontSize:9,fontWeight:800,padding:"1px 5px",minWidth:16,textAlign:"center",lineHeight:1.4}}>{badge}</span>}
+              {badge>0&&<span style={{background:bc,color:"#F5EDD8",borderRadius:99,fontSize:10,fontWeight:800,padding:"1px 5px",minWidth:16,textAlign:"center",lineHeight:1.4}}>{badge}</span>}
             </button>;
           })}
         </div>;
@@ -4080,7 +4117,7 @@ function AA({onOut}){
     </nav>
     <div className="mp" style={{maxWidth:1060,margin:"0 auto"}}>
       {msg.m&&<Pop t={msg.t} m={msg.m}/>}
-      <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:13}}>{[[`${users.length}`,"Inscrits",K.t2],[`${nD}`,"Dem.",K.wa],[`${nA}`,"Actifs",K.em],[`${nE}`,"Exp.",K.er],[`${mods.filter(m=>m.on!==false).length}`,"Modules",K.in_]].map(([v,l,c])=><div key={l} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:9,padding:"7px 11px",minWidth:mob?56:68,textAlign:"center"}}><div style={{color:c,fontWeight:800,fontSize:mob?14:16,letterSpacing:"-.5px",lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:10,marginTop:2}}>{l}</div></div>)}</div>
+      <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:13}}>{[[`${users.length}`,"Inscrits",K.t2],[`${nD}`,"Dem.",K.wa],[`${nA}`,"Actifs",K.em],[`${nE}`,"Exp.",K.er],[`${mods.filter(m=>m.on!==false).length}`,"Modules",K.in_]].map(([v,l,c])=><div key={l} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:9,padding:"7px 11px",minWidth:mob?56:68,textAlign:"center"}}><div style={{color:c,fontWeight:800,fontSize:mob?14:16,letterSpacing:"-.5px",lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}</div>
       {tab==="home"&&(()=>{
         const dashTiles=[
           {k:"d", ico:"clock",          label:"Demandes",       badge:nD, col:K.wa},
@@ -4131,10 +4168,10 @@ function AA({onOut}){
         const KpiCard=({label,val,col,suffix})=>
           <div style={{background:K.card,border:`1px solid ${K.b1}`,borderRadius:12,padding:"12px 13px"}}>
             <div style={{fontSize:20,fontWeight:900,color:col||K.t1,lineHeight:1}}>{val==null?"—":val}{suffix||""}</div>
-            <div style={{fontSize:10,color:K.t3,marginTop:5,fontWeight:600,lineHeight:1.3}}>{label}</div>
+            <div style={{fontSize:11,color:K.t3,marginTop:5,fontWeight:600,lineHeight:1.3}}>{label}</div>
           </div>;
         const KpiGroup=({title,children})=><div style={{marginBottom:18}}>
-          <div style={{fontSize:11,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>{title}</div>
+          <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>{title}</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(110px,1fr))",gap:8}}>{children}</div>
         </div>;
 
@@ -4185,32 +4222,32 @@ function AA({onOut}){
             <KpiCard label="Annonces actives" val={allAnnonces.filter(a=>a.actif).length} col={K.wa}/>
           </KpiGroup>
 
-          <div style={{fontSize:11,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>Accès rapide</div>
+          <div style={{fontSize:12,fontWeight:700,color:K.t3,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>Accès rapide</div>
           <div className="gm">
             {dashTiles.map(({k,ico,label,badge,col})=>
               <div key={k} onClick={()=>sT(k)} className="bt" style={{cursor:"pointer",padding:"14px 12px",borderRadius:13,background:K.card,border:`1px solid ${K.b1}`,position:"relative",overflow:"hidden",transition:"transform .15s"}}>
-                {!!badge&&<span style={{position:"absolute",top:9,right:9,background:col,color:"#F5EDD8",borderRadius:99,fontSize:10,fontWeight:800,padding:"1px 7px",minWidth:18,textAlign:"center"}}>{badge}</span>}
+                {!!badge&&<span style={{position:"absolute",top:9,right:9,background:col,color:"#F5EDD8",borderRadius:99,fontSize:11,fontWeight:800,padding:"1px 7px",minWidth:18,textAlign:"center"}}>{badge}</span>}
                 <div style={{width:34,height:34,borderRadius:10,background:`${col}18`,border:`1px solid ${col}30`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:10}}>
                   <i className={`ti ti-${ico}`} style={{fontSize:17,color:col}}/>
                 </div>
-                <div style={{fontSize:12,fontWeight:700,color:K.t1,lineHeight:1.3}}>{label}</div>
+                <div style={{fontSize:13,fontWeight:700,color:K.t1,lineHeight:1.3}}>{label}</div>
               </div>
             )}
           </div>
         </div>;
       })()}
-      {["d","a","e","t"].includes(tab)&&<><div style={{marginBottom:10}}><input type="text" placeholder="🔍 Rechercher…" defaultValue="" onChange={e=>sQ(e.target.value)} style={{padding:"8px 11px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:13,outline:"none",width:"100%",maxWidth:290,fontFamily:"'Outfit',sans-serif",caretColor:K.em,minHeight:38}} onFocus={e=>e.target.style.borderColor=K.emBd} onBlur={e=>e.target.style.borderColor=K.b0}/></div>{tab==="d"&&nD>0&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:9,padding:"8px 12px",marginBottom:9,fontSize:12,color:K.t2}}>💡 Vérifiez paiement → <b>✓</b> Valider → Durée → Code → <b>✉</b> mail.</div>}<Liste list={byT[tab]||fl} empty="Aucun résultat"/></>}
-      {tab==="s"&&<div style={{animation:"up .25s ease"}}><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10}}>Performance modules</div>{users.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"38px",textAlign:"center"}}><div style={{color:K.t3,fontSize:13}}>Aucune donnée.</div></div>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>{mods.map(m=>{const at=users.filter(u=>u.scores?.[m.id]),av=at.length?Math.round(at.reduce((a,u)=>a+u.scores[m.id].pct,0)/at.length):0,pa=at.filter(u=>u.scores[m.id].pct>=60).length;return <div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:"10px 12px"}}><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:7}}><div style={{width:24,height:24,borderRadius:7,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>{icoEl(m.ico,m.col,14)}</div><div><div style={{color:K.t1,fontWeight:700,fontSize:12}}>{m.titre}</div><div style={{color:K.t3,fontSize:9,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}</div></div></div><div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:K.t3,marginBottom:4,fontFamily:"'JetBrains Mono',monospace"}}><span>{at.length} tentatives</span><span>{pa} réussi · {av}%</span></div><Bar p={av} col={m.col} h={3}/></div>;})}</div>}</div>}
+      {["d","a","e","t"].includes(tab)&&<><div style={{marginBottom:10}}><input type="text" placeholder="🔍 Rechercher…" defaultValue="" onChange={e=>sQ(e.target.value)} style={{padding:"8px 11px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:14,outline:"none",width:"100%",maxWidth:290,fontFamily:"'Outfit',sans-serif",caretColor:K.em,minHeight:38}} onFocus={e=>e.target.style.borderColor=K.emBd} onBlur={e=>e.target.style.borderColor=K.b0}/></div>{tab==="d"&&nD>0&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:9,padding:"8px 12px",marginBottom:9,fontSize:13,color:K.t2}}>💡 Vérifiez paiement → <b>✓</b> Valider → Durée → Code → <b>✉</b> mail.</div>}<Liste list={byT[tab]||fl} empty="Aucun résultat"/></>}
+      {tab==="s"&&<div style={{animation:"up .25s ease"}}><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10}}>Performance modules</div>{users.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"38px",textAlign:"center"}}><div style={{color:K.t3,fontSize:14}}>Aucune donnée.</div></div>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>{mods.map(m=>{const at=users.filter(u=>u.scores?.[m.id]),av=at.length?Math.round(at.reduce((a,u)=>a+u.scores[m.id].pct,0)/at.length):0,pa=at.filter(u=>u.scores[m.id].pct>=60).length;return <div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:"10px 12px"}}><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:7}}><div style={{width:24,height:24,borderRadius:7,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{icoEl(m.ico,m.col,14)}</div><div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}</div></div></div><div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:K.t3,marginBottom:4,fontFamily:"'JetBrains Mono',monospace"}}><span>{at.length} tentatives</span><span>{pa} réussi · {av}%</span></div><Bar p={av} col={m.col} h={3}/></div>;})}</div>}</div>}
       {tab==="m"&&<div style={{animation:"up .25s ease"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Gestion des cours</div><div style={{color:K.t3,fontSize:12,marginTop:2}}>{mods.length} modules · {mods.filter(m=>m.on!==false).length} actifs</div></div><div style={{display:"flex",gap:7,flexWrap:"wrap"}}>{mods.length===0&&<Btn ch="🚀 Initialiser SYSCOHADA" on={seedModules} v="i" sx={{minHeight:38,fontSize:12}}/>}<Btn ch="➕ Nouveau" on={()=>{sEM(null);sNM(true);}} sx={{minHeight:38,fontSize:13}}/></div></div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Gestion des cours</div><div style={{color:K.t3,fontSize:13,marginTop:2}}>{mods.length} modules · {mods.filter(m=>m.on!==false).length} actifs</div></div><div style={{display:"flex",gap:7,flexWrap:"wrap"}}>{mods.length===0&&<Btn ch="🚀 Initialiser SYSCOHADA" on={seedModules} v="i" sx={{minHeight:38,fontSize:13}}/>}<Btn ch="➕ Nouveau" on={()=>{sEM(null);sNM(true);}} sx={{minHeight:38,fontSize:14}}/></div></div>
         {newMod&&<div style={{background:K.card,border:`1px solid ${K.emBd}`,borderRadius:12,padding:"14px",marginBottom:13,maxHeight:"80vh",overflowY:"auto"}}><ModEditor mod={{}} onSave={()=>{sNM(false);}} onCancel={()=>sNM(false)}/></div>}
         {editMod&&<div style={{background:K.card,border:`1px solid ${K.emBd}`,borderRadius:12,padding:"14px",marginBottom:13,maxHeight:"80vh",overflowY:"auto"}}><ModEditor mod={editMod} onSave={()=>{sEM(null);}} onCancel={()=>sEM(null)}/></div>}
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {mods.map(m=><div key={m.id} style={{background:K.card,border:`1px solid ${m.on!==false?K.b1:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",opacity:m.on!==false?1:.6}}>
             <div style={{width:34,height:34,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{icoEl(m.ico,m.col,18)}</div>
-            <div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:2}}><span style={{fontWeight:700,fontSize:13,color:K.t1}}>{m.titre}</span>{m.mat&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={m.mat}/>}{m.on===false&&<Tg c={K.t3} bg={K.c2} bd={K.b0} ch="Masqué"/>}</div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{m.code} · {m.q?.length||0} questions</div></div>
+            <div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:2}}><span style={{fontWeight:700,fontSize:14,color:K.t1}}>{m.titre}</span>{m.mat&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={m.mat}/>}{m.on===false&&<Tg c={K.t3} bg={K.c2} bd={K.b0} ch="Masqué"/>}</div><div style={{color:K.t3,fontSize:12,fontFamily:"'JetBrains Mono',monospace"}}>{m.code} · {m.q?.length||0} questions</div></div>
             <div style={{display:"flex",gap:5,flexShrink:0,flexWrap:"wrap"}}>
-              <button onClick={()=>saveModule({...m,on:m.on===false})} className="bt" style={{background:m.on!==false?K.waBg:K.emBg,border:`1px solid ${m.on!==false?K.waBd:K.emBd}`,color:m.on!==false?K.wa:K.em,borderRadius:7,padding:"5px 9px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:28}}>{m.on!==false?"Masquer":"Activer"}</button>
+              <button onClick={()=>saveModule({...m,on:m.on===false})} className="bt" style={{background:m.on!==false?K.waBg:K.emBg,border:`1px solid ${m.on!==false?K.waBd:K.emBd}`,color:m.on!==false?K.wa:K.em,borderRadius:7,padding:"5px 9px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:28}}>{m.on!==false?"Masquer":"Activer"}</button>
               <Btn ch="✏️" on={()=>{sNM(false);sEM(JSON.parse(JSON.stringify(m)));}} v="s" sm/>
               <Btn ch="🗑" on={async()=>{if(window.confirm(`Supprimer "${m.titre}" ?`))await deleteModule(m.id);}} v="d" sm/>
             </div>
@@ -4220,58 +4257,58 @@ function AA({onOut}){
       {tab==="v"&&<div style={{animation:"up .25s ease"}}>
         <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3}}>Vidéos</div>
         <div style={{background:K.card,border:`1px solid ${live.on?K.rdBd:K.b0}`,borderRadius:12,padding:"13px 15px",marginBottom:13}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:11,flexWrap:"wrap",gap:8}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18,animation:live.on?"blink 1.5s ease-in-out infinite":undefined}}>🔴</span><div><div style={{fontWeight:800,fontSize:13,color:K.t1}}>Cours en direct</div></div></div><button onClick={async()=>{await saveLive({...live,on:!live.on,url:rLU.current?.value?.trim()||live.url});}} className="bt" style={{background:live.on?K.rdBg:K.emBg,border:`1px solid ${live.on?K.rdBd:K.emBd}`,color:live.on?K.rd:K.em,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:32}}>{live.on?"⏹ Arrêter":"▶ Activer"}</button></div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:11,flexWrap:"wrap",gap:8}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18,animation:live.on?"blink 1.5s ease-in-out infinite":undefined}}>🔴</span><div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Cours en direct</div></div></div><button onClick={async()=>{await saveLive({...live,on:!live.on,url:rLU.current?.value?.trim()||live.url});}} className="bt" style={{background:live.on?K.rdBg:K.emBg,border:`1px solid ${live.on?K.rdBd:K.emBd}`,color:live.on?K.rd:K.em,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",minHeight:32}}>{live.on?"⏹ Arrêter":"▶ Activer"}</button></div>
           <Inp lb="URL du direct" rf={rLU} ph="https://youtube.com/live/..." def={live.url}/>
           <Inp lb="Titre" rf={rLT} ph="Cours en direct" def={live.titre}/>
           <Inp lb="Description" rf={rLD} ph="Décrivez le cours..." def={live.desc}/>
-          <Btn ch={saving?"Enregistrement…":"💾 Enregistrer"} on={saveLiveFn} full sx={{minHeight:40,fontSize:13}} dis={saving}/>
+          <Btn ch={saving?"Enregistrement…":"💾 Enregistrer"} on={saveLiveFn} full sx={{minHeight:40,fontSize:14}} dis={saving}/>
         </div>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:11,flexWrap:"wrap",gap:8}}><div style={{fontWeight:800,fontSize:13,color:K.t1}}>Vidéothèque ({vids.length})</div><Btn ch="➕ Ajouter" on={()=>sAV(f=>!f)} sx={{minHeight:36,fontSize:12}}/></div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:11,flexWrap:"wrap",gap:8}}><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Vidéothèque ({vids.length})</div><Btn ch="➕ Ajouter" on={()=>sAV(f=>!f)} sx={{minHeight:36,fontSize:13}}/></div>
         {addVid&&<div style={{background:K.card,border:`1px solid ${K.emBd}`,borderRadius:12,padding:"14px",marginBottom:12,animation:"sc .2s ease"}}>
           <Inp lb="Titre *" rf={rVT} ph="Titre de la vidéo"/>
           <Inp lb="URL *" rf={rVU} ph="YouTube · Vimeo · Facebook · lien direct" note="https://youtube.com/watch?v=... ou lien .mp4"/>
           <Inp lb="Description" rf={rVD} ph="Description optionnelle"/>
-          <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>Module associé</div><select ref={rVM} style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:13,outline:"none",minHeight:42}}><option value="">Aucun — Vidéothèque générale</option>{mods.filter(m=>m.on!==false).map(m=><option key={m.id} value={m.id}>{m.code} — {m.titre}</option>)}</select></div>
-          <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:7}}>{[[true,"🆓 Gratuit","Tous"],[false,"💎 Premium","Abonnés"]].map(([val,lb,note])=><div key={String(val)} onClick={()=>sGr(val)} style={{flex:1,background:gr===val?K.emBg:K.c2,border:`1px solid ${gr===val?K.emBd:K.b0}`,borderRadius:9,padding:"9px 11px",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:12,color:gr===val?K.em:K.t1,marginBottom:1}}>{lb}</div><div style={{fontSize:10,color:K.t3}}>{note}</div></div>)}</div></div>
+          <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:5}}>Module associé</div><select ref={rVM} style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:14,outline:"none",minHeight:42}}><option value="">Aucun — Vidéothèque générale</option>{mods.filter(m=>m.on!==false).map(m=><option key={m.id} value={m.id}>{m.code} — {m.titre}</option>)}</select></div>
+          <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:7}}>{[[true,"🆓 Gratuit","Tous"],[false,"💎 Premium","Abonnés"]].map(([val,lb,note])=><div key={String(val)} onClick={()=>sGr(val)} style={{flex:1,background:gr===val?K.emBg:K.c2,border:`1px solid ${gr===val?K.emBd:K.b0}`,borderRadius:9,padding:"9px 11px",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:13,color:gr===val?K.em:K.t1,marginBottom:1}}>{lb}</div><div style={{fontSize:11,color:K.t3}}>{note}</div></div>)}</div></div>
           <div style={{display:"flex",gap:7}}><Btn ch="Annuler" on={()=>sAV(false)} v="g" full/><Btn ch={saving?"…":"➕ Ajouter"} on={addVidFn} full dis={saving}/></div>
         </div>}
-        <div style={{display:"flex",flexDirection:"column",gap:7}}>{vids.map(v=>{const pv=pVid(v.url);return <div key={v.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:46,height:32,borderRadius:6,background:K.c2,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>{pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:14}}>🎬</span>}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div><div style={{display:"flex",alignItems:"center",gap:5,marginTop:2,flexWrap:"wrap"}}>{v.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}{v.mid&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={mods.find(m=>m.id===v.mid)?.code||""}/>}</div></div><Btn ch="🗑" on={async()=>deleteVideo(v.id)} v="d" sm/></div>;})} </div>
+        <div style={{display:"flex",flexDirection:"column",gap:7}}>{vids.map(v=>{const pv=pVid(v.url);return <div key={v.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:46,height:32,borderRadius:6,background:K.c2,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>{pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:14}}>🎬</span>}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div><div style={{display:"flex",alignItems:"center",gap:5,marginTop:2,flexWrap:"wrap"}}>{v.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}{v.mid&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={mods.find(m=>m.id===v.mid)?.code||""}/>}</div></div><Btn ch="🗑" on={async()=>deleteVideo(v.id)} v="d" sm/></div>;})} </div>
       </div>}
       {tab==="pr"&&<div style={{animation:"up .25s ease"}}>
   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}>
-    <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Présentations</div><div style={{color:K.t3,fontSize:12,marginTop:2}}>{allPresAdmin.length} présentation{allPresAdmin.length>1?"s":""}</div></div>
-    <Btn ch="➕ Ajouter" on={()=>sAddPres(p=>!p)} sx={{minHeight:38,fontSize:13}}/>
+    <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Présentations</div><div style={{color:K.t3,fontSize:13,marginTop:2}}>{allPresAdmin.length} présentation{allPresAdmin.length>1?"s":""}</div></div>
+    <Btn ch="➕ Ajouter" on={()=>sAddPres(p=>!p)} sx={{minHeight:38,fontSize:14}}/>
   </div>
   {addPres&&<div style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:12,padding:"14px",marginBottom:13,animation:"sc .2s ease"}}>
-    <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:10}}>Nouvelle présentation</div>
+    <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:10}}>Nouvelle présentation</div>
     <Inp lb="Titre *" rf={rPT} ph="Titre de la présentation"/>
     <Inp lb="URL *" rf={rPU} ph="https://docs.google.com/presentation/... ou lien Canva" note="Google Slides (lien de publication) · Canva (lien d'intégration) · URL directe"/>
     <Inp lb="Description" rf={rPD} ph="Résumé du contenu"/>
-    <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>Matière</div><input ref={rPM} placeholder="SYSCOHADA, Droit OHADA..." style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:13,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box",minHeight:44}}/></div>
-    <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:7}}>{[[true,"🆓 Gratuit","Tous"],[false,"💎 Premium","Abonnés"]].map(([val,lb,note])=><div key={String(val)} onClick={()=>sPresGr(val)} style={{flex:1,background:presGr===val?K.inBg:K.c2,border:`1px solid ${presGr===val?K.inBd:K.b0}`,borderRadius:9,padding:"9px 11px",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:12,color:presGr===val?K.in_:K.t1,marginBottom:1}}>{lb}</div><div style={{fontSize:10,color:K.t3}}>{note}</div></div>)}</div></div>
+    <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:5}}>Matière</div><input ref={rPM} placeholder="SYSCOHADA, Droit OHADA..." style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:14,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box",minHeight:44}}/></div>
+    <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:7}}>{[[true,"🆓 Gratuit","Tous"],[false,"💎 Premium","Abonnés"]].map(([val,lb,note])=><div key={String(val)} onClick={()=>sPresGr(val)} style={{flex:1,background:presGr===val?K.inBg:K.c2,border:`1px solid ${presGr===val?K.inBd:K.b0}`,borderRadius:9,padding:"9px 11px",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:13,color:presGr===val?K.in_:K.t1,marginBottom:1}}>{lb}</div><div style={{fontSize:11,color:K.t3}}>{note}</div></div>)}</div></div>
     <div style={{display:"flex",gap:7}}><Btn ch="Annuler" on={()=>sAddPres(false)} v="g" full/><Btn ch={saving?"…":"➕ Ajouter"} on={async()=>{const titre=rPT.current?.value?.trim()||"";const url=rPU.current?.value?.trim()||"";if(!titre||!url){alert("Titre et URL requis");return;}sSav(true);await savePresentation({titre,url,desc:rPD.current?.value?.trim()||"",mat:rPM.current?.value?.trim()||"",gr:presGr,ordre:Date.now()});sSav(false);sAddPres(false);[rPT,rPU,rPD,rPM].forEach(r=>{if(r.current)r.current.value="";});}} full dis={saving}/></div>
   </div>}
-  {allPresAdmin.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"38px",textAlign:"center"}}><div style={{fontSize:32,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>📊</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune présentation</div><div style={{color:K.t3,fontSize:12}}>Ajoutez votre première présentation Google Slides ou Canva.</div></div>
+  {allPresAdmin.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"38px",textAlign:"center"}}><div style={{fontSize:32,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>📊</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune présentation</div><div style={{color:K.t3,fontSize:13}}>Ajoutez votre première présentation Google Slides ou Canva.</div></div>
   :<div style={{display:"flex",flexDirection:"column",gap:8}}>{allPresAdmin.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:11,padding:"12px 14px",display:"flex",alignItems:"center",gap:11,flexWrap:"wrap"}}>
     <div style={{width:38,height:38,borderRadius:10,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-presentation" style={{fontSize:18,color:K.in_}}/></div>
-    <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div><div style={{display:"flex",gap:5,marginTop:3,flexWrap:"wrap"}}>{p.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}{p.mat&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={p.mat}/>}</div></div>
-    <div style={{display:"flex",gap:5,flexShrink:0}}><a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:12}}/>Voir</a><Btn ch="🗑" on={async()=>deletePresentation(p.id)} v="d" sm/></div>
+    <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div><div style={{display:"flex",gap:5,marginTop:3,flexWrap:"wrap"}}>{p.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}{p.mat&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={p.mat}/>}</div></div>
+    <div style={{display:"flex",gap:5,flexShrink:0}}><a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:13}}/>Voir</a><Btn ch="🗑" on={async()=>deletePresentation(p.id)} v="d" sm/></div>
   </div>)}</div>}
 </div>}
 {tab==="st"&&<div style={{animation:"up .25s ease"}}>
   {/* Sub-tabs */}
   <div style={{display:"flex",background:K.c2,borderRadius:9,padding:3,marginBottom:13,gap:2}}>
-    {[["offres","🎯 Offres de stages"],["plats","🌐 Plateformes"]].map(([k,l])=><button key={k} onClick={()=>sStageTab(k)} className="bt" style={{flex:1,padding:"8px",borderRadius:7,border:"none",fontWeight:700,fontSize:12,fontFamily:"'Outfit',sans-serif",cursor:"pointer",background:stageTab===k?K.card:"transparent",color:stageTab===k?K.t1:K.t3,minHeight:36}}>{l}</button>)}
+    {[["offres","🎯 Offres de stages"],["plats","🌐 Plateformes"]].map(([k,l])=><button key={k} onClick={()=>sStageTab(k)} className="bt" style={{flex:1,padding:"8px",borderRadius:7,border:"none",fontWeight:700,fontSize:13,fontFamily:"'Outfit',sans-serif",cursor:"pointer",background:stageTab===k?K.card:"transparent",color:stageTab===k?K.t1:K.t3,minHeight:36}}>{l}</button>)}
   </div>
 
   {/* OFFRES */}
   {stageTab==="offres"&&<>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}>
-      <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Offres de stages</div><div style={{color:K.t3,fontSize:12,marginTop:2}}>{allStagesAdmin.length} offre{allStagesAdmin.length>1?"s":""}</div></div>
-      <Btn ch="➕ Ajouter une offre" on={()=>sAddStage(p=>!p)} sx={{minHeight:38,fontSize:12}}/>
+      <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Offres de stages</div><div style={{color:K.t3,fontSize:13,marginTop:2}}>{allStagesAdmin.length} offre{allStagesAdmin.length>1?"s":""}</div></div>
+      <Btn ch="➕ Ajouter une offre" on={()=>sAddStage(p=>!p)} sx={{minHeight:38,fontSize:13}}/>
     </div>
     {addStage&&<div style={{background:K.card,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"14px",marginBottom:13,animation:"sc .2s ease"}}>
-      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:10}}>Nouvelle offre de stage</div>
+      <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:10}}>Nouvelle offre de stage</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
         <Inp lb="Titre *" rf={rST} ph="Stage Finance Virtuel"/>
         <Inp lb="Entreprise *" rf={rSE} ph="Deloitte, KPMG..."/>
@@ -4279,13 +4316,13 @@ function AA({onOut}){
       <Inp lb="URL / Lien *" rf={rSU} ph="https://www.theforage.com/..."/>
       <Inp lb="Description" rf={rSD} ph="Décrivez le stage, objectifs, contenu..." rows={3}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-        <div><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>Catégorie</div><select ref={rSC} style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:12,outline:"none",minHeight:42}}>{["Finance & Comptabilité","Droit des affaires","Audit & Contrôle","Banque & Assurance"].map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+        <div><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:5}}>Catégorie</div><select ref={rSC} style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:13,outline:"none",minHeight:42}}>{["Finance & Comptabilité","Droit des affaires","Audit & Contrôle","Banque & Assurance"].map(c=><option key={c} value={c}>{c}</option>)}</select></div>
         <Inp lb="Durée" rf={rSDur} ph="5-6h, 2 semaines..."/>
         <Inp lb="Date fin" ref={rSDF} rf={rSDF} ph="31/12/2025"/>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
         <Inp lb="Logo (emoji)" rf={rSLogo} ph="🏦 💼 📊..."/>
-        <div><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:6}}>{[[true,"Gratuit"],[false,"Payant"]].map(([val,lb])=><div key={String(val)} onClick={()=>{}} style={{flex:1,background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"8px",cursor:"pointer",textAlign:"center",fontSize:11,fontWeight:600,color:K.t2}}>{lb}</div>)}</div></div>
+        <div><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:6}}>{[[true,"Gratuit"],[false,"Payant"]].map(([val,lb])=><div key={String(val)} onClick={()=>{}} style={{flex:1,background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"8px",cursor:"pointer",textAlign:"center",fontSize:12,fontWeight:600,color:K.t2}}>{lb}</div>)}</div></div>
       </div>
       <div style={{display:"flex",gap:7}}><Btn ch="Annuler" on={()=>sAddStage(false)} v="g" full/><Btn ch={saving?"…":"➕ Publier l'offre"} on={async()=>{
         const titre=rST.current?.value?.trim()||"";
@@ -4298,11 +4335,11 @@ function AA({onOut}){
         [rST,rSE,rSU,rSD,rSDur,rSDF,rSLogo].forEach(r=>{if(r.current)r.current.value="";});
       }} full dis={saving}/></div>
     </div>}
-    {allStagesAdmin.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"32px",textAlign:"center"}}><div style={{fontSize:28,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>🎯</div><div style={{color:K.t3,fontSize:13}}>Aucune offre publiée.</div></div>
+    {allStagesAdmin.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"32px",textAlign:"center"}}><div style={{fontSize:28,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>🎯</div><div style={{color:K.t3,fontSize:14}}>Aucune offre publiée.</div></div>
     :<div style={{display:"flex",flexDirection:"column",gap:7}}>{allStagesAdmin.map(s=>{const cc=CAT_COLORS[s.cat]||{bg:K.c2,bd:K.b0,ac:K.em,ic:"briefcase"};return <div key={s.id} style={{background:K.card,border:`1px solid ${cc.bd}`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
       <div style={{width:36,height:36,borderRadius:9,background:cc.bg,border:`1px solid ${cc.bd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:s.logo?18:14,flexShrink:0}}>{s.logo||<i className={"ti ti-"+cc.ic} style={{fontSize:16,color:cc.ac}}/>}</div>
-      <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.titre}</div><div style={{display:"flex",gap:5,marginTop:2,flexWrap:"wrap"}}><Tg c={cc.ac} bg={cc.bg} bd={cc.bd} ch={s.entreprise}/><Tg c={K.t3} bg="none" bd={K.b0} ch={s.cat}/></div></div>
-      <div style={{display:"flex",gap:5,flexShrink:0}}><a href={s.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:12}}/>Voir</a><Btn ch="🗑" on={async()=>deleteStage(s.id)} v="d" sm/></div>
+      <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.titre}</div><div style={{display:"flex",gap:5,marginTop:2,flexWrap:"wrap"}}><Tg c={cc.ac} bg={cc.bg} bd={cc.bd} ch={s.entreprise}/><Tg c={K.t3} bg="none" bd={K.b0} ch={s.cat}/></div></div>
+      <div style={{display:"flex",gap:5,flexShrink:0}}><a href={s.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:13}}/>Voir</a><Btn ch="🗑" on={async()=>deleteStage(s.id)} v="d" sm/></div>
     </div>;})}
     </div>}
   </>}
@@ -4310,11 +4347,11 @@ function AA({onOut}){
   {/* PLATEFORMES */}
   {stageTab==="plats"&&<>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}>
-      <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Plateformes</div><div style={{color:K.t3,fontSize:12,marginTop:2}}>{allPlatsAdmin.length} plateforme{allPlatsAdmin.length>1?"s":""}</div></div>
-        {allPlatsAdmin.length===0?<Btn ch="🚀 Charger plateformes" on={async()=>{sSav(true);await seedPlateformes();sSav(false);sMsg({t:"o",m:"8 plateformes chargées !"});setTimeout(()=>sMsg({t:"",m:""}),3000);}} v="i" sx={{minHeight:36,fontSize:12}} dis={saving}/>:<Btn ch="➕ Ajouter" on={()=>sAddPlat(p=>!p)} sx={{minHeight:36,fontSize:12}}/>}
+      <div><div style={{fontWeight:800,fontSize:14,color:K.t1}}>Plateformes</div><div style={{color:K.t3,fontSize:13,marginTop:2}}>{allPlatsAdmin.length} plateforme{allPlatsAdmin.length>1?"s":""}</div></div>
+        {allPlatsAdmin.length===0?<Btn ch="🚀 Charger plateformes" on={async()=>{sSav(true);await seedPlateformes();sSav(false);sMsg({t:"o",m:"8 plateformes chargées !"});setTimeout(()=>sMsg({t:"",m:""}),3000);}} v="i" sx={{minHeight:36,fontSize:13}} dis={saving}/>:<Btn ch="➕ Ajouter" on={()=>sAddPlat(p=>!p)} sx={{minHeight:36,fontSize:13}}/>}
     </div>
     {addPlat&&<div style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:12,padding:"14px",marginBottom:13,animation:"sc .2s ease"}}>
-      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:10}}>Nouvelle plateforme</div>
+      <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:10}}>Nouvelle plateforme</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
         <Inp lb="Nom *" rf={rPN} ph="The Forage, Coursera..."/>
         <Inp lb="Logo (emoji)" rf={rPLogo} ph="🌾 🎓 💼..."/>
@@ -4323,15 +4360,15 @@ function AA({onOut}){
       <Inp lb="Description *" rf={rPDesc} ph="Décrivez la plateforme..." rows={2}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
         <Inp lb="Langue" rf={rPLang} ph="FR, EN, FR/EN..."/>
-        <div><div style={{color:K.t2,fontSize:12,fontWeight:600,marginBottom:5}}>Catégories</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+        <div><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:5}}>Catégories</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
           {["Finance & Comptabilité","Droit des affaires","Audit & Contrôle","Banque & Assurance"].map(c=>{
             const[selCats,sSelCats]=window._platCats||[[],(f)=>{window._platCats=[f(window._platCats?.[0]||[]),window._platCats?.[1]];window._platCatsForce&&window._platCatsForce();}];
             return null;
           })}
-          <div style={{fontSize:11,color:K.t3}}>Sélectionnez après création</div>
+          <div style={{fontSize:12,color:K.t3}}>Sélectionnez après création</div>
         </div></div>
       </div>
-      <div style={{display:"flex",gap:6,marginBottom:10}}>{[[true,"🆓 Gratuit"],[false,"💎 Freemium"]].map(([val,lb])=><div key={String(val)} style={{flex:1,background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"8px",textAlign:"center",fontSize:11,fontWeight:600,color:K.t2,cursor:"pointer"}}>{lb}</div>)}</div>
+      <div style={{display:"flex",gap:6,marginBottom:10}}>{[[true,"🆓 Gratuit"],[false,"💎 Freemium"]].map(([val,lb])=><div key={String(val)} style={{flex:1,background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,padding:"8px",textAlign:"center",fontSize:12,fontWeight:600,color:K.t2,cursor:"pointer"}}>{lb}</div>)}</div>
       <div style={{display:"flex",gap:7}}><Btn ch="Annuler" on={()=>sAddPlat(false)} v="g" full/><Btn ch={saving?"…":"➕ Ajouter"} on={async()=>{
         const nom=rPN.current?.value?.trim()||"";
         const url=rPUrl.current?.value?.trim()||"";
@@ -4344,20 +4381,20 @@ function AA({onOut}){
         sMsg({t:"o",m:"Plateforme ajoutée !"});setTimeout(()=>sMsg({t:"",m:""}),2500);
       }} full dis={saving}/></div>
     </div>}
-    {allPlatsAdmin.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"32px",textAlign:"center"}}><div style={{fontSize:28,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>🌐</div><div style={{color:K.t3,fontSize:13,marginBottom:7}}>Aucune plateforme.</div><div style={{color:K.t3,fontSize:11}}>Cliquez "Charger plateformes" pour les 8 plateformes pré-configurées, ou "➕ Ajouter" pour la vôtre.</div></div>
+    {allPlatsAdmin.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"32px",textAlign:"center"}}><div style={{fontSize:28,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>🌐</div><div style={{color:K.t3,fontSize:14,marginBottom:7}}>Aucune plateforme.</div><div style={{color:K.t3,fontSize:12}}>Cliquez "Charger plateformes" pour les 8 plateformes pré-configurées, ou "➕ Ajouter" pour la vôtre.</div></div>
     :<div style={{display:"flex",flexDirection:"column",gap:7}}>{allPlatsAdmin.map(p=>{const cc=CAT_COLORS[p.cats?.[0]]||{bg:K.c2,bd:K.b0,ac:K.em};return <div key={p.id} style={{background:K.card,border:`1px solid ${cc.bd}`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
       <div style={{width:36,height:36,borderRadius:9,background:cc.bg,border:`1px solid ${cc.bd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{p.logo}</div>
-      <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{p.nom}</div><div style={{fontSize:10,color:K.t3,marginTop:1}}>{p.langue} · {p.gratuit?"Gratuit":"Freemium"}</div></div>
-      <div style={{display:"flex",gap:5,flexShrink:0}}><a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:12}}/>Visiter</a><Btn ch="🗑" on={async()=>deletePlateforme(p.id)} v="d" sm/></div>
+      <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{p.nom}</div><div style={{fontSize:11,color:K.t3,marginTop:1}}>{p.langue} · {p.gratuit?"Gratuit":"Freemium"}</div></div>
+      <div style={{display:"flex",gap:5,flexShrink:0}}><a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:13}}/>Visiter</a><Btn ch="🗑" on={async()=>deletePlateforme(p.id)} v="d" sm/></div>
     </div>;})}
     </div>}
   </>}
 </div>}
 {tab==="dm"&&<div style={{animation:"up .25s ease"}}>
   <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3}}>Demandes de services</div>
-  <div style={{color:K.t3,fontSize:12,marginBottom:13}}>{allDemandesAdmin.filter(d=>d.statut==="nouveau").length} nouvelle{allDemandesAdmin.filter(d=>d.statut==="nouveau").length>1?"s":""} · {allDemandesAdmin.length} au total</div>
+  <div style={{color:K.t3,fontSize:13,marginBottom:13}}>{allDemandesAdmin.filter(d=>d.statut==="nouveau").length} nouvelle{allDemandesAdmin.filter(d=>d.statut==="nouveau").length>1?"s":""} · {allDemandesAdmin.length} au total</div>
   {allDemandesAdmin.length===0
-    ?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"38px",textAlign:"center"}}><div style={{fontSize:32,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>💼</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune demande</div><div style={{color:K.t3,fontSize:12}}>Les demandes des clients apparaîtront ici.</div></div>
+    ?<div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"38px",textAlign:"center"}}><div style={{fontSize:32,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>💼</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune demande</div><div style={{color:K.t3,fontSize:13}}>Les demandes des clients apparaîtront ici.</div></div>
     :<div style={{display:"flex",flexDirection:"column",gap:8}}>
       {allDemandesAdmin.map((d,i)=>{
         const isNew=d.statut==="nouveau";
@@ -4369,20 +4406,20 @@ function AA({onOut}){
           <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:10,flexWrap:"wrap"}}>
             <div style={{width:38,height:38,borderRadius:10,background:sBg,border:`1px solid ${sBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-user" style={{fontSize:18,color:sCol}}/></div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap",marginBottom:3}}><span style={{fontWeight:800,fontSize:13,color:K.t1}}>{d.nom}</span><span style={{background:sBg,border:`1px solid ${sBd}`,borderRadius:99,padding:"1px 8px",fontSize:10,fontWeight:700,color:sCol}}>{d.statut}</span></div>
-              <div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{d.email}{d.tel?` · ${d.tel}`:""}</div>
+              <div style={{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap",marginBottom:3}}><span style={{fontWeight:800,fontSize:14,color:K.t1}}>{d.nom}</span><span style={{background:sBg,border:`1px solid ${sBd}`,borderRadius:99,padding:"1px 8px",fontSize:11,fontWeight:700,color:sCol}}>{d.statut}</span></div>
+              <div style={{color:K.t3,fontSize:12,fontFamily:"'JetBrains Mono',monospace"}}>{d.email}{d.tel?` · ${d.tel}`:""}</div>
             </div>
-            <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:11,color:K.t3}}>{d.createdAt?new Date(d.createdAt).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"—"}</div></div>
+            <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:12,color:K.t3}}>{d.createdAt?new Date(d.createdAt).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"—"}</div></div>
           </div>
           <div style={{background:K.c2,borderRadius:9,padding:"8px 11px",marginBottom:10}}>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:d.message?6:0}}>
-              <span style={{background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:5,padding:"2px 8px",fontSize:11,color:K.in_,fontWeight:600}}>{d.service}</span>
+              <span style={{background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:5,padding:"2px 8px",fontSize:12,color:K.in_,fontWeight:600}}>{d.service}</span>
             </div>
-            {d.message&&<div style={{fontSize:12,color:K.t2,lineHeight:1.5,marginTop:5}}>{d.message}</div>}
+            {d.message&&<div style={{fontSize:13,color:K.t2,lineHeight:1.5,marginTop:5}}>{d.message}</div>}
           </div>
           <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-            <a href={`mailto:${d.email}?subject=Re: Votre demande — ${d.service}`} style={{display:"inline-flex",alignItems:"center",gap:5,background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:7,padding:"6px 11px",color:K.in_,fontWeight:700,fontSize:11,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:30}}><i className="ti ti-mail" style={{fontSize:12}}/>Répondre</a>
-            {d.tel&&<a href={`https://wa.me/${d.tel.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(37,211,102,.1)",border:"1px solid rgba(37,211,102,.3)",borderRadius:7,padding:"6px 11px",color:"#25D366",fontWeight:700,fontSize:11,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:30}}><i className="ti ti-brand-whatsapp" style={{fontSize:12}}/>WhatsApp</a>}
+            <a href={`mailto:${d.email}?subject=Re: Votre demande — ${d.service}`} style={{display:"inline-flex",alignItems:"center",gap:5,background:K.inBg,border:`1px solid ${K.inBd}`,borderRadius:7,padding:"6px 11px",color:K.in_,fontWeight:700,fontSize:12,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:30}}><i className="ti ti-mail" style={{fontSize:13}}/>Répondre</a>
+            {d.tel&&<a href={`https://wa.me/${d.tel.replace(/[^0-9]/g,"")}`} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(37,211,102,.1)",border:"1px solid rgba(37,211,102,.3)",borderRadius:7,padding:"6px 11px",color:"#25D366",fontWeight:700,fontSize:12,textDecoration:"none",fontFamily:"'Outfit',sans-serif",minHeight:30}}><i className="ti ti-brand-whatsapp" style={{fontSize:13}}/>WhatsApp</a>}
             {isNew&&<Btn ch="✓ Marquer traité" on={async()=>updateDemande(d.id,{statut:"traité"})} v="s" sm/>}
             {!isNew&&<Btn ch="↩ Rouvrir" on={async()=>updateDemande(d.id,{statut:"nouveau"})} v="g" sm/>}
           </div>
@@ -4400,7 +4437,7 @@ function AA({onOut}){
         const pendingMods=mods.filter(m=>m.status==="pending");
         const pendingPres=allPresAdmin.filter(p=>p.status==="pending");
         const total=pendingMods.length+pendingPres.length+pendingDocs.length;
-        if(!total)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:13,color:K.t3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/>Aucun contenu en attente de validation.</div>;
+        if(!total)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:14,color:K.t3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-check-circle" style={{fontSize:14,color:K.em}}/>Aucun contenu en attente de validation.</div>;
         const DocTypeInfo={
           "application/pdf":{label:"PDF",ico:"file-text",col:"#EF4444"},
           "application/vnd.openxmlformats-officedocument.presentationml.presentation":{label:"PPT",ico:"presentation",col:"#F59E0B"},
@@ -4408,42 +4445,42 @@ function AA({onOut}){
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{label:"Excel",ico:"file-spreadsheet",col:"#22C55E"},
         };
         return <div style={{marginBottom:20}}>
-          <div style={{fontWeight:700,fontSize:13,color:"#F59E0B",marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
+          <div style={{fontWeight:700,fontSize:14,color:"#F59E0B",marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
             <i className="ti ti-clock" style={{fontSize:14}}/>En attente de validation ({total})
           </div>
           {/* Modules en attente */}
           {pendingMods.map(m=><div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"13px 15px",marginBottom:8}}>
             <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-              <div style={{background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:7,padding:"2px 8px",fontSize:10,fontWeight:700,color:"#8B5CF6"}}>MODULE</div>
-              <div style={{fontWeight:700,fontSize:13,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>
+              <div style={{background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#8B5CF6"}}>MODULE</div>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>
             </div>
-            <div style={{fontSize:11,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===m.createdBy)?.nom||"—"} · {m.q?.length||0} questions</div>
+            <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===m.createdBy)?.nom||"—"} · {m.q?.length||0} questions</div>
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>approveContent("mod",m.id)} className="bt"
-                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                <i className="ti ti-check" style={{fontSize:12}}/>Approuver
+                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-check" style={{fontSize:13}}/>Approuver
               </button>
               <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent("mod",m.id,r);}} className="bt"
-                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                <i className="ti ti-x" style={{fontSize:12}}/>Rejeter
+                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
               </button>
             </div>
           </div>)}
           {/* Slides en attente */}
           {pendingPres.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"13px 15px",marginBottom:8}}>
             <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-              <div style={{background:"#22C55E18",border:"1px solid #22C55E30",borderRadius:7,padding:"2px 8px",fontSize:10,fontWeight:700,color:"#22C55E"}}>SLIDE</div>
-              <div style={{fontWeight:700,fontSize:13,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
+              <div style={{background:"#22C55E18",border:"1px solid #22C55E30",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#22C55E"}}>SLIDE</div>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
             </div>
-            <div style={{fontSize:11,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===p.createdBy)?.nom||"—"} · {p.mat||"—"}</div>
+            <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===p.createdBy)?.nom||"—"} · {p.mat||"—"}</div>
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>approveContent("pres",p.id)} className="bt"
-                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                <i className="ti ti-check" style={{fontSize:12}}/>Approuver
+                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-check" style={{fontSize:13}}/>Approuver
               </button>
               <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent("pres",p.id,r);}} className="bt"
-                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                <i className="ti ti-x" style={{fontSize:12}}/>Rejeter
+                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
               </button>
             </div>
           </div>)}
@@ -4452,19 +4489,19 @@ function AA({onOut}){
             const ft=DocTypeInfo[d.type]||{label:d.ext?.toUpperCase()||"Doc",ico:"file",col:"#8B5CF6"};
             return <div key={d.id} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"13px 15px",marginBottom:8}}>
               <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-                <div style={{background:`${ft.col}18`,border:`1px solid ${ft.col}30`,borderRadius:7,padding:"2px 8px",fontSize:10,fontWeight:700,color:ft.col}}>{ft.label}</div>
-                <div style={{fontWeight:700,fontSize:13,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.titre}</div>
+                <div style={{background:`${ft.col}18`,border:`1px solid ${ft.col}30`,borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:ft.col}}>{ft.label}</div>
+                <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.titre}</div>
               </div>
-              <div style={{fontSize:11,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===d.createdBy)?.nom||"—"} · {d.size?(d.size/1024/1024).toFixed(1)+" MB":""}</div>
-              {d.desc&&<div style={{fontSize:12,color:K.t2,marginBottom:8,lineHeight:1.5}}>{d.desc}</div>}
+              <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===d.createdBy)?.nom||"—"} · {d.size?(d.size/1024/1024).toFixed(1)+" MB":""}</div>
+              {d.desc&&<div style={{fontSize:13,color:K.t2,marginBottom:8,lineHeight:1.5}}>{d.desc}</div>}
               <div style={{display:"flex",gap:6}}>
                 <button onClick={()=>approveDoc(d.id)} className="bt"
-                  style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                  <i className="ti ti-check" style={{fontSize:12}}/>Approuver
+                  style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                  <i className="ti ti-check" style={{fontSize:13}}/>Approuver
                 </button>
                 <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectDoc(d.id,r);}} className="bt"
-                  style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                  <i className="ti ti-x" style={{fontSize:12}}/>Rejeter
+                  style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                  <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
                 </button>
               </div>
             </div>;
@@ -4472,7 +4509,7 @@ function AA({onOut}){
         </div>;
       })()}
       {/* Liste formateurs */}
-      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:10}}>Formateurs actifs</div>
+      <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:10}}>Formateurs actifs</div>
       {(()=>{
         const formateurs=users.filter(u=>u.role==="formateur");
         if(!formateurs.length)return <EmptyState ico="school" title="Aucun formateur" desc="Générez un code FO- pour inviter un formateur."/>;
@@ -4483,35 +4520,35 @@ function AA({onOut}){
             return <div key={f.uid} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"13px 15px",display:"flex",alignItems:"center",gap:12}}>
             <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,#7C3AED,#8B5CF6)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:14,flexShrink:0}}>{(f.nom||"F")[0].toUpperCase()}</div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontWeight:700,fontSize:13,color:K.t1}}>{f.nom}</div>
-              <div style={{fontSize:11,color:K.t3}}>{f.mail} · {fModIds.length} module{fModIds.length>1?"s":""} · <span style={{color:"#8B5CF6",fontWeight:700}}>{fApprenants} apprenant{fApprenants>1?"s":""} encadré{fApprenants>1?"s":""}</span></div>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1}}>{f.nom}</div>
+              <div style={{fontSize:12,color:K.t3}}>{f.mail} · {fModIds.length} module{fModIds.length>1?"s":""} · <span style={{color:"#8B5CF6",fontWeight:700}}>{fApprenants} apprenant{fApprenants>1?"s":""} encadré{fApprenants>1?"s":""}</span></div>
             </div>
-            {f.formateurCode&&<span style={{background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:7,padding:"3px 8px",fontSize:10,fontWeight:700,color:"#8B5CF6",fontFamily:"monospace",flexShrink:0}}>{f.formateurCode}</span>}
+            {f.formateurCode&&<span style={{background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:7,padding:"3px 8px",fontSize:11,fontWeight:700,color:"#8B5CF6",fontFamily:"monospace",flexShrink:0}}>{f.formateurCode}</span>}
             <button onClick={()=>{if(window.confirm(`Rétrograder ${f.nom} en apprenant ? Il perdra son accès formateur.`))updateDoc(doc(db,"users",f.uid),{role:deleteField(),formateurCodeValide:false});}} className="bt" title="Rétrograder en apprenant"
               style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:7,padding:"5px 8px",cursor:"pointer",flexShrink:0}}>
-              <i className="ti ti-user-down" style={{fontSize:13}}/>
+              <i className="ti ti-user-down" style={{fontSize:14}}/>
             </button>
           </div>;})}
         </div>;
       })()}
       {/* Inviter */}
-      <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:8}}>Inviter un formateur</div>
+      <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:8}}>Inviter un formateur</div>
       <div style={{background:K.card,border:`1px solid #8B5CF630`,borderRadius:12,padding:"16px"}}>
-        <div style={{fontSize:12,color:K.t2,marginBottom:12,lineHeight:1.6}}>Choisissez un utilisateur inscrit pour lui générer un code FO-. Il devra saisir ce code pour accéder à l'espace formateur.</div>
+        <div style={{fontSize:13,color:K.t2,marginBottom:12,lineHeight:1.6}}>Choisissez un utilisateur inscrit pour lui générer un code FO-. Il devra saisir ce code pour accéder à l'espace formateur.</div>
         <select onChange={e=>{if(e.target.value){genFormateurCode(e.target.value);e.target.value="";}}}
-          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13,fontFamily:"'Outfit',sans-serif",cursor:"pointer",marginBottom:12}}>
+          style={{width:"100%",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",cursor:"pointer",marginBottom:12}}>
           <option value="">Choisir un utilisateur...</option>
           {users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL).map(u=><option key={u.uid} value={u.uid}>{u.nom} ({u.mail})</option>)}
         </select>
         {/* Code généré — affiché en permanence */}
         {lastFoCode.code&&<div style={{background:"#8B5CF618",border:"1px solid #8B5CF640",borderRadius:10,padding:"14px",textAlign:"center"}}>
-          <div style={{fontSize:11,color:"#8B5CF6",fontWeight:700,marginBottom:6,letterSpacing:1,textTransform:"uppercase"}}>Code formateur généré</div>
+          <div style={{fontSize:12,color:"#8B5CF6",fontWeight:700,marginBottom:6,letterSpacing:1,textTransform:"uppercase"}}>Code formateur généré</div>
           <div style={{fontFamily:"monospace",fontSize:22,fontWeight:900,color:"#8B5CF6",letterSpacing:4,marginBottom:8}}>{lastFoCode.code}</div>
-          <div style={{fontSize:11,color:K.t3,marginBottom:10}}>Pour : {users.find(u=>u.uid===lastFoCode.uid)?.nom||""}</div>
+          <div style={{fontSize:12,color:K.t3,marginBottom:10}}>Pour : {users.find(u=>u.uid===lastFoCode.uid)?.nom||""}</div>
           <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
             <button onClick={()=>navigator.clipboard?.writeText(lastFoCode.code)} className="bt"
-              style={{background:"#8B5CF6",border:"none",color:"#fff",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-              <i className="ti ti-copy" style={{fontSize:12}}/>Copier le code
+              style={{background:"#8B5CF6",border:"none",color:"#fff",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+              <i className="ti ti-copy" style={{fontSize:13}}/>Copier le code
             </button>
             <button onClick={async()=>{
               const u=users.find(x=>x.uid===lastFoCode.uid);
@@ -4519,8 +4556,8 @@ function AA({onOut}){
               await sendNotifEmail({to_email:u.mail,subject:"Votre code formateur — Éco-Campus RDC",nom:u.nom,message:`Félicitations ! Vous avez été désigné(e) formateur sur Éco-Campus RDC.\n\nVotre code formateur : ${lastFoCode.code}\n\nPour l'activer :\n1. Connectez-vous sur eco-campus-rdc.vercel.app\n2. Cliquez sur "J'ai un code"\n3. Saisissez votre mot de passe puis le code : ${lastFoCode.code}\n\nÀ très vite !`});
               sMsg({t:"o",m:`✅ Email envoyé à ${u.mail}`});setTimeout(()=>sMsg({t:"",m:""}),3000);
             }} className="bt"
-              style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-              <i className="ti ti-mail" style={{fontSize:12}}/>Envoyer automatiquement
+              style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+              <i className="ti ti-mail" style={{fontSize:13}}/>Envoyer automatiquement
             </button>
           </div>
         </div>}
@@ -4528,16 +4565,16 @@ function AA({onOut}){
     </div>}
     {tab==="p"&&<div style={{animation:"up .25s ease"}}>
         <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:3}}>PDF d'exercices</div>
-        <div style={{color:K.t3,fontSize:12,marginBottom:13}}>Un PDF par module · Stocké sur Firebase Storage · Lecture seule pour abonnés.</div>
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{icoEl(m.ico,m.col,15)}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?` · 📄 ${pdf.name}` : " · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
-          <label className="bt" style={{background:pdf?K.c2:`linear-gradient(135deg,${K.inD},${K.in_})`,color:pdf?K.t2:"#fff",border:pdf?`1px solid ${K.b0}`:"none",borderRadius:8,padding:"7px 11px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:4,minHeight:34}}>
+        <div style={{color:K.t3,fontSize:13,marginBottom:13}}>Un PDF par module · Stocké sur Firebase Storage · Lecture seule pour abonnés.</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{icoEl(m.ico,m.col,15)}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{m.titre}</div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?` · 📄 ${pdf.name}` : " · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
+          <label className="bt" style={{background:pdf?K.c2:`linear-gradient(135deg,${K.inD},${K.in_})`,color:pdf?K.t2:"#fff",border:pdf?`1px solid ${K.b0}`:"none",borderRadius:8,padding:"7px 11px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:4,minHeight:34}}>
             {saving?"⏳":pdf?"🔄":"📤"}
             <input type="file" accept=".pdf" style={{display:"none"}} onChange={async e=>{const f=e.target.files?.[0];if(!f||f.type!=="application/pdf")return;if(f.size>15*1024*1024){alert("Max 15 Mo");return;}sSav(true);const res=await uploadPdf(m.id,f);sPdfs(p=>({...p,[m.id]:res}));sSav(false);e.target.value="";}}/>
           </label>
           {pdf&&<Btn ch="🗑" on={async()=>{await deletePdf(m.id,pdf.name);sPdfs(p=>{const n={...p};delete n[m.id];return n;});}} v="d" sm/>}
         </div></div>;})}
         </div>
-        <div style={{marginTop:13,padding:"10px 13px",background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:9,fontSize:12,color:K.t2}}>✅ PDF stockés sur Firebase Storage — persistants et sécurisés.</div>
+        <div style={{marginTop:13,padding:"10px 13px",background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:9,fontSize:13,color:K.t2}}>✅ PDF stockés sur Firebase Storage — persistants et sécurisés.</div>
       </div>}
     </div>
     {tab==="an"&&<div style={{animation:"fadeIn .35s ease"}}>
@@ -4548,23 +4585,23 @@ function AA({onOut}){
         <Btn ch="+ Nouvelle annonce" on={()=>sEditAn({titre:"",contenu:"",type:"info",actif:true,expireAt:""})} v="i" sm/>
       </div>
       {allAnnonces.length===0
-        ?<div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"20px",textAlign:"center",fontSize:13,color:K.t3}}>Aucune annonce pour l'instant.</div>
+        ?<div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"20px",textAlign:"center",fontSize:14,color:K.t3}}>Aucune annonce pour l'instant.</div>
         :<div style={{display:"flex",flexDirection:"column",gap:8}}>
           {allAnnonces.map(a=>{
             const typeInfo={info:{label:"Info",col:K.in_},promo:{label:"Promo",col:K.wa},urgent:{label:"Urgent",col:K.er}}[a.type||"info"];
             const expired=a.expireAt&&new Date(a.expireAt)<new Date();
             return <div key={a.id} style={{background:K.card,border:`1px solid ${a.actif&&!expired?K.b1:K.b0}`,borderRadius:12,padding:"13px 15px",opacity:a.actif&&!expired?1:.6}}>
               <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5,flexWrap:"wrap"}}>
-                <span style={{background:`${typeInfo.col}18`,border:`1px solid ${typeInfo.col}30`,borderRadius:99,padding:"2px 8px",fontSize:10,fontWeight:700,color:typeInfo.col}}>{typeInfo.label}</span>
-                {!a.actif&&<span style={{fontSize:10,color:K.t3}}>Désactivée</span>}
-                {expired&&<span style={{fontSize:10,color:K.er}}>Expirée</span>}
+                <span style={{background:`${typeInfo.col}18`,border:`1px solid ${typeInfo.col}30`,borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:700,color:typeInfo.col}}>{typeInfo.label}</span>
+                {!a.actif&&<span style={{fontSize:11,color:K.t3}}>Désactivée</span>}
+                {expired&&<span style={{fontSize:11,color:K.er}}>Expirée</span>}
               </div>
-              <div style={{fontWeight:700,fontSize:13,color:K.t1,marginBottom:4}}>{a.titre}</div>
-              <div style={{fontSize:12,color:K.t2,marginBottom:10,lineHeight:1.5}}>{a.contenu}</div>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>{a.titre}</div>
+              <div style={{fontSize:13,color:K.t2,marginBottom:10,lineHeight:1.5}}>{a.contenu}</div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                <button onClick={()=>saveAnnonce({...a,actif:!a.actif})} className="bt" style={{background:a.actif?K.waBg:K.emBg,border:`1px solid ${a.actif?K.waBd:K.emBd}`,color:a.actif?K.wa:K.em,borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>{a.actif?"Désactiver":"Activer"}</button>
-                <button onClick={()=>sEditAn(a)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>Éditer</button>
-                <button onClick={async()=>{if(window.confirm(`Supprimer "${a.titre}" ?`))await deleteAnnonce(a.id);}} className="bt" style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>Supprimer</button>
+                <button onClick={()=>saveAnnonce({...a,actif:!a.actif})} className="bt" style={{background:a.actif?K.waBg:K.emBg,border:`1px solid ${a.actif?K.waBd:K.emBd}`,color:a.actif?K.wa:K.em,borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>{a.actif?"Désactiver":"Activer"}</button>
+                <button onClick={()=>sEditAn(a)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>Éditer</button>
+                <button onClick={async()=>{if(window.confirm(`Supprimer "${a.titre}" ?`))await deleteAnnonce(a.id);}} className="bt" style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>Supprimer</button>
               </div>
             </div>;
           })}
@@ -4572,25 +4609,25 @@ function AA({onOut}){
     </div>}
     {editAn&&<Sheet title={editAn.id?"Modifier l'annonce":"Nouvelle annonce"} onClose={()=>sEditAn(null)}>
       <div style={{marginBottom:12}}>
-        <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Titre</label>
+        <label style={{display:"block",fontSize:12,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Titre</label>
         <input value={editAn.titre} onChange={e=>sEditAn({...editAn,titre:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
       </div>
       <div style={{marginBottom:12}}>
-        <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Contenu</label>
-        <textarea value={editAn.contenu} onChange={e=>sEditAn({...editAn,contenu:e.target.value})} rows={4} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13,resize:"vertical"}}/>
+        <label style={{display:"block",fontSize:12,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Contenu</label>
+        <textarea value={editAn.contenu} onChange={e=>sEditAn({...editAn,contenu:e.target.value})} rows={4} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14,resize:"vertical"}}/>
       </div>
       <div style={{display:"flex",gap:10,marginBottom:14}}>
         <div style={{flex:1}}>
-          <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Type</label>
-          <select value={editAn.type} onChange={e=>sEditAn({...editAn,type:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}>
+          <label style={{display:"block",fontSize:12,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Type</label>
+          <select value={editAn.type} onChange={e=>sEditAn({...editAn,type:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}>
             <option value="info">Info</option>
             <option value="promo">Promo</option>
             <option value="urgent">Urgent</option>
           </select>
         </div>
         <div style={{flex:1}}>
-          <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Expire le (optionnel)</label>
-          <input type="date" value={editAn.expireAt||""} onChange={e=>sEditAn({...editAn,expireAt:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}/>
+          <label style={{display:"block",fontSize:12,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Expire le (optionnel)</label>
+          <input type="date" value={editAn.expireAt||""} onChange={e=>sEditAn({...editAn,expireAt:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
         </div>
       </div>
       <Btn ch="Enregistrer" on={async()=>{if(!editAn.titre.trim())return;await saveAnnonce(editAn);sEditAn(null);}} full/>
@@ -4604,17 +4641,17 @@ function AA({onOut}){
           const convMap={};
           allMessages.filter(m=>!m.formateurUid).forEach(m=>{if(!convMap[m.apprenantUid]||m.ts>convMap[m.apprenantUid].ts)convMap[m.apprenantUid]=m;});
           const convs=Object.values(convMap).sort((a,b)=>b.ts-a.ts);
-          if(convs.length===0)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"20px",textAlign:"center",fontSize:13,color:K.t3}}>Aucun message pour l'instant.</div>;
+          if(convs.length===0)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"20px",textAlign:"center",fontSize:14,color:K.t3}}>Aucun message pour l'instant.</div>;
           return <div style={{display:"flex",flexDirection:"column",gap:7}}>
             {convs.map(c=>{
               const unread=allMessages.filter(m=>!m.formateurUid&&m.apprenantUid===c.apprenantUid&&m.fromRole==="apprenant"&&!m.luAdmin).length;
               return <div key={c.apprenantUid} onClick={()=>sActiveThread(c.apprenantUid)} className="bt" style={{background:K.card,border:`1px solid ${unread>0?K.rdBd:K.b0}`,borderRadius:12,padding:"12px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:36,height:36,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:14,flexShrink:0}}>{(c.apprenantNom||"?")[0].toUpperCase()}</div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:700,fontSize:13,color:K.t1}}>{c.apprenantNom||"Apprenant"}</div>
-                  <div style={{fontSize:11,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.fromRole==="admin"?"Vous : ":""}{c.texte}</div>
+                  <div style={{fontWeight:700,fontSize:14,color:K.t1}}>{c.apprenantNom||"Apprenant"}</div>
+                  <div style={{fontSize:12,color:K.t3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.fromRole==="admin"?"Vous : ":""}{c.texte}</div>
                 </div>
-                {unread>0&&<span style={{background:K.rd,color:"#fff",fontSize:10,fontWeight:800,borderRadius:99,padding:"2px 7px",flexShrink:0}}>{unread}</span>}
+                {unread>0&&<span style={{background:K.rd,color:"#fff",fontSize:11,fontWeight:800,borderRadius:99,padding:"2px 7px",flexShrink:0}}>{unread}</span>}
               </div>;
             })}
           </div>;
@@ -4627,16 +4664,16 @@ function AA({onOut}){
           <i className="ti ti-shield-check" style={{fontSize:16,color:K.in_}}/>Audit & Utilisateurs
         </div>
         <div style={{display:"flex",gap:7}}>
-          <button onClick={()=>exportUsersCsv(users)} className="bt" style={{background:K.c2,border:`1px solid ${K.b1}`,color:K.t2,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-            <i className="ti ti-download" style={{fontSize:13}}/>Export CSV
+          <button onClick={()=>exportUsersCsv(users)} className="bt" style={{background:K.c2,border:`1px solid ${K.b1}`,color:K.t2,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+            <i className="ti ti-download" style={{fontSize:14}}/>Export CSV
           </button>
           <Btn ch="+ Nouvel utilisateur" on={()=>{sNewUser({nom:"",mail:"",password:"",role:"apprenant"});sNuErr("");}} v="i" sm/>
         </div>
       </div>
-      <div style={{fontSize:12,color:K.t3,marginBottom:8}}>{users.length} compte{users.length>1?"s":""} · {users.filter(u=>u.lastLogin).length} déjà connecté{users.filter(u=>u.lastLogin).length>1?"s":""}</div>
+      <div style={{fontSize:13,color:K.t3,marginBottom:8}}>{users.length} compte{users.length>1?"s":""} · {users.filter(u=>u.lastLogin).length} déjà connecté{users.filter(u=>u.lastLogin).length>1?"s":""}</div>
       <div style={{display:"flex",gap:12,marginBottom:13,flexWrap:"wrap"}}>
         {[["#EF4444","🔴 Inactif","+ de 14 jours sans connexion"],["#F59E0B","🟡 À surveiller","peu actif ou 8-14 jours"],["#22C55E","🟢 Engagé","actif et progresse"]].map(([c,l,d])=>
-          <div key={l} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:K.t3}}><span style={{width:7,height:7,borderRadius:"50%",background:c,display:"inline-block"}}/>{l} <span style={{color:K.t3,opacity:.7}}>— {d}</span></div>
+          <div key={l} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:K.t3}}><span style={{width:7,height:7,borderRadius:"50%",background:c,display:"inline-block"}}/>{l} <span style={{color:K.t3,opacity:.7}}>— {d}</span></div>
         )}
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:7}}>
@@ -4649,20 +4686,20 @@ function AA({onOut}){
           const daysSince=u.lastLogin?Math.floor((Date.now()-u.lastLogin)/86400000):null;
           const engagement=jamais?{c:"#EF4444",l:"Jamais connecté"}:daysSince>14?{c:"#EF4444",l:"Inactif"}:(daysSince>7||nMods===0)?{c:"#F59E0B",l:"À surveiller"}:{c:"#22C55E",l:"Engagé"};
           return <div key={u.uid} style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:11,padding:"11px 14px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-            <div style={{width:32,height:32,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:13,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
+            <div style={{width:32,height:32,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#F5EDD8",fontWeight:800,fontSize:14,flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
             <div style={{flex:1,minWidth:120}}>
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                <span style={{fontWeight:700,fontSize:13,color:K.t1}}>{u.nom}</span>
+                <span style={{fontWeight:700,fontSize:14,color:K.t1}}>{u.nom}</span>
                 {u.role==="formateur"&&<Tg c="#8B5CF6" bg="#8B5CF618" bd="#8B5CF630" ch="Formateur"/>}
                 {u.creePar==="admin"&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch="Créé par admin"/>}
-                {isApprenant&&<span style={{display:"flex",alignItems:"center",gap:4,fontSize:10,fontWeight:700,color:engagement.c}}><span style={{width:6,height:6,borderRadius:"50%",background:engagement.c,display:"inline-block"}}/>{engagement.l}</span>}
+                {isApprenant&&<span style={{display:"flex",alignItems:"center",gap:4,fontSize:11,fontWeight:700,color:engagement.c}}><span style={{width:6,height:6,borderRadius:"50%",background:engagement.c,display:"inline-block"}}/>{engagement.l}</span>}
               </div>
-              <div style={{fontSize:11,color:K.t3,fontFamily:"'JetBrains Mono',monospace"}}>{u.mail}</div>
-              {isApprenant&&<div style={{fontSize:10,color:K.t3,marginTop:2}}>{nMods} module{nMods>1?"s":""} complété{nMods>1?"s":""}{avgScore!=null?` · ${avgScore}% de moyenne`:""}</div>}
+              <div style={{fontSize:12,color:K.t3,fontFamily:"'JetBrains Mono',monospace"}}>{u.mail}</div>
+              {isApprenant&&<div style={{fontSize:11,color:K.t3,marginTop:2}}>{nMods} module{nMods>1?"s":""} complété{nMods>1?"s":""}{avgScore!=null?` · ${avgScore}% de moyenne`:""}</div>}
             </div>
             <div style={{textAlign:"right",flexShrink:0}}>
-              <div style={{fontSize:10,color:K.t3}}>Créé le {u.createdAt}</div>
-              <div style={{fontSize:10,color:jamais?K.wa:K.em,fontWeight:600}}>{jamais?"Jamais connecté":new Date(u.lastLogin).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
+              <div style={{fontSize:11,color:K.t3}}>Créé le {u.createdAt}</div>
+              <div style={{fontSize:11,color:jamais?K.wa:K.em,fontWeight:600}}>{jamais?"Jamais connecté":new Date(u.lastLogin).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
             </div>
           </div>;
         })}
@@ -4670,25 +4707,25 @@ function AA({onOut}){
     </div>}
     {newUser&&<Sheet title="Nouvel utilisateur" onClose={()=>sNewUser(null)}>
       <div style={{marginBottom:12}}>
-        <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Nom complet</label>
+        <label style={{display:"block",fontSize:12,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Nom complet</label>
         <input value={newUser.nom} onChange={e=>sNewUser({...newUser,nom:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
       </div>
       <div style={{marginBottom:12}}>
-        <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Email</label>
+        <label style={{display:"block",fontSize:12,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Email</label>
         <input type="email" value={newUser.mail} onChange={e=>sNewUser({...newUser,mail:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
       </div>
       <div style={{marginBottom:12}}>
-        <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Mot de passe</label>
+        <label style={{display:"block",fontSize:12,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Mot de passe</label>
         <input type="text" value={newUser.password} onChange={e=>sNewUser({...newUser,password:e.target.value})} placeholder="Min. 6 caractères" style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
       </div>
       <div style={{marginBottom:14}}>
-        <label style={{display:"block",fontSize:11,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Rôle</label>
-        <select value={newUser.role} onChange={e=>sNewUser({...newUser,role:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}>
+        <label style={{display:"block",fontSize:12,fontWeight:700,color:K.t3,marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>Rôle</label>
+        <select value={newUser.role} onChange={e=>sNewUser({...newUser,role:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}>
           <option value="apprenant">Apprenant</option>
           <option value="formateur">Formateur</option>
         </select>
       </div>
-      {nuErr&&<div style={{color:K.er,fontSize:12,marginBottom:10}}>{nuErr}</div>}
+      {nuErr&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{nuErr}</div>}
       <Btn ch={nuBusy?"Création…":"Créer le compte"} dis={nuBusy} on={async()=>{
         if(!newUser.nom.trim()||!newUser.mail.trim()||newUser.password.length<6){sNuErr("Nom, email et mot de passe (6 car. min) requis.");return;}
         sNuBusy(true);sNuErr("");
@@ -4715,31 +4752,31 @@ function AA({onOut}){
           <div style={{fontWeight:800,fontSize:14,color:K.t1,display:"flex",alignItems:"center",gap:7}}>
             <i className="ti ti-calendar-check" style={{fontSize:16,color:K.em}}/>Présence en présentiel
           </div>
-          <input type="date" value={plDate} onChange={e=>sPlDate(e.target.value)} style={{background:K.c2,border:`1px solid ${K.b1}`,borderRadius:9,padding:"8px 11px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:13}}/>
+          <input type="date" value={plDate} onChange={e=>sPlDate(e.target.value)} style={{background:K.c2,border:`1px solid ${K.b1}`,borderRadius:9,padding:"8px 11px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
         </div>
-        <div style={{fontSize:12,color:K.t3,marginBottom:12}}>{present.length} présent{present.length>1?"s":""} le {plDate.split("-").reverse().join("/")} · cochez pour marquer la présence</div>
+        <div style={{fontSize:13,color:K.t3,marginBottom:12}}>{present.length} présent{present.length>1?"s":""} le {plDate.split("-").reverse().join("/")} · cochez pour marquer la présence</div>
         <div style={{display:"flex",flexDirection:"column",gap:7}}>
           {apprs.map(u=>{
             const isP=present.includes(u.uid);
             const total=plAll.filter(p=>p.present?.includes(u.uid)).length;
             return <div key={u.uid} onClick={()=>toggle(u.uid)} className="bt" style={{background:K.card,border:`1px solid ${isP?K.emBd:K.b0}`,borderRadius:11,padding:"11px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:11}}>
               <div style={{width:22,height:22,borderRadius:6,border:`2px solid ${isP?K.em:K.b1}`,background:isP?K.em:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                {isP&&<i className="ti ti-check" style={{fontSize:13,color:"#F5EDD8"}}/>}
+                {isP&&<i className="ti ti-check" style={{fontSize:14,color:"#F5EDD8"}}/>}
               </div>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontWeight:700,fontSize:13,color:K.t1}}>{u.nom}</div>
-                <div style={{fontSize:11,color:K.t3,fontFamily:"'JetBrains Mono',monospace"}}>{u.mail}</div>
+                <div style={{fontWeight:700,fontSize:14,color:K.t1}}>{u.nom}</div>
+                <div style={{fontSize:12,color:K.t3,fontFamily:"'JetBrains Mono',monospace"}}>{u.mail}</div>
               </div>
-              <span style={{fontSize:10,color:K.t3,flexShrink:0}}>{total} séance{total>1?"s":""} au total</span>
+              <span style={{fontSize:11,color:K.t3,flexShrink:0}}>{total} séance{total>1?"s":""} au total</span>
             </div>;
           })}
-          {!apprs.length&&<div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"20px",textAlign:"center",fontSize:13,color:K.t3}}>Aucun apprenant inscrit.</div>}
+          {!apprs.length&&<div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"20px",textAlign:"center",fontSize:14,color:K.t3}}>Aucun apprenant inscrit.</div>}
         </div>
       </div>;
     })()}
-    {vm&&<Sheet title="Valider — Choisir la durée" onClose={()=>sVm(null)}><div style={{color:K.t3,fontSize:13,marginBottom:12}}>Paiement confirmé pour <b style={{color:K.t1}}>{users.find(u=>u.uid===vm)?.nom}</b>.</div><div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>{DUR.map(d=><div key={d.id} onClick={()=>genC(vm,d.id)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",cursor:"pointer",minHeight:50}} onMouseEnter={e=>{e.currentTarget.style.borderColor=K.emBd;e.currentTarget.style.background=K.emBg;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=K.b0;e.currentTarget.style.background=K.c2;}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{d.l}</div><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={d.j===36500?"∞":d.j+"j"}/></div></div>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t3,fontSize:12}}>Ou activer directement :</div><Btn ch="⚡ 3 mois" on={()=>actD(vm,"3m")} v="s" sm/></div></Sheet>}
-    {cm&&<Sheet title="Code généré ✅" onClose={()=>sCm(null)} w={400}><div style={{background:K.bg,border:`2px solid ${K.emBd}`,borderRadius:12,padding:"16px",textAlign:"center",marginBottom:11}}><div style={{color:K.t3,fontSize:9,letterSpacing:2,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",marginBottom:7}}>Code d'accès</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:800,fontSize:32,letterSpacing:6,color:K.em,marginBottom:7}}>{cm.code}</div><div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={cm.d?.l||"—"}/><Tg c={K.t3} bg="none" bd={K.b0} ch={fD(dE(cm.d?.j||30))}/></div></div><Btn ch="✉ Envoyer par email + message" on={()=>mL({...users.find(u=>u.uid===cm.uid),...cm})} v="i" full sx={{padding:"10px",fontSize:13,marginBottom:7,minHeight:42}}/><div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:8,padding:"7px 10px",marginBottom:11,fontSize:12,color:K.t2}}>📨 Envoyé par email et dans la messagerie interne de l'apprenant.</div><Btn ch="Fermer" on={()=>sCm(null)} v="g" full/></Sheet>}
-    {dm&&<Sheet title="Supprimer ?" onClose={()=>sDm(null)} w={320}><div style={{textAlign:"center",padding:"4px 0"}}><div style={{fontSize:30,marginBottom:7}}>⚠️</div><div style={{color:K.t1,fontWeight:700,fontSize:14,marginBottom:4}}>{users.find(u=>u.uid===dm)?.nom}</div><div style={{color:K.t3,fontSize:12,marginBottom:17}}>Action irréversible.</div><div style={{display:"flex",gap:7,justifyContent:"center"}}><Btn ch="Annuler" on={()=>sDm(null)} v="g" sx={{minHeight:42}}/><Btn ch="Supprimer" on={()=>delU(dm)} v="d" sx={{minHeight:42}}/></div></div></Sheet>}
+    {vm&&<Sheet title="Valider — Choisir la durée" onClose={()=>sVm(null)}><div style={{color:K.t3,fontSize:14,marginBottom:12}}>Paiement confirmé pour <b style={{color:K.t1}}>{users.find(u=>u.uid===vm)?.nom}</b>.</div><div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>{DUR.map(d=><div key={d.id} onClick={()=>genC(vm,d.id)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",cursor:"pointer",minHeight:50}} onMouseEnter={e=>{e.currentTarget.style.borderColor=K.emBd;e.currentTarget.style.background=K.emBg;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=K.b0;e.currentTarget.style.background=K.c2;}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{d.l}</div><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={d.j===36500?"∞":d.j+"j"}/></div></div>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t3,fontSize:13}}>Ou activer directement :</div><Btn ch="⚡ 3 mois" on={()=>actD(vm,"3m")} v="s" sm/></div></Sheet>}
+    {cm&&<Sheet title="Code généré ✅" onClose={()=>sCm(null)} w={400}><div style={{background:K.bg,border:`2px solid ${K.emBd}`,borderRadius:12,padding:"16px",textAlign:"center",marginBottom:11}}><div style={{color:K.t3,fontSize:10,letterSpacing:2,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",marginBottom:7}}>Code d'accès</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:800,fontSize:32,letterSpacing:6,color:K.em,marginBottom:7}}>{cm.code}</div><div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={cm.d?.l||"—"}/><Tg c={K.t3} bg="none" bd={K.b0} ch={fD(dE(cm.d?.j||30))}/></div></div><Btn ch="✉ Envoyer par email + message" on={()=>mL({...users.find(u=>u.uid===cm.uid),...cm})} v="i" full sx={{padding:"10px",fontSize:14,marginBottom:7,minHeight:42}}/><div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:8,padding:"7px 10px",marginBottom:11,fontSize:13,color:K.t2}}>📨 Envoyé par email et dans la messagerie interne de l'apprenant.</div><Btn ch="Fermer" on={()=>sCm(null)} v="g" full/></Sheet>}
+    {dm&&<Sheet title="Supprimer ?" onClose={()=>sDm(null)} w={320}><div style={{textAlign:"center",padding:"4px 0"}}><div style={{fontSize:30,marginBottom:7}}>⚠️</div><div style={{color:K.t1,fontWeight:700,fontSize:14,marginBottom:4}}>{users.find(u=>u.uid===dm)?.nom}</div><div style={{color:K.t3,fontSize:13,marginBottom:17}}>Action irréversible.</div><div style={{display:"flex",gap:7,justifyContent:"center"}}><Btn ch="Annuler" on={()=>sDm(null)} v="g" sx={{minHeight:42}}/><Btn ch="Supprimer" on={()=>delU(dm)} v="d" sx={{minHeight:42}}/></div></div></Sheet>}
   </div>;
 }
 
@@ -4756,7 +4793,7 @@ class ErrorBoundary extends React.Component {
         <div style={{maxWidth:420,width:"100%",background:K_EB.card,border:`1px solid ${K_EB.b0}`,borderRadius:16,padding:28,textAlign:"center"}}>
           <div style={{fontSize:36,marginBottom:16}}>⚠️</div>
           <div style={{fontWeight:800,fontSize:18,color:K_EB.t1,marginBottom:8}}>Une erreur est survenue</div>
-          <div style={{fontSize:13,color:K_EB.t2,marginBottom:20,lineHeight:1.6}}>{this.state.error?.message||"Erreur inattendue"}</div>
+          <div style={{fontSize:14,color:K_EB.t2,marginBottom:20,lineHeight:1.6}}>{this.state.error?.message||"Erreur inattendue"}</div>
           <button onClick={()=>window.location.reload()}
             style={{background:"linear-gradient(135deg,#16A34A,#22C55E)",border:"none",borderRadius:10,padding:"11px 24px",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
             Recharger la page
@@ -4790,10 +4827,10 @@ function InstallPrompt(){
   return <div style={{position:"fixed",left:12,right:mob?12:"auto",bottom:mob?78:18,maxWidth:380,zIndex:997,background:K.card,border:`1px solid ${K.emBd}`,borderRadius:14,boxShadow:"0 10px 30px rgba(0,0,0,.25)",padding:"12px 14px",display:"flex",gap:11,alignItems:"center",animation:"slideUp .35s ease"}}>
     <img src="/icons/icon-192.png" alt="" style={{width:44,height:44,borderRadius:11,flexShrink:0}}/>
     <div style={{flex:1,minWidth:0}}>
-      <div style={{fontWeight:800,fontSize:13,color:K.t1}}>Installer Éco-Campus</div>
-      <div style={{fontSize:11,color:K.t2,lineHeight:1.45,marginTop:2}}>{ios?<>Touchez <b>Partager</b> <i className="ti ti-share-2"/> puis <b>« Sur l'écran d'accueil »</b>.</>:"Accès direct depuis votre écran d'accueil, en plein écran."}</div>
+      <div style={{fontWeight:800,fontSize:14,color:K.t1}}>Installer Éco-Campus</div>
+      <div style={{fontSize:12,color:K.t2,lineHeight:1.45,marginTop:2}}>{ios?<>Touchez <b>Partager</b> <i className="ti ti-share-2"/> puis <b>« Sur l'écran d'accueil »</b>.</>:"Accès direct depuis votre écran d'accueil, en plein écran."}</div>
     </div>
-    {!ios&&<button onClick={installer} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,color:"#F5EDD8",border:"none",borderRadius:9,padding:"8px 12px",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",flexShrink:0}}>Installer</button>}
+    {!ios&&<button onClick={installer} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,color:"#F5EDD8",border:"none",borderRadius:9,padding:"8px 12px",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",flexShrink:0}}>Installer</button>}
     <button onClick={fermer} aria-label="Fermer" className="bt" style={{background:"none",border:"none",color:K.t3,fontSize:20,cursor:"pointer",lineHeight:1,flexShrink:0}}>×</button>
   </div>;
 }
