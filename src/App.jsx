@@ -450,9 +450,18 @@ const msgStorage=e=>{
   if(c==="storage/unauthorized")return"Permission refusée par Firebase Storage : vérifiez que les règles Storage sont publiées et que vous êtes connecté avec le bon compte.";
   if(c==="storage/unauthenticated")return"Session expirée : reconnectez-vous puis réessayez.";
   if(c==="storage/quota-exceeded")return"Quota de stockage Firebase dépassé : vérifiez la formule (Blaze) dans la console Firebase.";
-  if(c==="storage/bucket-not-found"||c==="storage/project-not-found"||c==="storage/unknown")return"Stockage Firebase indisponible : activez Storage dans la console Firebase (formule Blaze requise).";
+  if(c==="storage/bucket-not-found"||c==="storage/project-not-found"||c==="storage/unknown")return"Stockage Firebase indisponible (formule Blaze requise). Utilisez plutôt un lien Google Drive.";
   if(c==="storage/canceled")return"Envoi annulé.";
   return e?.message||"Erreur inconnue lors de l'envoi.";
+};
+// Documents par lien (Google Drive, Docs, Slides…) : solution qui ne dépend pas de Firebase Storage
+const lienValide=u=>/^https:\/\/\S+\.\S+/i.test((u||"").trim());
+const apercuLien=u=>{
+  const d=(u||"").match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{10,})/);
+  if(d)return`https://drive.google.com/file/d/${d[1]}/preview`;
+  const g=(u||"").match(/docs\.google\.com\/(document|presentation|spreadsheets)\/d\/([\w-]{10,})/);
+  if(g)return`https://docs.google.com/${g[1]}/d/${g[2]}/preview`;
+  return null;
 };
 const avecDelai=(p,ms=90000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),ms))]);
 const uploadPdf=async(modId,file)=>{
@@ -462,8 +471,8 @@ const uploadPdf=async(modId,file)=>{
   await setDoc(doc(db,"pdfs",modId),{name:file.name,url,modId});
   return{name:file.name,url};
 };
-const deletePdf=async(modId,name)=>{
-  try{await deleteObject(ref(storage,`pdfs/${modId}/${name}`));}catch(e){}
+const deletePdf=async(modId,name,lien=false)=>{
+  if(!lien)try{await deleteObject(ref(storage,`pdfs/${modId}/${name}`));}catch(e){}
   await deleteDoc(doc(db,"pdfs",modId));
 };
 
@@ -778,6 +787,18 @@ function RatingPanel({modId,uid,K,mob}){
   </div>;
 }
 
+function ChampLien({K,val,onChange,lb}){
+  const ok=!val.trim()||lienValide(val);
+  return <div>
+    <div style={{fontSize:12,color:K.t3,marginBottom:4,fontWeight:600,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-link" style={{fontSize:13}}/>{lb}</div>
+    <input value={val} onChange={e=>onChange(e.target.value)} inputMode="url" placeholder="https://drive.google.com/file/d/…"
+      style={{width:"100%",background:K.c2,border:`1px solid ${ok?K.b1:K.erBd}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+    {val.trim()&&<div style={{fontSize:11.5,marginTop:4,color:!ok?K.er:apercuLien(val)?K.em:K.t3}}>
+      {!ok?"Le lien doit commencer par https://":apercuLien(val)?"✓ Lien Google reconnu : il s'ouvrira dans l'application.":"Lien externe : il doit pointer directement vers un fichier PDF public."}
+    </div>}
+  </div>;
+}
+
 function PdfV({url,name,onClose,modId,uid,showRating=false}){
   const K=useK();const{mob}=useW();
   const[tab,setTab]=useState("pdf");
@@ -787,7 +808,7 @@ function PdfV({url,name,onClose,modId,uid,showRating=false}){
     document.addEventListener("keydown",blockSave);
     return()=>document.removeEventListener("keydown",blockSave);
   },[]);
-  const embedUrl=`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
+  const embedUrl=apercuLien(url)||`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
   return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 15px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -1728,7 +1749,7 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
   const[questions,setQuestions]=useState([{q:"",opts:["","","",""],ans:0}]);
   const[openQuestions,setOpenQuestions]=useState([{q:"",points:10}]);
   const[savingNew,setSavingNew]=useState(false);
-  const[slideFile,setSlideFile]=useState(null);
+  const[slideFile,setSlideFile]=useState(null),[slideLien,setSlideLien]=useState("");
   const[slideUploading,setSlideUploading]=useState(false);
 
   const addQ=()=>setQuestions(qs=>[...qs,{q:"",opts:["","","",""],ans:0}]);
@@ -1742,10 +1763,11 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
     if(!form.titre.trim())return toast("e","Titre requis");
     if(evalType==="qcm"&&questions.some(q=>!q.q.trim()||q.opts.some(o=>!o.trim())))return toast("e","Complétez toutes les questions QCM");
     if(evalType==="open"&&openQuestions.some(q=>!q.q.trim()||!q.points))return toast("e","Complétez toutes les questions ouvertes (énoncé + points)");
+    if(!slideFile&&slideLien.trim()&&!lienValide(slideLien))return toast("e","Lien des slides invalide : collez un lien complet commençant par https://");
     setSavingNew(true);
     try{
       const id="M"+Date.now();
-      let slideUrl="";
+      let slideUrl=slideFile?"":slideLien.trim();
       if(slideFile){
         setSlideUploading(true);
         const r=ref(storage,`slides/${uid}/${id}.pdf`);
@@ -1763,7 +1785,7 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
       });
       toast("o","Module créé ! Soumettez-le pour validation.");
       setCreating(false);setForm({titre:"",mat:"",desc:"",ico:"book-2",col:"#1E4FA3"});
-      setQuestions([{q:"",opts:["","","",""],ans:0}]);setOpenQuestions([{q:"",points:10}]);setEvalType("qcm");setSlideFile(null);
+      setQuestions([{q:"",opts:["","","",""],ans:0}]);setOpenQuestions([{q:"",points:10}]);setEvalType("qcm");setSlideFile(null);setSlideLien("");
     }catch(e){toast("e",slideFile?`Échec de l'envoi des slides : ${msgStorage(e)}`:e.message);setSlideUploading(false);}
     setSavingNew(false);
   };
@@ -1844,7 +1866,7 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
         <i className="ti ti-file-text" style={{fontSize:14,color:"#F59E0B"}}/>Slides PDF (optionnel)
       </div>
       <label style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"18px",border:`2px dashed ${slideFile?"#1E4FA3":K.b1}`,borderRadius:10,cursor:"pointer",background:slideFile?"#1E4FA308":K.bg,transition:"all .2s"}}>
-        <input type="file" accept=".pdf" style={{display:"none"}} onChange={e=>setSlideFile(e.target.files[0]||null)}/>
+        <input type="file" accept=".pdf,application/pdf" style={{display:"none"}} onChange={e=>{setSlideFile(e.target.files[0]||null);setSlideLien("");}}/>
         <i className={`ti ti-${slideFile?"circle-check":"upload"}`} style={{fontSize:28,color:slideFile?"#1E4FA3":K.t3}}/>
         <div style={{fontSize:14,fontWeight:600,color:slideFile?"#1E4FA3":K.t2}}>{slideFile?slideFile.name:"Cliquez pour choisir un PDF"}</div>
         <div style={{fontSize:12,color:K.t3}}>PDF uniquement · Max 10 MB</div>
@@ -1853,6 +1875,7 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
         style={{marginTop:8,background:"none",border:"none",color:K.er,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
         <i className="ti ti-x" style={{fontSize:13}}/>Supprimer
       </button>}
+      {!slideFile&&<ChampLien K={K} val={slideLien} onChange={setSlideLien} lb="ou collez un lien Google Drive / Google Slides"/>}
     </div>
     <button onClick={saveModule} disabled={savingNew||slideUploading} className="bt"
       style={{width:"100%",padding:"13px",background:`linear-gradient(135deg,#7C3AED,#8B5CF6)`,border:"none",borderRadius:11,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:46}}>
@@ -2301,6 +2324,7 @@ function useAutoLogout(onLogout, minutes = 20) {
 // ── DOCUMENTS FORMATEUR ───────────────────────────────────────────────────────
 const DOC_TYPES = {
   "application/pdf":                    {label:"PDF",         ico:"file-text",    col:"#EF4444"},
+  "lien":                               {label:"Lien",        ico:"link",         col:"#1E4FA3"},
   "application/vnd.ms-powerpoint":      {label:"PowerPoint",  ico:"presentation", col:"#F59E0B"},
   "application/vnd.openxmlformats-officedocument.presentationml.presentation":
                                         {label:"PowerPoint",  ico:"presentation", col:"#F59E0B"},
@@ -2319,7 +2343,7 @@ function FADocs({uid,toast}){
   const[docs,setDocs]=useState([]);
   const[uploading,setUploading]=useState(false);
   const[form,setForm]=useState({titre:"",desc:"",modId:""});
-  const[file,setFile]=useState(null);
+  const[file,setFile]=useState(null),[lien,setLien]=useState("");
   const[dragOver,setDragOver]=useState(false);
   const{mods}=useModules();
   const myMods=mods.filter(m=>m.createdBy===uid);
@@ -2340,12 +2364,33 @@ function FADocs({uid,toast}){
     if(!Object.keys(DOC_TYPES).some(t=>f.type===t)&&!ACCEPT_DOCS.split(",").some(ext=>f.name.endsWith(ext.replace(".",".")))){
       toast("e","Format non supporté — PDF, PPT, PPTX, DOC, DOCX, XLS, XLSX uniquement");return;
     }
-    setFile(f);
+    setFile(f);setLien("");
     if(!form.titre)setForm(fm=>({...fm,titre:f.name.replace(/\.[^/.]+$/,"")}));
   };
 
+  const enregistrerLien=async()=>{
+    if(!lienValide(lien))return toast("e","Lien invalide : collez un lien complet commençant par https://");
+    if(!form.titre.trim())return toast("e","Titre requis");
+    setUploading(true);
+    try{
+      const id="DOC"+Date.now();
+      await setDoc(doc(db,"documents",id),{
+        id,titre:form.titre,desc:form.desc,
+        url:lien.trim(),type:"lien",ext:"lien",size:0,
+        modId:form.modId||"",
+        status:"draft",createdBy:uid,
+        createdAt:new Date().toISOString(),
+        fileName:"",
+      });
+      toast("o","Lien enregistré ! Soumettez-le pour validation.");
+      setLien("");setForm({titre:"",desc:"",modId:""});
+    }catch(e){toast("e",e.message);}
+    setUploading(false);
+  };
+
   const uploadDoc=async()=>{
-    if(!file)return toast("e","Choisissez un fichier");
+    if(!file&&lien.trim())return enregistrerLien();
+    if(!file)return toast("e","Choisissez un fichier ou collez un lien");
     if(!form.titre.trim())return toast("e","Titre requis");
     setUploading(true);
     const timeoutMs=90000;
@@ -2440,6 +2485,8 @@ function FADocs({uid,toast}){
         }
       </label>
 
+      {!file&&<div style={{marginTop:-4,marginBottom:14}}><ChampLien K={K} val={lien} onChange={setLien} lb="ou collez un lien (Google Drive, Docs, Slides…)"/></div>}
+
       {/* Formulaire */}
       {[["Titre du document","titre","Fondements SYSCOHADA — Chapitre 1"],["Description (optionnel)","desc","Résumé du contenu..."]].map(([lb,k,ph])=>
         <div key={k} style={{marginBottom:10}}>
@@ -2460,13 +2507,13 @@ function FADocs({uid,toast}){
       </div>}
 
       <div style={{display:"flex",gap:8}}>
-        {file&&<button onClick={()=>{setFile(null);setForm({titre:"",desc:"",modId:""});}} className="bt"
+        {(file||lien)&&<button onClick={()=>{setFile(null);setLien("");setForm({titre:"",desc:"",modId:""});}} className="bt"
           style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t3,borderRadius:9,padding:"10px 14px",cursor:"pointer",fontSize:13,fontFamily:"'Outfit',sans-serif"}}>
           Annuler
         </button>}
-        <button onClick={uploadDoc} disabled={uploading||!file} className="bt"
-          style={{flex:1,padding:"12px",background:file?"linear-gradient(135deg,#7C3AED,#8B5CF6)":"#333",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:14,cursor:file?"pointer":"not-allowed",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
-          {uploading?<><i className="ti ti-loader-2" style={{fontSize:14,animation:"spin .8s linear infinite"}}/>Upload en cours...</>:<><i className="ti ti-upload" style={{fontSize:14}}/>Uploader le document</>}
+        <button onClick={uploadDoc} disabled={uploading||(!file&&!lien.trim())} className="bt"
+          style={{flex:1,padding:"12px",background:file||lien.trim()?"linear-gradient(135deg,#7C3AED,#8B5CF6)":"#333",border:"none",borderRadius:9,color:"#fff",fontWeight:800,fontSize:14,cursor:file||lien.trim()?"pointer":"not-allowed",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
+          {uploading?<><i className="ti ti-loader-2" style={{fontSize:14,animation:"spin .8s linear infinite"}}/>Enregistrement...</>:!file&&lien.trim()?<><i className="ti ti-link" style={{fontSize:14}}/>Enregistrer le lien</>:<><i className="ti ti-upload" style={{fontSize:14}}/>Uploader le document</>}
         </button>
       </div>
     </div>
@@ -4231,7 +4278,7 @@ function AA({onOut}){
   const[tab,sT]=useState("home"),[msg,sMsg]=useState({t:"",m:""});
   const[cm,sCm]=useState(null),[vm,sVm]=useState(null),[dm,sDm]=useState(null),[q,sQ]=useState("");
   const[editMod,sEM]=useState(null),[newMod,sNM]=useState(false);
-  const[addVid,sAV]=useState(false),[saving,sSav]=useState(false),[pdfEnvoi,sPdfEnvoi]=useState(null),[pdfMsg,sPdfMsg]=useState({t:"",m:""}),[addPres,sAddPres]=useState(false),[presGr,sPresGr]=useState(true),[addStage,sAddStage]=useState(false),[stageTab,sStageTab]=useState("offres"),[addPlat,sAddPlat]=useState(false);
+  const[addVid,sAV]=useState(false),[saving,sSav]=useState(false),[pdfEnvoi,sPdfEnvoi]=useState(null),[pdfMsg,sPdfMsg]=useState({t:"",m:""}),[lienMod,sLienMod]=useState(null),[lienVal,sLienVal]=useState(""),[addPres,sAddPres]=useState(false),[presGr,sPresGr]=useState(true),[addStage,sAddStage]=useState(false),[stageTab,sStageTab]=useState("offres"),[addPlat,sAddPlat]=useState(false);
   const{mods}=useModules();const users=useUsers();const{vids,live}=useVideos();const allPresAdmin=usePresentations();
   const allStagesAdmin=useStages();
   const allPlatsAdmin=usePlateformes();
@@ -4727,6 +4774,7 @@ function AA({onOut}){
         if(!total)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:14,color:K.t3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-circle-check" style={{fontSize:14,color:K.em}}/>Aucun contenu en attente de validation.</div>;
         const DocTypeInfo={
           "application/pdf":{label:"PDF",ico:"file-text",col:"#EF4444"},
+          "lien":{label:"Lien",ico:"link",col:"#1E4FA3"},
           "application/vnd.openxmlformats-officedocument.presentationml.presentation":{label:"PPT",ico:"presentation",col:"#F59E0B"},
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document":{label:"Word",ico:"file-type-doc",col:"#3B82F6"},
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{label:"Excel",ico:"file-spreadsheet",col:"#1E4FA3"},
@@ -4782,6 +4830,10 @@ function AA({onOut}){
               <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===d.createdBy)?.nom||"—"} · {d.size?(d.size/1024/1024).toFixed(1)+" MB":""}</div>
               {d.desc&&<div style={{fontSize:13,color:K.t2,marginBottom:8,lineHeight:1.5}}>{d.desc}</div>}
               <div style={{display:"flex",gap:6}}>
+                {d.url&&<a href={d.url} target="_blank" rel="noreferrer" className="bt"
+                  style={{flex:1,background:K.inBg,border:`1px solid ${K.inBd}`,color:K.in_,borderRadius:8,padding:"7px",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4,textDecoration:"none"}}>
+                  <i className="ti ti-external-link" style={{fontSize:13}}/>Ouvrir
+                </a>}
                 <button onClick={()=>approveDoc(d.id)} className="bt"
                   style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
                   <i className="ti ti-check" style={{fontSize:13}}/>Approuver
@@ -4852,9 +4904,9 @@ function AA({onOut}){
     </div>}
     {tab==="p"&&<div style={{animation:"up .25s ease"}}>
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:21,letterSpacing:"-.3px",lineHeight:1.2,color:K.t1,marginBottom:3}}>PDF d'exercices</div>
-        <div style={{color:K.t3,fontSize:13,marginBottom:13}}>Un PDF par module · Stocké sur Firebase Storage · Lecture seule pour abonnés.</div>
+        <div style={{color:K.t3,fontSize:13,marginBottom:13}}>Un PDF par module · Fichier 📤 ou lien Google Drive 🔗 · Lecture seule pour abonnés.</div>
         {pdfMsg.m&&<div style={{position:"sticky",top:mob?60:112,zIndex:5,marginBottom:10}}><Pop t={pdfMsg.t} m={pdfMsg.m}/></div>}
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{icoEl(m.ico,m.col,15)}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{m.titre}</div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?` · 📄 ${pdf.name}` : " · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{icoEl(m.ico,m.col,15)}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{m.titre}</div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?(pdf.lien?" · 🔗 Lien Google Drive":` · 📄 ${pdf.name}`):" · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
           <label className="bt" style={{background:pdf?K.c2:`linear-gradient(135deg,${K.inD},${K.in_})`,color:pdf?K.t2:"#fff",border:pdf?`1px solid ${K.b0}`:"none",borderRadius:8,padding:"7px 11px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:4,minHeight:34}}>
             {pdfEnvoi===m.id?"⏳":pdf?"🔄":"📤"}
             <input type="file" accept=".pdf,application/pdf" style={{display:"none"}} disabled={!!pdfEnvoi} onChange={async e=>{const f=e.target.files?.[0];e.target.value="";if(!f)return;
@@ -4866,10 +4918,28 @@ function AA({onOut}){
               catch(x){err(`Échec de l'envoi : ${msgStorage(x)}`);}
               finally{sPdfEnvoi(null);}}}/>
           </label>
-          {pdf&&<Btn ch="🗑" on={async()=>{try{await deletePdf(m.id,pdf.name);sPdfs(p=>{const n={...p};delete n[m.id];return n;});}catch(x){sPdfMsg({t:"e",m:`Suppression impossible : ${msgStorage(x)}`});setTimeout(()=>sPdfMsg({t:"",m:""}),6000);}}} v="d" sm/>}
-        </div></div>;})}
+          <Btn ch="🔗" on={()=>{sLienMod(lienMod===m.id?null:m.id);sLienVal(pdf?.lien?pdf.url:"");}} v="g" sm/>
+          {pdf&&<Btn ch="🗑" on={async()=>{try{await deletePdf(m.id,pdf.name,pdf.lien);sPdfs(p=>{const n={...p};delete n[m.id];return n;});}catch(x){sPdfMsg({t:"e",m:`Suppression impossible : ${msgStorage(x)}`});setTimeout(()=>sPdfMsg({t:"",m:""}),6000);}}} v="d" sm/>}
         </div>
-        <div style={{marginTop:13,padding:"10px 13px",background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:9,fontSize:13,color:K.t2}}>✅ PDF stockés sur Firebase Storage — persistants et sécurisés.</div>
+        {lienMod===m.id&&<div style={{flexBasis:"100%",display:"flex",flexDirection:"column",gap:7}}>
+          <ChampLien K={K} val={lienVal} onChange={sLienVal} lb="Lien Google Drive du PDF"/>
+          <div style={{display:"flex",gap:6,justifyContent:"flex-end"}}>
+            <Btn ch="Annuler" on={()=>{sLienMod(null);sLienVal("");}} v="g" sm/>
+            <Btn ch={pdfEnvoi===m.id?"⏳":"Enregistrer le lien"} on={async()=>{
+              const u=lienVal.trim();
+              if(!lienValide(u)){sPdfMsg({t:"e",m:"Lien invalide : collez un lien complet commençant par https://"});setTimeout(()=>sPdfMsg({t:"",m:""}),6000);return;}
+              sPdfEnvoi(m.id);
+              try{const res={name:m.titre,url:u,modId:m.id,lien:true};await setDoc(doc(db,"pdfs",m.id),res);
+                if(pdf&&!pdf.lien)try{await deleteObject(ref(storage,`pdfs/${m.id}/${pdf.name}`));}catch(e){}
+                sPdfs(p=>({...p,[m.id]:res}));sLienMod(null);sLienVal("");
+                sPdfMsg({t:"o",m:`✓ Lien enregistré pour ${m.titre}.`});setTimeout(()=>sPdfMsg({t:"",m:""}),3500);}
+              catch(x){sPdfMsg({t:"e",m:`Enregistrement impossible : ${x.message}`});setTimeout(()=>sPdfMsg({t:"",m:""}),6000);}
+              finally{sPdfEnvoi(null);}}} sm/>
+          </div>
+        </div>}
+        </div>;})}
+        </div>
+        <div style={{marginTop:13,padding:"10px 13px",background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:9,fontSize:13,color:K.t2}}>🔗 <b>Lien Google Drive</b> : dans Drive, Partager → « Tous les utilisateurs disposant du lien » (Lecteur), puis copiez le lien. Pour empêcher le téléchargement : Partager → ⚙️ → décochez « Les lecteurs et les commentateurs peuvent voir l'option de téléchargement ».</div>
       </div>}
     {tab==="param"&&<ParametresAdmin onOut={onOut}/>}
     {tab==="an"&&<div style={{animation:"fadeIn .35s ease"}}>
