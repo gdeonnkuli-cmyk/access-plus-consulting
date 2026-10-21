@@ -297,6 +297,14 @@ export const CAS_LOGISTIQUE = [
   { c: "891", l: "Impôt sur les bénéfices et profits (IBP)", dn: 8100000, cn: 0, dn1: 8400000, cn1: 0, md: 8100000, mc: 0 },
 ];
 
+// Version RDC du cas du manuel : le manuel comptabilise un IBP de 31 102 200 ; en RDC, l'IBP d'une
+// entreprise bénéficiaire est de 30 % du résultat fiscal (246 581 910), soit 73 974 573.
+// L'écart de 42 872 373 est ajouté au compte 891 (charge) et au compte 441 (dette envers l'État).
+const IBP_MANUEL = 31102200, IBP_RDC = 73974573, AJ_IBP = IBP_RDC - IBP_MANUEL;
+export const CAS_MEUBLES_RDC = CAS_MEUBLES.map(l =>
+  l.c === "891000" ? { ...l, dn: l.dn + AJ_IBP, md: l.md + AJ_IBP }
+  : l.c === "441100" ? { ...l, cn: l.cn + AJ_IBP, mc: l.mc + AJ_IBP } : l);
+
 export const CAS_PRATIQUES = [
   {
     id: "kin-negoce",
@@ -324,10 +332,11 @@ export const CAS_PRATIQUES = [
     enonce: [
       "La SA MEUBLES DU FLEUVE (fabrication de meubles, Kinshasa/Limete) vous transmet ses balances après inventaire N-1 et N. Il s'agit du cas pratique du manuel « Montage des états financiers du SYSCOHADA révisé ».",
       "Travail demandé : établir le jeu complet d'états financiers du Système Normal (fiche d'identification, Bilan, Compte de résultat, Tableau des flux de trésorerie) et déterminer l'IBP de l'exercice.",
+      "Adaptation RDC : l'IBP a été recalculé selon la législation congolaise, soit 30 % du résultat fiscal de 246 581 910 = 73 974 573 (comptes 891 et 441), au lieu des 31 102 200 du manuel. Le résultat net, le bilan et le TFT diffèrent donc des montants publiés dans le manuel.",
       "Informations complémentaires : un emprunt bancaire de 100 000 000 a été obtenu dans l'exercice (le compte 4794 constate un écart de conversion de 2 500 925 sur cet emprunt) ; les dépôts et cautionnements remboursés à l'entité s'élèvent à 730 043 ; les dividendes de 90 000 000 décidés en AGO ont été payés. Résultats attendus : ZH = 123 097 127, CAFG = 241 773 904.",
     ],
     complementsCorriges: { nouvEmp: 100000000, rembFin: 730043 },
-    lignes: CAS_MEUBLES,
+    lignes: CAS_MEUBLES_RDC,
   },
   {
     id: "malachite-logistique",
