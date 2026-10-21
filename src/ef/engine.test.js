@@ -100,3 +100,21 @@ test("cas MEUBLES DU FLEUVE adapté à la RDC : IBP de 30 % comptabilisé, état
   expect(Math.round(r.N.act.BZ.n)).toBe(Math.round(r.N.pas.DZ));
   expect(Math.round(r.tft.ZH)).toBe(123097127);
 });
+
+test("cas MINOTERIE DU KASAÏ en perte : minimum d'IBP de 1 % du CA, TFT hors écart de conversion", () => {
+  const c = cas("minoterie-kasai");
+  const r = computeAll(c.lignes, c.complementsCorriges);
+  expect(r.ctrl.every(x => x.ok)).toBe(true);
+  expect(r.N.nonMap).toEqual([]);
+  const I = computeIBP(r, {});
+  expect([I.rai, I.rf, I.ibp, I.ecart].map(Math.round)).toEqual([-48500000, -47000000, 4800000, 0]);
+  expect(I.enPerte).toBe(true);
+  expect(Math.round(r.N.cr.XI)).toBe(-53300000);
+  expect(Math.round(r.N.act.BZ.n)).toBe(Math.round(r.N.pas.DZ));
+  expect(Math.round(r.N.pas.CP)).toBe(263500000);
+  const t = r.tft;
+  // la réévaluation de l'emprunt en USD (16 crédité par 4784) n'est pas un nouvel emprunt
+  expect([t.FA, t.ZB, t.ZC, t.FN, t.FO, t.FQ, t.ZG, t.ZH].map(Math.round))
+    .toEqual([6700000, -11200000, -30000000, -15000000, 0, -30000000, -86200000, 66300000]);
+  expect(computeNotes(r, {}).flatMap(n => (n.ctrl || []).filter(x => !x.ok))).toEqual([]);
+});
