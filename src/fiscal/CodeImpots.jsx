@@ -1,10 +1,14 @@
 import React,{useState,useEffect}from"react";
 import{doc,updateDoc}from"firebase/firestore";
 import{MODULES_FISC}from"./modules";
+import{tirerSerie,lireSerie,ecrireSerie}from"./tirage";
 
 // ══════════════════ CODE DES IMPÔTS RDC EXPLIQUÉ ══════════════════
 // 9 modules (src/fiscal/modules) : leçon structurée en blocs, schémas dessinés et QCM de 10 questions.
 // Score enregistré dans users/{uid}.scores["FISC-F2"] = { s, t, pct, date } (meilleur score conservé).
+// QCM : chaque tentative tire 10 questions dans la banque du module (15), dont au moins 30 % de nouvelles
+// par rapport à l'essai précédent, avec les propositions mélangées (voir tirage.js).
+const NB_Q=10;
 export const cleScore=id=>`FISC-${id}`;
 const fmt=v=>Math.round(v).toLocaleString("fr-FR").replace(/ | /g," ");
 const fmtFC=v=>`${v<0?"− ":""}${fmt(Math.abs(v))} FC`;
@@ -168,8 +172,10 @@ function Bloc({K,b,col}){
 
 // ── QCM ─────────────────────────────────────────────────────────────────────────
 function Qcm({K,mod,db,uid,ancien,onFin}){
+  const nouvelle=prec=>{const s=tirerSerie(mod.qcm,prec,{n:NB_Q});ecrireSerie(cleScore(mod.id),s);return s;};
+  const[serie,sSerie]=useState(()=>nouvelle(lireSerie(cleScore(mod.id))));
   const[i,sI]=useState(0),[choix,sChoix]=useState(null),[bonnes,sBonnes]=useState(0),[fini,sFini]=useState(false),[saveErr,sSaveErr]=useState("");
-  const q=mod.qcm[i],n=mod.qcm.length,col=mod.col;
+  const q=serie[i],n=serie.length,col=mod.col;
   const valider=c=>{if(choix!=null)return;sChoix(c);if(c===q.b)sBonnes(x=>x+1);};
   const suivant=async()=>{
     if(i<n-1){sI(i+1);sChoix(null);return;}
@@ -185,9 +191,10 @@ function Qcm({K,mod,db,uid,ancien,onFin}){
     <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:26,color:ok?K.em:K.er}}>{bonnes} / {n} · {pct} %</div>
     <div style={{fontSize:14.5,color:K.t2,margin:"6px 0 16px",lineHeight:1.6}}>{pct>=80?"Excellent : vous maîtrisez ce module.":ok?"Module validé. Relisez les points manqués pour consolider.":"Pas encore validé (60 % requis). Relisez la leçon puis retentez."}</div>
     {ancien&&ancien.pct>pct&&<div style={{fontSize:12.5,color:K.t3,marginBottom:10}}>Votre meilleur score ({ancien.pct} %) reste enregistré.</div>}
+    {mod.qcm.length>NB_Q&&<div style={{fontSize:12.5,color:K.t3,marginBottom:12,lineHeight:1.5}}><i className="ti ti-arrows-shuffle" style={{marginRight:4}}/>Chaque nouvelle série renouvelle au moins 30 % des questions ({mod.qcm.length} dans la banque) et mélange l'ordre des réponses.</div>}
     {saveErr&&<div style={{fontSize:12.5,color:K.er,marginBottom:10}}>{saveErr}</div>}
     <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
-      <Bouton K={K} v="g" ico="refresh" ch="Recommencer" on={()=>{sI(0);sChoix(null);sBonnes(0);sFini(false);}}/>
+      <Bouton K={K} v="g" ico="refresh" ch="Nouvelle série" on={()=>{sSerie(nouvelle(serie.map(x=>x.idx)));sI(0);sChoix(null);sBonnes(0);sFini(false);sSaveErr("");}}/>
       <Bouton K={K} ico="book-2" ch="Retour à la leçon" on={()=>onFin&&onFin(null,true)}/>
     </div></Carte>;}
   return <Carte K={K}>
@@ -235,7 +242,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?22:27,lineHeight:1.2,margin:"4px 0 6px"}}>{mod.titre}</div>
         <div style={{fontSize:14,opacity:.9,lineHeight:1.5}}>{mod.resume}</div>
         <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
-          {[["lecon","book-2","Leçon"],["qcm","checklist",`QCM · ${mod.qcm.length} questions`]].map(([k,ic,l])=><button key={k} onClick={()=>sMode(k)} className="bt" style={{background:mode===k?"#fff":"rgba(255,255,255,.16)",color:mode===k?mod.col:"#fff",border:"1px solid rgba(255,255,255,.35)",borderRadius:99,padding:"7px 13px",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+          {[["lecon","book-2","Leçon"],["qcm","checklist",`QCM · ${Math.min(NB_Q,mod.qcm.length)} questions`]].map(([k,ic,l])=><button key={k} onClick={()=>sMode(k)} className="bt" style={{background:mode===k?"#fff":"rgba(255,255,255,.16)",color:mode===k?mod.col:"#fff",border:"1px solid rgba(255,255,255,.35)",borderRadius:99,padding:"7px 13px",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
             <i className={`ti ti-${ic}`} style={{fontSize:14}}/>{l}</button>)}
           {s&&<span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"7px 12px",fontWeight:800,fontSize:13}}>Meilleur score : {s.pct} %</span>}
         </div>
@@ -279,7 +286,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
         <div style={{fontWeight:800,fontSize:15.5,color:K.t1,lineHeight:1.3}}>{m.titre}</div>
         <div style={{fontSize:13,color:K.t3,lineHeight:1.5,flex:1}}>{m.resume}</div>
         <div style={{display:"flex",gap:12,fontSize:12,color:K.t3,marginTop:2}}>
-          <span><i className="ti ti-clock" style={{marginRight:3}}/>{m.duree}</span><span><i className="ti ti-checklist" style={{marginRight:3}}/>QCM {m.qcm.length} q.</span>
+          <span><i className="ti ti-clock" style={{marginRight:3}}/>{m.duree}</span><span><i className="ti ti-checklist" style={{marginRight:3}}/>QCM {Math.min(NB_Q,m.qcm.length)} q.</span>
         </div>
       </div>;})}
     </div>
