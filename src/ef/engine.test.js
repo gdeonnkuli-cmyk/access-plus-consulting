@@ -72,7 +72,7 @@ test("le cas MALACHITE LOGISTIQUE (services) boucle sans informations complémen
   expect(R.ctrl.every(x => x.ok)).toBe(true);
   const t = R.tft;
   expect([R.N.cr.XI, t.FA, t.FE, t.ZB, t.FG, t.FI, t.FN, t.FQ, t.ZH].map(Math.round))
-    .toEqual([17900000, 110900000, 12100000, 83800000, -20000000, 12000000, -12000000, -48000000, 333300000]);
+    .toEqual([12500000, 105500000, 17500000, 83800000, -20000000, 12000000, -12000000, -48000000, 333300000]);
   expect(computeNotes(R, {}).flatMap(n => (n.ctrl || []).filter(x => !x.ok))).toEqual([]);
   expect(Math.round(computeIBP(R, {}).ecart)).toBe(0);
 });
@@ -89,8 +89,9 @@ test("IBP (art. 92) : le plus élevé de 30 % du résultat fiscal et de l'impôt
   const p = computeIBP(R(-2000000, 50000000));
   expect(p.ibp).toBe(500000); expect(p.minApplique).toBe(true); expect(p.enPerte).toBe(true);
   // résultat fiscal nul après imputation des déficits : impôt minimum
+  // déficits antérieurs : imputation plafonnée à 60 % du bénéfice fiscal (art. 42), le solde reste reportable
   const z = computeIBP(R(1000000, 50000000), { deficits: 3000000 });
-  expect(z.rf).toBe(0); expect(z.ibp).toBe(500000);
+  expect(z.imput).toBe(600000); expect(z.rf).toBe(400000); expect(z.defReport).toBe(2400000); expect(z.ibp).toBe(500000);
   // aucun chiffre d'affaires : impôt forfaitaire selon la catégorie
   expect(computeIBP(R(-1000000, 0)).ibp).toBe(750000);
   expect(computeIBP(R(-1000000, 0), { categorie: "GE" }).ibp).toBe(2500000);
@@ -101,9 +102,9 @@ test("cas MEUBLES DU FLEUVE adapté à la RDC : IBP de 30 % comptabilisé, état
   const c = cas("meubles-fleuve");
   const r = computeAll(c.lignes, c.complementsCorriges);
   const I = computeIBP(r, {});
-  expect(Math.round(I.ibp)).toBe(73974573);
-  expect(Math.round(I.ecart)).toBe(0);
-  expect(Math.round(r.N.cr.XI)).toBe(215389710 - 42872373);
+  expect(Math.round(I.ibp)).toBe(76150074);
+  expect(Math.abs(I.ecart)).toBeLessThan(0.5); // 30 % × 253 833 579 = 76 150 073,7 arrondi à 76 150 074 en comptabilité
+  expect(Math.round(r.N.cr.XI)).toBe(215389710 - 45047874);
   expect(Math.round(r.N.act.BZ.n)).toBe(Math.round(r.N.pas.DZ));
   expect(Math.round(r.tft.ZH)).toBe(123097127);
 });
@@ -114,7 +115,7 @@ test("cas MINOTERIE DU KASAÏ en perte : minimum d'IBP de 1 % du CA, TFT hors é
   expect(r.ctrl.every(x => x.ok)).toBe(true);
   expect(r.N.nonMap).toEqual([]);
   const I = computeIBP(r, {});
-  expect([I.rai, I.rf, I.ibp, I.ecart].map(Math.round)).toEqual([-48500000, -47000000, 4800000, 0]);
+  expect([I.rai, I.rf, I.ibp, I.ecart].map(Math.round)).toEqual([-48500000, -32000000, 4800000, 0]);
   expect(I.enPerte).toBe(true);
   expect(Math.round(r.N.cr.XI)).toBe(-53300000);
   expect(Math.round(r.N.act.BZ.n)).toBe(Math.round(r.N.pas.DZ));

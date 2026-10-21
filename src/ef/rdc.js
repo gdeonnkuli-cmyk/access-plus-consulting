@@ -49,7 +49,15 @@ export const IDENTITE = [
 
 // ── Impôt sur les Bénéfices et Profits (IBP) ─────────────────────────────────────
 // Taux et minimum d'imposition paramétrables : à aligner sur la loi de finances de l'exercice.
-export const FISC_DEFAUT = { tauxIBP: 30, tauxMin: 1, reint: [], deduc: [], deficits: 0, acomptes: 0 };
+export const FISC_DEFAUT = { tauxIBP: 30, tauxMin: 1, plafondDef: 60, provAdmises: false, reint: [], deduc: [], deficits: 0, acomptes: 0 };
+// Provisions non déductibles (art. 46-6°) : dotations réintégrées, reprises déduites (déjà taxées à la dotation).
+// Exception : provisions minières et provisions pour créances douteuses des établissements de crédit (provAdmises).
+export const PROV_DOTATIONS = [["659", "Charges pour dépréciations et provisions à court terme d'exploitation (659)"], ["679", "Charges pour dépréciations et provisions financières à court terme (679)"],
+  ["691", "Dotations aux provisions et dépréciations d'exploitation (691)"], ["697", "Dotations aux provisions et dépréciations financières (697)"],
+  ["853", "Dotations aux dépréciations HAO (853)"], ["854", "Dotations aux provisions pour risques HAO (854)"]];
+export const PROV_REPRISES = [["759", "Reprises de charges pour dépréciations et provisions à court terme d'exploitation (759)"], ["779", "Reprises de charges pour dépréciations et provisions financières à court terme (779)"],
+  ["791", "Reprises de provisions et dépréciations d'exploitation (791)"], ["797", "Reprises de provisions et dépréciations financières (797)"],
+  ["863", "Reprises de dépréciations HAO (863)"], ["864", "Reprises de provisions pour risques HAO (864)"]];
 // Impôt forfaitaire des entreprises en activité sans chiffre d'affaires (art. 92, par. 2, O.-L. n° 69/009)
 export const FORFAIT_SANS_CA = { GE: 2500000, ME: 750000, PE: 30000 };
 export const CATEGORIES = [["GE", "Grande entreprise (DGE)"], ["ME", "Moyenne entreprise (CDI)"], ["PE", "Entreprise de petite taille (CIS)"]];
@@ -59,12 +67,17 @@ export function computeIBP(R, f = {}) {
   const N = R.N, cfg = { ...FISC_DEFAUT, ...f };
   const ibpCompta = N.cr.RS;
   const rai = N.cr.XI + ibpCompta; // résultat comptable avant impôt
-  const auto = [{ lib: "Amendes et pénalités (647)", m: Math.max(N.s("647"), 0), auto: true }].filter(x => x.m);
+  const prov = !cfg.provAdmises;
+  const auto = [{ lib: "Amendes et pénalités (647)", m: Math.max(N.s("647"), 0), auto: true },
+    ...(prov ? PROV_DOTATIONS.map(([c, lib]) => ({ lib: `${lib}, art. 46-6°`, m: Math.max(N.s(c), 0), auto: true })) : [])].filter(x => x.m);
+  const autoD = prov ? PROV_REPRISES.map(([c, lib]) => ({ lib: `${lib}, provisions déjà réintégrées`, m: Math.max(-N.s(c), 0), auto: true })).filter(x => x.m) : [];
   const reint = [...auto, ...(cfg.reint || []).map(x => ({ lib: x.lib, m: num(x.m) }))];
-  const deduc = (cfg.deduc || []).map(x => ({ lib: x.lib, m: num(x.m) }));
+  const deduc = [...autoD, ...(cfg.deduc || []).map(x => ({ lib: x.lib, m: num(x.m) }))];
   const tR = reint.reduce((s, x) => s + x.m, 0), tD = deduc.reduce((s, x) => s + x.m, 0);
   const avantDef = rai + tR - tD;
-  const imput = Math.min(Math.max(num(cfg.deficits), 0), Math.max(avantDef, 0));
+  // Imputation des déficits antérieurs plafonnée à 60 % du bénéfice fiscal avant imputation (art. 42)
+  const plafondImput = Math.max(avantDef, 0) * num(cfg.plafondDef) / 100;
+  const imput = Math.min(Math.max(num(cfg.deficits), 0), plafondImput);
   const rf = avantDef - imput;
   const ibpTheo = Math.max(rf, 0) * num(cfg.tauxIBP) / 100;
   // Art. 92 : impôt minimum de 1 % du CA déclaré lorsque le résultat est déficitaire ou que l'IBP
@@ -74,5 +87,5 @@ export function computeIBP(R, f = {}) {
   const enPerte = rf <= 0;
   const ibp = Math.max(ibpTheo, minimum);
   const acomptes = num(cfg.acomptes);
-  return { rai, reint, deduc, tR, tD, avantDef, imput, rf, ibpTheo, minimum, ibp, minApplique: minimum > ibpTheo, enPerte, sansCA, ibpCompta, ecart: ibp - ibpCompta, acomptes, solde: ibp - acomptes, cfg };
+  return { rai, reint, deduc, tR, tD, avantDef, imput, rf, ibpTheo, minimum, ibp, minApplique: minimum > ibpTheo, enPerte, sansCA, ibpCompta, plafondImput, defReport: Math.max(num(cfg.deficits), 0) - imput, ecart: ibp - ibpCompta, acomptes, solde: ibp - acomptes, cfg };
 }
