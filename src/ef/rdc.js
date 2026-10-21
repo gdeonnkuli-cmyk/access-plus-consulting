@@ -50,6 +50,10 @@ export const IDENTITE = [
 // ── Impôt sur les Bénéfices et Profits (IBP) ─────────────────────────────────────
 // Taux et minimum d'imposition paramétrables : à aligner sur la loi de finances de l'exercice.
 export const FISC_DEFAUT = { tauxIBP: 30, tauxMin: 1, reint: [], deduc: [], deficits: 0, acomptes: 0 };
+// Impôt forfaitaire des entreprises en activité sans chiffre d'affaires (art. 92, par. 2, O.-L. n° 69/009)
+export const FORFAIT_SANS_CA = { GE: 2500000, ME: 750000, PE: 30000 };
+export const CATEGORIES = [["GE", "Grande entreprise (DGE)"], ["ME", "Moyenne entreprise (CDI)"], ["PE", "Entreprise de petite taille (CIS)"]];
+export const categorieDe = centre => /^DGE/.test(centre || "") ? "GE" : /^CIS/.test(centre || "") ? "PE" : "ME";
 
 export function computeIBP(R, f = {}) {
   const N = R.N, cfg = { ...FISC_DEFAUT, ...f };
@@ -63,10 +67,12 @@ export function computeIBP(R, f = {}) {
   const imput = Math.min(Math.max(num(cfg.deficits), 0), Math.max(avantDef, 0));
   const rf = avantDef - imput;
   const ibpTheo = Math.max(rf, 0) * num(cfg.tauxIBP) / 100;
-  const minimum = Math.max(N.cr.XB, 0) * num(cfg.tauxMin) / 100;
-  // Minimum d'imposition (1 % du CA) : dû seulement en cas de perte ou de résultat fiscal nul
+  // Art. 92 : impôt minimum de 1 % du CA déclaré lorsque le résultat est déficitaire ou que l'IBP
+  // calculé lui est inférieur ; impôt forfaitaire selon la catégorie si aucun chiffre d'affaires
+  const ca = Math.max(N.cr.XB, 0), sansCA = !ca && !N.vide;
+  const minimum = sansCA ? FORFAIT_SANS_CA[cfg.categorie] ?? FORFAIT_SANS_CA.ME : ca * num(cfg.tauxMin) / 100;
   const enPerte = rf <= 0;
-  const ibp = enPerte ? minimum : ibpTheo;
+  const ibp = Math.max(ibpTheo, minimum);
   const acomptes = num(cfg.acomptes);
-  return { rai, reint, deduc, tR, tD, avantDef, imput, rf, ibpTheo, minimum, ibp, minApplique: enPerte, enPerte, ibpCompta, ecart: ibp - ibpCompta, acomptes, solde: ibp - acomptes, cfg };
+  return { rai, reint, deduc, tR, tD, avantDef, imput, rf, ibpTheo, minimum, ibp, minApplique: minimum > ibpTheo, enPerte, sansCA, ibpCompta, ecart: ibp - ibpCompta, acomptes, solde: ibp - acomptes, cfg };
 }
