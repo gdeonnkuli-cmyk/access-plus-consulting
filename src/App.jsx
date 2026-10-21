@@ -441,9 +441,23 @@ const savePresentation=async(pres)=>{
 };
 const deletePresentation=async(id)=>{await deleteDoc(doc(db,"presentations",id));};
 const saveLive=async(data)=>{await setDoc(doc(db,"config","live"),data,{merge:true});};
+// Certains sélecteurs de fichiers (Android) ne donnent pas le type MIME : on se fie aussi à l'extension
+const estPdf=f=>!!f&&(f.type==="application/pdf"||/\.pdf$/i.test(f.name||""));
+// Message clair à partir d'une erreur Firebase Storage
+const msgStorage=e=>{
+  const c=e?.code||"";
+  if(e?.message==="timeout"||c==="storage/retry-limit-exceeded")return"L'envoi a expiré. Vérifiez votre connexion et réessayez.";
+  if(c==="storage/unauthorized")return"Permission refusée par Firebase Storage : vérifiez que les règles Storage sont publiées et que vous êtes connecté avec le bon compte.";
+  if(c==="storage/unauthenticated")return"Session expirée : reconnectez-vous puis réessayez.";
+  if(c==="storage/quota-exceeded")return"Quota de stockage Firebase dépassé : vérifiez la formule (Blaze) dans la console Firebase.";
+  if(c==="storage/bucket-not-found"||c==="storage/project-not-found"||c==="storage/unknown")return"Stockage Firebase indisponible : activez Storage dans la console Firebase (formule Blaze requise).";
+  if(c==="storage/canceled")return"Envoi annulé.";
+  return e?.message||"Erreur inconnue lors de l'envoi.";
+};
+const avecDelai=(p,ms=90000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),ms))]);
 const uploadPdf=async(modId,file)=>{
   const r=ref(storage,`pdfs/${modId}/${file.name}`);
-  await uploadBytes(r,file);
+  await avecDelai(uploadBytes(r,file,{contentType:"application/pdf"}));
   const url=await getDownloadURL(r);
   await setDoc(doc(db,"pdfs",modId),{name:file.name,url,modId});
   return{name:file.name,url};
@@ -1750,7 +1764,7 @@ function FAModules({uid,mods,onSubmit,saving,toast}){
       toast("o","Module créé ! Soumettez-le pour validation.");
       setCreating(false);setForm({titre:"",mat:"",desc:"",ico:"book-2",col:"#1E4FA3"});
       setQuestions([{q:"",opts:["","","",""],ans:0}]);setOpenQuestions([{q:"",points:10}]);setEvalType("qcm");setSlideFile(null);
-    }catch(e){toast("e",e.message);setSlideUploading(false);}
+    }catch(e){toast("e",slideFile?`Échec de l'envoi des slides : ${msgStorage(e)}`:e.message);setSlideUploading(false);}
     setSavingNew(false);
   };
 
@@ -2361,7 +2375,7 @@ function FADocs({uid,toast}){
       setUploading(false);
     }catch(e){
       clearTimeout(timeoutId);
-      if(!timedOut){toast("e",e.message==="timeout"?"L'envoi a expiré. Vérifiez votre connexion.":e.message);setUploading(false);}
+      if(!timedOut){toast("e",`Échec de l'envoi : ${msgStorage(e)}`);setUploading(false);}
     }
   };
 
@@ -4217,7 +4231,7 @@ function AA({onOut}){
   const[tab,sT]=useState("home"),[msg,sMsg]=useState({t:"",m:""});
   const[cm,sCm]=useState(null),[vm,sVm]=useState(null),[dm,sDm]=useState(null),[q,sQ]=useState("");
   const[editMod,sEM]=useState(null),[newMod,sNM]=useState(false);
-  const[addVid,sAV]=useState(false),[saving,sSav]=useState(false),[addPres,sAddPres]=useState(false),[presGr,sPresGr]=useState(true),[addStage,sAddStage]=useState(false),[stageTab,sStageTab]=useState("offres"),[addPlat,sAddPlat]=useState(false);
+  const[addVid,sAV]=useState(false),[saving,sSav]=useState(false),[pdfEnvoi,sPdfEnvoi]=useState(null),[pdfMsg,sPdfMsg]=useState({t:"",m:""}),[addPres,sAddPres]=useState(false),[presGr,sPresGr]=useState(true),[addStage,sAddStage]=useState(false),[stageTab,sStageTab]=useState("offres"),[addPlat,sAddPlat]=useState(false);
   const{mods}=useModules();const users=useUsers();const{vids,live}=useVideos();const allPresAdmin=usePresentations();
   const allStagesAdmin=useStages();
   const allPlatsAdmin=usePlateformes();
@@ -4839,12 +4853,20 @@ function AA({onOut}){
     {tab==="p"&&<div style={{animation:"up .25s ease"}}>
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:21,letterSpacing:"-.3px",lineHeight:1.2,color:K.t1,marginBottom:3}}>PDF d'exercices</div>
         <div style={{color:K.t3,fontSize:13,marginBottom:13}}>Un PDF par module · Stocké sur Firebase Storage · Lecture seule pour abonnés.</div>
+        {pdfMsg.m&&<div style={{position:"sticky",top:mob?60:112,zIndex:5,marginBottom:10}}><Pop t={pdfMsg.t} m={pdfMsg.m}/></div>}
         <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{icoEl(m.ico,m.col,15)}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{m.titre}</div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?` · 📄 ${pdf.name}` : " · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
           <label className="bt" style={{background:pdf?K.c2:`linear-gradient(135deg,${K.inD},${K.in_})`,color:pdf?K.t2:"#fff",border:pdf?`1px solid ${K.b0}`:"none",borderRadius:8,padding:"7px 11px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:4,minHeight:34}}>
-            {saving?"⏳":pdf?"🔄":"📤"}
-            <input type="file" accept=".pdf" style={{display:"none"}} onChange={async e=>{const f=e.target.files?.[0];if(!f||f.type!=="application/pdf")return;if(f.size>15*1024*1024){alert("Max 15 Mo");return;}sSav(true);const res=await uploadPdf(m.id,f);sPdfs(p=>({...p,[m.id]:res}));sSav(false);e.target.value="";}}/>
+            {pdfEnvoi===m.id?"⏳":pdf?"🔄":"📤"}
+            <input type="file" accept=".pdf,application/pdf" style={{display:"none"}} disabled={!!pdfEnvoi} onChange={async e=>{const f=e.target.files?.[0];e.target.value="";if(!f)return;
+              const err=t=>{sPdfMsg({t:"e",m:t});setTimeout(()=>sPdfMsg({t:"",m:""}),6000);};
+              if(!estPdf(f))return err(`« ${f.name} » n'est pas un PDF.`);
+              if(f.size>15*1024*1024)return err("Fichier trop lourd : 15 Mo maximum.");
+              sPdfEnvoi(m.id);
+              try{const res=await uploadPdf(m.id,f);sPdfs(p=>({...p,[m.id]:res}));sPdfMsg({t:"o",m:`✓ PDF « ${f.name} » enregistré pour ${m.titre}.`});setTimeout(()=>sPdfMsg({t:"",m:""}),3500);}
+              catch(x){err(`Échec de l'envoi : ${msgStorage(x)}`);}
+              finally{sPdfEnvoi(null);}}}/>
           </label>
-          {pdf&&<Btn ch="🗑" on={async()=>{await deletePdf(m.id,pdf.name);sPdfs(p=>{const n={...p};delete n[m.id];return n;});}} v="d" sm/>}
+          {pdf&&<Btn ch="🗑" on={async()=>{try{await deletePdf(m.id,pdf.name);sPdfs(p=>{const n={...p};delete n[m.id];return n;});}catch(x){sPdfMsg({t:"e",m:`Suppression impossible : ${msgStorage(x)}`});setTimeout(()=>sPdfMsg({t:"",m:""}),6000);}}} v="d" sm/>}
         </div></div>;})}
         </div>
         <div style={{marginTop:13,padding:"10px 13px",background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:9,fontSize:13,color:K.t2}}>✅ PDF stockés sur Firebase Storage — persistants et sécurisés.</div>
