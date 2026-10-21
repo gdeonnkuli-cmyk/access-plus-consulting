@@ -764,8 +764,8 @@ function FiscTab({K,R,fisc,setF,canEdit,meta}){
     ...I.reint.map(x=>[`+ ${x.lib||"Réintégration"}${x.auto?" (repris de la balance)":""}`,x.m]),
     ...I.deduc.map(x=>[`− ${x.lib||"Déduction"}`,-x.m]),
     ["= Résultat fiscal avant imputation des déficits",I.avantDef,1],["− Déficits antérieurs imputés",-I.imput],["= RÉSULTAT FISCAL",I.rf,2],
-    [`IBP au taux de ${num(f.tauxIBP)} %`,I.ibpTheo],[`Minimum d'imposition (${num(f.tauxMin)} % du chiffre d'affaires ${fmt(R.N.cr.XB)})`,I.minimum],
-    [`= IBP DÛ${I.minApplique?" (minimum appliqué)":""}`,I.ibp,2],["− Acomptes provisionnels versés",-I.acomptes],[I.solde>=0?"= SOLDE D'IBP À PAYER":"= CRÉDIT D'IBP",I.solde,2],
+    [`IBP au taux de ${num(f.tauxIBP)} %`,I.ibpTheo],[`Minimum d'imposition en cas de perte (${num(f.tauxMin)} % du chiffre d'affaires ${fmt(R.N.cr.XB)})`,I.minimum],
+    [`= IBP DÛ${I.minApplique?" (perte : minimum d'imposition)":" (bénéfice : taux de l'IBP)"}`,I.ibp,2],["− Acomptes provisionnels versés",-I.acomptes],[I.solde>=0?"= SOLDE D'IBP À PAYER":"= CRÉDIT D'IBP",I.solde,2],
   ];
   const exp=()=>downloadCSV(`IBP_${meta.societe}_${meta.exercice}`,[["Libellé","Montant"],...rows.map(([l,v])=>[l,Math.round(v)])]);
   const okC=Math.abs(I.ecart)<0.5;
@@ -774,7 +774,7 @@ function FiscTab({K,R,fisc,setF,canEdit,meta}){
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:10,alignItems:"start"}}>
       <div className="ef-noprint" style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px"}}>
         <div style={{fontWeight:700,color:K.t1,fontSize:13,marginBottom:3}}>Paramètres et retraitements extra-comptables</div>
-        <div style={{color:K.t3,fontSize:11,marginBottom:10,lineHeight:1.5}}>Taux de l'IBP et minimum d'imposition à aligner sur la loi de finances applicable à l'exercice (DGI-RDC). Les amendes et pénalités (647) sont réintégrées automatiquement.</div>
+        <div style={{color:K.t3,fontSize:11,marginBottom:10,lineHeight:1.5}}>En cas de bénéfice, l'IBP est calculé au taux de l'IBP sur le résultat fiscal ; en cas de perte (ou de résultat fiscal nul), le minimum d'imposition s'applique sur le chiffre d'affaires. Les amendes et pénalités (647) sont réintégrées automatiquement.</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 8px"}}>
           <Field K={K} lb="Taux IBP (%)"><NumCellBox K={K} value={f.tauxIBP} dis={!canEdit} onChange={v=>setF({...f,tauxIBP:v})}/></Field>
           <Field K={K} lb="Minimum (% du CA)"><NumCellBox K={K} value={f.tauxMin} dis={!canEdit} onChange={v=>setF({...f,tauxMin:v})}/></Field>

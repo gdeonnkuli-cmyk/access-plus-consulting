@@ -64,7 +64,9 @@ export function computeIBP(R, f = {}) {
   const rf = avantDef - imput;
   const ibpTheo = Math.max(rf, 0) * num(cfg.tauxIBP) / 100;
   const minimum = Math.max(N.cr.XB, 0) * num(cfg.tauxMin) / 100;
-  const ibp = Math.max(ibpTheo, minimum);
+  // Minimum d'imposition (1 % du CA) : dû seulement en cas de perte ou de résultat fiscal nul
+  const enPerte = rf <= 0;
+  const ibp = enPerte ? minimum : ibpTheo;
   const acomptes = num(cfg.acomptes);
-  return { rai, reint, deduc, tR, tD, avantDef, imput, rf, ibpTheo, minimum, ibp, minApplique: minimum > ibpTheo, ibpCompta, ecart: ibp - ibpCompta, acomptes, solde: ibp - acomptes, cfg };
+  return { rai, reint, deduc, tR, tD, avantDef, imput, rf, ibpTheo, minimum, ibp, minApplique: enPerte, enPerte, ibpCompta, ecart: ibp - ibpCompta, acomptes, solde: ibp - acomptes, cfg };
 }
