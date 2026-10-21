@@ -1,10 +1,11 @@
 import React,{useState,useRef,useEffect,useCallback,createContext,useContext}from"react";
 import{initializeApp,deleteApp}from"firebase/app";
-import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup}from"firebase/auth";
+import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup,updatePassword,reauthenticateWithCredential,EmailAuthProvider}from"firebase/auth";
 import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,orderBy,limit,deleteField,writeBatch}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
 import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
 import{htmlCodeAcces,htmlNotification}from"./emails";
+import{PROVINCES}from"./ef/rdc";
 import LOGO from"./assets/logo.png";
 import LOGO_CLAIR from"./assets/logo-clair.png";
 import LOGO_ICONE from"./assets/logo-icone.png";
@@ -201,7 +202,7 @@ function useUsers(){
 // activite/{uid} : dernière activité de chaque compte (signal toutes les 90 s quand l'onglet est visible)
 // connexions/{id} : une ligne par ouverture de session (une fois par onglet)
 const ENLIGNE_MS=4*60*1000;
-const VUE_LBL={home:"Accueil",msg:"Messages",pres:"Cours",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration"};
+const VUE_LBL={home:"Accueil",msg:"Messages",pres:"Cours",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
 const appareil=()=>{const ua=navigator.userAgent||"";const os=/Android/i.test(ua)?"Android":/iPhone|iPad|iPod/i.test(ua)?"iOS":/Windows/i.test(ua)?"Windows":/Mac OS/i.test(ua)?"Mac":/Linux/i.test(ua)?"Linux":"Autre";
   const nav=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/SamsungBrowser/.test(ua)?"Samsung":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"Navigateur";
   const app=(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||String(document.referrer).startsWith("android-app://")?"Application":"Site web";
@@ -222,7 +223,12 @@ function usePresence({uid,nom,mail,role,vue}){
   useEffect(()=>{
     if(!uid||!nom)return;
     const k="ec_cx_"+uid;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");}catch(e){}
-    addDoc(collection(db,"connexions"),{uid,nom,mail:mail||"",role,appareil:appareil(),ts:serverTimestamp()}).catch(()=>{});
+    const app_=appareil();
+    addDoc(collection(db,"connexions"),{uid,nom,mail:mail||"",role,appareil:app_,ts:serverTimestamp()}).catch(()=>{});
+    // 10 dernières connexions, consultables par l'utilisateur dans ses paramètres
+    const ref_=doc(db,"activite",uid);
+    getDoc(ref_).then(s=>{const r=[{t:Date.now(),appareil:app_},...((s.exists()&&s.data().recents)||[])].slice(0,10);
+      return setDoc(ref_,{uid,nom,mail:mail||"",role,appareil:app_,enLigne:true,lastSeen:serverTimestamp(),recents:r},{merge:true});}).catch(()=>{});
   },[uid,nom,mail,role]);
 }
 function useActiviteAll(){
@@ -1297,7 +1303,7 @@ function ProgressRing({pct,size=80,stroke=7,col,track,txt}){
 
 // ── COMPOSANTS COMMUNS ESPACES FORMATEUR / ADMIN ──────────────────────────────
 const ROLE_COL={formateur:["#5B21B6","#8B5CF6"],admin:["#001433","#1E4FA3"]};
-function StaffNav({role,nom,onOut,tabs,active,onTab,extra}){
+function StaffNav({role,nom,onOut,tabs,active,onTab,extra,onProfil}){
   const K=useK();const{mob}=useW();const[c1,c2]=ROLE_COL[role];
   return <nav className="nb" style={{background:`${K.card}f4`,backdropFilter:"blur(18px)",borderBottom:`1px solid ${K.b0}`,position:"sticky",top:0,zIndex:99,boxShadow:"0 4px 18px rgba(0,0,0,.04)"}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,minHeight:mob?54:60,padding:mob?"6px 12px":"6px 20px"}}>
@@ -1310,8 +1316,11 @@ function StaffNav({role,nom,onOut,tabs,active,onTab,extra}){
       <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
         {extra}
         <div style={{display:"flex",alignItems:"center",gap:7,padding:"3px 4px 3px 3px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:99}}>
-          <div style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${c1},${c2})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:13}}>{(nom||"?")[0].toUpperCase()}</div>
-          {!mob&&<span style={{fontSize:13,fontWeight:700,color:K.t2}}>{(nom||"").split(" ")[0]}</span>}
+          <div onClick={onProfil} title="Paramètres" className="bt" style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer"}}>
+            <div style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${c1},${c2})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:13}}>{(nom||"?")[0].toUpperCase()}</div>
+            {!mob&&<span style={{fontSize:13,fontWeight:700,color:K.t2}}>{(nom||"").split(" ")[0]}</span>}
+            <i className="ti ti-settings" style={{fontSize:15,color:K.t3}}/>
+          </div>
           <button onClick={onOut} className="bt" title="Se déconnecter" style={{display:"flex",alignItems:"center",gap:4,background:K.card,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:99,padding:"5px 10px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}>
             <i className="ti ti-logout" style={{fontSize:14}}/>{!mob&&"Quitter"}
           </button>
@@ -1364,6 +1373,196 @@ function ActionTile({ico,col,label,desc,badge,on,i=0,compact}){
   </div>;
 }
 
+// ── PARAMÈTRES PERSONNELS ─────────────────────────────────────────────────────
+// Préférences enregistrées dans users/{uid}.preferences : { delaiDeco, taille, notifEmails }
+// Réglages de l'administrateur dans config/securite : { delaiMax, delaiAdmin }
+const DELAIS=[10,20,30,60];
+const TAILLES=[["normale","Normale",1],["grande","Grande",1.12],["tres","Très grande",1.25]];
+const appliquerTaille=t=>{const z=(TAILLES.find(x=>x[0]===t)||TAILLES[0])[2];try{document.body.style.zoom=z===1?"":String(z);localStorage.setItem("ec_taille",t||"normale");}catch(e){}};
+try{appliquerTaille(localStorage.getItem("ec_taille")||"normale");}catch(e){}
+function useConfigSecurite(){
+  const[c,sC]=useState({});
+  useEffect(()=>onSnapshot(doc(db,"config","securite"),s=>sC(s.exists()?s.data():{}),()=>{}),[]);
+  return c;
+}
+// Délai de déconnexion effectif d'un compte (minutes), plafonné par l'administrateur
+const delaiCompte=(prefs,cfg)=>Math.min(prefs?.delaiDeco||20,cfg?.delaiMax||60);
+
+function ParamCarte({ico,col,titre,sous,children}){
+  const K=useK();const{mob}=useW();
+  return <div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:18,padding:mob?"16px 14px":"20px 22px",marginBottom:16}}>
+    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:sous?4:14}}>
+      <div style={{width:40,height:40,borderRadius:12,background:`linear-gradient(135deg,${col},${col}B0)`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className={`ti ti-${ico}`} style={{fontSize:20,color:"#fff"}}/></div>
+      <div style={{fontWeight:800,fontSize:17,color:K.t1}}>{titre}</div>
+    </div>
+    {sous&&<div style={{fontSize:13.5,color:K.t2,marginBottom:14,marginLeft:52,lineHeight:1.5}}>{sous}</div>}
+    {children}
+  </div>;
+}
+function Choix({options,val,on,col}){
+  const K=useK();
+  return <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{options.map(([v,l,dis])=>{const a=val===v;return <button key={v} onClick={()=>!dis&&on(v)} disabled={dis} className="bt" style={{padding:"9px 15px",borderRadius:12,border:`1.5px solid ${a?(col||K.em):K.b1}`,background:a?(col||K.em):K.c2,color:a?"#fff":dis?K.t3:K.t1,fontWeight:800,fontSize:14,cursor:dis?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",opacity:dis?.5:1}}>{l}</button>;})}</div>;
+}
+function Interrupteur({on,set,lib,sous}){
+  const K=useK();
+  return <div onClick={()=>set(!on)} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer",padding:"10px 0"}}>
+    <div style={{flex:1}}><div style={{fontWeight:700,fontSize:14.5,color:K.t1}}>{lib}</div>{sous&&<div style={{fontSize:13,color:K.t3,marginTop:2,lineHeight:1.45}}>{sous}</div>}</div>
+    <div style={{width:48,height:28,borderRadius:99,background:on?K.em:K.b1,position:"relative",transition:"background .2s",flexShrink:0}}><div style={{position:"absolute",top:3,left:on?23:3,width:22,height:22,borderRadius:"50%",background:"#fff",boxShadow:"0 2px 6px rgba(0,0,0,.25)",transition:"left .2s"}}/></div>
+  </div>;
+}
+function ChoixTheme(){
+  const K=useK();const{tid,setT}=useContext(Ctx);
+  return <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(96px,1fr))",gap:9}}>
+    {Object.entries(TH).map(([id,t])=>{const sel=tid===id;return <button key={id} onClick={()=>setT(id)} className="bt" style={{background:t.bg,border:`2px solid ${sel?K.em:t.b1}`,borderRadius:14,padding:"12px 6px 10px",cursor:"pointer",textAlign:"center",position:"relative"}}>
+      {sel&&<span style={{position:"absolute",top:4,right:7,fontSize:12,color:K.em,fontWeight:900}}>✓</span>}
+      <div style={{fontSize:20,marginBottom:4}}>{t.i}</div><div style={{fontSize:12.5,fontWeight:800,color:t.t1}}>{t.n}</div>
+    </button>;})}
+  </div>;
+}
+function ChoixTaille({val,on}){return <Choix options={TAILLES.map(([v,l])=>[v,l])} val={val} on={v=>{appliquerTaille(v);on(v);}}/>;}
+
+function ParametresPage({role,uid,data,onOut}){
+  const K=useK();const{mob}=useW();
+  const cfg=useConfigSecurite();
+  const prefs=data?.preferences||{};
+  const[f,sF]=useState({nom:data?.nom||"",tel:data?.tel||"",province:data?.province||"",ville:data?.ville||""});
+  const[msg,sMsg]=useState({t:"",m:""});
+  const[pw,sPw]=useState({a:"",n:"",c:""}),[pwBusy,sPwBusy]=useState(false),[pwMsg,sPwMsg]=useState({t:"",m:""});
+  const[recents,sRecents]=useState([]);
+  const[supp,sSupp]=useState(false);
+  const user=auth.currentUser;
+  const motDePasse=(user?.providerData||[]).some(p=>p.providerId==="password");
+  const fournisseur=(user?.providerData||[]).map(p=>p.providerId==="google.com"?"Google":p.providerId==="facebook.com"?"Facebook":"E-mail et mot de passe").join(", ");
+  useEffect(()=>{getDoc(doc(db,"activite",uid)).then(s=>sRecents(s.exists()?(s.data().recents||[]):[])).catch(()=>{});},[uid]);
+  const flash=(t,m)=>{sMsg({t,m});setTimeout(()=>sMsg({t:"",m:""}),3500);};
+  const majPrefs=async p=>{try{await updateDoc(doc(db,"users",uid),{preferences:{...prefs,...p}});flash("o","Préférence enregistrée.");}catch(e){flash("e","Enregistrement impossible : "+e.message);}};
+  const enrProfil=async()=>{
+    if(!f.nom.trim())return flash("e","Le nom ne peut pas être vide.");
+    try{await updateDoc(doc(db,"users",uid),{nom:f.nom.trim(),tel:f.tel.trim(),province:f.province,ville:f.ville.trim()});flash("o","Profil enregistré.");}
+    catch(e){flash("e","Enregistrement impossible : "+e.message);}
+  };
+  const changerMdp=async()=>{
+    sPwMsg({t:"",m:""});
+    if(pw.n.length<6)return sPwMsg({t:"e",m:"Le nouveau mot de passe doit contenir au moins 6 caractères."});
+    if(pw.n!==pw.c)return sPwMsg({t:"e",m:"La confirmation ne correspond pas."});
+    sPwBusy(true);
+    try{await reauthenticateWithCredential(user,EmailAuthProvider.credential(user.email,pw.a));await updatePassword(user,pw.n);sPw({a:"",n:"",c:""});sPwMsg({t:"o",m:"Mot de passe modifié."});}
+    catch(e){sPwMsg({t:"e",m:e.code==="auth/wrong-password"||e.code==="auth/invalid-credential"?"Mot de passe actuel incorrect.":e.code==="auth/too-many-requests"?"Trop de tentatives. Réessayez plus tard.":"Modification impossible : "+e.message});}
+    sPwBusy(false);
+  };
+  const telecharger=()=>{
+    const {activationCode,formateurCode,...rest}=data||{};
+    const contenu={exporteLe:new Date().toISOString(),compte:{uid,email:user?.email||data?.mail,connexion:fournisseur},profil:rest,dernieresConnexions:recents.map(r=>({date:new Date(r.t).toISOString(),appareil:r.appareil}))};
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(contenu,null,2)],{type:"application/json"}));a.download=`mes-donnees-eco-campus_${new Date().toISOString().slice(0,10)}.json`;a.click();
+  };
+  const demanderSuppression=async()=>{
+    try{await saveDemande({nom:data?.nom||"",email:user?.email||data?.mail||"",tel:data?.tel||"",service:"Suppression de compte",message:`Je demande la suppression de mon compte Éco-Campus RDC et de mes données (compte ${role}, identifiant ${uid}).`,type:"suppression",uid});
+      sSupp(false);flash("o","Demande envoyée. L'équipe Éco-Campus supprimera votre compte et vous confirmera par e-mail.");}
+    catch(e){flash("e","Envoi impossible : "+e.message);}
+  };
+  const delai=delaiCompte(prefs,cfg),max=cfg.delaiMax||60;
+  const champ={width:"100%",padding:"11px 14px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:12,color:K.t1,fontSize:15,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box",minHeight:46};
+  const lab=t=><div style={{color:K.t1,fontSize:13.5,fontWeight:700,marginBottom:6}}>{t}</div>;
+  return <div style={{maxWidth:760,margin:"0 auto",animation:"fadeIn .3s ease"}}>
+    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20}}>
+      <div style={{width:58,height:58,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:900,fontSize:22,flexShrink:0}}>{(data?.nom||"?").split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase()}</div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:mob?24:28,color:K.t1,lineHeight:1.15}}>Paramètres</div>
+        <div style={{fontSize:14,color:K.t2,marginTop:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{data?.nom} · {role==="formateur"?"Formateur":"Apprenant"}</div>
+      </div>
+      <Btn ch={<><i className="ti ti-logout" style={{fontSize:16}}/>Se déconnecter</>} on={onOut} v="d" sm/>
+    </div>
+    {msg.m&&<div style={{position:"sticky",top:mob?60:112,zIndex:5}}><Pop t={msg.t} m={msg.m}/></div>}
+
+    <ParamCarte ico="user-circle" col="#1E4FA3" titre="Mon profil">
+      <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"1fr 1fr",gap:12}}>
+        <div>{lab("Nom complet")}<input value={f.nom} onChange={e=>sF({...f,nom:e.target.value})} style={champ}/></div>
+        <div>{lab("E-mail")}<input value={user?.email||data?.mail||""} disabled style={{...champ,opacity:.65}}/></div>
+        <div>{lab("Téléphone")}<input value={f.tel} onChange={e=>sF({...f,tel:e.target.value})} placeholder="+243 …" inputMode="tel" style={champ}/></div>
+        <div>{lab("Province")}<select value={f.province} onChange={e=>sF({...f,province:e.target.value})} style={champ}><option value="">—</option>{PROVINCES.map(p=><option key={p} value={p}>{p}</option>)}</select></div>
+        <div>{lab("Ville")}<input value={f.ville} onChange={e=>sF({...f,ville:e.target.value})} placeholder="Kinshasa, Lubumbashi…" style={champ}/></div>
+      </div>
+      <div style={{marginTop:14}}><Btn ch="Enregistrer le profil" on={enrProfil}/></div>
+    </ParamCarte>
+
+    <ParamCarte ico="clock-shield" col="#A3122A" titre="Déconnexion automatique" sous={`Tant que l'application est affichée, elle reste ouverte. Fermée ou mise de côté, elle vous déconnecte après ${delai} minutes.`}>
+      <Choix options={DELAIS.map(m=>[m,`${m} min`,m>max])} val={delai} on={m=>majPrefs({delaiDeco:m})} col="#A3122A"/>
+      {max<60&&<div style={{fontSize:12.5,color:K.t3,marginTop:8}}>Délai maximum autorisé par l'administrateur : {max} minutes.</div>}
+    </ParamCarte>
+
+    <ParamCarte ico="lock" col="#0A2A5C" titre="Sécurité">
+      <div style={{fontSize:14,color:K.t2,marginBottom:12}}>Mode de connexion : <b style={{color:K.t1}}>{fournisseur||"—"}</b></div>
+      {motDePasse?<>
+        <div style={{fontWeight:800,fontSize:14.5,color:K.t1,marginBottom:10}}>Changer de mot de passe</div>
+        <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"1fr 1fr 1fr",gap:10}}>
+          <input type="password" value={pw.a} onChange={e=>sPw({...pw,a:e.target.value})} placeholder="Mot de passe actuel" autoComplete="current-password" style={champ}/>
+          <input type="password" value={pw.n} onChange={e=>sPw({...pw,n:e.target.value})} placeholder="Nouveau (6 car. min.)" autoComplete="new-password" style={champ}/>
+          <input type="password" value={pw.c} onChange={e=>sPw({...pw,c:e.target.value})} placeholder="Confirmer" autoComplete="new-password" style={champ}/>
+        </div>
+        <div style={{marginTop:10}}><Pop t={pwMsg.t} m={pwMsg.m}/><Btn ch={pwBusy?"Modification…":"Modifier le mot de passe"} on={changerMdp} dis={pwBusy||!pw.a||!pw.n} v="s"/></div>
+      </>:<div style={{fontSize:13.5,color:K.t3}}>Vous vous connectez avec {fournisseur} : le mot de passe se gère depuis ce compte.</div>}
+      <div style={{fontWeight:800,fontSize:14.5,color:K.t1,margin:"18px 0 8px"}}>Mes dernières connexions</div>
+      {!recents.length&&<div style={{fontSize:13.5,color:K.t3}}>Les prochaines connexions s'afficheront ici.</div>}
+      {recents.map((r,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderTop:i?`1px solid ${K.b0}`:"none"}}>
+        <i className={`ti ti-${r.appareil?.type==="Mobile"?"device-mobile":"device-desktop"}`} style={{fontSize:18,color:K.t2}}/>
+        <span style={{flex:1,fontSize:14,color:K.t1}}>{new Date(r.t).toLocaleString("fr-FR",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span>
+        <span style={{fontSize:13,color:K.t3}}>{r.appareil?.os} · {r.appareil?.app==="Application"?"Application":r.appareil?.nav}</span>
+      </div>)}
+      <div style={{fontSize:12.5,color:K.t3,marginTop:8}}>Une connexion que vous ne reconnaissez pas ? Changez votre mot de passe et prévenez l'équipe Éco-Campus.</div>
+    </ParamCarte>
+
+    <ParamCarte ico="palette" col="#7C3AED" titre="Apparence">
+      {lab("Thème")}<ChoixTheme/>
+      <div style={{height:16}}/>
+      {lab("Taille du texte")}<ChoixTaille val={prefs.taille||"normale"} on={v=>majPrefs({taille:v})}/>
+    </ParamCarte>
+
+    <ParamCarte ico="bell" col="#C98A1B" titre="Notifications">
+      <Interrupteur on={prefs.notifEmails!==false} set={v=>majPrefs({notifEmails:v})} lib="E-mail quand l'équipe m'envoie un message" sous="Les e-mails importants (code d'accès, sécurité du compte) sont toujours envoyés."/>
+    </ParamCarte>
+
+    <ParamCarte ico="database" col="#0D7A6B" titre="Mes données" sous="Vos données vous appartiennent : vous pouvez les télécharger ou demander la suppression de votre compte.">
+      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        <Btn ch={<><i className="ti ti-download" style={{fontSize:16}}/>Télécharger mes données</>} on={telecharger} v="s"/>
+        <Btn ch={<><i className="ti ti-user-x" style={{fontSize:16}}/>Demander la suppression du compte</>} on={()=>sSupp(true)} v="d"/>
+      </div>
+      <div style={{fontSize:12.5,color:K.t3,marginTop:10}}>Voir aussi la <a href="/confidentialite.html" target="_blank" rel="noreferrer" style={{color:K.in_,fontWeight:700}}>politique de confidentialité</a>.</div>
+    </ParamCarte>
+
+    {supp&&<Sheet title="Supprimer mon compte ?" onClose={()=>sSupp(false)} w={420}>
+      <div style={{fontSize:14.5,color:K.t2,lineHeight:1.6,marginBottom:16}}>Votre demande sera transmise à l'équipe Éco-Campus. Votre compte, votre progression, vos scores et vos dossiers seront supprimés définitivement. Pensez à télécharger vos données avant.</div>
+      <div style={{display:"flex",gap:8}}><Btn ch="Annuler" on={()=>sSupp(false)} v="g" full/><Btn ch="Envoyer la demande" on={demanderSuppression} v="d" full/></div>
+    </Sheet>}
+  </div>;
+}
+
+// Paramètres de l'administrateur : sécurité de tous les comptes et préférences locales
+function ParametresAdmin({onOut}){
+  const K=useK();const{mob}=useW();
+  const cfg=useConfigSecurite();
+  const[taille,sTaille]=useState(()=>{try{return localStorage.getItem("ec_taille")||"normale";}catch(e){return"normale";}});
+  const[msg,sMsg]=useState("");
+  const maj=async p=>{try{await setDoc(doc(db,"config","securite"),p,{merge:true});sMsg("Réglage enregistré.");}catch(e){sMsg("Enregistrement impossible : "+e.message);}setTimeout(()=>sMsg(""),3000);};
+  return <div style={{maxWidth:760,margin:"0 auto",animation:"fadeIn .3s ease"}}>
+    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20}}>
+      <div style={{flex:1}}><div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:mob?24:28,color:K.t1}}>Paramètres</div><div style={{fontSize:14,color:K.t2,marginTop:3}}>Administrateur · {ADM_EMAIL}</div></div>
+      <Btn ch={<><i className="ti ti-logout" style={{fontSize:16}}/>Se déconnecter</>} on={onOut} v="d" sm/>
+    </div>
+    {msg&&<Pop t={msg.startsWith("Enregistrement impossible")?"e":"o"} m={msg}/>}
+    <ParamCarte ico="shield-lock" col="#A3122A" titre="Déconnexion automatique des utilisateurs" sous="Délai maximum que les apprenants et formateurs peuvent choisir dans leurs paramètres (20 min par défaut pour chacun).">
+      <Choix options={DELAIS.map(m=>[m,`${m} min`])} val={cfg.delaiMax||60} on={m=>maj({delaiMax:m})} col="#A3122A"/>
+    </ParamCarte>
+    <ParamCarte ico="clock-shield" col="#0A2A5C" titre="Ma déconnexion automatique" sous="Délai appliqué au compte administrateur lorsque l'application est fermée ou mise de côté.">
+      <Choix options={DELAIS.map(m=>[m,`${m} min`])} val={cfg.delaiAdmin||20} on={m=>maj({delaiAdmin:m})}/>
+    </ParamCarte>
+    <ParamCarte ico="palette" col="#7C3AED" titre="Apparence">
+      <div style={{color:K.t1,fontSize:13.5,fontWeight:700,marginBottom:6}}>Thème</div><ChoixTheme/>
+      <div style={{height:16}}/>
+      <div style={{color:K.t1,fontSize:13.5,fontWeight:700,marginBottom:6}}>Taille du texte</div><ChoixTaille val={taille} on={sTaille}/>
+    </ParamCarte>
+  </div>;
+}
+
 // ── FORMATEUR APP ─────────────────────────────────────────────────────────────
 function FA({uid,onOut}){
   const K=useK();const{mob}=useW();
@@ -1381,7 +1580,9 @@ function FA({uid,onOut}){
     return unsub;
   },[uid]);
 
-  const{warning:faWarn}=useAutoLogout(onOut);
+  const cfgSecF=useConfigSecurite();
+  const{warning:faWarn}=useAutoLogout(onOut,delaiCompte(fData?.preferences,cfgSecF));
+  useEffect(()=>{if(fData?.preferences?.taille)appliquerTaille(fData.preferences.taille);},[fData?.preferences?.taille]);
   useEffect(()=>{if(fData)inscrireAnnuaire(db,{uid,nom:fData.nom,mail:auth.currentUser?.email||fData.mail});},[uid,fData?.nom,fData?.mail]);
   const myOpenAnswersFA=useFormateurOpenAnswers(uid);
   const myMsgsFA=useFormateurMessages(uid);
@@ -1428,7 +1629,7 @@ function FA({uid,onOut}){
   const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
     <AutoLogoutBanner warning={faWarn} mob={mob}/>
-    <StaffNav role="formateur" nom={fData.nom} onOut={onOut} tabs={NAV} active={vue} onTab={sV}/>
+    <StaffNav role="formateur" nom={fData.nom} onOut={onOut} tabs={NAV} active={vue} onTab={sV} onProfil={()=>sV("param")}/>
     <main style={{maxWidth:1060,margin:"0 auto",padding:mob?"18px 14px 80px":"24px 24px 40px"}}>
       {msg.m&&<div style={{background:msg.t==="o"?K.emBg:K.erBg,border:`1px solid ${msg.t==="o"?K.emBd:K.erBd}`,borderRadius:9,padding:"9px 14px",marginBottom:12,fontSize:14,color:msg.t==="o"?K.em:K.er,display:"flex",gap:7}}><i className={`ti ti-${msg.t==="o"?"check":"alert-triangle"}`} style={{fontSize:14}}/>{msg.m}</div>}
       {ch}
@@ -1498,6 +1699,7 @@ function FA({uid,onOut}){
 
   // ── MESSAGES ─────────────────────────────────────────────────────────────
   if(vue==="fmsg")return W(<FAMessages msgs={myMsgsFA} uid={uid} fNom={fData.nom}/>);
+  if(vue==="param")return W(<ParametresPage role="formateur" uid={uid} data={fData} onOut={onOut}/>);
   if(vue==="ef")return W(<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:fData.nom,mail:fData.mail,role:"formateur"}}/>);
 
   return W(<div/>);
@@ -2020,15 +2222,16 @@ function FAStats({uid,myMods,allUsers}){
 // et ne se ferme jamais. Le délai court seulement quand elle est fermée, réduite, dans un autre
 // onglet ou que le téléphone est verrouillé : au retour, si plus de 20 min se sont écoulées,
 // l'utilisateur est déconnecté. La dernière utilisation est mémorisée dans le navigateur.
-const INACTIVITY_MS = 20 * 60 * 1000;
-const WARN_MS = 18 * 60 * 1000; // alerte 2 min avant
+// Délai par défaut : 20 min ; chaque compte peut le régler dans ses paramètres (alerte 2 min avant)
 const CLE_ACTIVITE = "ec_derniere_activite";
 const CLE_DECO = "ec_deconnexion_inactivite";
 
-function useAutoLogout(onLogout) {
+function useAutoLogout(onLogout, minutes = 20) {
   const [warning, setWarning] = useState(false);
   const onLogoutRef = useRef(onLogout);
   onLogoutRef.current = onLogout;
+  const delaiRef = useRef(minutes);
+  delaiRef.current = minutes || 20;
 
   useEffect(() => {
     const lire = () => { try { return +localStorage.getItem(CLE_ACTIVITE) || 0; } catch (e) { return 0; } };
@@ -2040,15 +2243,16 @@ function useAutoLogout(onLogout) {
     const verifier = () => {
       if (fini) return;
       derniere = Math.max(derniere, lire()); // activité dans un autre onglet
-      if (document.visibilityState === "visible" && Date.now() - derniere < INACTIVITY_MS) { activite(); return; } // affichée = utilisée
+      const DELAI = delaiRef.current * 60000, ALERTE = DELAI - 2 * 60000;
+      if (document.visibilityState === "visible" && Date.now() - derniere < DELAI) { activite(); return; } // affichée = utilisée
       const inactif = Date.now() - derniere;
-      if (inactif >= INACTIVITY_MS) {
+      if (inactif >= DELAI) {
         fini = true; setWarning(false);
         try { localStorage.removeItem(CLE_ACTIVITE); sessionStorage.setItem(CLE_DECO, "1"); } catch (e) {}
         onLogoutRef.current();
         return;
       }
-      setWarning(inactif >= WARN_MS ? derniere + INACTIVITY_MS : false); // heure prévue de déconnexion
+      setWarning(inactif >= ALERTE ? derniere + DELAI : false); // heure prévue de déconnexion
     };
     const activite = () => {
       if (fini) return;
@@ -2328,7 +2532,7 @@ function Auth({onL}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("l"),[err,sE]=useState(""),[ok,sO]=useState(""),[busy,sB]=useState(false),[step,sS]=useState(1);
   const[consent,sConsent]=useState(false),[showPrivacy,sShowPrivacy]=useState(false),[needConsent,sNeedConsent]=useState(false);
-  useEffect(()=>{try{if(sessionStorage.getItem(CLE_DECO)){sessionStorage.removeItem(CLE_DECO);sO("Vous avez été déconnecté après 20 minutes sans utilisation. Reconnectez-vous pour continuer.");}}catch(e){}},[]);
+  useEffect(()=>{try{if(sessionStorage.getItem(CLE_DECO)){sessionStorage.removeItem(CLE_DECO);sO("Vous avez été déconnecté après une période sans utilisation. Reconnectez-vous pour continuer.");}}catch(e){}},[]);
   const pm=useRef(null),rN=useRef(),rM=useRef(),rP=useRef(),rP2=useRef(),rC=useRef();
   const sw=useCallback(t=>{sT(t);sS(1);sE("");sO("");sConsent(false);sNeedConsent(false);setTimeout(()=>[rN,rM,rP,rP2,rC].forEach(r=>{if(r.current)r.current.value="";}),0);},[]);
   const reg=useCallback(async()=>{
@@ -2497,7 +2701,7 @@ function Auth({onL}){
 function UA({uid,onOut}){
   const K=useK();const{mob}=useW();
   // Vue initiale : raccourcis de l'application installée (?vue=ef, ?vue=pres…)
-  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","psycho","services","prog","res"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
+  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","psycho","services","prog","res","param"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
   const[uData,sUD]=useState(null),[pdfs,sPdfs]=useState({});
   const[showOnboarding,sShowOnboarding]=useState(false);
   const{mods,loading:mL}=useModules();
@@ -2523,7 +2727,9 @@ function UA({uid,onOut}){
     await updateDoc(doc(db,"users",uid),{onboardingDone:true});
     if(firstMod&&firstMod.id){sM(firstMod);}
   };
-  const{warning:uaWarn}=useAutoLogout(onOut);
+  const cfgSec=useConfigSecurite();
+  const{warning:uaWarn}=useAutoLogout(onOut,delaiCompte(uData?.preferences,cfgSec));
+  useEffect(()=>{if(uData?.preferences?.taille)appliquerTaille(uData.preferences.taille);},[uData?.preferences?.taille]);
   // Fiche d'annuaire (nom, e-mail) permettant aux collègues d'inviter cet apprenant dans un dossier d'états financiers
   useEffect(()=>{if(uData)inscrireAnnuaire(db,{uid,nom:uData.nom,mail:auth.currentUser?.email||uData.mail});},[uid,uData?.nom,uData?.mail]);
   const myOpenAnswers=useMyOpenAnswers(uid);
@@ -2548,6 +2754,7 @@ function UA({uid,onOut}){
     {vue==="prog"&&<Prog pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods}/>}
     {vue==="res"&&<Res sc={sc} ok={ok} mods={aMods} u={uData} pr={pr} nd={nd} gp={gp}/>}
     {vue==="psycho"&&<PsychoPage uid={uid} u={uData}/>}
+    {vue==="param"&&<ParametresPage role="apprenant" uid={uid} data={uData} onOut={onOut}/>}
     {vue==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="msg"&&<MessagerieApprenant uid={uid} uNom={uData.nom}/>}
   </>);
@@ -3043,7 +3250,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
           <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:28,height:28,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
             <i className="ti ti-key" style={{fontSize:14,color:K.t2}}/>
           </button>
-          <div onClick={onOut} style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",fontWeight:800,fontSize:13,cursor:"pointer",flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
+          <div onClick={()=>sV("param")} title="Paramètres" style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",fontWeight:800,fontSize:13,cursor:"pointer",flexShrink:0}}>{(u.nom||"U")[0].toUpperCase()}</div>
         </div>
       </div>
       {/* Bottom nav : 4 rubriques principales + « Plus » */}
@@ -3110,10 +3317,10 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
       <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:32,height:32,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
         <i className="ti ti-key" style={{fontSize:15,color:K.t2}}/>
       </button>
-      <div onClick={onOut} style={{display:"flex",alignItems:"center",gap:7,padding:"4px 9px 4px 5px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:99,cursor:"pointer"}} className="bt">
+      <div onClick={()=>sV("param")} title="Paramètres" style={{display:"flex",alignItems:"center",gap:7,padding:"4px 9px 4px 5px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:99,cursor:"pointer"}} className="bt">
         <div style={{width:26,height:26,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#FFFFFF",fontWeight:800,fontSize:12}}>{(u.nom||"U")[0].toUpperCase()}</div>
         <span style={{color:K.t2,fontSize:13,fontWeight:600}}>{(u.nom||"").split(" ")[0]}</span>
-        <i className="ti ti-chevron-down" style={{fontSize:12,color:K.t3}}/>
+        <i className="ti ti-settings" style={{fontSize:14,color:K.t3}}/>
       </div>
     </div>
     {codeModal}
@@ -3959,7 +4166,8 @@ function AdminThread({apprenantUid,apprenantMail,onBack}){
     const t=texte.trim();if(!t||sending)return;
     sSending(true);
     await sendMessage({apprenantUid,apprenantNom,from:"admin",fromNom:"Éco-Campus RDC",fromRole:"admin",texte:t});
-    if(apprenantMail){
+    let veutEmail=true;try{const us=await getDoc(doc(db,"users",apprenantUid));veutEmail=us.data()?.preferences?.notifEmails!==false;}catch(e){}
+    if(apprenantMail&&veutEmail){
       sendNotifEmail({to_email:apprenantMail,subject:"Nouveau message — Éco-Campus RDC",nom:apprenantNom,message:`Vous avez reçu un nouveau message de l'équipe Éco-Campus RDC :\n\n« ${t} »\n\nConnectez-vous à votre compte, onglet Messages, pour répondre.`}).catch(()=>{});
     }
     sTexte("");sSending(false);
@@ -3989,7 +4197,8 @@ function AdminThread({apprenantUid,apprenantMail,onBack}){
 }
 function AA({onOut}){
   const K=useK();const{mob}=useW();
-  const{warning:aaWarn}=useAutoLogout(onOut);
+  const cfgSecA=useConfigSecurite();
+  const{warning:aaWarn}=useAutoLogout(onOut,cfgSecA.delaiAdmin||20);
   usePresence({uid:auth.currentUser?.uid,nom:"Administrateur",mail:ADM_EMAIL,role:"admin",vue:"Administration"});
   const[pendingDocs,setPendingDocs]=useState([]);
   useEffect(()=>{
@@ -4176,7 +4385,7 @@ function AA({onOut}){
   return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
     <AutoLogoutBanner warning={aaWarn} mob={mob}/>
-    <StaffNav role="admin" nom="Administrateur" onOut={onOut} tabs={ADMIN_TABS} active={tab} onTab={sT}
+    <StaffNav role="admin" nom="Administrateur" onOut={onOut} tabs={ADMIN_TABS} active={tab} onTab={sT} onProfil={()=>sT("param")}
       extra={!mob&&<div style={{display:"flex",gap:12,alignItems:"center",marginRight:4}}>
         {[[`${users.length}`,"users",K.t2,"Inscrits"],[`${nD}`,"clock",K.wa,"Demandes"],[`${nA}`,"circle-check",K.em,"Actifs"]].map(([v,ic,c,t])=>(
           <div key={ic} title={t} style={{display:"flex",alignItems:"center",gap:4}}><i className={`ti ti-${ic}`} style={{fontSize:16,color:c}}/><span style={{fontSize:14,fontWeight:800,color:c}}>{v}</span></div>))}
@@ -4640,6 +4849,7 @@ function AA({onOut}){
         </div>
         <div style={{marginTop:13,padding:"10px 13px",background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:9,fontSize:13,color:K.t2}}>✅ PDF stockés sur Firebase Storage — persistants et sécurisés.</div>
       </div>}
+    {tab==="param"&&<ParametresAdmin onOut={onOut}/>}
     {tab==="an"&&<div style={{animation:"fadeIn .35s ease"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:21,letterSpacing:"-.3px",lineHeight:1.2,color:K.t1,display:"flex",alignItems:"center",gap:7}}>
