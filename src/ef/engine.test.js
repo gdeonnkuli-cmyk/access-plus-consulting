@@ -74,3 +74,16 @@ test("le cas MALACHITE LOGISTIQUE (services) boucle sans informations complémen
   expect(computeNotes(R, {}).flatMap(n => (n.ctrl || []).filter(x => !x.ok))).toEqual([]);
   expect(Math.round(computeIBP(R, {}).ecart)).toBe(0);
 });
+
+test("IBP : taux de 30 % en cas de bénéfice, minimum de 1 % du CA seulement en cas de perte", () => {
+  const R = (xi, ca, rs = 0) => ({ N: { cr: { XI: xi, RS: rs, XB: ca }, s: () => 0 } });
+  // bénéfice faible : 30 % × 1 000 000 = 300 000, même si 1 % du CA (500 000) est plus élevé
+  const b = computeIBP(R(1000000, 50000000));
+  expect(b.ibp).toBe(300000); expect(b.minApplique).toBe(false);
+  // perte : minimum de 1 % du CA
+  const p = computeIBP(R(-2000000, 50000000));
+  expect(p.ibp).toBe(500000); expect(p.minApplique).toBe(true);
+  // résultat fiscal nul après imputation des déficits : minimum
+  const z = computeIBP(R(1000000, 50000000), { deficits: 3000000 });
+  expect(z.rf).toBe(0); expect(z.ibp).toBe(500000);
+});
