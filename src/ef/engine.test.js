@@ -77,17 +77,24 @@ test("le cas MALACHITE LOGISTIQUE (services) boucle sans informations complémen
   expect(Math.round(computeIBP(R, {}).ecart)).toBe(0);
 });
 
-test("IBP : taux de 30 % en cas de bénéfice, minimum de 1 % du CA seulement en cas de perte", () => {
+test("IBP (art. 92) : le plus élevé de 30 % du résultat fiscal et de l'impôt minimum de 1 % du CA", () => {
   const R = (xi, ca, rs = 0) => ({ N: { cr: { XI: xi, RS: rs, XB: ca }, s: () => 0 } });
-  // bénéfice faible : 30 % × 1 000 000 = 300 000, même si 1 % du CA (500 000) est plus élevé
+  // bénéfice dont l'IBP à 30 % (300 000) est inférieur à 1 % du CA (500 000) : impôt minimum
   const b = computeIBP(R(1000000, 50000000));
-  expect(b.ibp).toBe(300000); expect(b.minApplique).toBe(false);
-  // perte : minimum de 1 % du CA
+  expect(b.ibp).toBe(500000); expect(b.minApplique).toBe(true); expect(b.enPerte).toBe(false);
+  // bénéfice dont l'IBP à 30 % (3 000 000) dépasse le minimum : taux de l'IBP
+  const g = computeIBP(R(10000000, 50000000));
+  expect(g.ibp).toBe(3000000); expect(g.minApplique).toBe(false);
+  // perte : impôt minimum
   const p = computeIBP(R(-2000000, 50000000));
-  expect(p.ibp).toBe(500000); expect(p.minApplique).toBe(true);
-  // résultat fiscal nul après imputation des déficits : minimum
+  expect(p.ibp).toBe(500000); expect(p.minApplique).toBe(true); expect(p.enPerte).toBe(true);
+  // résultat fiscal nul après imputation des déficits : impôt minimum
   const z = computeIBP(R(1000000, 50000000), { deficits: 3000000 });
   expect(z.rf).toBe(0); expect(z.ibp).toBe(500000);
+  // aucun chiffre d'affaires : impôt forfaitaire selon la catégorie
+  expect(computeIBP(R(-1000000, 0)).ibp).toBe(750000);
+  expect(computeIBP(R(-1000000, 0), { categorie: "GE" }).ibp).toBe(2500000);
+  expect(computeIBP(R(-1000000, 0), { categorie: "PE" }).sansCA).toBe(true);
 });
 
 test("cas MEUBLES DU FLEUVE adapté à la RDC : IBP de 30 % comptabilisé, états équilibrés", () => {

@@ -172,7 +172,7 @@ export const REGLES = [
   ] },
   { t: "Spécificités pour la RDC", p: [
     "Comptabilité tenue et états financiers présentés en francs congolais (CDF) ; les opérations en devises sont converties au cours de la Banque Centrale du Congo.",
-    "L'IBP (impôt sur les bénéfices et profits) est comptabilisé en 891 / 441 : en cas de bénéfice, il est égal au taux légal (30 %) appliqué au résultat fiscal ; en cas de perte ou de résultat fiscal nul, l'entreprise doit le minimum d'imposition de 1 % du chiffre d'affaires. Le calcul figure dans l'onglet Fiscalité de l'atelier.",
+    "L'IBP (impôt sur les bénéfices et profits) est comptabilisé en 891 / 441 : il est égal au taux légal (30 %) appliqué au résultat fiscal, sans pouvoir être inférieur à l'impôt minimum de 1 % du chiffre d'affaires déclaré, dû en cas de perte ou lorsque l'IBP calculé lui est inférieur (art. 92). Sans chiffre d'affaires, un impôt forfaitaire s'applique : 2 500 000 FC (grandes entreprises), 750 000 FC (moyennes), 30 000 FC (petite taille). Le calcul figure dans l'onglet Fiscalité de l'atelier.",
     "Les états financiers sont joints à la déclaration fiscale déposée à la DGI (DGE, CDI ou CIS selon l'entité) ; vérifier les échéances du calendrier fiscal en vigueur.",
     "Les cotisations sociales (CNSS, INPP, ONEM) et l'IPR doivent concorder avec les charges de personnel et les dettes sociales et fiscales (notes 18 et 27).",
     "Les états sont établis ou visés par un professionnel inscrit au tableau de l'ONEC.",
