@@ -456,13 +456,15 @@ const msgStorage=e=>{
 };
 // Documents par lien (Google Drive, Docs, Slides…) : solution qui ne dépend pas de Firebase Storage
 const lienValide=u=>/^https:\/\/\S+\.\S+/i.test((u||"").trim());
+const lienDrive=u=>(u||"").match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{10,})/);
+const lienDocs=u=>(u||"").match(/docs\.google\.com\/(document|presentation|spreadsheets)\/d\/([\w-]{10,})/);
 const apercuLien=u=>{
-  const d=(u||"").match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{10,})/);
-  if(d)return`https://drive.google.com/file/d/${d[1]}/preview`;
-  const g=(u||"").match(/docs\.google\.com\/(document|presentation|spreadsheets)\/d\/([\w-]{10,})/);
-  if(g)return`https://docs.google.com/${g[1]}/d/${g[2]}/preview`;
+  const d=lienDrive(u);if(d)return`https://drive.google.com/file/d/${d[1]}/preview`;
+  const g=lienDocs(u);if(g)return`https://docs.google.com/${g[1]}/d/${g[2]}/preview`;
   return null;
 };
+// Miniature de la première page, générée par Google Drive (fichier partagé par lien)
+const miniatureLien=(u,l=400)=>{const id=lienDrive(u)?.[1]||lienDocs(u)?.[2];return id?`https://drive.google.com/thumbnail?id=${id}&sz=w${l}`:null;};
 const avecDelai=(p,ms=90000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),ms))]);
 const uploadPdf=async(modId,file)=>{
   const r=ref(storage,`pdfs/${modId}/${file.name}`);
@@ -787,6 +789,14 @@ function RatingPanel({modId,uid,K,mob}){
   </div>;
 }
 
+function Miniature({url,w,h,r=8,K,alt="",fallback=null}){
+  const src=miniatureLien(url,typeof w==="number"?Math.max(w,h)*2:600);
+  const[ko,sKo]=useState(false);
+  if(!src||ko)return fallback;
+  return <img src={src} alt={alt} loading="lazy" referrerPolicy="no-referrer" onError={()=>sKo(true)}
+    style={{width:w,height:h,objectFit:"cover",objectPosition:"top",borderRadius:r,border:`1px solid ${K.b0}`,background:K.c2,flexShrink:0,display:"block"}}/>;
+}
+
 function ChampLien({K,val,onChange,lb}){
   const ok=!val.trim()||lienValide(val);
   return <div>
@@ -795,6 +805,9 @@ function ChampLien({K,val,onChange,lb}){
       style={{width:"100%",background:K.c2,border:`1px solid ${ok?K.b1:K.erBd}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
     {val.trim()&&<div style={{fontSize:11.5,marginTop:4,color:!ok?K.er:apercuLien(val)?K.em:K.t3}}>
       {!ok?"Le lien doit commencer par https://":apercuLien(val)?"✓ Lien Google reconnu : il s'ouvrira dans l'application.":"Lien externe : il doit pointer directement vers un fichier PDF public."}
+    </div>}
+    {ok&&miniatureLien(val)&&<div style={{marginTop:7,display:"flex",alignItems:"center",gap:9}}>
+      <Miniature key={val} url={val} w={54} h={72} r={6} K={K} fallback={<div style={{fontSize:11.5,color:K.wa}}>⚠ Couverture indisponible : vérifiez que le fichier est partagé en « Tous les utilisateurs disposant du lien ».</div>}/>
     </div>}
   </div>;
 }
@@ -2526,9 +2539,9 @@ function FADocs({uid,toast}){
         const si=statusInfo[d.status||"draft"];
         return <div key={d.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px"}}>
           <div style={{display:"flex",alignItems:"center",gap:12}}>
-            <div style={{width:40,height:40,borderRadius:11,background:`${ft.col}18`,border:`1px solid ${ft.col}30`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            {(()=>{const ico=<div style={{width:40,height:40,borderRadius:11,background:`${ft.col}18`,border:`1px solid ${ft.col}30`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
               <i className={`ti ti-${ft.ico}`} style={{fontSize:19,color:ft.col}}/>
-            </div>
+            </div>;return d.type==="lien"?<Miniature url={d.url} w={40} h={52} r={8} K={K} fallback={ico}/>:ico;})()}
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.titre}</div>
               <div style={{fontSize:12,color:K.t3,display:"flex",gap:8,alignItems:"center"}}>
@@ -3536,6 +3549,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
               <div style={{marginTop:10,fontSize:13,fontWeight:700,color:lk?K.t3:c,display:"flex",alignItems:"center",gap:4}}>
                 {lk?<><i className="ti ti-lock" style={{fontSize:13}}/><span>Verrouillé</span></>:f?<><i className="ti ti-circle-check" style={{fontSize:14}}/><span>Complété</span></>:<><span>Commencer</span><i className="ti ti-arrow-right" style={{fontSize:14}}/></>}
               </div>
+              {m.slideUrl&&!lk&&miniatureLien(m.slideUrl)&&<div onClick={e=>{e.stopPropagation();setPdfMod(m);}} style={{marginTop:10,cursor:"pointer"}}><Miniature url={m.slideUrl} w="100%" h={110} r={9} K={K} alt={`Slides — ${m.titre}`}/></div>}
               {m.slideUrl&&!lk&&<button onClick={e=>{e.stopPropagation();setPdfMod(m);}} className="bt"
                 style={{marginTop:10,width:"100%",background:"#F59E0B14",border:"1px solid #F59E0B30",borderRadius:9,padding:"7px 8px",color:"#D97706",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
                 <i className="ti ti-file-text" style={{fontSize:13}}/>Slides PDF
@@ -3616,7 +3630,9 @@ function MV({mod,sc,ok,onQ,onOpenQ,onMarkDone,doneNoEval,openAnswer,onBack,onSub
           {ex.tv?.length>0&&<div style={{marginBottom:10}}><div style={{color:K.t3,fontSize:11,fontWeight:700,letterSpacing:"1.2px",textTransform:"uppercase",fontFamily:"'JetBrains Mono',monospace",marginBottom:5}}>Travail demandé</div>{ex.tv.map((t,i)=><div key={i} style={{display:"flex",gap:8,background:K.c2,borderRadius:8,padding:"8px 11px",marginBottom:4}}><div style={{width:18,height:18,borderRadius:5,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:K.in_,flexShrink:0}}>{i+1}</div><div style={{color:K.t1,fontSize:14,lineHeight:1.6}}>{t}</div></div>)}</div>}
           <button onClick={()=>sCorr(c=>!c)} className="bt" style={{background:corr?K.emBg:K.c2,border:`1px solid ${corr?K.emBd:K.b0}`,borderRadius:8,padding:"7px 11px",cursor:"pointer",color:corr?K.em:K.t3,fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,width:"100%",minHeight:34}}><span>{corr?"🔼":"🔽"}</span><span>{corr?"Masquer le corrigé":"Voir le corrigé"}</span></button>
           {corr&&<div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:8,padding:"10px 12px",marginTop:6}}><div style={{color:K.em,fontSize:13,lineHeight:1.7,fontFamily:"'JetBrains Mono',monospace"}}>{ex.co}</div></div>}
-          {pdf&&<div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${K.b0}`}}><Btn ch="📄 Ouvrir PDF" on={()=>sPdfO(true)} v="i" full sx={{minHeight:40,fontSize:14}}/></div>}
+          {pdf&&<div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${K.b0}`}}>
+            {miniatureLien(pdf.url)&&<div onClick={()=>sPdfO(true)} className="hv" style={{cursor:"pointer",marginBottom:8,display:"flex",justifyContent:"center"}}><Miniature url={pdf.url} w={150} h={200} r={10} K={K} alt={pdf.name}/></div>}
+            <Btn ch="📄 Ouvrir PDF" on={()=>sPdfO(true)} v="i" full sx={{minHeight:40,fontSize:14}}/></div>}
         </>}
       </div>}
     </div>}
@@ -4829,6 +4845,7 @@ function AA({onOut}){
               </div>
               <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===d.createdBy)?.nom||"—"} · {d.size?(d.size/1024/1024).toFixed(1)+" MB":""}</div>
               {d.desc&&<div style={{fontSize:13,color:K.t2,marginBottom:8,lineHeight:1.5}}>{d.desc}</div>}
+              {d.type==="lien"&&<div style={{marginBottom:8}}><Miniature url={d.url} w={90} h={120} r={8} K={K} alt={d.titre}/></div>}
               <div style={{display:"flex",gap:6}}>
                 {d.url&&<a href={d.url} target="_blank" rel="noreferrer" className="bt"
                   style={{flex:1,background:K.inBg,border:`1px solid ${K.inBd}`,color:K.in_,borderRadius:8,padding:"7px",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4,textDecoration:"none"}}>
@@ -4906,7 +4923,7 @@ function AA({onOut}){
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:21,letterSpacing:"-.3px",lineHeight:1.2,color:K.t1,marginBottom:3}}>PDF d'exercices</div>
         <div style={{color:K.t3,fontSize:13,marginBottom:13}}>Un PDF par module · Fichier 📤 ou lien Google Drive 🔗 · Lecture seule pour abonnés.</div>
         {pdfMsg.m&&<div style={{position:"sticky",top:mob?60:112,zIndex:5,marginBottom:10}}><Pop t={pdfMsg.t} m={pdfMsg.m}/></div>}
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{icoEl(m.ico,m.col,15)}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{m.titre}</div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?(pdf.lien?" · 🔗 Lien Google Drive":` · 📄 ${pdf.name}`):" · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>{mods.filter(m=>m.on!==false).map(m=>{const pdf=pdfs[m.id];const ico=<div style={{width:32,height:32,borderRadius:9,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{icoEl(m.ico,m.col,15)}</div>;return <div key={m.id} style={{background:K.card,border:`1px solid ${pdf?K.inBd:K.b0}`,borderRadius:11,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>{pdf?.lien?<Miniature url={pdf.url} w={36} h={48} r={6} K={K} fallback={ico}/>:ico}<div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{m.titre}</div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}{pdf?(pdf.lien?" · 🔗 Lien Google Drive":` · 📄 ${pdf.name}`):" · Aucun PDF"}</div></div><div style={{display:"flex",gap:5,flexShrink:0}}>
           <label className="bt" style={{background:pdf?K.c2:`linear-gradient(135deg,${K.inD},${K.in_})`,color:pdf?K.t2:"#fff",border:pdf?`1px solid ${K.b0}`:"none",borderRadius:8,padding:"7px 11px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:4,minHeight:34}}>
             {pdfEnvoi===m.id?"⏳":pdf?"🔄":"📤"}
             <input type="file" accept=".pdf,application/pdf" style={{display:"none"}} disabled={!!pdfEnvoi} onChange={async e=>{const f=e.target.files?.[0];e.target.value="";if(!f)return;
