@@ -362,11 +362,12 @@ function computeTFT(N, P1, k = {}) {
   // Capitaux étrangers : 16 et 18 hors intérêts courus (166), corrigés des écarts de conversion sur emprunts
   const ecF = (d("sC", "479") - d("sC", ECART_CIRC.p)) - (d("sD", "478") - d("sD", ECART_CIRC.a));
   const dFin = dP("DA") - d("sC", "166") + ecF;
-  const nouvMvt = N.mC(["16", "181", "182", "183", "184", "!166"]);
+  // Hors réévaluation de change des emprunts en devises (16 crédité par 4784) : aucun encaissement
+  const reevEmp = N.mD("4784"), nouvMvt = N.mC(["16", "181", "182", "183", "184", "!166"]) - reevEmp;
   t.FO = has("nouvEmp") ? cb("nouvEmp") : N.hasMvt ? nouvMvt : Math.max(dFin, 0);
   t.FP = 0;
   t.FQ = dFin - t.FO + (dP("DB") - locAcq);
-  ex.FO = has("nouvEmp") ? "Montant saisi dans les informations complémentaires" : N.hasMvt ? `Mouvements crédit des comptes 16 et 181-184 (hors 166) : ${fmt(nouvMvt)}` : `Variation nette des dettes financières ${fmt(dFin)} (renseignez les nouveaux emprunts pour séparer FO et FQ)`;
+  ex.FO = has("nouvEmp") ? "Montant saisi dans les informations complémentaires" : N.hasMvt ? `Mouvements crédit des comptes 16 et 181-184 (hors 166${reevEmp ? `, hors écart de conversion 4784 ${fmt(reevEmp)}` : ""}) : ${fmt(nouvMvt)}` : `Variation nette des dettes financières ${fmt(dFin)} (renseignez les nouveaux emprunts pour séparer FO et FQ)`;
   ex.FQ = `Δ dettes financières corrigée ${fmt(dFin)} − emprunts nouveaux ${fmt(t.FO)} + remboursements de location-acquisition ${fmt(dP("DB") - locAcq)}`;
   t.ZE = t.FO + t.FP + t.FQ;
   t.ZF = t.ZD + t.ZE;
