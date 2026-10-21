@@ -26,3 +26,12 @@ test("l'IBP est présenté à 30 % avec l'impôt minimum de l'article 92", () =>
   const f2 = JSON.stringify(MODULES_FISC.find(m => m.id === "F2"));
   expect(f2).toContain("30 %"); expect(f2).toContain("art. 92"); expect(f2).toContain("60 %");
 });
+
+test("modules alignés sur le Code des impôts mis à jour au 31 mars 2021", () => {
+  const mod = id => MODULES_FISC.find(m => m.id === id);
+  const bareme = mod("F3").blocs.find(b => b.kind === "bareme").tranches;
+  expect(bareme.map(t => t.taux)).toEqual([3, 15, 30, 40]);
+  expect(bareme.map(t => t.a)).toEqual([1944000, 21600000, 43200000, null]);
+  for (const m of MODULES_FISC) expect(JSON.stringify(m.blocs.filter(b => b.type === "maj"))).toContain("2021");
+  expect(JSON.stringify(mod("F2"))).toContain("4 × 20 %");
+});
