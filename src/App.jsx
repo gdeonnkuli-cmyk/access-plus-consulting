@@ -2015,9 +2015,11 @@ function FAStats({uid,myMods,allUsers}){
 }
 
 // ── AUTO-LOGOUT après 20 min d'inactivité ────────────────────────────────────
-// Déconnexion automatique après 20 minutes sans activité (clic, toucher, clavier, défilement).
-// La dernière activité est mémorisée dans le navigateur : le délai continue de courir quand
-// l'application est fermée ou en arrière-plan, et la déconnexion a lieu dès son retour.
+// Déconnexion automatique après 20 minutes sans utilisation.
+// Tant que l'application est affichée à l'écran, elle compte comme utilisée (lecture, vidéo, PDF…)
+// et ne se ferme jamais. Le délai court seulement quand elle est fermée, réduite, dans un autre
+// onglet ou que le téléphone est verrouillé : au retour, si plus de 20 min se sont écoulées,
+// l'utilisateur est déconnecté. La dernière utilisation est mémorisée dans le navigateur.
 const INACTIVITY_MS = 20 * 60 * 1000;
 const WARN_MS = 18 * 60 * 1000; // alerte 2 min avant
 const CLE_ACTIVITE = "ec_derniere_activite";
@@ -2038,6 +2040,7 @@ function useAutoLogout(onLogout) {
     const verifier = () => {
       if (fini) return;
       derniere = Math.max(derniere, lire()); // activité dans un autre onglet
+      if (document.visibilityState === "visible" && Date.now() - derniere < INACTIVITY_MS) { activite(); return; } // affichée = utilisée
       const inactif = Date.now() - derniere;
       if (inactif >= INACTIVITY_MS) {
         fini = true; setWarning(false);
@@ -2053,7 +2056,8 @@ function useAutoLogout(onLogout) {
       if (derniere - ecrite > 15000) { ecrite = derniere; ecrire(derniere); }
       setWarning(false);
     };
-    const retour = () => { if (document.visibilityState === "visible") verifier(); };
+    const retour = () => { if (document.visibilityState === "visible") verifier(); else if (!fini) { derniere = Date.now(); ecrite = derniere; ecrire(derniere); } };
+    const quitte = () => { if (!fini) ecrire(Date.now()); };
 
     verifier();
     if (!fini) ecrire(derniere);
@@ -2061,12 +2065,14 @@ function useAutoLogout(onLogout) {
     events.forEach(e => window.addEventListener(e, activite, {passive:true}));
     document.addEventListener("visibilitychange", retour);
     window.addEventListener("focus", verifier);
+    window.addEventListener("pagehide", quitte);
     const iv = setInterval(verifier, 15000);
 
     return () => {
       events.forEach(e => window.removeEventListener(e, activite));
       document.removeEventListener("visibilitychange", retour);
       window.removeEventListener("focus", verifier);
+      window.removeEventListener("pagehide", quitte);
       clearInterval(iv);
     };
   }, []);
@@ -2322,7 +2328,7 @@ function Auth({onL}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("l"),[err,sE]=useState(""),[ok,sO]=useState(""),[busy,sB]=useState(false),[step,sS]=useState(1);
   const[consent,sConsent]=useState(false),[showPrivacy,sShowPrivacy]=useState(false),[needConsent,sNeedConsent]=useState(false);
-  useEffect(()=>{try{if(sessionStorage.getItem(CLE_DECO)){sessionStorage.removeItem(CLE_DECO);sO("Vous avez été déconnecté après 20 minutes d'inactivité. Reconnectez-vous pour continuer.");}}catch(e){}},[]);
+  useEffect(()=>{try{if(sessionStorage.getItem(CLE_DECO)){sessionStorage.removeItem(CLE_DECO);sO("Vous avez été déconnecté après 20 minutes sans utilisation. Reconnectez-vous pour continuer.");}}catch(e){}},[]);
   const pm=useRef(null),rN=useRef(),rM=useRef(),rP=useRef(),rP2=useRef(),rC=useRef();
   const sw=useCallback(t=>{sT(t);sS(1);sE("");sO("");sConsent(false);sNeedConsent(false);setTimeout(()=>[rN,rM,rP,rP2,rC].forEach(r=>{if(r.current)r.current.value="";}),0);},[]);
   const reg=useCallback(async()=>{
