@@ -1,12 +1,14 @@
 import { computeAll } from "./engine";
 import { computeIBP } from "./rdc";
-import { CAS_PRATIQUES } from "./casPratiques";
+import { CAS_PRATIQUES, CAS_MEUBLES } from "./casPratiques";
 import { computeNotes } from "./notes";
 
 const cas = id => CAS_PRATIQUES.find(x => x.id === id);
+// Balance d'origine du manuel (IBP du manuel), pour vérifier que le moteur reproduit les états publiés
+const manuel = () => ({ ...cas("meubles-fleuve"), lignes: CAS_MEUBLES });
 
 test("le cas du manuel reproduit Bilan, Compte de résultat et TFT publiés", () => {
-  const c = cas("meubles-fleuve");
+  const c = manuel();
   const r = computeAll(c.lignes, c.complementsCorriges);
   expect(Math.round(r.N.act.BZ.n)).toBe(1054424478);
   expect(Math.round(r.P1.act.BZ.n)).toBe(446088093);
@@ -25,7 +27,7 @@ test("le cas KIN NÉGOCE passe tous les contrôles et l'IBP comptabilisé est ex
 });
 
 test("avec les mouvements N, le TFT du manuel se calcule sans informations complémentaires", () => {
-  const c = cas("meubles-fleuve");
+  const c = manuel();
   const t = computeAll(c.lignes, {}).tft;
   expect([t.FH, t.FJ, t.FO, t.FQ, t.ZH].map(Math.round)).toEqual([-601175, 730043, 100000000, -5000000, 123097127]);
 });
@@ -86,4 +88,15 @@ test("IBP : taux de 30 % en cas de bénéfice, minimum de 1 % du CA seulement en
   // résultat fiscal nul après imputation des déficits : minimum
   const z = computeIBP(R(1000000, 50000000), { deficits: 3000000 });
   expect(z.rf).toBe(0); expect(z.ibp).toBe(500000);
+});
+
+test("cas MEUBLES DU FLEUVE adapté à la RDC : IBP de 30 % comptabilisé, états équilibrés", () => {
+  const c = cas("meubles-fleuve");
+  const r = computeAll(c.lignes, c.complementsCorriges);
+  const I = computeIBP(r, {});
+  expect(Math.round(I.ibp)).toBe(73974573);
+  expect(Math.round(I.ecart)).toBe(0);
+  expect(Math.round(r.N.cr.XI)).toBe(215389710 - 42872373);
+  expect(Math.round(r.N.act.BZ.n)).toBe(Math.round(r.N.pas.DZ));
+  expect(Math.round(r.tft.ZH)).toBe(123097127);
 });
