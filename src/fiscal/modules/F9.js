@@ -1,0 +1,256 @@
+export default {
+  id: "F9",
+  titre: "Impôts réels, TSCR et conventions fiscales",
+  court: "Réels · Conv.",
+  ico: "world",
+  col: "#4A5B78",
+  duree: "25 min",
+  resume: "Foncier, véhicules, concessions minières, TSCR, impôt personnel minimum, puis les conventions avec l'Afrique du Sud et la Belgique.",
+  blocs: [
+    {
+      type: "essentiel",
+      texte:
+        "Les **impôts réels** (O.-L. n° 69/006) frappent des biens, pas des revenus : la **superficie des immeubles** (impôt foncier), les **véhicules** et la **superficie des concessions minières**. La **TSCR** est un droit de péage annuel sur les véhicules, à payer **avant le 31 mars**. L'**impôt personnel minimum** est un impôt local payé par les adultes résidents. Enfin, les **conventions fiscales** signées avec l'**Afrique du Sud** et la **Belgique** évitent la double imposition et plafonnent les retenues sur dividendes, intérêts et redevances.",
+    },
+    {
+      type: "schema",
+      kind: "cartes",
+      titre: "Les impôts de ce module",
+      cartes: [
+        { t: "Impôt foncier", d: "Forfait annuel selon la nature de l'immeuble et le rang de la localité ; déclaration au 1er février", ico: "home-dollar" },
+        { t: "Impôt sur les véhicules", d: "Dû par l'utilisateur ; 1/12 par mois si l'usage commence après janvier", ico: "car" },
+        { t: "Concessions minières", d: "Tarif en USD par hectare, selon le titre et l'année", ico: "map-2" },
+        { t: "TSCR", d: "Péage annuel dû par le propriétaire, payé avant le 31 mars", ico: "receipt" },
+        { t: "Impôt personnel minimum", d: "Impôt local des adultes résidents, au profit des Secteurs, Chefferies et Communes", ico: "users" },
+        { t: "Conventions fiscales", d: "Afrique du Sud et Belgique : éviter la double imposition", ico: "world" },
+      ],
+    },
+    {
+      type: "texte",
+      titre: "L'impôt foncier",
+      p: [
+        "C'est un « impôt forfaitaire annuel, dont le montant varie suivant la nature des immeubles et le rang des localités » (art. 13 O.-L. n° 69/006). Les villas des localités de 1er à 4e rang sont imposées selon leur **superficie bâtie**. **Le Code de 2017 ne reproduit aucun montant.**",
+      ],
+      puces: [
+        "**Redevable :** le propriétaire (ou possesseur, emphytéote, usufruitier…). Il reste redevable même si le bail met l'impôt à la charge du locataire (art. 8 à 10).",
+        "**Période :** l'impôt est dû pour l'**année entière** sur la superficie existant au **1er janvier** ; une vente en cours d'année ne donne pas droit à un dégrèvement (art. 21).",
+        "**Superficie :** mesurée aux parois extérieures, vérandas, balcons et terrasses compris ; les terrains non bâtis ne sont imposables qu'en circonscription urbaine (art. 15 à 18).",
+        "**Déclaration :** chaque année **au plus tard le 1er février** (art. 6 L. n° 004/2003). Un nouveau propriétaire déclare dans **un mois** à compter de la mutation (art. 11).",
+        "**Exemptions :** État et entités publiques, institutions religieuses ou philanthropiques, ASBL, ambassades (sous réserve de réciprocité) ; immeubles agricoles sous conditions et immeubles affectés sans but de lucre au culte, à l'enseignement ou aux hôpitaux (art. 2 à 4).",
+        "**Inoccupation :** dégrèvement proportionnel si l'immeuble est vide et sans revenu pendant au moins **180 jours consécutifs**, avec avis dans les deux mois (art. 25).",
+      ],
+    },
+    {
+      type: "texte",
+      titre: "L'impôt sur les véhicules et l'impôt sur les concessions minières",
+      puces: [
+        "**Véhicules — redevable :** la personne qui **utilise** le véhicule (art. 40 O.-L. n° 69/006). Exemptés : véhicules publics, diplomatiques, ambulances, cyclomoteurs de 50 cm³ au plus, etc. (art. 39).",
+        "**Véhicules — période :** impôt dû pour l'année entière si le véhicule roule en janvier ; sinon **1/12 par mois ou fraction de mois** d'usage (art. 43 et 44).",
+        "**Véhicules — tarifs :** le Code donne seulement les catégories (motos, utilitaires selon le poids, tourisme selon les chevaux-vapeur, bateaux…). Les montants de l'A.M. n° 081/2002 ont été **abrogés** (art. 9 L. n° 11/011).",
+        "**Déclaration :** une par véhicule, **avant sa mise en usage** ; vente, cession ou mise hors d'usage à déclarer **dans les 30 jours** (art. 7 et 8 L. n° 004/2003).",
+        "**Concessions minières :** le titulaire d'un permis de recherches ou d'un droit minier d'exploitation paie un tarif par hectare (art. 54). Exemple : 5 000 ha en 3e année de recherches = 5 000 × 0,035 = **175 USD**.",
+        "Aucun impôt n'est dû pour une concession accordée **après le 31 janvier** ; déclaration au plus tard le **1er février** (art. 10 L. n° 004/2003). Les titulaires d'hydrocarbures n'y sont plus soumis (L. n° 15/012).",
+      ],
+    },
+    {
+      type: "schema",
+      kind: "tableau",
+      titre: "Impôt sur la superficie des concessions minières (USD par hectare)",
+      note: "Taux payés en francs congolais à l'équivalent de ces montants en USD (art. 54 O.-L. n° 69/006, adapté au Code minier de 2002).",
+      entetes: ["Année", "Permis de recherches", "Droit minier d'exploitation"],
+      lignes: [
+        ["1re année", "0,02 USD", "0,04 USD"],
+        ["2e année", "0,03 USD", "0,06 USD"],
+        ["3e année", "0,035 USD", "0,07 USD"],
+        ["Années suivantes", "0,04 USD", "0,08 USD"],
+      ],
+    },
+    {
+      type: "texte",
+      titre: "La taxe spéciale de circulation routière (TSCR)",
+      puces: [
+        "Créée « au titre de droit de péage au profit du Trésor public » (art. 1er O.-L. n° 88/029), elle frappe tous les véhicules admis sur le réseau routier public (art. 2).",
+        "**Redevable :** le **propriétaire** du véhicule, alors que l'impôt sur les véhicules est dû par l'**utilisateur** (art. 3).",
+        "**Pas de prorata :** la taxe est due pour **l'année civile entière**, quelle que soit la date de mise en circulation (art. 5).",
+        "**Paiement spontané :** **avant le 31 mars** pour un véhicule acquis avant le 1er janvier ; **à l'immatriculation** pour un véhicule acquis en cours d'année (art. 7).",
+        "**Transport public :** les entreprises de transport public paient **la moitié du taux** pour les véhicules affectés au transport public de personnes (art. 3 ter).",
+        "**Sanction :** en plus des pénalités de droit commun, **majoration de 100 %** si le défaut de paiement est constaté par procès-verbal lors d'un contrôle routier (art. 13). Les montants du D. n° 038/2002 ont été **abrogés**.",
+      ],
+    },
+    {
+      type: "texte",
+      titre: "L'impôt personnel minimum (IPM)",
+      puces: [
+        "Impôt perçu « au profit exclusif des Secteurs, des Chefferies et des Communes » : c'est un **impôt local** (art. 2 O.-L. n° 71/087).",
+        "**Redevables :** les personnes physiques **adultes** (18 ans et plus au début de l'exercice) qui résident effectivement en RDC (art. 4 et 5).",
+        "**Paiement :** dû pour le tout au **1er janvier**, en **un seul versement**, dans la collectivité de résidence (art. 6 à 8).",
+        "**Taux :** fixés par le Parlement dans les lois de finances ou, par délégation, par les assemblées provinciales et les organes des entités territoriales décentralisées (art. 9). **Le Code n'en donne aucun montant.**",
+        "**Réduction :** au plus **5 % de l'impôt par personne à charge** (art. 10). **Exemptions :** anciens combattants, étudiants du cycle régulier, invalides permanents, vieillards sans activité lucrative (art. 11).",
+        "L'IPM payé pour le même exercice est **déduit** de l'impôt professionnel (art. 93 O.-L. n° 69/009).",
+      ],
+    },
+    {
+      type: "texte",
+      titre: "Les conventions fiscales : à quoi servent-elles ?",
+      p: [
+        "Sans convention, un même revenu peut être taxé deux fois : en RDC, où il est payé, et dans le pays du bénéficiaire. Les conventions répartissent le droit d'imposer et **plafonnent** les retenues à la source dans le pays d'où vient le revenu.",
+      ],
+      puces: [
+        "**Afrique du Sud :** signée à Pretoria le 29/04/2005, ratifiée par la L. n° 11/019 du 15/09/2011 ; objet : **éviter la double imposition et prévenir l'évasion fiscale** en matière d'impôts sur le revenu.",
+        "**Belgique :** signée à Bruxelles le 23/05/2007, ratifiée par la L. n° 11/021 du 24/12/2011 ; elle couvre les impôts sur le revenu **et sur la fortune** et vise aussi la **fraude** fiscale.",
+        "**Impôts congolais visés :** IRL, impôt mobilier, impôt sur les bénéfices, impôt sur les profits des professions libérales et IPR. La convention belge ajoute l'IERE et l'**impôt foncier** sur les propriétés bâties.",
+        "La convention sud-africaine plafonne aussi l'**impôt de succursale** en RDC à **5 %** des bénéfices de l'établissement stable après impôt (art. 10).",
+      ],
+    },
+    {
+      type: "schema",
+      kind: "tableau",
+      titre: "Taux maximaux de retenue prévus par les conventions",
+      entetes: ["Revenu", "RDC – Afrique du Sud", "RDC – Belgique"],
+      lignes: [
+        ["Dividendes", "5 % si la société bénéficiaire détient directement au moins 25 % du capital ; 15 % dans les autres cas", "En RDC : 15 % (société exonérée par le Code des investissements ou une loi sectorielle, détention d'au moins 25 %) ; 10 % dans les autres cas. En Belgique : 5 % (au moins 25 %) ; 10 %"],
+        ["Intérêts", "10 % ; exonération pour l'État, les collectivités, la BCC, la SARB et les institutions étatiques", "10 % ; exonération des créances commerciales, des prêts bancaires non représentés par des titres au porteur et des intérêts payés à l'État ou à la banque centrale"],
+        ["Redevances", "10 %", "10 %"],
+        ["Impôts couverts", "Impôts sur le revenu", "Impôts sur le revenu et sur la fortune"],
+        ["Publication au JO", "01/10/2016", "01/06/2016"],
+      ],
+    },
+    {
+      type: "exemple",
+      titre: "Exemple 1 — Une voiture mise en circulation en mai",
+      enonce:
+        "La SARL BOMOKO met en circulation une voiture de tourisme achetée en mai. Le Code de 2017 ne donne plus de tarif : supposons, à titre purement pédagogique, un tarif annuel fictif de 120 000 FC pour l'impôt sur les véhicules et de 120 000 FC pour la TSCR.",
+      lignes: [
+        ["Impôt sur les véhicules : tarif annuel fictif", 120000],
+        ["Impôt sur les véhicules dû : 8/12 (mai à décembre, art. 44)", 80000, "total"],
+        ["TSCR due pour l'année entière (art. 5)", 120000, "total"],
+        ["Total à payer pour l'année", 200000, "resultat"],
+        ["Si la TSCR n'est pas payée et qu'un PV est dressé : majoration de 100 % (art. 13)", 120000],
+      ],
+      conclusion:
+        "L'impôt sur les véhicules suit les mois d'usage (8 mois sur 12), mais la TSCR est due en entier, payée à l'immatriculation. Remplacez les tarifs fictifs par ceux du texte en vigueur dans votre province.",
+    },
+    {
+      type: "exemple",
+      titre: "Exemple 2 — Dividende versé à une société sud-africaine",
+      enonce:
+        "La SA KIVU TRANS verse un dividende brut de 10 000 000 FC à sa société mère sud-africaine, qui détient directement 30 % de son capital.",
+      lignes: [
+        ["Dividende brut", 10000000],
+        ["IM de droit interne à 20 % (art. 26 O.-L. n° 69/009)", 2000000],
+        ["Plafond de la convention : 5 % (détention d'au moins 25 %)", 500000, "resultat"],
+      ],
+      conclusion:
+        "La convention limite l'impôt prélevé en RDC sur ce dividende à 500 000 FC. Si la société mère détenait moins de 25 %, le plafond serait de 15 %, soit 1 500 000 FC.",
+    },
+    {
+      type: "pieges",
+      puces: [
+        "Confondre les redevables : l'impôt sur les véhicules est dû par l'**utilisateur**, la TSCR par le **propriétaire**.",
+        "Appliquer un prorata à la TSCR : elle est due pour l'**année entière**, même si le véhicule roule seulement à partir de novembre (art. 5 O.-L. n° 88/029).",
+        "Chercher les tarifs du foncier, des véhicules ou de la TSCR dans le Code de 2017 : ils n'y figurent pas ou ont été abrogés.",
+        "Croire qu'une convention supprime tout impôt : elle **plafonne** la retenue (par exemple 10 % sur les redevances) et répartit le droit d'imposer.",
+        "Oublier la condition de détention d'au moins **25 %** pour le taux réduit sur dividendes.",
+      ],
+    },
+    {
+      type: "maj",
+      texte:
+        "Les règles de ce module viennent du Code des impôts mis à jour au 15 juillet 2017 ; vérifie la dernière loi de finances. Les montants de l'impôt sur les véhicules et de la TSCR ont été abrogés (art. 9 L. n° 11/011) et le Code ne chiffre pas l'impôt foncier ni l'IPM. Plusieurs de ces impôts relèvent aujourd'hui des provinces ou des entités locales : l'IPM est expressément local, et l'impôt foncier et l'impôt sur les véhicules sont vraisemblablement provinciaux (nomenclature de l'O.-L. n° 13/001 du 23 février 2013). Consulte l'édit provincial en vigueur pour les tarifs. Les tarifs miniers sont calés sur le Code minier de 2002, qui a pu être révisé.",
+    },
+    {
+      type: "articles",
+      refs: [
+        "Art. 1er à 27 — O.-L. n° 69/006 : impôt foncier (exemptions, redevables, superficie, période)",
+        "Art. 39 à 45 — O.-L. n° 69/006 : impôt sur les véhicules (exemptions, redevable, prorata)",
+        "Art. 54 — O.-L. n° 69/006 : impôt sur la superficie des concessions minières",
+        "Art. 1er à 13 — O.-L. n° 88/029 : taxe spéciale de circulation routière",
+        "Art. 1er à 11 — O.-L. n° 71/087 : impôt personnel minimum",
+        "Art. 6 à 10 — L. n° 004/2003 : déclarations foncière, véhicules et concessions",
+        "Convention RDC – Afrique du Sud (L. n° 11/019) et Convention RDC – Belgique (L. n° 11/021)",
+      ],
+    },
+  ],
+  qcm: [
+    {
+      q: "Avant quelle date faut-il payer la TSCR d'un véhicule acquis avant le 1er janvier ?",
+      r: ["Le 1er février", "Le 31 mars", "Le 30 avril", "Le 31 décembre"],
+      b: 1,
+      e: "Le paiement spontané se fait avant le 31 mars de chaque année ; pour un véhicule acquis en cours d'année, il se fait à l'immatriculation.",
+      art: "art. 7 O.-L. n° 88/029",
+    },
+    {
+      q: "Quel avantage la TSCR prévoit-elle pour un bus d'une entreprise de transport public de personnes ?",
+      r: ["La moitié du taux", "Une exonération totale", "Un paiement en douzièmes", "Une réduction de 25 %"],
+      b: 0,
+      e: "Les entreprises de transport public paient la moitié du taux pour les véhicules affectés au transport public de personnes.",
+      art: "art. 3 ter O.-L. n° 88/029",
+    },
+    {
+      q: "Lors d'un contrôle routier, un PV constate que la TSCR n'a pas été payée. Quelle majoration s'ajoute aux pénalités ?",
+      r: ["25 %", "50 %", "100 %", "200 %"],
+      b: 2,
+      e: "L'art. 13 ajoute une majoration de 100 % pour défaut de paiement relevé par procès-verbal lors d'un contrôle routier.",
+      art: "art. 13 O.-L. n° 88/029",
+    },
+    {
+      q: "Un véhicule est mis en usage en septembre. Que doit-on payer pour l'année ?",
+      r: [
+        "4/12 de l'impôt sur les véhicules et la TSCR entière",
+        "4/12 de l'impôt sur les véhicules et 4/12 de la TSCR",
+        "Les deux impôts pour l'année entière",
+        "L'impôt sur les véhicules entier et 4/12 de la TSCR",
+      ],
+      b: 0,
+      e: "L'impôt sur les véhicules est dû pour 1/12 par mois ou fraction de mois (septembre à décembre = 4/12), alors que la TSCR est due pour l'année civile entière.",
+      art: "art. 44 O.-L. n° 69/006 ; art. 5 O.-L. n° 88/029",
+    },
+    {
+      q: "Quel est le tarif par hectare d'un permis de recherches minières en 2e année ?",
+      r: ["0,02 USD", "0,03 USD", "0,04 USD", "0,06 USD"],
+      b: 1,
+      e: "Permis de recherches : 0,02 USD (1re année), 0,03 USD (2e), 0,035 USD (3e), 0,04 USD ensuite.",
+      art: "art. 54 O.-L. n° 69/006",
+    },
+    {
+      q: "Une société détient un droit minier d'exploitation de 1 000 ha depuis plus de trois ans. Quel est l'impôt annuel ?",
+      r: ["40 USD", "70 USD", "80 USD", "60 USD"],
+      b: 2,
+      e: "Années suivantes, droit minier d'exploitation : 0,08 USD/ha. 1 000 × 0,08 = 80 USD, payés en francs congolais.",
+      art: "art. 54 O.-L. n° 69/006",
+    },
+    {
+      q: "Jusqu'à quand faut-il souscrire la déclaration annuelle de l'impôt foncier ?",
+      r: ["Au plus tard le 1er février", "Avant le 31 mars", "Au plus tard le 30 avril", "Dans les 15 jours de chaque mois"],
+      b: 0,
+      e: "La déclaration foncière est souscrite chaque année au plus tard le 1er février, avec les éléments existant au 1er janvier.",
+      art: "art. 6 L. n° 004/2003",
+    },
+    {
+      q: "Au profit de qui l'impôt personnel minimum est-il perçu ?",
+      r: [
+        "Du Trésor public",
+        "Des Secteurs, des Chefferies et des Communes",
+        "De la DGI uniquement",
+        "De l'INSS",
+      ],
+      b: 1,
+      e: "L'IPM est perçu au profit exclusif des Secteurs, des Chefferies et des Communes : c'est un impôt local.",
+      art: "art. 2 O.-L. n° 71/087",
+    },
+    {
+      q: "Selon la convention RDC – Afrique du Sud, quel est le taux maximal de retenue sur un dividende versé à une société qui détient directement 30 % du capital ?",
+      r: ["15 %", "10 %", "20 %", "5 %"],
+      b: 3,
+      e: "Le plafond est de 5 % lorsque la société bénéficiaire détient directement au moins 25 % du capital, et de 15 % dans les autres cas.",
+      art: "Convention RDC – Afrique du Sud (L. n° 11/019)",
+    },
+    {
+      q: "Quel est le taux maximal de retenue sur les redevances prévu par la convention RDC – Belgique ?",
+      r: ["5 %", "10 %", "15 %", "20 %"],
+      b: 1,
+      e: "La convention avec la Belgique plafonne la retenue sur les redevances à 10 %, comme celle avec l'Afrique du Sud.",
+      art: "Convention RDC – Belgique (L. n° 11/021)",
+    },
+  ],
+};
