@@ -4,7 +4,8 @@ import{MODULES_FISC}from"./modules";
 import{tirerSerie,lireSerie,ecrireSerie}from"./tirage";
 
 // ══════════════════ CODE DES IMPÔTS RDC EXPLIQUÉ ══════════════════
-// 9 modules (src/fiscal/modules) : leçon structurée en blocs, schémas dessinés et QCM de 10 questions.
+// 9 modules (src/fiscal/modules, Code des impôts mis à jour au 31 mars 2021) : leçon structurée en blocs,
+// schémas dessinés et QCM (banque de 15 questions, séries de 10).
 // Score enregistré dans users/{uid}.scores["FISC-F2"] = { s, t, pct, date } (meilleur score conservé).
 // QCM : chaque tentative tire 10 questions dans la banque du module (15), dont au moins 30 % de nouvelles
 // par rapport à l'essai précédent, avec les propositions mélangées (voir tirage.js).
@@ -263,7 +264,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
       <i className="ti ti-receipt-tax" style={{position:"absolute",right:-10,bottom:-22,fontSize:150,opacity:.1}}/>
       <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Fiscalité · République démocratique du Congo</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Le Code des impôts expliqué</div>
-      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>9 modules clairs, avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts (mise à jour au 15 juillet 2017) et des règles en vigueur validées par nos formateurs.</div>
+      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>9 modules clairs, avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts de la DGI mis à jour au 31 mars 2021.</div>
       <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
         <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>{valides} / {MODULES_FISC.length} modules validés</span>
         {moy!=null&&<span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>Score moyen : {moy} %</span>}
