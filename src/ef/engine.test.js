@@ -92,6 +92,9 @@ test("IBP (art. 92) : le plus élevé de 30 % du résultat fiscal et de l'impôt
   // déficits antérieurs : imputation plafonnée à 60 % du bénéfice fiscal (art. 42), le solde reste reportable
   const z = computeIBP(R(1000000, 50000000), { deficits: 3000000 });
   expect(z.imput).toBe(600000); expect(z.rf).toBe(400000); expect(z.defReport).toBe(2400000); expect(z.ibp).toBe(500000);
+  // impôt minimum payé en période déficitaire : imputable avec les pertes, sous le même plafond de 60 % (art. 42)
+  const mi = computeIBP(R(10000000, 50000000), { deficits: 4000000, minAnterieurs: 3000000 });
+  expect(mi.imput).toBe(6000000); expect(mi.rf).toBe(4000000); expect(mi.defReport).toBe(1000000);
   // aucun chiffre d'affaires : impôt forfaitaire selon la catégorie
   expect(computeIBP(R(-1000000, 0)).ibp).toBe(750000);
   expect(computeIBP(R(-1000000, 0), { categorie: "GE" }).ibp).toBe(2500000);

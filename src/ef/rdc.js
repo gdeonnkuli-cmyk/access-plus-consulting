@@ -49,9 +49,10 @@ export const IDENTITE = [
 
 // ── Impôt sur les Bénéfices et Profits (IBP) ─────────────────────────────────────
 // Taux et minimum d'imposition paramétrables : à aligner sur la loi de finances de l'exercice.
-export const FISC_DEFAUT = { tauxIBP: 30, tauxMin: 1, plafondDef: 60, provAdmises: false, reint: [], deduc: [], deficits: 0, acomptes: 0 };
+export const FISC_DEFAUT = { tauxIBP: 30, tauxMin: 1, plafondDef: 60, provAdmises: false, reint: [], deduc: [], deficits: 0, minAnterieurs: 0, acomptes: 0 };
 // Provisions non déductibles (art. 46-6°) : dotations réintégrées, reprises déduites (déjà taxées à la dotation).
-// Exception : provisions minières et provisions pour créances douteuses des établissements de crédit (provAdmises).
+// Exception : provisions minières et provisions pour créances douteuses des établissements de crédit et de
+// microfinance (provAdmises).
 export const PROV_DOTATIONS = [["659", "Charges pour dépréciations et provisions à court terme d'exploitation (659)"], ["679", "Charges pour dépréciations et provisions financières à court terme (679)"],
   ["691", "Dotations aux provisions et dépréciations d'exploitation (691)"], ["697", "Dotations aux provisions et dépréciations financières (697)"],
   ["853", "Dotations aux dépréciations HAO (853)"], ["854", "Dotations aux provisions pour risques HAO (854)"]];
@@ -75,9 +76,11 @@ export function computeIBP(R, f = {}) {
   const deduc = [...autoD, ...(cfg.deduc || []).map(x => ({ lib: x.lib, m: num(x.m) }))];
   const tR = reint.reduce((s, x) => s + x.m, 0), tD = deduc.reduce((s, x) => s + x.m, 0);
   const avantDef = rai + tR - tD;
-  // Imputation des déficits antérieurs plafonnée à 60 % du bénéfice fiscal avant imputation (art. 42)
+  // Art. 42 (L.F. n° 18/025) : les pertes antérieures et l'impôt minimum payé en cas de résultats déficitaires
+  // sont déductibles des bénéfices, dans la limite de 60 % du bénéfice fiscal avant leur imputation
   const plafondImput = Math.max(avantDef, 0) * num(cfg.plafondDef) / 100;
-  const imput = Math.min(Math.max(num(cfg.deficits), 0), plafondImput);
+  const aImputer = Math.max(num(cfg.deficits), 0) + Math.max(num(cfg.minAnterieurs), 0);
+  const imput = Math.min(aImputer, plafondImput);
   const rf = avantDef - imput;
   const ibpTheo = Math.max(rf, 0) * num(cfg.tauxIBP) / 100;
   // Art. 92 : impôt minimum de 1 % du CA déclaré lorsque le résultat est déficitaire ou que l'IBP
@@ -87,5 +90,5 @@ export function computeIBP(R, f = {}) {
   const enPerte = rf <= 0;
   const ibp = Math.max(ibpTheo, minimum);
   const acomptes = num(cfg.acomptes);
-  return { rai, reint, deduc, tR, tD, avantDef, imput, rf, ibpTheo, minimum, ibp, minApplique: minimum > ibpTheo, enPerte, sansCA, ibpCompta, plafondImput, defReport: Math.max(num(cfg.deficits), 0) - imput, ecart: ibp - ibpCompta, acomptes, solde: ibp - acomptes, cfg };
+  return { rai, reint, deduc, tR, tD, avantDef, imput, rf, ibpTheo, minimum, ibp, minApplique: minimum > ibpTheo, enPerte, sansCA, ibpCompta, plafondImput, defReport: aImputer - imput, ecart: ibp - ibpCompta, acomptes, solde: ibp - acomptes, cfg };
 }
