@@ -25,7 +25,7 @@ export const CAS_LIGNES = [
   { c: "4111", l: "Clients", dn: 75000000, cn: 0, dn1: 45000000, cn1: 0, md: 400000000, mc: 370000000 },
   { c: "422", l: "Personnel, rémunérations dues", dn: 0, cn: 0, dn1: 0, cn1: 0, md: 50000000, mc: 50000000 },
   { c: "4311", l: "CNSS (sécurité sociale)", dn: 0, cn: 5500000, dn1: 0, cn1: 5000000, md: 7000000, mc: 7500000 },
-  { c: "441", l: "État, impôt sur les bénéfices", dn: 0, cn: 9900000, dn1: 0, cn1: 3450000, md: 3450000, mc: 9900000 },
+  { c: "441", l: "État, impôt sur les bénéfices", dn: 0, cn: 11400000, dn1: 0, cn1: 3450000, md: 3450000, mc: 11400000 },
   { c: "465", l: "Associés, dividendes à payer", dn: 0, cn: 0, dn1: 0, cn1: 0, md: 3000000, mc: 3000000 },
   { c: "4911", l: "Dépréciations des comptes clients", dn: 0, cn: 2000000, dn1: 0, cn1: 0, md: 0, mc: 2000000 },
   { c: "5211", l: "Banque", dn: 156550000, cn: 0, dn1: 81000000, cn1: 0, md: 476000000, mc: 400450000 },
@@ -48,7 +48,7 @@ export const CAS_LIGNES = [
   { c: "799", l: "Reprises de subventions d'investissement", dn: 0, cn: 1000000, dn1: 0, cn1: 0, md: 0, mc: 1000000 },
   { c: "812", l: "Valeurs comptables des cessions d'immobilisations corporelles", dn: 4000000, cn: 0, dn1: 0, cn1: 0, md: 4000000, mc: 0 },
   { c: "822", l: "Produits des cessions d'immobilisations corporelles", dn: 0, cn: 6000000, dn1: 0, cn1: 0, md: 0, mc: 6000000 },
-  { c: "891", l: "Impôts sur les bénéfices de l'exercice", dn: 9900000, cn: 0, dn1: 3450000, cn1: 0, md: 9900000, mc: 0 },
+  { c: "891", l: "Impôts sur les bénéfices de l'exercice", dn: 11400000, cn: 0, dn1: 3450000, cn1: 0, md: 11400000, mc: 0 },
 ];
 
 export const CAS_MEUBLES = [
@@ -257,7 +257,7 @@ export const CAS_LOGISTIQUE = [
   { c: "416", l: "Clients douteux ou litigieux", dn: 15000000, cn: 0, dn1: 0, cn1: 0, md: 15000000, mc: 0 },
   { c: "422", l: "Personnel, rémunérations dues", dn: 0, cn: 0, dn1: 0, cn1: 0, md: 110000000, mc: 110000000 },
   { c: "4311", l: "CNSS — Caisse nationale de sécurité sociale", dn: 0, cn: 7000000, dn1: 0, cn1: 6000000, md: 14000000, mc: 15000000 },
-  { c: "441", l: "État, impôt sur les bénéfices et profits (IBP)", dn: 0, cn: 8100000, dn1: 0, cn1: 8400000, md: 8400000, mc: 8100000 },
+  { c: "441", l: "État, impôt sur les bénéfices et profits (IBP)", dn: 0, cn: 13500000, dn1: 0, cn1: 8400000, md: 8400000, mc: 13500000 },
   { c: "4431", l: "État, TVA facturée sur prestations", dn: 0, cn: 0, dn1: 0, cn1: 0, md: 83200000, mc: 83200000 },
   { c: "4441", l: "État, TVA due", dn: 0, cn: 6000000, dn1: 0, cn1: 8800000, md: 58800000, mc: 56000000 },
   { c: "4452", l: "État, TVA récupérable sur achats", dn: 0, cn: 0, dn1: 0, cn1: 0, md: 27200000, mc: 27200000 },
@@ -294,7 +294,7 @@ export const CAS_LOGISTIQUE = [
   { c: "711", l: "Subventions d'exploitation", dn: 0, cn: 6000000, dn1: 0, cn1: 0, md: 0, mc: 6000000 },
   { c: "812", l: "Valeurs comptables des cessions d'immobilisations corporelles", dn: 15000000, cn: 0, dn1: 0, cn1: 0, md: 15000000, mc: 0 },
   { c: "822", l: "Produits des cessions d'immobilisations corporelles", dn: 0, cn: 22000000, dn1: 0, cn1: 0, md: 0, mc: 22000000 },
-  { c: "891", l: "Impôt sur les bénéfices et profits (IBP)", dn: 8100000, cn: 0, dn1: 8400000, cn1: 0, md: 8100000, mc: 0 },
+  { c: "891", l: "Impôt sur les bénéfices et profits (IBP)", dn: 13500000, cn: 0, dn1: 8400000, cn1: 0, md: 13500000, mc: 0 },
 ];
 
 // Cas en perte : le résultat fiscal est négatif, l'IBP dû est le minimum de 1 % du chiffre d'affaires
@@ -352,9 +352,9 @@ export const CAS_MINOTERIE = [
 ];
 
 // Version RDC du cas du manuel : le manuel comptabilise un IBP de 31 102 200 ; en RDC, l'IBP d'une
-// entreprise bénéficiaire est de 30 % du résultat fiscal (246 581 910), soit 73 974 573.
-// L'écart de 42 872 373 est ajouté au compte 891 (charge) et au compte 441 (dette envers l'État).
-const IBP_MANUEL = 31102200, IBP_RDC = 73974573, AJ_IBP = IBP_RDC - IBP_MANUEL;
+// entreprise bénéficiaire est de 30 % du résultat fiscal (253 833 579, dotations aux provisions de 7 251 669
+// réintégrées, art. 46-6°), soit 76 150 074. L'écart de 45 047 874 est ajouté au compte 891 (charge) et au compte 441 (dette envers l'État).
+const IBP_MANUEL = 31102200, IBP_RDC = 76150074, AJ_IBP = IBP_RDC - IBP_MANUEL;
 export const CAS_MEUBLES_RDC = CAS_MEUBLES.map(l =>
   l.c === "891000" ? { ...l, dn: l.dn + AJ_IBP, md: l.md + AJ_IBP }
   : l.c === "441100" ? { ...l, cn: l.cn + AJ_IBP, mc: l.mc + AJ_IBP } : l);
@@ -386,7 +386,7 @@ export const CAS_PRATIQUES = [
     enonce: [
       "La SA MEUBLES DU FLEUVE (fabrication de meubles, Kinshasa/Limete) vous transmet ses balances après inventaire N-1 et N. Il s'agit du cas pratique du manuel « Montage des états financiers du SYSCOHADA révisé ».",
       "Travail demandé : établir le jeu complet d'états financiers du Système Normal (fiche d'identification, Bilan, Compte de résultat, Tableau des flux de trésorerie) et déterminer l'IBP de l'exercice.",
-      "Adaptation RDC : l'IBP a été recalculé selon la législation congolaise, soit 30 % du résultat fiscal de 246 581 910 = 73 974 573 (comptes 891 et 441), au lieu des 31 102 200 du manuel. Le résultat net, le bilan et le TFT diffèrent donc des montants publiés dans le manuel.",
+      "Adaptation RDC : l'IBP a été recalculé selon la législation congolaise, soit 30 % du résultat fiscal de 253 833 579 = 76 150 074 (comptes 891 et 441), au lieu des 31 102 200 du manuel ; le résultat fiscal réintègre les amendes (647) et les dotations aux provisions pour risques (691, 7 251 669), non déductibles en RDC (art. 46-6°). Le résultat net, le bilan et le TFT diffèrent donc des montants publiés dans le manuel.",
       "Informations complémentaires : un emprunt bancaire de 100 000 000 a été obtenu dans l'exercice (le compte 4794 constate un écart de conversion de 2 500 925 sur cet emprunt) ; les dépôts et cautionnements remboursés à l'entité s'élèvent à 730 043 ; les dividendes de 90 000 000 décidés en AGO ont été payés. Résultats attendus : ZH = 123 097 127, CAFG = 241 773 904.",
     ],
     complementsCorriges: { nouvEmp: 100000000, rembFin: 730043 },
@@ -403,8 +403,8 @@ export const CAS_PRATIQUES = [
     enonce: [
       "La SARL MALACHITE LOGISTIQUE (société fictive de transport et de logistique minière, Lubumbashi, Haut-Katanga) vous remet sa balance à 8 colonnes au 31/12/2025 (soldes N-1, mouvements N, soldes N), après inventaire et avant affectation du résultat. Montants en francs congolais.",
       "Opérations marquantes de 2025 : augmentation de capital en numéraire de 100 000 000 avec une prime d'émission de 20 000 000 ; dividendes 2024 de 20 000 000, dont 12 000 000 payés (le solde reste au 465) ; nouvel emprunt bancaire de 80 000 000, remboursement de 30 000 000 et intérêts courus non échus de 2 000 000 (166) ; camion pris en location-acquisition pour 90 000 000, dont 18 000 000 de capital remboursé (1731) ; cession d'un ancien camion (brut 60 000 000, amortissements 45 000 000) pour 22 000 000, dont 10 000 000 restent à encaisser (485) ; matériel de bureau de 4 000 000 non encore payé (481) et paiement de 20 000 000 de dettes d'investissement de 2024.",
-      "Opérations d'inventaire : client douteux de 15 000 000 déprécié de 9 000 000 ; perte latente de change de 4 000 000 sur une créance en USD (4781), couverte par une provision (194) ; gain latent de 1 500 000 sur une dette fournisseur en USD (4792) ; provision pour litige de 5 000 000 ; assurance payée d'avance de 2 000 000 (476) et prestation facturée d'avance de 5 000 000 (477). TVA à 16 % : la TVA facturée et la TVA récupérable sont soldées sur la TVA due (4441). Les pénalités fiscales (647) ne sont pas déductibles ; IBP au taux de 30 %, minimum de 1 % du chiffre d'affaires.",
-      "Travail demandé : établir le Bilan, le Compte de résultat, le TFT (sans informations complémentaires : les mouvements suffisent), les notes annexes et l'IBP ; expliquer chaque retraitement du TFT (485, 481, 465, 166, 17, 4781, 4792). Résultats attendus : résultat net 17 900 000 ; CAFG 110 900 000 ; flux opérationnels 83 800 000 ; trésorerie au 31/12 (ZH) 333 300 000 ; IBP 8 100 000.",
+      "Opérations d'inventaire : client douteux de 15 000 000 déprécié de 9 000 000 ; perte latente de change de 4 000 000 sur une créance en USD (4781), couverte par une provision (194) ; gain latent de 1 500 000 sur une dette fournisseur en USD (4792) ; provision pour litige de 5 000 000 ; assurance payée d'avance de 2 000 000 (476) et prestation facturée d'avance de 5 000 000 (477). TVA à 16 % : la TVA facturée et la TVA récupérable sont soldées sur la TVA due (4441). Les pénalités fiscales (647) et les dotations aux provisions et dépréciations (659, 691, 697) ne sont pas déductibles (art. 46) ; IBP au taux de 30 %, avec un impôt minimum de 1 % du chiffre d'affaires (art. 92).",
+      "Travail demandé : établir le Bilan, le Compte de résultat, le TFT (sans informations complémentaires : les mouvements suffisent), les notes annexes et l'IBP ; expliquer chaque retraitement du TFT (485, 481, 465, 166, 17, 4781, 4792). Résultats attendus : résultat fiscal 45 000 000 (dont 18 000 000 de provisions réintégrées) ; IBP 13 500 000 ; résultat net 12 500 000 ; CAFG 105 500 000 ; flux opérationnels 83 800 000 ; trésorerie au 31/12 (ZH) 333 300 000.",
     ],
     complementsCorriges: {},
     lignes: CAS_LOGISTIQUE,
@@ -421,8 +421,8 @@ export const CAS_PRATIQUES = [
       "La SARL MINOTERIE DU KASAÏ (société fictive, capital de 250 000 000, fabrication de farine de maïs à Kananga, Kasaï-Central) vous remet sa balance à 8 colonnes au 31/12/2025 (soldes N-1, mouvements N, soldes N), après inventaire et avant affectation du résultat. Montants en francs congolais.",
       "Contexte : une récolte déficitaire fait monter le prix du maïs et le chiffre d'affaires recule de 20 % (de 600 000 000 à 480 000 000) ; les délestages électriques alourdissent le carburant des groupes et l'entretien des machines. L'exercice se solde par une perte.",
       "Opérations de 2025 : affectation du bénéfice 2024 de 61 800 000 (réserve légale 6 180 000, dividendes 20 000 000 dont 15 000 000 payés et 5 000 000 restant au 465, report à nouveau 35 620 000) ; remboursement de 30 000 000 sur l'emprunt bancaire en USD, avec 4 000 000 de pertes de change réalisées ; acquisition d'une ensacheuse de 40 000 000, dont 10 000 000 restent dus (481) ; paiement de l'IBP 2024 de 26 700 000.",
-      "Opérations d'inventaire : la dépréciation du franc congolais augmente la dette en USD de 8 000 000 (1621 par 4784), perte latente couverte par une provision (6971 / 194) ; client douteux de 10 000 000 transféré au 416 et déprécié à 70 % (7 000 000) ; stock de maïs ramené de 40 000 000 à 25 000 000, stock de farine porté de 20 000 000 à 30 000 000. TVA à 16 % sur les ventes et les services (le maïs est acheté à des producteurs non assujettis), soldée sur la TVA due (4441). Pénalité fiscale de 1 500 000 (647) non déductible ; IBP au taux de 30 %, avec un impôt minimum de 1 % du chiffre d'affaires dû en cas de perte ou lorsque l'IBP calculé lui est inférieur (art. 92).",
-      "Travail demandé : établir le Bilan, le Compte de résultat, le TFT (les mouvements suffisent) et l'IBP ; expliquer pourquoi un impôt est dû malgré la perte ; commenter la chute de la trésorerie et la place de l'écart de conversion (4784) dans le TFT ; vérifier si les capitaux propres restent supérieurs à la moitié du capital (art. 371 AUSCGIE). Résultats attendus : résultat avant impôt -48 500 000 ; résultat fiscal -47 000 000 ; IBP minimum 4 800 000 ; résultat net -53 300 000 ; CAFG 6 700 000 ; flux opérationnels -11 200 000 ; trésorerie au 31/12 (ZH) 66 300 000 ; capitaux propres 263 500 000.",
+      "Opérations d'inventaire : la dépréciation du franc congolais augmente la dette en USD de 8 000 000 (1621 par 4784), perte latente couverte par une provision (6971 / 194) ; client douteux de 10 000 000 transféré au 416 et déprécié à 70 % (7 000 000) ; stock de maïs ramené de 40 000 000 à 25 000 000, stock de farine porté de 20 000 000 à 30 000 000. TVA à 16 % sur les ventes et les services (le maïs est acheté à des producteurs non assujettis), soldée sur la TVA due (4441). Pénalité fiscale de 1 500 000 (647) et dotations aux provisions et dépréciations (6594, 6971) non déductibles (art. 46) ; IBP au taux de 30 %, avec un impôt minimum de 1 % du chiffre d'affaires dû en cas de perte ou lorsque l'IBP calculé lui est inférieur (art. 92).",
+      "Travail demandé : établir le Bilan, le Compte de résultat, le TFT (les mouvements suffisent) et l'IBP ; expliquer pourquoi un impôt est dû malgré la perte ; commenter la chute de la trésorerie et la place de l'écart de conversion (4784) dans le TFT ; vérifier si les capitaux propres restent supérieurs à la moitié du capital (art. 371 AUSCGIE). Résultats attendus : résultat avant impôt -48 500 000 ; résultat fiscal -32 000 000 (pénalité et provisions de 16 500 000 réintégrées) ; IBP minimum 4 800 000 ; résultat net -53 300 000 ; CAFG 6 700 000 ; flux opérationnels -11 200 000 ; trésorerie au 31/12 (ZH) 66 300 000 ; capitaux propres 263 500 000.",
     ],
     complementsCorriges: {},
     lignes: CAS_MINOTERIE,

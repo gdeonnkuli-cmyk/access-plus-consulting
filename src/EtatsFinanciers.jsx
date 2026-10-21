@@ -763,7 +763,8 @@ function FiscTab({K,R,fisc,setF,canEdit,meta}){
     ["Résultat net comptable (XI)",R.N.cr.XI],["+ IBP comptabilisé (compte 89)",I.ibpCompta],["= Résultat comptable avant impôt",I.rai,1],
     ...I.reint.map(x=>[`+ ${x.lib||"Réintégration"}${x.auto?" (repris de la balance)":""}`,x.m]),
     ...I.deduc.map(x=>[`− ${x.lib||"Déduction"}`,-x.m]),
-    ["= Résultat fiscal avant imputation des déficits",I.avantDef,1],["− Déficits antérieurs imputés",-I.imput],["= RÉSULTAT FISCAL",I.rf,2],
+    ["= Résultat fiscal avant imputation des déficits",I.avantDef,1],[`− Déficits antérieurs imputés (plafond ${num(f.plafondDef)} % : ${fmt(I.plafondImput)}, art. 42)`,-I.imput],["= RÉSULTAT FISCAL",I.rf,2],
+    ...(I.defReport>0?[["Déficit restant reportable sur les exercices suivants",I.defReport]]:[]),
     [`IBP au taux de ${num(f.tauxIBP)} % du résultat fiscal`,I.ibpTheo],
     [I.sansCA?`Impôt forfaitaire sans chiffre d'affaires (${(CATEGORIES.find(c=>c[0]===f.categorie)||CATEGORIES[1])[1]})`:`Impôt minimum (${num(f.tauxMin)} % du chiffre d'affaires déclaré ${fmt(R.N.cr.XB)})`,I.minimum],
     [`= IBP DÛ${I.minApplique?(I.sansCA?" (impôt forfaitaire, art. 92)":` (impôt minimum, art. 92${I.enPerte?" : résultat déficitaire":" : IBP calculé inférieur au minimum"})`):" (taux de l'IBP)"}`,I.ibp,2],["− Acomptes provisionnels versés",-I.acomptes],[I.solde>=0?"= SOLDE D'IBP À PAYER":"= CRÉDIT D'IBP",I.solde,2],
@@ -775,10 +776,16 @@ function FiscTab({K,R,fisc,setF,canEdit,meta}){
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:10,alignItems:"start"}}>
       <div className="ef-noprint" style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px"}}>
         <div style={{fontWeight:700,color:K.t1,fontSize:13,marginBottom:3}}>Paramètres et retraitements extra-comptables</div>
-        <div style={{color:K.t3,fontSize:11,marginBottom:10,lineHeight:1.5}}>L'IBP dû est le plus élevé de l'IBP au taux légal sur le résultat fiscal et de l'impôt minimum de 1 % du chiffre d'affaires déclaré, applicable en cas de perte ou lorsque l'IBP calculé lui est inférieur (art. 92). Sans chiffre d'affaires, l'impôt forfaitaire de la catégorie s'applique. Les amendes et pénalités (647) sont réintégrées automatiquement.</div>
+        <div style={{color:K.t3,fontSize:11,marginBottom:10,lineHeight:1.5}}>L'IBP dû est le plus élevé de l'IBP au taux légal sur le résultat fiscal et de l'impôt minimum de 1 % du chiffre d'affaires déclaré, applicable en cas de perte ou lorsque l'IBP calculé lui est inférieur (art. 92). Sans chiffre d'affaires, l'impôt forfaitaire de la catégorie s'applique. Les dotations aux provisions et dépréciations sont réintégrées et leurs reprises déduites automatiquement (art. 46-6°) ; l'imputation des déficits antérieurs est plafonnée à 60 % du bénéfice fiscal (art. 42). Les amendes et pénalités (647) sont réintégrées automatiquement.</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 8px"}}>
           <Field K={K} lb="Taux IBP (%)"><NumCellBox K={K} value={f.tauxIBP} dis={!canEdit} onChange={v=>setF({...f,tauxIBP:v})}/></Field>
           <Field K={K} lb="Minimum (% du CA)"><NumCellBox K={K} value={f.tauxMin} dis={!canEdit} onChange={v=>setF({...f,tauxMin:v})}/></Field>
+          <Field K={K} lb="Plafond d'imputation des déficits (%)"><NumCellBox K={K} value={f.plafondDef} dis={!canEdit} onChange={v=>setF({...f,plafondDef:v})}/></Field>
+          <div/>
+          <label style={{gridColumn:"1 / -1",display:"flex",alignItems:"flex-start",gap:8,fontSize:12,color:K.t2,marginBottom:12,cursor:canEdit?"pointer":"default",lineHeight:1.45}}>
+            <input type="checkbox" disabled={!canEdit} checked={!!f.provAdmises} onChange={e=>setF({...f,provAdmises:e.target.checked})} style={{marginTop:2}}/>
+            <span>Provisions admises en déduction : établissement de crédit (créances douteuses) ou entreprise minière (art. 46-6°). Décochée, les dotations sont réintégrées.</span>
+          </label>
           <div style={{gridColumn:"1 / -1"}}><Field K={K} lb="Catégorie (impôt forfaitaire si aucun chiffre d'affaires)"><select disabled={!canEdit} style={fieldSt(K)} value={f.categorie} onChange={e=>setF({...f,categorie:e.target.value})}>{CATEGORIES.map(([k,l])=><option key={k} value={k}>{l} — {fmt(FORFAIT_SANS_CA[k])} FC</option>)}</select></Field></div>
           <Field K={K} lb="Déficits antérieurs reportables"><NumCellBox K={K} value={f.deficits} dis={!canEdit} onChange={v=>setF({...f,deficits:v})}/></Field>
           <Field K={K} lb="Acomptes provisionnels versés"><NumCellBox K={K} value={f.acomptes} dis={!canEdit} onChange={v=>setF({...f,acomptes:v})}/></Field>

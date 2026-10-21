@@ -4,6 +4,7 @@ import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut
 import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,orderBy,limit,deleteField,writeBatch}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
 import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
+import CodeImpots from"./fiscal/CodeImpots";
 import{htmlCodeAcces,htmlNotification}from"./emails";
 import{PROVINCES}from"./ef/rdc";
 import LOGO from"./assets/logo.png";
@@ -90,7 +91,7 @@ const CARD_PALETTES={
     {bg:"#F5F0FF",bd:"#D0C0F0",ac:"#6040A0"},
   ],
 };
-const TILE_COLORS={modules:["#1E4FA3","#4F7FD6"],qcm:["#4F46E5","#8B7CF6"],pres:["#D97706","#F5B342"],stages:["#0D7A6B","#19B39B"],videos:["#C2410C","#F2733F"],ef:["#1D4ED8","#4F8DF7"]};
+const TILE_COLORS={modules:["#1E4FA3","#4F7FD6"],qcm:["#4F46E5","#8B7CF6"],pres:["#D97706","#F5B342"],stages:["#0D7A6B","#19B39B"],videos:["#C2410C","#F2733F"],ef:["#1D4ED8","#4F8DF7"],fisc:["#A3122A","#E0475F"]};
 const getCardPalette=(tid,idx)=>{const p=CARD_PALETTES[tid]||CARD_PALETTES.dark;return p[idx%p.length];};
 const bK=id=>{const t=TH[id]||TH.eco;const sombre=["dark","blue","green","purple"].includes(id);return{sh:sombre?"0 8px 22px rgba(0,0,0,.28)":"0 1px 2px rgba(10,42,92,.04),0 8px 22px rgba(10,42,92,.07)",bg:t.bg,card:t.ca,c2:t.c2,b0:t.b0,b1:t.b1,t1:t.t1,t2:t.t2,t3:t.t3,...ACC,...(sombre?ACC_SOMBRE:{})};};
 const Ctx=createContext({K:bK("dark"),tid:"dark",setT:()=>{}});
@@ -1672,6 +1673,7 @@ function FA({uid,onOut}){
     {k:"fmsg",ico:"message-circle",label:"Messages",badge:unreadMsgFA},
     {k:"stats",ico:"chart-bar",label:"Statistiques"},
     {k:"ef",ico:"report-money",label:"États financiers"},
+    {k:"fisc",ico:"receipt-tax",label:"Code des impôts"},
   ];
 
   const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
@@ -1699,6 +1701,7 @@ function FA({uid,onOut}){
         {ico:"checkbox",col:"#DC2626",label:"Corrections",desc:nUngraded?`${nUngraded} copie${nUngraded>1?"s":""} à corriger`:"Aucune copie en attente",badge:nUngraded,on:()=>sV("corr")},
         {ico:"message-circle",col:"#0D7A6B",label:"Messages",desc:unreadMsgFA?`${unreadMsgFA} non lu${unreadMsgFA>1?"s":""}`:"Échanges avec vos apprenants",badge:unreadMsgFA,on:()=>sV("fmsg")},
         {ico:"report-money",col:"#1D4ED8",label:"États financiers",desc:"Atelier SYSCOHADA et suivi des dossiers",on:()=>sV("ef")},
+        {ico:"receipt-tax",col:"#A3122A",label:"Code des impôts",desc:"9 modules expliqués, schémas et QCM",on:()=>sV("fisc")},
       ].map((t,i)=><ActionTile key={t.label} {...t} i={i}/>)}
     </div>
 
@@ -1749,6 +1752,7 @@ function FA({uid,onOut}){
   if(vue==="fmsg")return W(<FAMessages msgs={myMsgsFA} uid={uid} fNom={fData.nom}/>);
   if(vue==="param")return W(<ParametresPage role="formateur" uid={uid} data={fData} onOut={onOut}/>);
   if(vue==="ef")return W(<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:fData.nom,mail:fData.mail,role:"formateur"}}/>);
+  if(vue==="fisc")return W(<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={fData.scores||{}} ok/>);
 
   return W(<div/>);
 }
@@ -2775,7 +2779,7 @@ function Auth({onL}){
 function UA({uid,onOut}){
   const K=useK();const{mob}=useW();
   // Vue initiale : raccourcis de l'application installée (?vue=ef, ?vue=pres…)
-  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","psycho","services","prog","res","param"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
+  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","fisc","psycho","services","prog","res","param"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
   const[uData,sUD]=useState(null),[pdfs,sPdfs]=useState({});
   const[showOnboarding,sShowOnboarding]=useState(false);
   const{mods,loading:mL}=useModules();
@@ -2820,7 +2824,7 @@ function UA({uid,onOut}){
   if(openQuiz)return W(<OpenQuiz mod={openQuiz} uid={uid} uNom={uData.nom} onDone={()=>{sOpenQuiz(null);sM(null);sV("res");}} onBack={()=>sOpenQuiz(null)}/>,true);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onOpenQ={()=>sOpenQuiz(mod)} onMarkDone={()=>markDoneNoEval(mod.id)} doneNoEval={pr[mod.id]==="done"} openAnswer={myOpenAnswers.find(a=>a.modId===mod.id)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]} uid={uid} uNom={uData.nom}/>,true);
   return W(<>
-    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} live={live} presCount={allPres.length} uid={uid}/>}
+    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} live={live} presCount={allPres.length} uid={uid}/>}
     {vue==="videos"&&<VidsPage ok={ok} onSub={()=>sSub(true)} vids={vids} live={live}/>}
     {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres.filter(p=>p.on!==false)}/>
     }{vue==="stages"&&<StagePage stages={allStages} plats={allPlats} ok={ok}/>
@@ -2830,6 +2834,7 @@ function UA({uid,onOut}){
     {vue==="psycho"&&<PsychoPage uid={uid} u={uData}/>}
     {vue==="param"&&<ParametresPage role="apprenant" uid={uid} data={uData} onOut={onOut}/>}
     {vue==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)}/>}
+    {vue==="fisc"&&<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="msg"&&<MessagerieApprenant uid={uid} uNom={uData.nom}/>}
   </>);
 }
@@ -3305,6 +3310,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     {k:"stages", ico:"briefcase",     label:"Stages"},
     {k:"videos", ico:"video",         label:"Vidéos", live:true},
     {k:"ef",     ico:"report-money",  label:"États fin."},
+    {k:"fisc",   ico:"receipt-tax",   label:"Impôts"},
     {k:"psycho", ico:"brain",         label:"Psycho"},
     {k:"services",ico:"building",     label:"Services"},
     {k:"prog",   ico:"chart-line",    label:"Progrès"},
@@ -3401,7 +3407,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
   </nav>;
 }
 
-function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onEf,live,presCount=0,uid}){
+function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onEf,onFisc,live,presCount=0,uid}){
   const K=useK();const{mob}=useW();const jr=jR(u.dateExpiration);
   const{tid}=useContext(Ctx);
   const[pdfMod,setPdfMod]=useState(null);
@@ -3449,6 +3455,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
     {key:"pres",ico:"presentation",label:"Présentations",desc:`${presCount||0} support${presCount>1?"s":""} de cours`,action:onPres},
     {key:"stages",ico:"briefcase",label:"Stages",desc:"Expériences virtuelles",action:onStages},{key:"videos",ico:"video",label:"Vidéos",desc:`${vids.length} vidéos disponibles`,action:onVid},
     ...(onEf?[{key:"ef",ico:"report-money",label:"États financiers",desc:"Atelier SYSCOHADA : Bilan, CR, TFT, notes",action:onEf}]:[]),
+    ...(onFisc?[{key:"fisc",ico:"receipt-tax",label:"Code des impôts",desc:"9 modules RDC : IBP, IPR, TVA… schémas et QCM",action:onFisc}]:[]),
   ];
 
   return <div style={{animation:"up .3s ease"}}>
@@ -4457,6 +4464,7 @@ function AA({onOut}){
           {k:"au", ico:"ti-shield-check",     label:"Audit",       bc:K.in_},
           {k:"pl", ico:"ti-calendar-check",   label:"Présentiel",  bc:K.em},
           {k:"ef", ico:"ti-report-money",     label:"États fin."},
+          {k:"fisc", ico:"ti-receipt-tax",    label:"Impôts"},
           {k:"msg", ico:"ti-message-circle",  label:"Messages",   badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, bc:K.rd},
     ];
   return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
@@ -4488,6 +4496,7 @@ function AA({onOut}){
           {k:"au",ico:"shield-check",   label:"Audit",          col:"#011B33"},
           {k:"pl",ico:"calendar-check", label:"Présentiel",     col:"#0A2A5C"},
           {k:"ef",ico:"report-money",   label:"États financiers",col:"#1D4ED8"},
+          {k:"fisc",ico:"receipt-tax",  label:"Code des impôts",col:"#A3122A"},
           {k:"msg",ico:"message-circle",label:"Messages",       badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, col:"#BE123C"},
         ];
         // ── Calcul des indicateurs ──
@@ -5214,6 +5223,7 @@ function AA({onOut}){
       }} full/>
     </Sheet>}
     {tab==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid:auth.currentUser?.uid,nom:"Administrateur",mail:ADM_EMAIL,role:"admin"}}/>}
+    {tab==="fisc"&&<CodeImpots K={K} mob={mob} db={db} ok/>}
     {tab==="pl"&&(()=>{
       const apprs=users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL);
       const day=plAll.find(p=>p.id===plDate);
