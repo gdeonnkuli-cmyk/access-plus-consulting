@@ -42,6 +42,14 @@ service cloud.firestore {
         && !("role" in nouveau())
         && !("formateurCode" in nouveau());
     }
+    // Préférences personnelles (page Paramètres)
+    function preferencesValides() {
+      let p = nouveau().get("preferences", {});
+      return p is map && p.keys().hasOnly(["delaiDeco", "taille", "notifEmails"])
+        && (!("delaiDeco" in p) || p.delaiDeco in [10, 20, 30, 60])
+        && (!("taille" in p) || p.taille in ["normale", "grande", "tres"])
+        && (!("notifEmails" in p) || p.notifEmails is bool);
+    }
     match /users/{uid} {
       allow read: if moi(uid) || estStaff();
       allow create: if estAdmin() || (moi(uid) && inscriptionValide());
@@ -51,8 +59,9 @@ service cloud.firestore {
         // modifications par l'utilisateur lui-même
         || (moi(uid)
             && champsModifies().hasOnly(["nom", "lastLogin", "onboardingDone", "progress", "scores", "abonnement", "demandeDate",
-                                         "codeValide", "role", "formateurCodeValide", "consentDate", "consentVersion"])
-            && abonnementAutorise() && roleAutorise());
+                                         "codeValide", "role", "formateurCodeValide", "consentDate", "consentVersion",
+                                         "tel", "province", "ville", "preferences"])
+            && abonnementAutorise() && roleAutorise() && preferencesValides());
       allow delete: if estAdmin();
     }
 
@@ -171,9 +180,10 @@ service cloud.firestore {
         || (nouveau().role == "admin" && estAdmin());
     }
     match /activite/{uid} {
-      allow read: if estAdmin();
+      allow read: if estAdmin() || moi(uid);
       allow create, update: if moi(uid)
-        && nouveau().keys().hasOnly(["uid", "nom", "mail", "role", "vue", "appareil", "enLigne", "lastSeen"])
+        && nouveau().keys().hasOnly(["uid", "nom", "mail", "role", "vue", "appareil", "enLigne", "lastSeen", "recents"])
+        && nouveau().get("recents", []) is list && nouveau().get("recents", []).size() <= 10
         && nouveau().uid == uid
         && nouveau().lastSeen == request.time
         && roleDeclareValide();
