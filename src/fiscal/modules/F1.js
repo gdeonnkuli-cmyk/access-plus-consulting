@@ -172,7 +172,7 @@ export default {
     {
       type: "maj",
       texte:
-        "Les chiffres de ce module viennent du Code des impôts, édition mise à jour au 15 juillet 2017 (IRL 22 %, IM 20 %, TVA 16 %, seuil de 80 000 000 FC, forfait micro de 50 000 FC, IERE 25 %, amendes). Seul le taux de l'IBP est donné ici à 30 %, valeur validée par l'expert : l'édition 2017 indique 35 % (art. 83). Vérifiez toujours la dernière loi de finances. Notez aussi que l'impôt foncier, l'impôt sur les véhicules et l'IRL relèvent probablement aujourd'hui des provinces (O.-L. n° 13/001) : le texte de 2017 ne le dit pas, c'est à vérifier.",
+        "Les chiffres de ce module viennent du Code des impôts, édition mise à jour au 15 juillet 2017 (IRL 22 %, IM 20 %, TVA 16 %, seuil de 80 000 000 FC, forfait micro de 50 000 FC, IERE 25 %, amendes). Seul le taux de l'IBP est donné ici à 30 %, taux en vigueur retenu par Éco-Campus : l'édition 2017 indique 35 % (art. 83). Vérifiez toujours la dernière loi de finances. Notez aussi que l'impôt foncier, l'impôt sur les véhicules et l'IRL relèvent probablement aujourd'hui des provinces (O.-L. n° 13/001) : le texte de 2017 ne le dit pas, c'est à vérifier.",
     },
     {
       type: "articles",

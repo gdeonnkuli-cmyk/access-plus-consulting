@@ -68,8 +68,8 @@ export default {
         "Les documents sont **certifiés exacts**, contresignés par le conseil ou le comptable et présentés dans la langue officielle (art. 13-14) ; un relevé des ventes de l'année aux commerçants ou fabricants est joint.",
         "**Factures** : une facture pour chaque transaction ; les doubles sont classés dans l'ordre de comptabilisation et conservés selon la législation commerciale (art. 23-24).",
         "**Livres TVA** : livre-journal, grand livre, balance, journaux des ventes et des achats, livre d'inventaire et des immobilisations, tenus en RDC (art. 57 O.-L. n° 10/001).",
-        "**Prix de transfert** : la filiale congolaise d'un groupe étranger tient à la disposition de l'Administration une **documentation** justifiant sa politique de prix (art. 24 bis). Le seuil de chiffre d'affaires est renvoyé au règlement.",
-        "**Déclaration allégée** (art. 24 ter) : dans les 6 mois après l'échéance de l'IBP, elle décrit le groupe, ses actifs incorporels, les transactions avec les entreprises associées et la méthode de prix retenue (pleine concurrence).",
+        "**Prix de transfert** : la filiale congolaise d'un groupe étranger tient à la disposition de l'Administration une **documentation** justifiant sa politique de prix ; seuil fixé par règlement (art. 24 bis).",
+        "**Déclaration allégée** (art. 24 ter) : dans les 6 mois après l'échéance de l'IBP ; elle décrit le groupe, ses actifs incorporels, les transactions avec les sociétés liées et la méthode de prix (pleine concurrence).",
         "En cas de redressement de prix de transfert, l'Administration applique la méthode « la plus appropriée » ; si le contribuable conteste, **la charge de la preuve lui incombe** (art. 41 ter).",
       ],
     },
@@ -107,7 +107,7 @@ export default {
         "Lorsque l'entreprise a déclaré et tient une comptabilité probante, l'Administration doit suivre la **procédure contradictoire** : elle notifie, l'entreprise répond, et la **preuve incombe à l'Administration** (art. 36). La **taxation d'office** est une procédure de sanction réservée à des cas précis.",
       ],
       puces: [
-        "**Cas de taxation d'office** (art. 41) : absence de déclaration ; absence de comptabilité ; défaut de remise des pièces, des renseignements ou de réponse dans les délais ; rejet d'une comptabilité irrégulière ; opposition au contrôle fiscal.",
+        "**Cas de taxation d'office** (art. 41) : pas de déclaration ; pas de comptabilité ; pièces, renseignements ou réponses non fournis dans les délais ; comptabilité rejetée comme irrégulière ; opposition au contrôle.",
         "**Évaluation** : d'après les signes d'aisance ou par comparaison avec les bénéfices d'entreprises similaires (capital, chiffre d'affaires, personnel…), sauf preuve contraire (art. 41 bis).",
         "**Conséquences** : avis de taxation d'office sans délai de 20 jours ; réclamation possible après l'AMR, mais **la preuve incombe au contribuable** (art. 42) ; pas de sursis de paiement (art. 110).",
         "**Abus de droit** : un acte qui dissimule la réalisation ou le transfert d'un élément imposable est inopposable ; l'Administration lui restitue son véritable caractère (art. 40).",
@@ -168,7 +168,7 @@ export default {
     {
       type: "maj",
       texte:
-        "Les délais et montants de ce module proviennent de l'édition du Code des impôts à jour au **15 juillet 2017** ; vérifiez la dernière loi de finances (télédéclaration, échéances, amendes). Le taux d'IBP utilisé dans l'exemple est de **30 %**, valeur validée par l'expert-comptable : l'édition 2017 indiquait encore 35 % (art. 83 O.-L. n° 69/009). Les seuils de la documentation sur les prix de transfert (art. 24 bis et 24 ter) ne sont pas chiffrés dans le Code de 2017 et ont probablement été précisés depuis. Enfin, la loi ne fixe ni durée maximale de vérification ni délai de réponse de l'Administration aux observations : à surveiller dans les textes récents.",
+        "Les délais et montants de ce module proviennent de l'édition du Code des impôts à jour au **15 juillet 2017** ; vérifiez la dernière loi de finances (télédéclaration, échéances, amendes). Le taux d'IBP utilisé dans l'exemple est de **30 %**, taux en vigueur retenu par Éco-Campus : l'édition 2017 indiquait encore 35 % (art. 83 O.-L. n° 69/009). Les seuils de la documentation sur les prix de transfert (art. 24 bis et 24 ter) ne sont pas chiffrés dans le Code de 2017 et ont probablement été précisés depuis. Enfin, la loi ne fixe ni durée maximale de vérification ni délai de réponse de l'Administration aux observations : à surveiller dans les textes récents.",
     },
     {
       type: "articles",

@@ -74,7 +74,7 @@ export default {
         "**Intérêts** d'emprunts auprès de tiers (43-4°). Les associés d'une société autre que par actions ne sont pas des tiers.",
         "**Commissions et honoraires** : déductibles seulement si l'on indique le nom et le domicile exacts du bénéficiaire ; sinon ils sont ajoutés au bénéfice (43-5°).",
         "**Amortissements** des immobilisations, et **impôt réel** de caractère d'exploitation payé dans le délai (43-7° et 8°).",
-        "**Restrictions** (art. 43 bis A à C) : services intragroupe facturés de l'étranger (triple condition : service réel, impossible à rendre en RDC, prix de pleine concurrence) ; paiements vers un paradis fiscal ; intérêts à des associés étrangers.",
+        "**Restrictions** (art. 43 bis A à C) : services intragroupe de l'étranger (service réel, impossible à rendre en RDC, prix de pleine concurrence) ; paiements vers un paradis fiscal ; intérêts aux associés étrangers.",
       ],
     },
     {
@@ -85,7 +85,7 @@ export default {
       ],
       puces: [
         "**Linéaire** (régime par défaut) : annuité constante. La première annuité est réduite au prorata à partir du 1er jour du mois de mise en service.",
-        "**Dégressif** (sur option) : réservé aux biens **neufs** éligibles (matériel industriel, de manutention, machines agricoles…), hors véhicules de tourisme et incorporels. Taux linéaire × 2, 2,5 ou 3, appliqué à la valeur résiduelle.",
+        "**Dégressif** (sur option) : biens **neufs** éligibles (matériel industriel, de manutention, machines agricoles…), hors véhicules de tourisme et incorporels. Taux linéaire × 2, 2,5 ou 3, sur la valeur résiduelle.",
         "**Exceptionnel** : entreprises industrielles dont le prorata d'exportation atteint au moins **20 %** ; 1re annuité de **60 %** du prix de revient, sans prorata, puis dégressif.",
         "L'option pour le dégressif ou l'exceptionnel est notifiée avec la déclaration et elle est **irrévocable** (art. 43 ter M).",
         "Le petit matériel et le matériel de bureau sous un seuil fixé par arrêté sont déductibles en totalité l'année d'achat.",
@@ -207,7 +207,7 @@ export default {
     {
       type: "maj",
       texte:
-        "Taux de l'IBP : l'édition 2017 du Code fixe le taux à **35 %** (art. 83 O.-L. n° 69/009). Le taux appliqué dans ce module est de **30 %**, valeur validée par l'expert-comptable.",
+        "Taux de l'IBP : l'édition 2017 du Code fixe le taux à **35 %** (art. 83 O.-L. n° 69/009). Le taux appliqué dans ce module est de **30 %**, taux en vigueur retenu par Éco-Campus.",
     },
     {
       type: "maj",
@@ -236,7 +236,7 @@ export default {
       q: "Quel taux d'IBP applique-t-on dans ce module aux bénéfices d'une société de droit commun ?",
       r: ["35 %", "30 %", "25 %", "40 %"],
       b: 1,
-      e: "Le taux validé par l'expert est de 30 %. L'édition 2017 du Code indiquait 35 % : il faut toujours vérifier la dernière loi de finances.",
+      e: "Le taux en vigueur est de 30 %. L'édition 2017 du Code indiquait 35 % : il faut toujours vérifier la dernière loi de finances.",
       art: "art. 83 O.-L. n° 69/009",
     },
     {

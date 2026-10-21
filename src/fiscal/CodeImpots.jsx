@@ -69,7 +69,8 @@ function Tableau({K,col,entetes,lignes}){
     </table>
   </div>;
 }
-const impotBareme=(tranches,r)=>tranches.reduce((s,t)=>{const haut=t.a==null?Infinity:t.a;const base=Math.max(0,Math.min(r,haut)-t.de);return s+base*t.taux/100;},0);
+// Chaque tranche commence là où finit la précédente (les bornes du texte sont des francs entiers)
+const impotBareme=(tranches,r)=>tranches.reduce((s,t,i)=>{const bas=i?tranches[i-1].a:t.de,haut=t.a==null?Infinity:t.a;return s+Math.max(0,Math.min(r,haut)-bas)*t.taux/100;},0);
 function Bareme({K,col,tranches}){
   const max=Math.max(...tranches.map(t=>t.taux),1);
   const[rev,sRev]=useState("");
@@ -131,7 +132,7 @@ function Bloc({K,b,col}){
     <Titre K={K} ico="bolt" col={col}>L'essentiel en 30 secondes</Titre>
     <div style={{fontSize:15,color:K.t1,lineHeight:1.7}}><T t={b.texte}/></div></div>;
   if(b.type==="texte")return <Carte K={K}>
-    {b.titre&&<Titre K={K} ico="point-filled" col={col}>{b.titre}</Titre>}
+    {b.titre&&<Titre K={K} ico="circle-dot" col={col}>{b.titre}</Titre>}
     {(b.p||[]).map((p,i)=><p key={i} style={{fontSize:14.5,color:K.t2,lineHeight:1.7,marginBottom:8}}><T t={p}/></p>)}
     {b.puces?.length>0&&<ul style={{margin:0,paddingLeft:0,listStyle:"none"}}>{b.puces.map((x,i)=><li key={i} style={{display:"flex",gap:8,fontSize:14.5,color:K.t2,lineHeight:1.6,marginBottom:6}}>
       <i className="ti ti-check" style={{color:col,fontSize:15,marginTop:3,flexShrink:0}}/><span><T t={x}/></span></li>)}</ul>}
