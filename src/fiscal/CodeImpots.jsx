@@ -3,9 +3,10 @@ import{doc,updateDoc}from"firebase/firestore";
 import{MODULES_FISC}from"./modules";
 import{tirerSerie,lireSerie,ecrireSerie}from"./tirage";
 import{calculPaie,INPP}from"./paie";
+import{liquidationTVA}from"./tva";
 
 // ══════════════════ CODE DES IMPÔTS RDC EXPLIQUÉ ══════════════════
-// 11 modules (src/fiscal/modules : Code des impôts mis à jour au 31 mars 2021, import-export et paie) : leçon structurée en blocs,
+// 12 modules (src/fiscal/modules : Code des impôts mis à jour au 31 mars 2021, TVA pratique, import-export et paie) : leçon structurée en blocs,
 // schémas dessinés et QCM (banque de 15 questions, séries de 10).
 // Score enregistré dans users/{uid}.scores["FISC-F2"] = { s, t, pct, date } (meilleur score conservé).
 // QCM : chaque tentative tire 10 questions dans la banque du module (15), dont au moins 30 % de nouvelles
@@ -171,7 +172,35 @@ function Paie({K,col,defaut={}}){
     </div>
   </div>;
 }
-const SCHEMAS={flux:Flux,chronologie:Chronologie,arbre:Arbre,tableau:Tableau,bareme:Bareme,chaine:Chaine,cartes:Cartes,paie:Paie};
+// Simulateur de déclaration mensuelle de TVA (module F12) : calcul dans tva.js
+const CHAMPS_TVA=[["ventes","Ventes de biens livrées (HT)"],["services","Services encaissés (HT)"],["exportations","Exportations (FOB, 0 %)"],["exonerees","Recettes exonérées"],
+  ["achats","Achats et services déductibles (HT)"],["immobilisations","Immobilisations (HT)"],["carburant","Carburant (HT, 50 %)"],["exclus","Dépenses exclues ou payées en espèces (HT)"],
+  ["douane","TVA payée en douane"],["credit","Crédit du mois précédent"]];
+function Tva({K,col,defaut={}}){
+  const[v,sV]=useState(Object.fromEntries(CHAMPS_TVA.map(([k])=>[k,defaut[k]?fmt(defaut[k]):""])));
+  const n=k=>Number(String(v[k]).replace(/[^\d]/g,""))||0;
+  const r=liquidationTVA(Object.fromEntries(CHAMPS_TVA.map(([k])=>[k,n(k)])));
+  const champ={width:"100%",boxSizing:"border-box",background:K.card,border:`1px solid ${K.b1}`,borderRadius:9,padding:"9px 11px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif"};
+  const ch=(k,l)=><label key={k} style={{display:"block"}}><div style={{fontSize:12,fontWeight:700,color:K.t2,marginBottom:4}}>{l}</div>
+    <input value={v[k]} onChange={e=>sV({...v,[k]:e.target.value})} onBlur={()=>sV(x=>({...x,[k]:n(k)?fmt(n(k)):""}))} inputMode="numeric" placeholder="0" style={champ}/></label>;
+  const L=({l,x,fort,c})=><div style={{display:"flex",justifyContent:"space-between",gap:10,padding:"5px 0",borderTop:`1px solid ${K.b0}`,fontSize:13.5,fontWeight:fort?900:500,color:c||(fort?K.t1:K.t2)}}><span>{l}</span><span style={{whiteSpace:"nowrap"}}>{fmtFC(x)}</span></div>;
+  return <div>
+    <div style={{fontSize:12.5,fontWeight:800,color:K.t1,margin:"0 0 6px"}}>Opérations du mois</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:12}}>{CHAMPS_TVA.map(([k,l])=>ch(k,l))}</div>
+    <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:12,padding:"10px 12px"}}>
+      <div style={{fontSize:12.5,fontWeight:800,color:K.t1,marginBottom:4}}><i className="ti ti-file-text" style={{marginRight:5,color:col}}/>Déclaration du mois</div>
+      <L l="TVA collectée (16 %)" x={r.collectee}/>
+      <L l="TVA déductible avant prorata" x={r.brute}/>
+      {r.prorata<100&&<div style={{fontSize:12.5,color:K.t3,padding:"3px 0"}}>Prorata de déduction : <b style={{color:K.t1}}>{r.prorata} %</b> (arrondi à l'unité supérieure)</div>}
+      <L l="− TVA déductible retenue" x={-r.deductible}/>
+      {n("credit")>0&&<L l="− Crédit du mois précédent" x={-n("credit")}/>}
+      {r.aPayer>0?<L l="TVA à payer (arrondie à la centaine)" x={r.aPayer} fort c={col}/>:<L l="Crédit de TVA à reporter" x={r.creditReporte} fort c={K.em}/>}
+      {r.remboursable>0&&<div style={{fontSize:12.5,color:K.t2,marginTop:4,lineHeight:1.5}}>Exportateur : remboursement demandable jusqu'à <b>{fmtFC(r.remboursable)}</b> (16 % des exportations du mois), le reste est reporté.</div>}
+      {r.perdue>0&&<div style={{fontSize:11.5,color:K.t3,marginTop:6,lineHeight:1.45}}>TVA non récupérable ce mois-ci : {fmtFC(r.perdue)}, à laisser dans le coût des charges.</div>}
+    </div>
+  </div>;
+}
+const SCHEMAS={flux:Flux,chronologie:Chronologie,arbre:Arbre,tableau:Tableau,bareme:Bareme,chaine:Chaine,cartes:Cartes,paie:Paie,tva:Tva};
 
 // ── Blocs de leçon ──────────────────────────────────────────────────────────────
 function Bloc({K,b,col}){
@@ -306,7 +335,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
       <i className="ti ti-receipt-tax" style={{position:"absolute",right:-10,bottom:-22,fontSize:150,opacity:.1}}/>
       <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Fiscalité · République démocratique du Congo</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Le Code des impôts expliqué</div>
-      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>11 modules clairs (fiscalité, paie et import-export), avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts de la DGI mis à jour au 31 mars 2021 et, pour la paie, des textes sociaux en vigueur en 2026.</div>
+      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>12 modules clairs (fiscalité, TVA pratique, paie et import-export), avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts de la DGI mis à jour au 31 mars 2021 et, pour la paie, des textes sociaux en vigueur en 2026.</div>
       <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
         <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>{valides} / {MODULES_FISC.length} modules validés</span>
         {moy!=null&&<span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>Score moyen : {moy} %</span>}
