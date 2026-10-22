@@ -1371,11 +1371,12 @@ function StaffNav({role,nom,onOut,tabs,active,onTab,extra,onProfil}){
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,minHeight:mob?54:60,padding:mob?"6px 12px":"6px 20px"}}>
       <div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}>
         <Logo sm={mob}/>
-        <span style={{display:"inline-flex",alignItems:"center",gap:5,background:`linear-gradient(135deg,${c1},${c2})`,color:"#fff",borderRadius:99,padding:mob?"3px 9px":"4px 11px",fontSize:11,fontWeight:800,letterSpacing:.6,boxShadow:`0 4px 12px ${c2}40`,flexShrink:0}}>
-          <i className={`ti ti-${role==="admin"?"shield-check":"school"}`} style={{fontSize:13}}/>{role==="admin"?"ADMIN":"FORMATEUR"}
+        {/* Sur téléphone, badge réduit à l'icône : la place sert à la cloche et au profil */}
+        <span title={role==="admin"?"Administrateur":"Formateur"} style={{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,background:`linear-gradient(135deg,${c1},${c2})`,color:"#fff",borderRadius:99,padding:mob?0:"4px 11px",width:mob?26:"auto",height:mob?26:"auto",fontSize:11,fontWeight:800,letterSpacing:.6,boxShadow:`0 4px 12px ${c2}40`,flexShrink:0}}>
+          <i className={`ti ti-${role==="admin"?"shield-check":"school"}`} style={{fontSize:13}}/>{!mob&&(role==="admin"?"ADMIN":"FORMATEUR")}
         </span>
       </div>
-      <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+      <div style={{display:"flex",alignItems:"center",gap:mob?6:8,flexShrink:0}}>
         {extra}
         <div style={{display:"flex",alignItems:"center",gap:7,padding:"3px 4px 3px 3px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:99}}>
           <div onClick={onProfil} title="Paramètres" className="bt" style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer"}}>
