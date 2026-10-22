@@ -15,7 +15,7 @@ export const OFFRES = [
 ];
 export const INCLUS = [
   "Tous les modules SYSCOHADA, QCM et exercices corrigés",
-  "Le Code des impôts et la paie : 11 modules avec QCM",
+  "Le Code des impôts, la TVA et la paie : 12 modules avec QCM",
   "L'atelier États financiers et ses cas pratiques",
   "Vidéos, cours en direct, présentations et PDF",
   "Les nouveaux contenus, ajoutés régulièrement",
