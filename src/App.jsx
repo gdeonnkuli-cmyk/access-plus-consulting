@@ -11,6 +11,7 @@ import AdminNotif from"./notif/AdminNotif";
 import{Suggestions,AdminSuggestions}from"./notif/Suggestions";
 import PourVous from"./notif/Recommandations";
 import Apropos from"./notif/Apropos";
+import MessageDuMoment,{ReglageMarketing,AdminMarketing}from"./notif/MessageDuMoment";
 import{DUR,OFFRES,INCLUS,offresAvecPrix,parMois,fUSD,numerosRenseignes,usePaiement,utiliserCodeOffert}from"./acces/acces";
 import AdminAcces from"./acces/AdminAcces";
 import{pushPossible,pushActif,activerPush,desactiverPush}from"./notif/push";
@@ -1610,6 +1611,7 @@ function ParametresPage({role,uid,data,onOut,onGo}){
 
     <ParamCarte ico="bell" col="#C98A1B" titre="Notifications">
       <ReglagePush uid={uid} role={role}/>
+      {role==="apprenant"&&<ReglageMarketing K={K} Interrupteur={Interrupteur}/>}
       <Interrupteur on={prefs.notifEmails!==false} set={v=>majPrefs({notifEmails:v})} lib="Copie par e-mail" sous="Messages de l'équipe, corrections et réponses à vos suggestions. Les e-mails importants (code d'accès, sécurité du compte) sont toujours envoyés."/>
     </ParamCarte>
 
@@ -2892,7 +2894,7 @@ function UA({uid,onOut}){
   if(openQuiz)return W(<OpenQuiz mod={openQuiz} uid={uid} uNom={uData.nom} onDone={()=>{sOpenQuiz(null);sM(null);sV("res");}} onBack={()=>sOpenQuiz(null)}/>,true);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onOpenQ={()=>sOpenQuiz(mod)} onMarkDone={()=>markDoneNoEval(mod.id)} doneNoEval={pr[mod.id]==="done"} openAnswer={myOpenAnswers.find(a=>a.modId===mod.id)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]} uid={uid} uNom={uData.nom}/>,true);
   return W(<>
-    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} live={live} presCount={allPres.length} uid={uid}/>}
+    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} live={live} presCount={allPres.length} uid={uid} onGo={sV}/>}
     {vue==="videos"&&<VidsPage ok={ok} onSub={()=>sSub(true)} vids={vids} live={live}/>}
     {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres.filter(p=>p.on!==false)}/>
     }{vue==="stages"&&<StagePage stages={allStages} plats={allPlats} ok={ok}/>
@@ -3386,7 +3388,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
             ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"3px 9px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:11,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ Actif":"✓ Actif"}</span></div>
             :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:12,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>Accéder</button>
           }
-          <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} mob onGo={v=>sV(NAV_ITEMS.some(n=>n.k===v)||v==="param"?v:"home")} taille={28}/>
+          <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} mob onGo={v=>v==="acces"?onSub&&onSub():sV(NAV_ITEMS.some(n=>n.k===v)||["param","sugg","apropos"].includes(v)?v:"home")} taille={28}/>
           <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:28,height:28,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
             <i className="ti ti-key" style={{fontSize:14,color:K.t2}}/>
           </button>
@@ -3454,7 +3456,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
         ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 11px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:12,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ À vie":"✓ Actif"}</span></div>
         :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>Obtenir l'accès</button>
       }
-      <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} onGo={v=>sV(NAV_ITEMS.some(n=>n.k===v)||v==="param"?v:"home")} taille={32}/>
+      <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} onGo={v=>v==="acces"?onSub&&onSub():sV(NAV_ITEMS.some(n=>n.k===v)||["param","sugg","apropos"].includes(v)?v:"home")} taille={32}/>
       <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:32,height:32,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
         <i className="ti ti-key" style={{fontSize:15,color:K.t2}}/>
       </button>
@@ -3468,7 +3470,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
   </nav>;
 }
 
-function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onEf,onFisc,live,presCount=0,uid}){
+function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onEf,onFisc,live,presCount=0,uid,onGo}){
   const K=useK();const{mob}=useW();const jr=jR(u.dateExpiration);
   const{tid}=useContext(Ctx);
   const[pdfMod,setPdfMod]=useState(null);
@@ -3551,6 +3553,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
     {live.on&&<div onClick={onVid} className="hv" style={{background:`linear-gradient(135deg,${K.rdBg},${K.c2})`,border:`1px solid ${K.rdBd}`,borderRadius:13,padding:"13px 16px",marginBottom:14,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}><div style={{width:42,height:42,borderRadius:12,background:K.rdBg,border:`1px solid ${K.rdBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-broadcast" style={{fontSize:20,color:K.rd,animation:"blink 1.5s ease-in-out infinite"}}/></div><div style={{flex:1}}><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:1}}>{live.titre||"Cours en direct"}</div><div style={{fontSize:12,color:K.t3}}>En cours maintenant · Rejoindre</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
 
     {/* Recommandations personnalisées */}
+    <MessageDuMoment K={K} mob={mob} db={db} uid={uid} user={u} onGo={v=>v==="acces"?onSub&&onSub():v==="fisc"?onFisc&&onFisc():v==="ef"?onEf&&onEf():v==="videos"?onVid&&onVid():v==="pres"?onPres&&onPres():onGo&&onGo(v)}/>
     <PourVous K={K} mob={mob} u={u} mods={mods} pr={pr} sc={sc} ok={ok} onOpen={onOpen} onSub={onSub} onEf={onEf} onFisc={onFisc}/>
     {/* Cartes fonctionnalités */}
     <div style={{marginBottom:22}}>
@@ -5090,7 +5093,7 @@ function AA({onOut}){
       </div>}
     {tab==="param"&&<ParametresAdmin onOut={onOut}/>}
     {tab==="ac"&&<AdminAcces K={K} mob={mob} db={db}/>}
-    {tab==="nt"&&<AdminNotif K={K} mob={mob} db={db} users={users}/>}
+    {tab==="nt"&&<><AdminNotif K={K} mob={mob} db={db} users={users}/><AdminMarketing K={K} mob={mob} db={db}/></>}
     {tab==="sg"&&<AdminSuggestions K={K} mob={mob} db={db}/>}
     {tab==="an"&&<div style={{animation:"fadeIn .35s ease"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
