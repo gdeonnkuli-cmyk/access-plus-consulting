@@ -50,6 +50,33 @@ service cloud.firestore {
         && (!("taille" in p) || p.taille in ["normale", "grande", "tres"])
         && (!("notifEmails" in p) || p.notifEmails is bool);
     }
+    // Demande d'accès : offre choisie (m, t, a), référence et numéro de la transaction Mobile Money
+    function texteCourt(v, n) { return v == null || (v is string && v.size() <= n); }
+    function demandeValide() {
+      return nouveau().get("demandeOffre", null) in [null, "m", "t", "a"]
+        && texteCourt(nouveau().get("demandeRef", null), 60)
+        && texteCourt(nouveau().get("demandeTel", null), 30);
+    }
+    // Date « AAAA-MM-JJ » d'un horodatage (comparaison lexicographique avec une date ISO)
+    function jourIso(t) {
+      return string(t.year()) + "-" + (t.month() < 10 ? "0" : "") + string(t.month())
+        + "-" + (t.day() < 10 ? "0" : "") + string(t.day());
+    }
+    // Code offert (bons/{code}) : l'utilisateur s'active lui-même, dans le même lot d'écritures
+    // qui marque le bon comme utilisé par lui ; la durée est celle du bon, comptée à partir d'aujourd'hui.
+    function reclamationBon() {
+      let code = nouveau().get("bonCode", "");
+      let chemin = /databases/$(database)/documents/bons/$(code);
+      let bon = get(chemin).data;
+      let exp = nouveau().get("dateExpiration", "");
+      return code is string && code.matches("OF-[A-Z0-9]{8}")
+        && bon.get("uid", null) == null
+        && getAfter(chemin).data.get("uid", null) == request.auth.uid
+        && nouveau().get("abonnement", "") == "actif" && nouveau().get("codeValide", false) == true
+        && nouveau().get("activationCode", "") == code && nouveau().get("dureeId", "") == bon.dureeId
+        && exp is string && exp.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z")
+        && exp < jourIso(request.time + duration.value(bon.jours + 1, "d"));
+    }
     match /users/{uid} {
       allow read: if moi(uid) || estStaff();
       allow create: if estAdmin() || (moi(uid) && inscriptionValide());
@@ -60,8 +87,12 @@ service cloud.firestore {
         || (moi(uid)
             && champsModifies().hasOnly(["nom", "lastLogin", "onboardingDone", "progress", "scores", "abonnement", "demandeDate",
                                          "codeValide", "role", "formateurCodeValide", "consentDate", "consentVersion",
-                                         "tel", "province", "ville", "preferences"])
-            && abonnementAutorise() && roleAutorise() && preferencesValides());
+                                         "tel", "province", "ville", "preferences", "demandeOffre", "demandeRef", "demandeTel"])
+            && abonnementAutorise() && roleAutorise() && preferencesValides() && demandeValide())
+        // activation par un code offert
+        || (moi(uid)
+            && champsModifies().hasOnly(["abonnement", "codeValide", "activationCode", "dureeId", "dateExpiration", "bonCode"])
+            && reclamationBon());
       allow delete: if estAdmin();
     }
 
@@ -244,6 +275,21 @@ service cloud.firestore {
         && nouveau().ts == request.time
         && roleDeclareValide();
       allow delete: if estAdmin() || (connecte() && resource.data.uid == request.auth.uid);
+    }
+
+    // ── Codes d'accès offerts ───────────────────────────────────────────────────
+    // Créés par l'administrateur ; connaître le code permet de le lire et de le réclamer une seule fois.
+    match /bons/{code} {
+      allow get: if connecte();
+      allow list, create, delete: if estAdmin();
+      allow update: if estAdmin()
+        || (connecte()
+            && resource.data.get("uid", null) == null
+            && champsModifies().hasOnly(["uid", "nom", "utiliseLe"])
+            && nouveau().uid == request.auth.uid
+            && nouveau().utiliseLe == request.time
+            && texteCourt(nouveau().get("nom", null), 120)
+            && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("bonCode", null) == code);
     }
 
     // ── Boîte à suggestions ─────────────────────────────────────────────────────
