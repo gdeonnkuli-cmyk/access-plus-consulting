@@ -1,14 +1,17 @@
 import React,{useState,useEffect,useRef}from"react";
+import{createPortal}from"react-dom";
 import{TYPES,useNotifications,useNotifEtat,estLue,marquerLue,toutMarquerLu,rappelsLocaux,depuis}from"./notif";
 
 // Cloche de notifications : badge des non-lues, panneau (liste, tout marquer lu), ouverture de la vue liée.
 // Les réglages (push, copie e-mail) sont dans Paramètres ; l'effacement est réservé à l'administrateur.
+// Sur téléphone, le panneau est rendu dans <body> : les barres de navigation ont un backdrop-filter,
+// qui ferait positionner un élément « fixed » par rapport à la barre au lieu de l'écran.
 export default function Cloche({K,db,uid,role,user,mob,onGo,taille=30}){
   const liste=useNotifications(db,uid,role),etat=useNotifEtat(db,uid);
-  const[open,sOpen]=useState(false);const ref=useRef(null);
+  const[open,sOpen]=useState(false);const ref=useRef(null),refP=useRef(null);
   const tout=[...rappelsLocaux(user),...liste];
   const nonLues=tout.filter(n=>!n.local&&!estLue(n,etat)).length+tout.filter(n=>n.local).length;
-  useEffect(()=>{if(!open)return;const f=e=>{if(ref.current&&!ref.current.contains(e.target))sOpen(false);};document.addEventListener("mousedown",f);return()=>document.removeEventListener("mousedown",f);},[open]);
+  useEffect(()=>{if(!open)return;const f=e=>{if(!ref.current?.contains(e.target)&&!refP.current?.contains(e.target))sOpen(false);};document.addEventListener("mousedown",f);return()=>document.removeEventListener("mousedown",f);},[open]);
   const ouvrir=n=>{if(!n.local&&!estLue(n,etat))marquerLue(db,uid,etat,n.id);sOpen(false);if(n.vue&&onGo)onGo(n.vue);};
   const panneau={background:K.card,border:`1px solid ${K.b0}`,boxShadow:"0 18px 48px rgba(0,12,30,.22)",borderRadius:mob?"18px 18px 0 0":16,overflow:"hidden",display:"flex",flexDirection:"column",
     ...(mob?{position:"fixed",left:0,right:0,bottom:0,maxHeight:"78vh",zIndex:1001}:{position:"absolute",right:0,top:taille+10,width:380,maxHeight:520,zIndex:1001})};
@@ -18,9 +21,9 @@ export default function Cloche({K,db,uid,role,user,mob,onGo,taille=30}){
       <i className={`ti ti-bell${nonLues?"-ringing":""}`} style={{fontSize:taille>30?17:15,color:nonLues?K.em:K.t2}}/>
       {nonLues>0&&<span style={{position:"absolute",top:-4,right:-4,minWidth:17,height:17,borderRadius:99,background:K.rd||K.er,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px",border:`1.5px solid ${K.card}`}}>{nonLues>99?"99+":nonLues}</span>}
     </button>
-    {open&&<>
+    {open&&(c=>mob?createPortal(c,document.body):c)(<>
       {mob&&<div onClick={()=>sOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,12,30,.45)",zIndex:1000}}/>}
-      <div style={panneau} role="dialog" aria-label="Notifications">
+      <div ref={refP} style={panneau} role="dialog" aria-label="Notifications">
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 16px",borderBottom:`1px solid ${K.b0}`}}>
           <div style={{fontWeight:800,fontSize:15.5,color:K.t1}}>Notifications{nonLues>0&&<span style={{marginLeft:6,fontSize:12,color:K.t3,fontWeight:700}}>{nonLues} non lue{nonLues>1?"s":""}</span>}</div>
           {liste.some(n=>!estLue(n,etat))&&<button onClick={()=>toutMarquerLu(db,uid)} className="bt" style={{background:"none",border:"none",color:K.in_,fontWeight:700,fontSize:12.5,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Tout marquer comme lu</button>}
@@ -41,6 +44,6 @@ export default function Cloche({K,db,uid,role,user,mob,onGo,taille=30}){
             </button>;})}
         </div>
       </div>
-    </>}
+    </>)}
   </div>;
 }
