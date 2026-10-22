@@ -2,8 +2,8 @@ import { MODULES_FISC } from "./modules";
 
 const KINDS = ["flux", "chronologie", "arbre", "tableau", "bareme", "chaine", "cartes"];
 
-test("les 9 modules du Code des impôts sont complets et leurs QCM cohérents", () => {
-  expect(MODULES_FISC.map(m => m.id)).toEqual(["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9"]);
+test("les 10 modules (Code des impôts et import-export) sont complets et leurs QCM cohérents", () => {
+  expect(MODULES_FISC.map(m => m.id)).toEqual(["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10"]);
   expect(MODULES_FISC.filter(m => m.libre).map(m => m.id)).toEqual(["F1"]);
   for (const m of MODULES_FISC) {
     const types = m.blocs.map(b => b.type);
