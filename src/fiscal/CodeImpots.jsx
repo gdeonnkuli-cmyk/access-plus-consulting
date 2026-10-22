@@ -2,9 +2,10 @@ import React,{useState,useEffect}from"react";
 import{doc,updateDoc}from"firebase/firestore";
 import{MODULES_FISC}from"./modules";
 import{tirerSerie,lireSerie,ecrireSerie}from"./tirage";
+import{calculPaie,INPP}from"./paie";
 
 // ══════════════════ CODE DES IMPÔTS RDC EXPLIQUÉ ══════════════════
-// 10 modules (src/fiscal/modules : Code des impôts mis à jour au 31 mars 2021) : leçon structurée en blocs,
+// 11 modules (src/fiscal/modules : Code des impôts mis à jour au 31 mars 2021, import-export et paie) : leçon structurée en blocs,
 // schémas dessinés et QCM (banque de 15 questions, séries de 10).
 // Score enregistré dans users/{uid}.scores["FISC-F2"] = { s, t, pct, date } (meilleur score conservé).
 // QCM : chaque tentative tire 10 questions dans la banque du module (15), dont au moins 30 % de nouvelles
@@ -129,7 +130,48 @@ function Cartes({K,col,cartes}){
     </div>)}
   </div>;
 }
-const SCHEMAS={flux:Flux,chronologie:Chronologie,arbre:Arbre,tableau:Tableau,bareme:Bareme,chaine:Chaine,cartes:Cartes};
+// Simulateur de bulletin de paie (module F11) : calcul dans paie.js
+function Paie({K,col,defaut={}}){
+  const[v,sV]=useState({base:"",primes:"",logement:"",transport:"",allocations:"",charges:0,taille:"1-50",...Object.fromEntries(Object.entries(defaut).map(([k,x])=>[k,typeof x==="number"&&k!=="charges"?fmt(x):x]))});
+  const n=k=>Number(String(v[k]).replace(/[^\d]/g,""))||0;
+  const r=calculPaie({base:n("base"),primes:n("primes"),logement:n("logement"),transport:n("transport"),allocations:n("allocations"),charges:Number(v.charges)||0,taille:v.taille});
+  const champ={width:"100%",boxSizing:"border-box",background:K.card,border:`1px solid ${K.b1}`,borderRadius:9,padding:"9px 11px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif"};
+  const ch=(k,l)=><label key={k} style={{display:"block"}}><div style={{fontSize:12,fontWeight:700,color:K.t2,marginBottom:4}}>{l}</div>
+    <input value={v[k]} onChange={e=>sV({...v,[k]:e.target.value})} onBlur={()=>sV(x=>({...x,[k]:n(k)?fmt(n(k)):""}))} inputMode="numeric" placeholder="0" style={champ}/></label>;
+  const L=({l,x,fort,c})=><div style={{display:"flex",justifyContent:"space-between",gap:10,padding:"5px 0",borderTop:`1px solid ${K.b0}`,fontSize:13.5,fontWeight:fort?900:500,color:c||(fort?K.t1:K.t2)}}><span>{l}</span><span style={{whiteSpace:"nowrap"}}>{fmtFC(x)}</span></div>;
+  return <div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:12}}>
+      {ch("base","Salaire de base (FC)")}{ch("primes","Primes (FC)")}{ch("logement","Indemnité de logement (FC)")}
+      {ch("transport","Indemnité de transport (FC)")}{ch("allocations","Allocations familiales (FC)")}
+      <label style={{display:"block"}}><div style={{fontSize:12,fontWeight:700,color:K.t2,marginBottom:4}}>Personnes à charge</div>
+        <select value={v.charges} onChange={e=>sV({...v,charges:Number(e.target.value)})} style={champ}>{Array.from({length:10},(_,i)=><option key={i} value={i}>{i}{i===9?" (maximum)":""}</option>)}</select></label>
+      <label style={{display:"block",gridColumn:"1 / -1"}}><div style={{fontSize:12,fontWeight:700,color:K.t2,marginBottom:4}}>Employeur (taux INPP)</div>
+        <select value={v.taille} onChange={e=>sV({...v,taille:e.target.value})} style={champ}>{INPP.map(x=><option key={x.k} value={x.k}>{x.l} : {String(x.taux).replace(".",",")} %</option>)}</select></label>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:10}}>
+      <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:12,padding:"10px 12px"}}>
+        <div style={{fontSize:12.5,fontWeight:800,color:K.t1,marginBottom:4}}><i className="ti ti-receipt" style={{marginRight:5,color:col}}/>Bulletin du salarié</div>
+        <L l="Brut total" x={r.brut} fort/>
+        {r.logementImposable>0&&<L l={`Logement imposable (au-delà de ${fmtFC(r.logementImmunise)})`} x={r.logementImposable}/>}
+        <L l="Assiette CNSS et IPR" x={r.assiette}/>
+        <L l="− CNSS salarié (5 %)" x={-r.cnssSalarie}/>
+        <L l="Revenu imposable" x={r.imposable}/>
+        <L l="− IPR du mois" x={-r.ipr}/>
+        <L l="Net à payer" x={r.net} fort c={col}/>
+      </div>
+      <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:12,padding:"10px 12px"}}>
+        <div style={{fontSize:12.5,fontWeight:800,color:K.t1,marginBottom:4}}><i className="ti ti-building" style={{marginRight:5,color:col}}/>Coût pour l'employeur</div>
+        <L l="Brut total" x={r.brut}/>
+        <L l="+ CNSS employeur (13 %)" x={r.cnssEmployeur}/>
+        <L l={`+ INPP (${String(r.tauxInpp).replace(".",",")} %)`} x={r.inpp}/>
+        <L l="+ ONEM (0,5 %)" x={r.onem}/>
+        <L l="Coût total" x={r.coutEmployeur} fort c={col}/>
+        <div style={{fontSize:11.5,color:K.t3,marginTop:6,lineHeight:1.45}}>À reverser le 15 du mois suivant : CNSS {fmtFC(r.cnssSalarie+r.cnssEmployeur)}, IPR {fmtFC(r.ipr)}, INPP et ONEM {fmtFC(r.inpp+r.onem)}.</div>
+      </div>
+    </div>
+  </div>;
+}
+const SCHEMAS={flux:Flux,chronologie:Chronologie,arbre:Arbre,tableau:Tableau,bareme:Bareme,chaine:Chaine,cartes:Cartes,paie:Paie};
 
 // ── Blocs de leçon ──────────────────────────────────────────────────────────────
 function Bloc({K,b,col}){
@@ -264,7 +306,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
       <i className="ti ti-receipt-tax" style={{position:"absolute",right:-10,bottom:-22,fontSize:150,opacity:.1}}/>
       <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Fiscalité · République démocratique du Congo</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Le Code des impôts expliqué</div>
-      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>10 modules clairs (fiscalité et import-export), avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts de la DGI mis à jour au 31 mars 2021.</div>
+      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>11 modules clairs (fiscalité, paie et import-export), avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts de la DGI mis à jour au 31 mars 2021 et, pour la paie, des textes sociaux en vigueur en 2026.</div>
       <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
         <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>{valides} / {MODULES_FISC.length} modules validés</span>
         {moy!=null&&<span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>Score moyen : {moy} %</span>}
