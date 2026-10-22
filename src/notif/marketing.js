@@ -1,11 +1,11 @@
-// ══════════════════ MESSAGE DU MOMENT (marketing dans l'application) ══════════════════
-// Toutes les N heures (2 par défaut), chaque apprenant voit un nouveau message tiré au hasard dans la
-// banque ci-dessous (ou parmi les messages ajoutés par l'admin), adapté à sa situation :
-//   « visiteurs » = sans accès actif (offres, accroches) ; « abonnes » = accès actif (défis, nouveautés) ;
-//   « tous » = astuces fiscales et comptables.
-// Affichage : dans la cloche (non lu jusqu'à ouverture) et en bandeau sur l'accueil. Pas de push.
-// Réglages admin : config/marketing { actif, intervalleH, desactives: [id], perso: [{ id, cible, type, titre, texte, vue }] }.
-// Réglages de l'utilisateur, propres à l'appareil (localStorage) : ec_mkt_off, ec_mkt_lu.
+// ══════════════════ BANNIÈRE PUBLICITAIRE DE L'ACCUEIL ══════════════════
+// Sur la page d'accueil de l'apprenant uniquement : de courts messages défilent toutes les 30 secondes
+// (réglable par l'admin), dans un ordre aléatoire propre à chaque utilisateur et renouvelé chaque jour.
+// Les messages dépendent de la situation : « visiteurs » = sans accès actif (offres, accroches) ;
+// « abonnes » = accès actif (défis, nouveautés) ; « tous » = astuces fiscales et comptables.
+// Ce n'est ni une notification ni un message : rien dans la cloche, aucun push.
+// Réglages admin : config/marketing { actif, intervalleS, desactives: [id], perso: [{ id, cible, type, titre, texte, vue }] }.
+// L'utilisateur peut masquer la bannière (localStorage ec_mkt_off, propre à l'appareil) et la réactiver dans Paramètres.
 import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 
@@ -17,8 +17,8 @@ export const TYPES_MKT = {
   motivation: { l: "Motivation", ico: "flame", col: "#C2410C" },
 };
 export const CIBLES = { tous: "Tout le monde", visiteurs: "Sans accès actif", abonnes: "Abonnés" };
-export const INTERVALLES = [1, 2, 3, 4, 6, 12, 24];
-export const MKT_DEFAUT = { actif: true, intervalleH: 2, desactives: [], perso: [] };
+export const INTERVALLES = [15, 30, 45, 60, 120];
+export const MKT_DEFAUT = { actif: true, intervalleS: 30, desactives: [], perso: [] };
 
 // {m}, {t}, {a} : prix des offres mensuelle, trimestrielle et annuelle (config/paiement)
 export const BANQUE = [
@@ -64,7 +64,7 @@ export const BANQUE = [
   { id: "t23", cible: "tous", type: "motivation", titre: "Apprenez à plusieurs", texte: "Partagez Éco-Campus avec un collègue ou un camarade de promotion : on progresse mieux ensemble.", vue: "home" },
 ];
 
-const accesActif = u => u?.abonnement === "actif" && !!u.dateExpiration && new Date(u.dateExpiration) > new Date();
+export const accesActif = u => u?.abonnement === "actif" && !!u.dateExpiration && new Date(u.dateExpiration) > new Date();
 const hash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const remplir = (t, prix) => String(t || "").replace(/\{(m|t|a)\}/g, (_, k) => String(prix?.[k] ?? { m: 5, t: 12, a: 40 }[k]).replace(".", ","));
 
@@ -75,39 +75,31 @@ export function candidats(cfg, abonne) {
   return [...BANQUE.filter(m => !off.has(m.id)), ...(c.perso || [])]
     .filter(m => m.titre && (m.cible === "tous" || m.cible === (abonne ? "abonnes" : "visiteurs")));
 }
-// Message du créneau courant : même message pendant tout le créneau, différent d'un utilisateur à l'autre
-export function messageDuMoment({ uid = "", user, cfg, prix, now = Date.now() }) {
+// Liste de la bannière : ordre aléatoire propre à l'utilisateur et au jour, prix remplacés
+export function rotation({ uid = "", user, cfg, prix, now = Date.now() }) {
   const c = { ...MKT_DEFAUT, ...(cfg || {}) };
-  if (!c.actif) return null;
-  const pas = Math.max(1, Number(c.intervalleH) || 2) * 36e5, creneau = Math.floor(now / pas);
-  const L = candidats(c, accesActif(user));
-  if (!L.length) return null;
-  const m = L[hash(`${uid}:${creneau}`) % L.length];
-  return { ...m, id: `mkt-${creneau}-${m.id}`, mid: m.id, titre: remplir(m.titre, prix), texte: remplir(m.texte, prix), t: creneau * pas, finCreneau: (creneau + 1) * pas };
+  if (!c.actif) return [];
+  const jour = Math.floor(now / 864e5);
+  return candidats(c, accesActif(user))
+    .map(m => ({ ...m, titre: remplir(m.titre, prix), texte: remplir(m.texte, prix), k: hash(`${uid}:${jour}:${m.id}`) }))
+    .sort((a, b) => a.k - b.k);
 }
+export const intervalleMs = cfg => Math.max(10, Number(cfg?.intervalleS) || MKT_DEFAUT.intervalleS) * 1000;
 
 const lire = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const ecrire = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
 export const mktDesactive = () => lire("ec_mkt_off") === "1";
 export const setMktDesactive = v => { ecrire("ec_mkt_off", v ? "1" : null); window.dispatchEvent(new Event("ec-mkt")); };
-const marquerMkt = id => { ecrire("ec_mkt_lu", id); window.dispatchEvent(new Event("ec-mkt")); };
 
-// Hook partagé par la cloche et l'accueil : { msg, lu, marquer }
-export function useMessageDuMoment({ db, uid, user, actif = true }) {
-  const [cfg, sCfg] = useState(null), [prix, sPrix] = useState(null), [, sTic] = useState(0);
+// Réglages de l'admin et prix (config/marketing, config/paiement), plus la préférence de l'appareil
+export function useBanniere(db) {
+  const [cfg, sCfg] = useState(null), [prix, sPrix] = useState(null), [off, sOff] = useState(mktDesactive());
   useEffect(() => {
-    if (!db || !actif) return;
+    if (!db) return;
     const a = onSnapshot(doc(db, "config", "marketing"), s => sCfg(s.data() || {}), () => sCfg({}));
     const b = onSnapshot(doc(db, "config", "paiement"), s => sPrix(s.data()?.prix || null), () => {});
     return () => { a(); b(); };
-  }, [db, actif]);
-  useEffect(() => { const f = () => sTic(x => x + 1); window.addEventListener("ec-mkt", f); return () => window.removeEventListener("ec-mkt", f); }, []);
-  const msg = actif && cfg && !mktDesactive() ? messageDuMoment({ uid, user, cfg, prix }) : null;
-  // Changement de créneau : rafraîchir à l'heure prévue
-  useEffect(() => {
-    if (!msg) return;
-    const t = setTimeout(() => sTic(x => x + 1), Math.min(msg.finCreneau - Date.now() + 1000, 2 ** 31 - 1));
-    return () => clearTimeout(t);
-  }, [msg?.id]);
-  return { msg, lu: !!msg && lire("ec_mkt_lu") === msg.id, marquer: () => msg && marquerMkt(msg.id) };
+  }, [db]);
+  useEffect(() => { const f = () => sOff(mktDesactive()); window.addEventListener("ec-mkt", f); return () => window.removeEventListener("ec-mkt", f); }, []);
+  return { cfg, prix, off };
 }

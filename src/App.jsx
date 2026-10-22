@@ -11,7 +11,7 @@ import AdminNotif from"./notif/AdminNotif";
 import{Suggestions,AdminSuggestions}from"./notif/Suggestions";
 import PourVous from"./notif/Recommandations";
 import Apropos from"./notif/Apropos";
-import MessageDuMoment,{ReglageMarketing,AdminMarketing}from"./notif/MessageDuMoment";
+import Banniere,{ReglageMarketing,AdminMarketing}from"./notif/Banniere";
 import{DUR,OFFRES,INCLUS,offresAvecPrix,parMois,fUSD,numerosRenseignes,usePaiement,utiliserCodeOffert}from"./acces/acces";
 import AdminAcces from"./acces/AdminAcces";
 import{pushPossible,pushActif,activerPush,desactiverPush}from"./notif/push";
@@ -1611,7 +1611,7 @@ function ParametresPage({role,uid,data,onOut,onGo}){
 
     <ParamCarte ico="bell" col="#C98A1B" titre="Notifications">
       <ReglagePush uid={uid} role={role}/>
-      {role==="apprenant"&&<ReglageMarketing K={K} Interrupteur={Interrupteur}/>}
+      {role==="apprenant"&&<ReglageMarketing Interrupteur={Interrupteur}/>}
       <Interrupteur on={prefs.notifEmails!==false} set={v=>majPrefs({notifEmails:v})} lib="Copie par e-mail" sous="Messages de l'équipe, corrections et réponses à vos suggestions. Les e-mails importants (code d'accès, sécurité du compte) sont toujours envoyés."/>
     </ParamCarte>
 
@@ -3553,7 +3553,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
     {live.on&&<div onClick={onVid} className="hv" style={{background:`linear-gradient(135deg,${K.rdBg},${K.c2})`,border:`1px solid ${K.rdBd}`,borderRadius:13,padding:"13px 16px",marginBottom:14,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}><div style={{width:42,height:42,borderRadius:12,background:K.rdBg,border:`1px solid ${K.rdBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-broadcast" style={{fontSize:20,color:K.rd,animation:"blink 1.5s ease-in-out infinite"}}/></div><div style={{flex:1}}><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:1}}>{live.titre||"Cours en direct"}</div><div style={{fontSize:12,color:K.t3}}>En cours maintenant · Rejoindre</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
 
     {/* Recommandations personnalisées */}
-    <MessageDuMoment K={K} mob={mob} db={db} uid={uid} user={u} onGo={v=>v==="acces"?onSub&&onSub():v==="fisc"?onFisc&&onFisc():v==="ef"?onEf&&onEf():v==="videos"?onVid&&onVid():v==="pres"?onPres&&onPres():onGo&&onGo(v)}/>
+    <Banniere K={K} mob={mob} db={db} uid={uid} user={u} onGo={v=>v==="acces"?onSub&&onSub():v==="fisc"?onFisc&&onFisc():v==="ef"?onEf&&onEf():v==="videos"?onVid&&onVid():v==="pres"?onPres&&onPres():onGo&&onGo(v)}/>
     <PourVous K={K} mob={mob} u={u} mods={mods} pr={pr} sc={sc} ok={ok} onOpen={onOpen} onSub={onSub} onEf={onEf} onFisc={onFisc}/>
     {/* Cartes fonctionnalités */}
     <div style={{marginBottom:22}}>
