@@ -1758,7 +1758,7 @@ function FA({uid,onOut}){
         {ico:"checkbox",col:"#DC2626",label:"Corrections",desc:nUngraded?`${nUngraded} copie${nUngraded>1?"s":""} à corriger`:"Aucune copie en attente",badge:nUngraded,on:()=>sV("corr")},
         {ico:"message-circle",col:"#0D7A6B",label:"Messages",desc:unreadMsgFA?`${unreadMsgFA} non lu${unreadMsgFA>1?"s":""}`:"Échanges avec vos apprenants",badge:unreadMsgFA,on:()=>sV("fmsg")},
         {ico:"report-money",col:"#1D4ED8",label:"États financiers",desc:"Atelier SYSCOHADA et suivi des dossiers",on:()=>sV("ef")},
-        {ico:"receipt-tax",col:"#A3122A",label:"Code des impôts",desc:"10 modules : fiscalité et import-export",on:()=>sV("fisc")},
+        {ico:"receipt-tax",col:"#A3122A",label:"Code des impôts",desc:"11 modules : fiscalité, paie et import-export",on:()=>sV("fisc")},
       ].map((t,i)=><ActionTile key={t.label} {...t} i={i}/>)}
     </div>
 
@@ -3503,7 +3503,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
     {key:"pres",ico:"presentation",label:"Présentations",desc:`${presCount||0} support${presCount>1?"s":""} de cours`,action:onPres},
     {key:"stages",ico:"briefcase",label:"Stages",desc:"Expériences virtuelles",action:onStages},{key:"videos",ico:"video",label:"Vidéos",desc:`${vids.length} vidéos disponibles`,action:onVid},
     ...(onEf?[{key:"ef",ico:"report-money",label:"États financiers",desc:"Atelier SYSCOHADA : Bilan, CR, TFT, notes",action:onEf}]:[]),
-    ...(onFisc?[{key:"fisc",ico:"receipt-tax",label:"Code des impôts",desc:"10 modules RDC : IBP, IPR, TVA, import-export… avec QCM",action:onFisc}]:[]),
+    ...(onFisc?[{key:"fisc",ico:"receipt-tax",label:"Code des impôts",desc:"11 modules RDC : IBP, IPR, TVA, paie, import-export… avec QCM",action:onFisc}]:[]),
   ];
 
   return <div style={{animation:"up .3s ease"}}>
