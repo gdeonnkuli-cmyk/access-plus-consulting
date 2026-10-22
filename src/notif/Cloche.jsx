@@ -2,6 +2,7 @@ import React,{useState,useEffect,useRef}from"react";
 import{TYPES,useNotifications,useNotifEtat,estLue,marquerLue,toutMarquerLu,rappelsLocaux,depuis}from"./notif";
 
 // Cloche de notifications : badge des non-lues, panneau (liste, tout marquer lu), ouverture de la vue liée.
+// Les réglages (push, copie e-mail) sont dans Paramètres ; l'effacement est réservé à l'administrateur.
 export default function Cloche({K,db,uid,role,user,mob,onGo,taille=30}){
   const liste=useNotifications(db,uid,role),etat=useNotifEtat(db,uid);
   const[open,sOpen]=useState(false);const ref=useRef(null);
@@ -39,8 +40,6 @@ export default function Cloche({K,db,uid,role,user,mob,onGo,taille=30}){
               </div>
             </button>;})}
         </div>
-        {onGo&&<button onClick={()=>{sOpen(false);onGo("param");}} className="bt" style={{padding:"11px 16px",background:K.c2,border:"none",borderTop:`1px solid ${K.b0}`,color:K.t2,fontWeight:700,fontSize:12.5,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-          <i className="ti ti-settings" style={{fontSize:14}}/>Préférences de notification (e-mail, téléphone)</button>}
       </div>
     </>}
   </div>;
