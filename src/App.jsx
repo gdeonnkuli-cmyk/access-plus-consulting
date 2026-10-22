@@ -2756,7 +2756,7 @@ function Auth({onL}){
       <div style={{width:"100%",maxWidth:385,animation:"sc .3s ease"}}>
         <div style={{textAlign:"center",marginBottom:mob?17:23}}>
           <div style={{display:"inline-flex",alignItems:"center",gap:5,background:K.card,border:`1px solid ${K.b0}`,borderRadius:99,padding:"4px 12px",marginBottom:12}}><span style={{width:5,height:5,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:12,color:K.t2}}>Plateforme active</span></div>
-          <h1 style={{fontSize:mob?20:25,fontWeight:900,color:K.t1,lineHeight:1.15,letterSpacing:"-.4px",marginBottom:5}}><span style={{background:`linear-gradient(135deg,${K.em},${K.in_})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Éco-Campus</span><br/><span style={{fontSize:mob?14:17,fontWeight:700,color:K.t2}}>Consulting</span></h1>
+          <h1 style={{fontSize:mob?20:25,fontWeight:900,color:K.t1,lineHeight:1.15,letterSpacing:"-.4px",marginBottom:5}}><span style={{background:`linear-gradient(135deg,${K.em},${K.in_})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Éco-Campus</span><br/><span style={{fontSize:mob?14:17,fontWeight:700,color:K.t2}}>Services et formations</span></h1>
           <p style={{color:K.t3,fontSize:13,lineHeight:1.6}}>Modules · QCM · Exercices · Vidéos · Direct</p>
         </div>
         <div style={{background:K.card,border:`1px solid ${K.b1}`,boxShadow:K.sh,borderRadius:16,padding:mob?"17px 15px":"21px 19px",boxShadow:"0 20px 55px rgba(0,0,0,.3)"}}>
