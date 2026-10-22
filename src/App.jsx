@@ -5,6 +5,13 @@ import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnap
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
 import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
 import CodeImpots from"./fiscal/CodeImpots";
+import{initNotif,notifier}from"./notif/notif";
+import Cloche from"./notif/Cloche";
+import AdminNotif from"./notif/AdminNotif";
+import{Suggestions,AdminSuggestions}from"./notif/Suggestions";
+import PourVous from"./notif/Recommandations";
+import Apropos from"./notif/Apropos";
+import{pushPossible,pushActif,activerPush,desactiverPush}from"./notif/push";
 import{htmlCodeAcces,htmlNotification}from"./emails";
 import{PROVINCES}from"./ef/rdc";
 import LOGO from"./assets/logo.png";
@@ -49,6 +56,7 @@ const sendNotifEmail=async({to_email,subject,nom,message})=>{
     });
   }catch(e){console.log("sendNotifEmail error",e);}
 };
+initNotif({db,auth,email:sendNotifEmail});
 const googleProvider=new GoogleAuthProvider();
 const facebookProvider=new FacebookAuthProvider();
 
@@ -341,6 +349,9 @@ const createUserAsAdmin=async({nom,mail,password,role})=>{
 const sendMessage=async({apprenantUid,apprenantNom,from,fromNom,fromRole,texte,formateurUid})=>{
   const ref_=doc(collection(db,"messages"));
   await setDoc(ref_,{apprenantUid,apprenantNom,from,fromNom,fromRole,texte,formateurUid:formateurUid||null,ts:Date.now(),luApprenant:fromRole==="apprenant",luAdmin:fromRole!=="apprenant"});
+  const extrait=String(texte||"").slice(0,200);
+  if(fromRole==="apprenant")notifier({dest:formateurUid||"admin",type:"message",titre:`Nouveau message de ${fromNom||apprenantNom||"un apprenant"}`,texte:extrait,vue:formateurUid?"fmsg":"msg",auteurNom:fromNom||apprenantNom||""});
+  else notifier({dest:apprenantUid,type:"message",titre:`Nouveau message de ${fromNom||"l'équipe Éco-Campus"}`,texte:extrait,vue:"msg",auteurNom:fromNom||""});
 };
 const markMsgsRead=async(apprenantUid,side)=>{
   try{
@@ -526,13 +537,15 @@ function useFormateurOpenAnswers(formateurUid){
 const submitOpenAnswers=async({modId,modTitre,apprenantUid,apprenantNom,formateurUid,answers,maxPoints})=>{
   const ref_=doc(collection(db,"openAnswers"));
   await setDoc(ref_,{modId,modTitre,apprenantUid,apprenantNom,formateurUid,answers,maxPoints,graded:false,notes:{},totalPoints:0,pct:null,submittedAt:Date.now()});
+  notifier({dest:formateurUid||"admin",type:"message",titre:`Nouvelle copie à corriger : ${modTitre||"module"}`,texte:`${apprenantNom||"Un apprenant"} a remis ses réponses.`,vue:"corr",auteurNom:apprenantNom||""});
   await updateDoc(doc(db,"users",apprenantUid),{[`progress.${modId}`]:"done"});
 };
-const gradeOpenAnswers=async(answerId,notes,apprenantUid,modId,maxPoints)=>{
+const gradeOpenAnswers=async(answerId,notes,apprenantUid,modId,maxPoints,modTitre="")=>{
   const totalPoints=Object.values(notes).reduce((a,b)=>a+(Number(b)||0),0);
   const pct=maxPoints>0?Math.round(totalPoints/maxPoints*100):0;
   await updateDoc(doc(db,"openAnswers",answerId),{graded:true,notes,totalPoints,pct,gradedAt:Date.now()});
   await updateDoc(doc(db,"users",apprenantUid),{[`scores.${modId}`]:{s:totalPoints,t:maxPoints,pct}});
+  notifier({dest:apprenantUid,type:"correction",titre:`Votre copie a été corrigée : ${pct} %`,texte:`${modTitre?`Module « ${modTitre} » : `:""}${totalPoints} / ${maxPoints} points.`,vue:"home",auteurNom:"Votre formateur",email:true});
 };
 function useAllDocs(){
   const[docs,sDocs]=useState([]);
@@ -1452,6 +1465,16 @@ function Choix({options,val,on,col}){
   const K=useK();
   return <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{options.map(([v,l,dis])=>{const a=val===v;return <button key={v} onClick={()=>!dis&&on(v)} disabled={dis} className="bt" style={{padding:"9px 15px",borderRadius:12,border:`1.5px solid ${a?(col||K.em):K.b1}`,background:a?(col||K.em):K.c2,color:a?"#fff":dis?K.t3:K.t1,fontWeight:800,fontSize:14,cursor:dis?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",opacity:dis?.5:1}}>{l}</button>;})}</div>;
 }
+// Notifications push sur l'appareil courant (Firebase Cloud Messaging)
+function ReglagePush({uid,role}){
+  const K=useK();const[actif,sActif]=useState(pushActif()),[busy,sBusy]=useState(false),[err,sErr]=useState("");
+  if(!pushPossible())return <div style={{fontSize:13,color:K.t3,padding:"10px 0",lineHeight:1.5}}><i className="ti ti-device-mobile-off" style={{marginRight:5}}/>Notifications sur téléphone indisponibles dans ce navigateur. Sur iPhone, installez d'abord l'application sur l'écran d'accueil (Safari → Partager → « Sur l'écran d'accueil »).</div>;
+  const basculer=async v=>{sBusy(true);sErr("");try{if(v)await activerPush(db,uid,role);else await desactiverPush(db);sActif(v);}catch(e){sErr(e.message);}sBusy(false);};
+  return <div style={{opacity:busy?.6:1}}>
+    <Interrupteur on={actif} set={v=>!busy&&basculer(v)} lib="Notifications sur ce téléphone" sous={busy?"Activation…":"Alertes même application fermée : nouveaux modules, messages, corrections, accès."}/>
+    {err&&<div style={{fontSize:12.5,color:K.er,background:K.erBg,border:`1px solid ${K.erBd}`,borderRadius:9,padding:"8px 11px",marginTop:4}}>{err}</div>}
+  </div>;
+}
 function Interrupteur({on,set,lib,sous}){
   const K=useK();
   return <div onClick={()=>set(!on)} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer",padding:"10px 0"}}>
@@ -1470,7 +1493,7 @@ function ChoixTheme(){
 }
 function ChoixTaille({val,on}){return <Choix options={TAILLES.map(([v,l])=>[v,l])} val={val} on={v=>{appliquerTaille(v);on(v);}}/>;}
 
-function ParametresPage({role,uid,data,onOut}){
+function ParametresPage({role,uid,data,onOut,onGo}){
   const K=useK();const{mob}=useW();
   const cfg=useConfigSecurite();
   const prefs=data?.preferences||{};
@@ -1567,7 +1590,15 @@ function ParametresPage({role,uid,data,onOut}){
     </ParamCarte>
 
     <ParamCarte ico="bell" col="#C98A1B" titre="Notifications">
-      <Interrupteur on={prefs.notifEmails!==false} set={v=>majPrefs({notifEmails:v})} lib="E-mail quand l'équipe m'envoie un message" sous="Les e-mails importants (code d'accès, sécurité du compte) sont toujours envoyés."/>
+      <ReglagePush uid={uid} role={role}/>
+      <Interrupteur on={prefs.notifEmails!==false} set={v=>majPrefs({notifEmails:v})} lib="Copie par e-mail" sous="Messages de l'équipe, corrections et réponses à vos suggestions. Les e-mails importants (code d'accès, sécurité du compte) sont toujours envoyés."/>
+    </ParamCarte>
+
+    <ParamCarte ico="info-circle" col="#4A5B78" titre="Aide et informations">
+      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        <Btn ch={<><i className="ti ti-bulb" style={{fontSize:16}}/>Boîte à suggestions</>} on={()=>onGo&&onGo("sugg")} v="s"/>
+        <Btn ch={<><i className="ti ti-info-circle" style={{fontSize:16}}/>À propos d'Éco-Campus</>} on={()=>onGo&&onGo("apropos")} v="s"/>
+      </div>
     </ParamCarte>
 
     <ParamCarte ico="database" col="#0D7A6B" titre="Mes données" sous="Vos données vous appartiennent : vous pouvez les télécharger ou demander la suppression de votre compte.">
@@ -1603,6 +1634,9 @@ function ParametresAdmin({onOut}){
     </ParamCarte>
     <ParamCarte ico="clock-shield" col="#0A2A5C" titre="Ma déconnexion automatique" sous="Délai appliqué au compte administrateur lorsque l'application est fermée ou mise de côté.">
       <Choix options={DELAIS.map(m=>[m,`${m} min`])} val={cfg.delaiAdmin||20} on={m=>maj({delaiAdmin:m})}/>
+    </ParamCarte>
+    <ParamCarte ico="bell" col="#C98A1B" titre="Notifications sur ce téléphone" sous="Recevez les nouvelles suggestions et les messages des apprenants, même application fermée.">
+      <ReglagePush uid={auth.currentUser?.uid} role="admin"/>
     </ParamCarte>
     <ParamCarte ico="palette" col="#7C3AED" titre="Apparence">
       <div style={{color:K.t1,fontSize:13.5,fontWeight:700,marginBottom:6}}>Thème</div><ChoixTheme/>
@@ -1674,12 +1708,16 @@ function FA({uid,onOut}){
     {k:"stats",ico:"chart-bar",label:"Statistiques"},
     {k:"ef",ico:"report-money",label:"États financiers"},
     {k:"fisc",ico:"receipt-tax",label:"Code des impôts"},
+    {k:"sugg",ico:"bulb",label:"Suggestions"},
+    {k:"apropos",ico:"info-circle",label:"À propos"},
   ];
+  const ALLER_FA={msg:"fmsg",videos:"vids"};
+  const allerFA=v=>sV(NAV.some(n=>n.k===v)||v==="param"?v:ALLER_FA[v]||"home");
 
   const W=ch=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
     <AutoLogoutBanner warning={faWarn} mob={mob}/>
-    <StaffNav role="formateur" nom={fData.nom} onOut={onOut} tabs={NAV} active={vue} onTab={sV} onProfil={()=>sV("param")}/>
+    <StaffNav role="formateur" nom={fData.nom} onOut={onOut} tabs={NAV} active={vue} onTab={sV} onProfil={()=>sV("param")} extra={<Cloche K={K} db={db} uid={uid} role="formateur" user={fData} mob={mob} onGo={allerFA}/>}/>
     <main style={{maxWidth:1060,margin:"0 auto",padding:mob?"18px 14px 80px":"24px 24px 40px"}}>
       {msg.m&&<div style={{background:msg.t==="o"?K.emBg:K.erBg,border:`1px solid ${msg.t==="o"?K.emBd:K.erBd}`,borderRadius:9,padding:"9px 14px",marginBottom:12,fontSize:14,color:msg.t==="o"?K.em:K.er,display:"flex",gap:7}}><i className={`ti ti-${msg.t==="o"?"check":"alert-triangle"}`} style={{fontSize:14}}/>{msg.m}</div>}
       {ch}
@@ -1750,9 +1788,11 @@ function FA({uid,onOut}){
 
   // ── MESSAGES ─────────────────────────────────────────────────────────────
   if(vue==="fmsg")return W(<FAMessages msgs={myMsgsFA} uid={uid} fNom={fData.nom}/>);
-  if(vue==="param")return W(<ParametresPage role="formateur" uid={uid} data={fData} onOut={onOut}/>);
+  if(vue==="param")return W(<ParametresPage role="formateur" uid={uid} data={fData} onOut={onOut} onGo={sV}/>);
   if(vue==="ef")return W(<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:fData.nom,mail:fData.mail,role:"formateur"}}/>);
   if(vue==="fisc")return W(<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={fData.scores||{}} ok/>);
+  if(vue==="sugg")return W(<Suggestions K={K} mob={mob} db={db} me={{uid,nom:fData.nom,mail:fData.mail,role:"formateur"}}/>);
+  if(vue==="apropos")return W(<Apropos K={K} mob={mob} onGo={sV}/>);
 
   return W(<div/>);
 }
@@ -2114,7 +2154,7 @@ function FACorrections({answers}){
       </div>
       <Btn ch={saving?"Enregistrement…":"✓ Valider la correction"} dis={saving||overMax} on={async()=>{
         setSaving(true);
-        try{await gradeOpenAnswers(grading.id,notes,grading.apprenantUid,grading.modId,grading.maxPoints);setGrading(null);}
+        try{await gradeOpenAnswers(grading.id,notes,grading.apprenantUid,grading.modId,grading.maxPoints,grading.modTitre||"");setGrading(null);}
         catch(e){alert(e.message);}
         setSaving(false);
       }} full sx={{minHeight:46}}/>
@@ -2777,9 +2817,9 @@ function Auth({onL}){
 
 // ── USER APP ──────────────────────────────────────────────────────────────────
 function UA({uid,onOut}){
-  const K=useK();const{mob}=useW();
+  const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
   // Vue initiale : raccourcis de l'application installée (?vue=ef, ?vue=pres…)
-  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","fisc","psycho","services","prog","res","param"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
+  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","fisc","psycho","services","prog","res","param","sugg","apropos"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
   const[uData,sUD]=useState(null),[pdfs,sPdfs]=useState({});
   const[showOnboarding,sShowOnboarding]=useState(false);
   const{mods,loading:mL}=useModules();
@@ -2832,9 +2872,11 @@ function UA({uid,onOut}){
     {vue==="prog"&&<Prog pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods}/>}
     {vue==="res"&&<Res sc={sc} ok={ok} mods={aMods} u={uData} pr={pr} nd={nd} gp={gp}/>}
     {vue==="psycho"&&<PsychoPage uid={uid} u={uData}/>}
-    {vue==="param"&&<ParametresPage role="apprenant" uid={uid} data={uData} onOut={onOut}/>}
+    {vue==="param"&&<ParametresPage role="apprenant" uid={uid} data={uData} onOut={onOut} onGo={sV}/>}
     {vue==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="fisc"&&<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)}/>}
+    {vue==="sugg"&&<Suggestions K={K} mob={mob} db={db} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}}/>}
+    {vue==="apropos"&&<Apropos K={K} mob={mob} onGo={sV}/>}
     {vue==="msg"&&<MessagerieApprenant uid={uid} uNom={uData.nom}/>}
   </>);
 }
@@ -3315,6 +3357,8 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     {k:"services",ico:"building",     label:"Services"},
     {k:"prog",   ico:"chart-line",    label:"Progrès"},
     {k:"res",    ico:"trophy",        label:"Résultats"},
+    {k:"sugg",   ico:"bulb",          label:"Suggestions"},
+    {k:"apropos",ico:"info-circle",   label:"À propos"},
   ];
   if(mob){
     // ── BOTTOM NAV MOBILE ──
@@ -3327,6 +3371,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
             ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"3px 9px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:11,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ Actif":"✓ Actif"}</span></div>
             :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:12,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>Accéder</button>
           }
+          <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} mob onGo={v=>sV(NAV_ITEMS.some(n=>n.k===v)||v==="param"?v:"home")} taille={28}/>
           <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:28,height:28,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
             <i className="ti ti-key" style={{fontSize:14,color:K.t2}}/>
           </button>
@@ -3394,6 +3439,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
         ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 11px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:12,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ À vie":"✓ Actif"}</span></div>
         :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>Obtenir l'accès</button>
       }
+      <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} onGo={v=>sV(NAV_ITEMS.some(n=>n.k===v)||v==="param"?v:"home")} taille={32}/>
       <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:32,height:32,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
         <i className="ti ti-key" style={{fontSize:15,color:K.t2}}/>
       </button>
@@ -3502,6 +3548,8 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
     {/* Bannière live */}
     {live.on&&<div onClick={onVid} className="hv" style={{background:`linear-gradient(135deg,${K.rdBg},${K.c2})`,border:`1px solid ${K.rdBd}`,borderRadius:13,padding:"13px 16px",marginBottom:14,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}><div style={{width:42,height:42,borderRadius:12,background:K.rdBg,border:`1px solid ${K.rdBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-broadcast" style={{fontSize:20,color:K.rd,animation:"blink 1.5s ease-in-out infinite"}}/></div><div style={{flex:1}}><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:1}}>{live.titre||"Cours en direct"}</div><div style={{fontSize:12,color:K.t3}}>En cours maintenant · Rejoindre</div></div><Btn ch="▶ Rejoindre" v="r" sm sx={{flexShrink:0}}/></div>}
 
+    {/* Recommandations personnalisées */}
+    <PourVous K={K} mob={mob} u={u} mods={mods} pr={pr} sc={sc} ok={ok} onOpen={onOpen} onSub={onSub} onEf={onEf} onFisc={onFisc}/>
     {/* Cartes fonctionnalités */}
     <div style={{marginBottom:22}}>
       <div className="h-sec" style={{color:K.t1,marginBottom:12}}>Accès rapide</div>
@@ -4285,6 +4333,8 @@ function AA({onOut}){
   const{warning:aaWarn}=useAutoLogout(onOut,cfgSecA.delaiAdmin||20);
   usePresence({uid:auth.currentUser?.uid,nom:"Administrateur",mail:ADM_EMAIL,role:"admin",vue:"Administration"});
   const[pendingDocs,setPendingDocs]=useState([]);
+  const[nSugg,sNSugg]=useState(0);
+  useEffect(()=>onSnapshot(query(collection(db,"suggestions"),where("statut","==","nouveau")),s=>sNSugg(s.size),()=>{}),[]);
   useEffect(()=>{
     const unsub=onSnapshot(query(collection(db,"documents"),where("status","==","pending")),
       snap=>setPendingDocs(snap.docs.map(d=>({id:d.id,...d.data()}))));
@@ -4292,10 +4342,14 @@ function AA({onOut}){
   },[]);
   const approveDoc=async(id)=>{
     await updateDoc(doc(db,"documents",id),{status:"approved",approvedAt:new Date().toISOString()});
+    const d=pendingDocs.find(x=>x.id===id);
+    if(d?.createdBy)notifier({dest:d.createdBy,type:"contenu",titre:`Document approuvé : ${d.titre||""}`,texte:"Votre document est validé par l'administration.",vue:"docs",auteurNom:"Éco-Campus RDC"});
     sMsg({t:"o",m:"Document approuvé !"});setTimeout(()=>sMsg({t:"",m:""}),3000);
   };
   const rejectDoc=async(id,reason)=>{
     await updateDoc(doc(db,"documents",id),{status:"rejected",rejectedAt:new Date().toISOString(),rejectReason:reason||""});
+    const d=pendingDocs.find(x=>x.id===id);
+    if(d?.createdBy)notifier({dest:d.createdBy,type:"contenu",titre:`Document à revoir : ${d.titre||""}`,texte:reason?`Motif : ${reason}`:"Consultez vos documents pour le corriger.",vue:"docs",auteurNom:"Éco-Campus RDC"});
     sMsg({t:"o",m:"Document rejeté."});setTimeout(()=>sMsg({t:"",m:""}),3000);
   };
   const[tab,sT]=useState("home"),[msg,sMsg]=useState({t:"",m:""});
@@ -4365,16 +4419,21 @@ function AA({onOut}){
   };
   const activateFormateur=async(uid)=>{
     await saveUserData(uid,{role:"formateur",formateurCodeValide:true});
+    notifier({dest:uid,type:"code",titre:"Votre espace formateur est activé",texte:"Vous pouvez créer vos modules, slides et documents, et corriger les copies de vos apprenants.",vue:"home",auteurNom:"Éco-Campus RDC"});
     sMsg({t:"o",m:"Formateur activé !"});setTimeout(()=>sMsg({t:"",m:""}),3000);
   };
   const approveContent=async(type,id)=>{
     const coll=type==="mod"?"modules":type==="pres"?"presentations":"videos";
     await updateDoc(doc(db,coll,id),{status:"approved",on:true,approvedAt:new Date().toISOString()});
+    try{const c=(await getDoc(doc(db,coll,id))).data()||{};const genre={mod:["module","Nouveau module","home"],pres:["pres","Nouveau cours","pres"],vid:["video","Nouvelle vidéo","videos"]}[type]||["info","Nouveau contenu","home"];
+      notifier({dest:"apprenants",type:genre[0],titre:`${genre[1]} : ${c.titre||""}`,texte:c.desc||"",vue:genre[2],auteurNom:"Éco-Campus RDC"});
+      if(c.createdBy)notifier({dest:c.createdBy,type:"contenu",titre:`Contenu publié : ${c.titre||""}`,texte:"Votre contenu a été approuvé et il est visible par les apprenants.",vue:type==="mod"?"mods":type==="pres"?"pres":"vids",auteurNom:"Éco-Campus RDC"});}catch(e){}
     sMsg({t:"o",m:"Contenu approuvé et publié !"});setTimeout(()=>sMsg({t:"",m:""}),3000);
   };
   const rejectContent=async(type,id,reason)=>{
     const coll=type==="mod"?"modules":type==="pres"?"presentations":"videos";
     await updateDoc(doc(db,coll,id),{status:"rejected",rejectedAt:new Date().toISOString(),rejectReason:reason||""});
+    try{const c=(await getDoc(doc(db,coll,id))).data()||{};if(c.createdBy)notifier({dest:c.createdBy,type:"contenu",titre:`Contenu à revoir : ${c.titre||""}`,texte:reason?`Motif : ${reason}`:"Consultez vos contenus pour le corriger.",vue:type==="mod"?"mods":type==="pres"?"pres":"vids",auteurNom:"Éco-Campus RDC"});}catch(e){}
     sMsg({t:"o",m:"Contenu rejeté."});setTimeout(()=>sMsg({t:"",m:""}),3000);
   };
   const genC=async(uid,did)=>{
@@ -4385,6 +4444,7 @@ function AA({onOut}){
   const actD=async(uid,did)=>{
     sSav(true);const d=DUR.find(x=>x.id===did)||DUR[4];const code=nC();
     await saveUserData(uid,{activationCode:code,codeValide:true,dureeId:did||"v",dateExpiration:dE(d.j),abonnement:"actif"});
+    notifier({dest:uid,type:"code",titre:"Votre accès est activé 🎉",texte:`Durée : ${d.l||"—"}. Tous les modules, QCM et ateliers sont maintenant disponibles.`,vue:"home",auteurNom:"Éco-Campus RDC"});
     sSav(false);sVm(null);sMsg({t:"o",m:`✓ ${users.find(u=>u.uid===uid)?.nom} activé.`});setTimeout(()=>sMsg({t:"",m:""}),3000);
   };
   const rev=async uid=>{await saveUserData(uid,{abonnement:"expiré",codeValide:false});};
@@ -4404,7 +4464,7 @@ function AA({onOut}){
   const rPN=useRef(),rPUrl=useRef(),rPDesc=useRef(),rPLang=useRef(),rPLogo=useRef();
   const[gr,sGr]=useState(true);
   const saveLiveFn=async()=>{sSav(true);await saveLive({on:live.on,url:rLU.current?.value?.trim()||"",titre:rLT.current?.value?.trim()||"",desc:rLD.current?.value?.trim()||""});sSav(false);sMsg({t:"o",m:"Direct enregistré."});setTimeout(()=>sMsg({t:"",m:""}),2000);};
-  const addVidFn=async()=>{const url=rVU.current?.value?.trim()||"",titre=rVT.current?.value?.trim()||"";if(!titre||!url){alert("Titre et URL requis");return;}if(!pVid(url)){alert("URL invalide");return;}sSav(true);await saveVideo({titre,url,desc:rVD.current?.value?.trim()||"",mid:rVM.current?.value||null,gr});sSav(false);sAV(false);[rVU,rVT,rVD].forEach(r=>{if(r.current)r.current.value="";});};
+  const addVidFn=async()=>{const url=rVU.current?.value?.trim()||"",titre=rVT.current?.value?.trim()||"";if(!titre||!url){alert("Titre et URL requis");return;}if(!pVid(url)){alert("URL invalide");return;}sSav(true);await saveVideo({titre,url,desc:rVD.current?.value?.trim()||"",mid:rVM.current?.value||null,gr});notifier({dest:"apprenants",type:"video",titre:`Nouvelle vidéo : ${titre}`,texte:rVD.current?.value?.trim()||"",vue:"videos",auteurNom:"Éco-Campus RDC"});sSav(false);sAV(false);[rVU,rVT,rVD].forEach(r=>{if(r.current)r.current.value="";});};
   const IB=({ico,t,on,v="s",lbl})=>{const c={p:[K.em,"#fff",K.em],s:[K.c2,K.t2,K.b1],d:[K.erBg,K.er,K.erBd],i:[K.inBg,K.in_,K.inBd],w:[K.waBg,K.wa,K.waBd]}[v];return <button onClick={on} title={t} className="bt" style={{display:"inline-flex",alignItems:"center",gap:5,height:34,minWidth:34,padding:lbl?"0 11px":0,justifyContent:"center",borderRadius:10,background:c[0],color:c[1],border:`1px solid ${c[2]}`,cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif"}}><i className={`ti ti-${ico}`} style={{fontSize:16}}/>{lbl}</button>;};
   const Acts=({u,st})=><>{st==="demande"&&<><IB ico="check" t="Valider l'accès" lbl="Valider" v="p" on={()=>sVm(u.uid)}/><IB ico="x" t="Refuser" v="d" on={()=>ref_(u.uid)}/></>}{st==="actif"&&<><IB ico="key" t="Voir le code" on={()=>sCm(u)}/><IB ico="send" t="Envoyer le code par e-mail et message" v="i" on={()=>mL(u)}/><IB ico="player-pause" t="Suspendre l'accès" v="w" on={()=>rev(u.uid)}/></>}{(st==="expiré"||st==="aucun")&&<IB ico="player-play" t="Réactiver / donner accès" lbl="Accès" on={()=>sVm(u.uid)}/>}<IB ico="trash" t="Supprimer le compte" v="d" on={()=>sDm(u.uid)}/></>;
   const Av=({u,sz=38})=>{const cs=["#0A2A5C","#1E4FA3","#A3122A","#0D7A6B","#7C3AED","#C98A1B"];const c=cs[((u.nom||"U").charCodeAt(0)+(u.nom||"").length)%cs.length];return <div style={{width:sz,height:sz,borderRadius:"50%",background:`linear-gradient(135deg,${c},${c}B0)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:sz*.38,flexShrink:0}}>{(u.nom||"U").split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase()}</div>;};
@@ -4465,16 +4525,18 @@ function AA({onOut}){
           {k:"pl", ico:"ti-calendar-check",   label:"Présentiel",  bc:K.em},
           {k:"ef", ico:"ti-report-money",     label:"États fin."},
           {k:"fisc", ico:"ti-receipt-tax",    label:"Impôts"},
+          {k:"nt", ico:"ti-bell",            label:"Notifications"},
+          {k:"sg", ico:"ti-bulb",            label:"Suggestions", badge:nSugg, bc:K.wa},
           {k:"msg", ico:"ti-message-circle",  label:"Messages",   badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, bc:K.rd},
     ];
   return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
     <AutoLogoutBanner warning={aaWarn} mob={mob}/>
     <StaffNav role="admin" nom="Administrateur" onOut={onOut} tabs={ADMIN_TABS} active={tab} onTab={sT} onProfil={()=>sT("param")}
-      extra={!mob&&<div style={{display:"flex",gap:12,alignItems:"center",marginRight:4}}>
+      extra={<>{!mob&&<div style={{display:"flex",gap:12,alignItems:"center",marginRight:4}}>
         {[[`${users.length}`,"users",K.t2,"Inscrits"],[`${nD}`,"clock",K.wa,"Demandes"],[`${nA}`,"circle-check",K.em,"Actifs"]].map(([v,ic,c,t])=>(
           <div key={ic} title={t} style={{display:"flex",alignItems:"center",gap:4}}><i className={`ti ti-${ic}`} style={{fontSize:16,color:c}}/><span style={{fontSize:14,fontWeight:800,color:c}}>{v}</span></div>))}
-      </div>}/>
+      </div>}<Cloche K={K} db={db} uid={auth.currentUser?.uid} role="admin" mob={mob} onGo={v=>sT(ADMIN_TABS.some(t=>t.k===v)||v==="param"?v:"home")}/></>}/>
     <div className="mp" style={{maxWidth:1060,margin:"0 auto"}}>
       {msg.m&&<Pop t={msg.t} m={msg.m}/>}
       {tab!=="home"&&<div className="tn" style={{gap:8,marginBottom:16,paddingBottom:2}}>{[[`${users.length}`,"Inscrits",K.t1,"users","t"],[`${nD}`,"Demandes",K.wa,"clock","d"],[`${nA}`,"Actifs",K.em,"circle-check","a"],[`${nE}`,"Expirés",K.er,"clock-off","e"],[`${mods.filter(m=>m.on!==false).length}`,"Modules",K.in_,"book-2","m"]].map(([v,l,c,ic,k])=><div key={l} onClick={()=>sT(k)} className="bt" style={{display:"flex",alignItems:"center",gap:8,background:K.card,border:`1px solid ${tab===k?c:K.b0}`,boxShadow:K.sh,borderRadius:14,padding:"8px 13px",cursor:"pointer",flexShrink:0}}><i className={`ti ti-${ic}`} style={{fontSize:17,color:c}}/><span style={{color:c,fontWeight:900,fontSize:17}}>{v}</span><span style={{color:K.t2,fontSize:13,fontWeight:600}}>{l}</span></div>)}</div>}
@@ -4497,6 +4559,8 @@ function AA({onOut}){
           {k:"pl",ico:"calendar-check", label:"Présentiel",     col:"#0A2A5C"},
           {k:"ef",ico:"report-money",   label:"États financiers",col:"#1D4ED8"},
           {k:"fisc",ico:"receipt-tax",  label:"Code des impôts",col:"#A3122A"},
+          {k:"nt",ico:"bell",           label:"Notifications",col:"#1E4FA3"},
+          {k:"sg",ico:"bulb",           label:"Suggestions",    badge:nSugg, col:"#C98A1B"},
           {k:"msg",ico:"message-circle",label:"Messages",       badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, col:"#BE123C"},
         ];
         // ── Calcul des indicateurs ──
@@ -4968,6 +5032,8 @@ function AA({onOut}){
         <div style={{marginTop:13,padding:"10px 13px",background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:9,fontSize:13,color:K.t2}}>🔗 <b>Lien Google Drive</b> : dans Drive, Partager → « Tous les utilisateurs disposant du lien » (Lecteur), puis copiez le lien. Pour empêcher le téléchargement : Partager → ⚙️ → décochez « Les lecteurs et les commentateurs peuvent voir l'option de téléchargement ».</div>
       </div>}
     {tab==="param"&&<ParametresAdmin onOut={onOut}/>}
+    {tab==="nt"&&<AdminNotif K={K} mob={mob} db={db} users={users}/>}
+    {tab==="sg"&&<AdminSuggestions K={K} mob={mob} db={db}/>}
     {tab==="an"&&<div style={{animation:"fadeIn .35s ease"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:21,letterSpacing:"-.3px",lineHeight:1.2,color:K.t1,display:"flex",alignItems:"center",gap:7}}>
@@ -5021,7 +5087,7 @@ function AA({onOut}){
           <input type="date" value={editAn.expireAt||""} onChange={e=>sEditAn({...editAn,expireAt:e.target.value})} style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",color:K.t1,fontFamily:"'Outfit',sans-serif",fontSize:14}}/>
         </div>
       </div>
-      <Btn ch="Enregistrer" on={async()=>{if(!editAn.titre.trim())return;await saveAnnonce(editAn);sEditAn(null);}} full/>
+      <Btn ch="Enregistrer" on={async()=>{if(!editAn.titre.trim())return;await saveAnnonce(editAn);if(!editAn.id&&editAn.actif)notifier({dest:"apprenants",type:"annonce",titre:editAn.titre.trim(),texte:editAn.contenu||"",vue:"home",auteurNom:"Éco-Campus RDC"});sEditAn(null);}} full/>
     </Sheet>}
     {tab==="msg"&&<div style={{animation:"fadeIn .35s ease"}}>
       {!activeThread?<>

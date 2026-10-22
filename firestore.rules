@@ -198,5 +198,70 @@ service cloud.firestore {
         && roleDeclareValide();
       allow update: if false;
     }
+
+    // ── Notifications (cloche de l'application) ─────────────────────────────────
+    // dest : uid d'un destinataire, ou groupe « all », « apprenants », « formateurs », « admin ».
+    // L'administrateur envoie à tous ; un formateur à une personne (corrections, messages, contenus) ;
+    // un apprenant seulement à l'administration ou à un formateur (message, suggestion).
+    function notifValide() {
+      return nouveau().keys().hasOnly(["dest", "type", "titre", "texte", "vue", "ts", "auteur", "auteurNom"])
+        && nouveau().auteur == request.auth.uid
+        && nouveau().ts == request.time
+        && nouveau().titre is string && nouveau().titre.size() > 0 && nouveau().titre.size() <= 120
+        && nouveau().get("texte", "") is string && nouveau().get("texte", "").size() <= 1000
+        && nouveau().get("vue", "") is string && nouveau().get("vue", "").size() <= 40
+        && nouveau().dest is string && nouveau().dest.size() > 0 && nouveau().dest.size() <= 128;
+    }
+    function destGroupe(d) { return d in ["all", "apprenants", "formateurs", "admin"]; }
+    match /notifications/{id} {
+      allow read: if estAdmin()
+        || (connecte() && (resource.data.dest == request.auth.uid || resource.data.dest in ["all", "apprenants", "formateurs"]));
+      allow create: if notifValide() && (
+        estAdmin()
+        || (estFormateur() && !destGroupe(nouveau().dest) && nouveau().type in ["correction", "message", "contenu", "info"])
+        || (connecte() && nouveau().type in ["message", "suggestion"]
+            && (nouveau().dest == "admin"
+                || get(/databases/$(database)/documents/users/$(nouveau().dest)).data.get("role", "") == "formateur")));
+      allow update: if false;
+      allow delete: if estAdmin();
+    }
+    // État de lecture propre à chaque utilisateur : vu (date en ms) et notifications lues une à une
+    match /notifEtat/{uid} {
+      allow read: if moi(uid);
+      allow create, update: if moi(uid)
+        && nouveau().keys().hasOnly(["vu", "lues"])
+        && nouveau().get("vu", 0) is number
+        && nouveau().get("lues", {}) is map && nouveau().get("lues", {}).size() <= 200;
+      allow delete: if moi(uid) || estAdmin();
+    }
+    // Jetons de notification push (Firebase Cloud Messaging) : un document par appareil.
+    // Lus uniquement par le serveur d'envoi (api/push, SDK Admin) ; jamais par les autres utilisateurs.
+    match /pushTokens/{token} {
+      allow read: if estAdmin() || (connecte() && resource.data.uid == request.auth.uid);
+      allow create, update: if connecte()
+        && nouveau().keys().hasOnly(["uid", "role", "ts", "appareil"])
+        && nouveau().uid == request.auth.uid
+        && nouveau().ts == request.time
+        && roleDeclareValide();
+      allow delete: if estAdmin() || (connecte() && resource.data.uid == request.auth.uid);
+    }
+
+    // ── Boîte à suggestions ─────────────────────────────────────────────────────
+    match /suggestions/{id} {
+      allow read: if estAdmin() || (connecte() && resource.data.uid == request.auth.uid);
+      allow create: if connecte()
+        && nouveau().keys().hasOnly(["uid", "nom", "mail", "role", "cat", "texte", "ts", "statut"])
+        && nouveau().uid == request.auth.uid
+        && nouveau().ts == request.time
+        && nouveau().statut == "nouveau"
+        && nouveau().cat in ["idee", "bug", "contenu", "autre"]
+        && nouveau().texte is string && nouveau().texte.size() >= 5 && nouveau().texte.size() <= 2000
+        && roleDeclareValide();
+      allow update: if estAdmin()
+        && champsModifies().hasOnly(["statut", "reponse", "reponseTs"])
+        && nouveau().statut in ["nouveau", "en_cours", "realise", "rejete"]
+        && nouveau().get("reponse", "") is string && nouveau().get("reponse", "").size() <= 2000;
+      allow delete: if estAdmin();
+    }
   }
 }
