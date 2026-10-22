@@ -11,6 +11,8 @@ import AdminNotif from"./notif/AdminNotif";
 import{Suggestions,AdminSuggestions}from"./notif/Suggestions";
 import PourVous from"./notif/Recommandations";
 import Apropos from"./notif/Apropos";
+import{DUR,OFFRES,INCLUS,offresAvecPrix,parMois,fUSD,numerosRenseignes,usePaiement,utiliserCodeOffert}from"./acces/acces";
+import AdminAcces from"./acces/AdminAcces";
 import{pushPossible,pushActif,activerPush,desactiverPush}from"./notif/push";
 import{htmlCodeAcces,htmlNotification}from"./emails";
 import{PROVINCES}from"./ef/rdc";
@@ -161,7 +163,6 @@ body{background:${K.bg};color:${K.t1};font-family:'Outfit',sans-serif;-webkit-fo
 .mp{padding:18px max(14px,env(safe-area-inset-right)) max(80px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));}`;
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
-const DUR=[{id:"1m",l:"1 mois",j:30},{id:"3m",l:"3 mois",j:90},{id:"6m",l:"6 mois",j:180},{id:"1a",l:"1 an",j:365},{id:"v",l:"À vie",j:36500}];
 const dE=j=>{const d=new Date();d.setDate(d.getDate()+j);return d.toISOString();};
 const jR=i=>!i?0:Math.max(0,Math.ceil((new Date(i)-new Date())/864e5));
 const fD=i=>!i?"—":new Date(i).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});
@@ -264,6 +265,23 @@ function useConnexions(n=400){
 
 // ── FIRESTORE ACTIONS ─────────────────────────────────────────────────────────
 const saveUserData=async(uid,data)=>{await setDoc(doc(db,"users",uid),data,{merge:true});};
+// Code saisi par l'utilisateur : formateur (FO-), offert (OF-) ou délivré par l'administrateur après paiement.
+const activerCode=async(uid,saisie)=>{
+  const c=String(saisie||"").trim().toUpperCase();if(!c)return{err:"Entrez votre code"};
+  const snap=await getDoc(doc(db,"users",uid));if(!snap.exists())return{err:"Profil introuvable."};
+  const ud=snap.data();
+  if(c.startsWith("FO-")){
+    if(ud.formateurCode!==c)return{err:"Code formateur incorrect."};
+    await updateDoc(doc(db,"users",uid),{role:"formateur",formateurCodeValide:true});return{ok:true};
+  }
+  if(c.startsWith("OF-")){
+    const r=await utiliserCodeOffert(db,uid,ud,c);if(!r.ok)return{err:r.err};
+    notifier({dest:"admin",type:"message",titre:`Code offert utilisé : ${ud.nom||ud.mail||""}`,texte:`${c} · ${r.duree}`,vue:"ac",auteurNom:ud.nom||"",push:false});
+    return{ok:true};
+  }
+  if(ud.activationCode!==c)return{err:"Code incorrect."};
+  await updateDoc(doc(db,"users",uid),{abonnement:"actif",codeValide:true});return{ok:true};
+};
 const saveProgress=async(uid,modId,score)=>{
   await updateDoc(doc(db,"users",uid),{[`scores.${modId}`]:score,[`progress.${modId}`]:"done"});
 };
@@ -2702,6 +2720,15 @@ function Auth({onL}){
       }catch(e){sB(false);sE(e.message);}
       return;
     }
+    // Code offert
+    if(c.toUpperCase().startsWith("OF-")){
+      try{
+        const r=await activerCode(cred.user.uid,c);
+        if(r.err){sB(false);return sE(r.err);}
+        sO("✓ Accès débloqué !");setTimeout(()=>onL(cred.user.uid,cred.user),700);
+      }catch(e){sB(false);sE(e.message);}
+      return;
+    }
     // Code apprenant standard
     try{
       const snap=await getDoc(doc(db,"users",cred.user.uid));
@@ -2763,7 +2790,7 @@ function Auth({onL}){
           {step===1&&<div style={{display:"flex",background:K.bg,borderRadius:9,padding:3,marginBottom:17,gap:2}}>{[["l","Connexion"],["r","Inscription"]].map(([k,l])=><button key={k} onClick={()=>sw(k)} className="bt" style={{flex:1,padding:"9px",borderRadius:7,border:"none",fontWeight:700,fontSize:14,fontFamily:"'Outfit',sans-serif",cursor:"pointer",background:tab===k?K.c2:"transparent",color:tab===k?K.t1:K.t3,minHeight:38}}>{l}</button>)}</div>}
           <div style={{marginBottom:15}}><div style={{fontSize:15,fontWeight:800,color:K.t1,marginBottom:3}}>{step===2?"🔐 Code d'activation":tab==="l"?"Bon retour 👋":"Créer un compte"}</div><div style={{fontSize:13,color:K.t3,lineHeight:1.5}}>{step===2?"Code reçu de l'administrateur":tab==="l"?"Accédez à votre formation":"Inscription gratuite · Accès sur abonnement"}</div></div>
           {step===2&&<Inp lb="Mot de passe" rf={rP} type="password" ph="Le même qu'à l'inscription" ok={hk}/>}
-          {step===2&&<Inp lb="Code d'activation" rf={rC} ph="ACC-001" mono note="Communiqué par Éco-Campus" ok={hk}/>}
+          {step===2&&<Inp lb="Code d'activation" rf={rC} ph="EC-XXXXXXXX ou OF-XXXXXXXX" mono note="Code d'accès ou code offert reçu d'Éco-Campus" ok={hk}/>}
           {step===1&&tab==="r"&&<Inp lb="Nom complet" rf={rN} ph="Votre nom" ok={hk}/>}
           {step===1&&<Inp lb="Email" rf={rM} type="email" ph="vous@exemple.com" ok={hk}/>}
           {step===1&&<Inp lb="Mot de passe" rf={rP} type="password" ph="Min. 6 car." ok={hk}/>}
@@ -3321,28 +3348,15 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
   const[hcBusy,sHcBusy]=useState(false);
   const[showMore,sShowMore]=useState(false);
   const submitNavCode=async()=>{
-    const c=rHc.current?.value?.trim()||"";
-    sHcErr("");if(!c)return sHcErr("Entrez votre code");
-    sHcBusy(true);
+    sHcErr("");sHcBusy(true);
     try{
-      const snap=await getDoc(doc(db,"users",uid));
-      if(!snap.exists()){sHcBusy(false);return sHcErr("Profil introuvable.");}
-      const ud=snap.data();
-      if(c.startsWith("FO-")){
-        if(ud.formateurCode!==c){sHcBusy(false);return sHcErr("Code formateur incorrect.");}
-        await updateDoc(doc(db,"users",uid),{role:"formateur",formateurCodeValide:true});
-        sHcBusy(false);sShowCode(false);
-        window.location.reload();
-        return;
-      }
-      if(ud.activationCode!==c){sHcBusy(false);return sHcErr("Code incorrect.");}
-      await updateDoc(doc(db,"users",uid),{abonnement:"actif",codeValide:true});
-      sHcBusy(false);sShowCode(false);
-      window.location.reload();
+      const r=await activerCode(uid,rHc.current?.value);
+      sHcBusy(false);if(r.err)return sHcErr(r.err);
+      sShowCode(false);window.location.reload();
     }catch(e){sHcBusy(false);sHcErr(e.message);}
   };
   const codeModal=showCode&&<Sheet title="🔑 J'ai un code" onClose={()=>sShowCode(false)}>
-    <Inp lb="Code d'activation" rf={rHc} ph="EC-XXXXXXXX ou FO-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
+    <Inp lb="Code d'activation" rf={rHc} ph="EC-XXXXXXXX, OF-XXXXXXXX ou FO-XXXXXXXX" mono note="Code d'accès, code offert ou code formateur"/>
     {hcErr&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{hcErr}</div>}
     <Btn ch={hcBusy?"…":"Valider →"} on={submitNavCode} full dis={hcBusy}/>
   </Sheet>;
@@ -3470,24 +3484,11 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
   const[modQ,sModQ]=useState("");
   const activeAnnonces=annonces.filter(a=>a.actif&&(!a.expireAt||new Date(a.expireAt)>=new Date())&&!dismissed.includes(a.id));
   const submitHomeCode=async()=>{
-    const c=rHc.current?.value?.trim()||"";
-    sHcErr("");if(!c)return sHcErr("Entrez votre code");
-    sHcBusy(true);
+    sHcErr("");sHcBusy(true);
     try{
-      const snap=await getDoc(doc(db,"users",uid));
-      if(!snap.exists()){sHcBusy(false);return sHcErr("Profil introuvable.");}
-      const ud=snap.data();
-      if(c.startsWith("FO-")){
-        if(ud.formateurCode!==c){sHcBusy(false);return sHcErr("Code formateur incorrect.");}
-        await updateDoc(doc(db,"users",uid),{role:"formateur",formateurCodeValide:true});
-        sHcBusy(false);sShowCode(false);
-        window.location.reload();
-        return;
-      }
-      if(ud.activationCode!==c){sHcBusy(false);return sHcErr("Code incorrect.");}
-      await updateDoc(doc(db,"users",uid),{abonnement:"actif",codeValide:true});
-      sHcBusy(false);sShowCode(false);
-      window.location.reload();
+      const r=await activerCode(uid,rHc.current?.value);
+      sHcBusy(false);if(r.err)return sHcErr(r.err);
+      sShowCode(false);window.location.reload();
     }catch(e){sHcBusy(false);sHcErr(e.message);}
   };
   const filMat=fi==="Toutes"?mods:mods.filter(m=>(m.mat||"Général")===fi);
@@ -3632,7 +3633,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
       </div>
     </div>}
     {showCode&&<Sheet title="🔐 Code d'activation" onClose={()=>sShowCode(false)}>
-      <Inp lb="Code d'activation" rf={rHc} ph="EC-XXXXXXXX ou FO-XXXXXXXX" mono note="Communiqué par Éco-Campus"/>
+      <Inp lb="Code d'activation" rf={rHc} ph="EC-XXXXXXXX, OF-XXXXXXXX ou FO-XXXXXXXX" mono note="Code d'accès, code offert ou code formateur"/>
       {hcErr&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{hcErr}</div>}
       <Btn ch={hcBusy?"…":"Valider →"} on={submitHomeCode} full dis={hcBusy}/>
     </Sheet>}
@@ -3640,14 +3641,64 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
 }
 
 function SubM({onClose,uid,u}){
-  const K=useK();const a=u.abonnement==="demande";
-  const ask=async()=>{await saveUserData(uid,{abonnement:"demande",demandeDate:new Date().toLocaleDateString("fr-FR")});onClose();};
+  const K=useK();const cfg=usePaiement(db);const offres=offresAvecPrix(cfg);const nums=numerosRenseignes(cfg);
+  const a=u.abonnement==="demande";
+  const[o,sO]=useState(OFFRES.some(x=>x.id===u.demandeOffre)?u.demandeOffre:"t");
+  const[err,sErr]=useState(""),[busy,sBusy]=useState(false),[copie,sCopie]=useState("");
+  const[cErr,sCErr]=useState(""),[cBusy,sCBusy]=useState(false);
+  const rRef=useRef(),rTel=useRef(),rCode=useRef();
+  const off=offres.find(x=>x.id===o)||offres[1];
+  const ask=async()=>{
+    const ref=rRef.current?.value?.trim()||"",tel=rTel.current?.value?.trim()||"";
+    sErr("");if(!ref)return sErr("Indiquez la référence de la transaction, reçue par SMS après le paiement.");
+    sBusy(true);
+    try{
+      await saveUserData(uid,{abonnement:"demande",demandeDate:new Date().toLocaleDateString("fr-FR"),demandeOffre:off.id,demandeRef:ref.slice(0,60),demandeTel:tel.slice(0,30)});
+      notifier({dest:"admin",type:"message",titre:`Demande d'accès : ${off.l} (${fUSD(off.prix)})`,texte:`${u.nom||u.mail||""} · Réf. ${ref}${tel?` · ${tel}`:""}`,vue:"d",auteurNom:u.nom||""});
+      onClose();
+    }catch(e){sErr("Envoi impossible. Vérifiez votre connexion et réessayez.");}
+    sBusy(false);
+  };
+  const code=async()=>{
+    sCErr("");sCBusy(true);
+    try{const r=await activerCode(uid,rCode.current?.value);sCBusy(false);if(r.err)return sCErr(r.err);window.location.reload();}
+    catch(e){sCBusy(false);sCErr(e.message);}
+  };
+  const copier=v=>{try{navigator.clipboard.writeText(v);sCopie(v);setTimeout(()=>sCopie(""),1800);}catch(e){}};
+  const boite={background:K.bg,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px",marginBottom:12};
+  const Numeros=({rappel=true})=><div style={boite}>
+    <div style={{fontWeight:800,fontSize:14.5,color:K.t1,marginBottom:8}}>Payez {fUSD(off.prix)} par Mobile Money</div>
+    {nums.length?nums.map(n=><div key={n.k} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"6px 0",borderTop:`1px solid ${K.b0}`}}>
+      <span style={{fontSize:13.5,color:K.t2}}>{n.l}</span>
+      <button onClick={()=>copier(cfg[n.k])} className="bt" title="Copier le numéro" style={{display:"inline-flex",alignItems:"center",gap:6,background:"none",border:"none",cursor:"pointer",fontFamily:"'JetBrains Mono',monospace",fontWeight:800,fontSize:14,color:K.em}}>{cfg[n.k]}<i className={`ti ti-${copie===cfg[n.k]?"check":"copy"}`} style={{fontSize:15}}/></button>
+    </div>):<div style={{fontSize:13.5,color:K.t2,lineHeight:1.6}}>Les numéros de paiement seront bientôt affichés ici. En attendant, écrivez-nous à <b>contact@accessplusconsulting.com</b>.</div>}
+    {cfg?.beneficiaire&&<div style={{fontSize:13,color:K.t2,marginTop:6}}>Bénéficiaire : <b style={{color:K.t1}}>{cfg.beneficiaire}</b></div>}
+    {rappel&&<div style={{fontSize:12.5,color:K.t3,marginTop:6,lineHeight:1.5}}>Gardez le SMS de confirmation : sa référence est demandée ci-dessous.</div>}
+  </div>;
   return <Sheet title="Obtenir l'accès" onClose={onClose}>
-    {a?<div style={{textAlign:"center",padding:"5px 0"}}><div style={{fontSize:40,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>⏳</div><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:5}}>Demande en cours</div><div style={{color:K.t3,fontSize:14,lineHeight:1.7,marginBottom:12}}>Demande du <b style={{color:K.t2}}>{u.demandeDate}</b>. Code sous 24h.</div><div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:9,padding:"8px 11px",marginBottom:12,fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:K.t2,lineHeight:1.9}}>📱 +243 XXX XXX XXX<br/>✉️ contact@accessplusconsulting.com</div><Btn ch="Fermer" on={onClose} v="g" full sx={{minHeight:44}}/></div>:<>
-      <div style={{color:K.t3,fontSize:14,marginBottom:12}}>Paiement unique · Durée définie après validation.</div>
-      <div style={{background:K.bg,border:`1px solid ${K.emBd}`,borderRadius:11,padding:"12px 14px",marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{fontWeight:900,fontSize:18,color:K.t1}}>50 USD</div><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Paiement unique"/></div>{["Tous les modules actifs","QCM + Exercices + PDF","Vidéos premium + Direct","Accès selon durée validée"].map(f=><div key={f} style={{display:"flex",gap:7,fontSize:14,color:K.t2,marginBottom:3}}><span style={{color:K.em}}>✓</span>{f}</div>)}</div>
-      <div style={{background:K.bg,border:`1px solid ${K.b0}`,borderRadius:9,padding:"8px 11px",marginBottom:12,fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:K.t2,lineHeight:1.9}}>💳 M-Pesa · Airtel Money · Orange Money<br/>✉️ contact@accessplusconsulting.com</div>
-      <Btn ch="J'ai payé — Soumettre" on={ask} full sx={{padding:"12px",fontSize:14,minHeight:46}}/>
+    {a?<div style={{padding:"2px 0"}}>
+      <div style={{textAlign:"center"}}><div style={{fontSize:40,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>⏳</div><div style={{fontWeight:800,fontSize:15.5,color:K.t1,marginBottom:5}}>Demande en cours de vérification</div>
+      <div style={{color:K.t3,fontSize:14,lineHeight:1.7,marginBottom:12}}>Envoyée le <b style={{color:K.t2}}>{u.demandeDate}</b>{u.demandeOffre&&<> · offre <b style={{color:K.t2}}>{(offres.find(x=>x.id===u.demandeOffre)||{}).l}</b></>}{u.demandeRef&&<> · réf. <b style={{color:K.t2,fontFamily:"'JetBrains Mono',monospace"}}>{u.demandeRef}</b></>}.<br/>Votre code d'accès arrive sous 24 h, par message et par e-mail.</div></div>
+      <Numeros rappel={false}/>
+      <Btn ch="Fermer" on={onClose} v="g" full sx={{minHeight:44}}/>
+    </div>:<>
+      <div style={{color:K.t2,fontSize:14,marginBottom:12,lineHeight:1.55}}>Chaque abonnement donne accès à <b style={{color:K.t1}}>tous les contenus</b> pendant sa durée.</div>
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>{offres.map(x=>{const sel=x.id===o;return <button key={x.id} onClick={()=>sO(x.id)} className="bt" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,textAlign:"left",padding:"12px 14px",borderRadius:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",background:sel?K.emBg:K.c2,border:`${sel?2:1}px solid ${sel?K.em:K.b0}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}><i className={`ti ti-${sel?"circle-check":"circle"}`} style={{fontSize:20,color:sel?K.em:K.t3}}/>
+          <div><div style={{fontWeight:800,fontSize:15,color:K.t1}}>{x.l} <span style={{fontWeight:600,fontSize:13,color:K.t3}}>· {x.duree}</span></div>{x.mois>1&&<div style={{fontSize:12.5,color:K.t3}}>soit {fUSD(parMois(x))} par mois</div>}</div></div>
+        <div style={{textAlign:"right"}}><div style={{fontWeight:900,fontSize:18,color:K.t1}}>{fUSD(x.prix)}</div>{x.badge&&<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={x.badge}/>}</div>
+      </button>;})}</div>
+      <div style={{...boite,background:"transparent"}}>{INCLUS.map(f=><div key={f} style={{display:"flex",gap:7,fontSize:13.5,color:K.t2,marginBottom:3}}><span style={{color:K.em}}>✓</span>{f}</div>)}</div>
+      <Numeros/>
+      <Inp lb="Référence de la transaction" rf={rRef} ph="Ex. : PP261022.1430.A12345" mono note="Indiquée dans le SMS de confirmation"/>
+      <Inp lb="Numéro utilisé pour payer (facultatif)" rf={rTel} type="tel" ph="+243 …"/>
+      {err&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{err}</div>}
+      <Btn ch={busy?"Envoi…":`J'ai payé ${fUSD(off.prix)} — Envoyer ma demande`} on={ask} full dis={busy} sx={{padding:"12px",fontSize:14,minHeight:46}}/>
+      <div style={{borderTop:`1px solid ${K.b0}`,margin:"16px 0 12px"}}/>
+      <div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:8}}>Vous avez reçu un code ?</div>
+      <Inp lb="Code d'accès ou code offert" rf={rCode} ph="OF-XXXXXXXX ou EC-XXXXXXXX" mono/>
+      {cErr&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{cErr}</div>}
+      <Btn ch={cBusy?"Vérification…":"Activer mon code"} on={code} v="g" full dis={cBusy} sx={{minHeight:44}}/>
     </>}
   </Sheet>;
 }
@@ -4331,6 +4382,7 @@ function AdminThread({apprenantUid,apprenantMail,onBack}){
 function AA({onOut}){
   const K=useK();const{mob}=useW();
   const cfgSecA=useConfigSecurite();
+  const offresA=offresAvecPrix(usePaiement(db));
   const{warning:aaWarn}=useAutoLogout(onOut,cfgSecA.delaiAdmin||20);
   usePresence({uid:auth.currentUser?.uid,nom:"Administrateur",mail:ADM_EMAIL,role:"admin",vue:"Administration"});
   const[pendingDocs,setPendingDocs]=useState([]);
@@ -4471,8 +4523,10 @@ function AA({onOut}){
   const Av=({u,sz=38})=>{const cs=["#0A2A5C","#1E4FA3","#A3122A","#0D7A6B","#7C3AED","#C98A1B"];const c=cs[((u.nom||"U").charCodeAt(0)+(u.nom||"").length)%cs.length];return <div style={{width:sz,height:sz,borderRadius:"50%",background:`linear-gradient(135deg,${c},${c}B0)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:sz*.38,flexShrink:0}}>{(u.nom||"U").split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase()}</div>;};
   const Stat=({st})=><span style={{display:"inline-flex",alignItems:"center",gap:5,background:`${sc_(st)}14`,color:sc_(st),border:`1px solid ${sc_(st)}33`,borderRadius:99,padding:"3px 10px",fontSize:12,fontWeight:800,whiteSpace:"nowrap"}}><span style={{width:6,height:6,borderRadius:"50%",background:sc_(st)}}/>{sl_(st)}</span>;
   const Code=({u,jr})=>u.activationCode?<div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,fontSize:13,color:K.em,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:7,padding:"2px 7px"}}>{u.activationCode}</span>{u.dateExpiration&&<span style={{fontSize:12,fontWeight:700,color:jr<=7?K.er:jr<=30?K.wa:K.t3}}>{jr>0?`${jr} j restants`:"Expiré"}</span>}</div>:<span style={{color:K.t3,fontSize:13}}>—</span>;
-  function RC({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:18,padding:"14px",marginBottom:10}}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av u={u}/><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:800,fontSize:15}}>{u.nom}</div><div style={{color:K.t3,fontSize:12.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div></div><Stat st={st}/></div>{u.activationCode&&<div style={{marginBottom:10}}><Code u={u} jr={jr}/></div>}<div style={{display:"flex",gap:6,flexWrap:"wrap"}}><Acts u={u} st={st}/></div></div>;}
-  function RR({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div className="ar" style={{borderBottom:`1px solid ${K.b0}`}}><div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}><Av u={u} sz={36}/><div style={{minWidth:0}}><div style={{color:K.t1,fontWeight:800,fontSize:14.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.nom}</div><div style={{color:K.t3,fontSize:12}}>Inscrit le {u.createdAt||"—"}</div></div></div><div style={{color:K.t2,fontSize:13.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div><div><Stat st={st}/></div><div><Code u={u} jr={jr}/></div><div style={{display:"flex",gap:5,justifyContent:"flex-end",flexWrap:"wrap"}}><Acts u={u} st={st}/></div></div>;}
+  const Dem=({u})=>{if(u.abonnement!=="demande"||!(u.demandeOffre||u.demandeRef))return null;const o=offresA.find(x=>x.id===u.demandeOffre);
+    return <div style={{display:"flex",flexWrap:"wrap",gap:"4px 10px",alignItems:"center",fontSize:12.5,color:K.t2,marginTop:3}}>{o&&<b style={{color:K.wa}}>{o.l} · {fUSD(o.prix)}</b>}{u.demandeRef&&<span>Réf. <b style={{fontFamily:"'JetBrains Mono',monospace",color:K.t1}}>{u.demandeRef}</b></span>}{u.demandeTel&&<span>{u.demandeTel}</span>}</div>;};
+  function RC({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:18,padding:"14px",marginBottom:10}}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><Av u={u}/><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:800,fontSize:15}}>{u.nom}</div><div style={{color:K.t3,fontSize:12.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div><Dem u={u}/></div><Stat st={st}/></div>{u.activationCode&&<div style={{marginBottom:10}}><Code u={u} jr={jr}/></div>}<div style={{display:"flex",gap:6,flexWrap:"wrap"}}><Acts u={u} st={st}/></div></div>;}
+  function RR({u}){const ex=xp(u.dateExpiration)&&u.abonnement==="actif",st=ex?"expiré":u.abonnement,jr=jR(u.dateExpiration);return <div className="ar" style={{borderBottom:`1px solid ${K.b0}`}}><div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}><Av u={u} sz={36}/><div style={{minWidth:0}}><div style={{color:K.t1,fontWeight:800,fontSize:14.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.nom}</div><div style={{color:K.t3,fontSize:12}}>Inscrit le {u.createdAt||"—"}</div><Dem u={u}/></div></div><div style={{color:K.t2,fontSize:13.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.mail}</div><div><Stat st={st}/></div><div><Code u={u} jr={jr}/></div><div style={{display:"flex",gap:5,justifyContent:"flex-end",flexWrap:"wrap"}}><Acts u={u} st={st}/></div></div>;}
   function Liste({list,empty}){if(list.length===0)return <div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"38px",textAlign:"center"}}><div style={{fontSize:26,marginBottom:7,animation:"fl 3s ease-in-out infinite"}}>👤</div><div style={{color:K.t3,fontSize:14}}>{empty}</div></div>;if(mob)return <div>{list.map(u=><RC key={u.uid} u={u}/>)}</div>;return <div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,overflow:"hidden"}}><div className="ah" style={{background:K.c2,borderBottom:`1px solid ${K.b0}`,color:K.t3,fontSize:12,fontWeight:800,textTransform:"uppercase",letterSpacing:".6px"}}><div>Apprenant</div><div>E-mail</div><div>Statut</div><div>Accès</div><div style={{textAlign:"right"}}>Actions</div></div>{list.map(u=><RR key={u.uid} u={u}/>)}</div>;}
   function ModEditor({mod,onSave,onCancel}){
     const isNew=!mod.id;const[qs,sQs]=useState(mod.q?JSON.parse(JSON.stringify(mod.q)):[{q:"",r:["","","",""],b:0}]);
@@ -4526,6 +4580,7 @@ function AA({onOut}){
           {k:"pl", ico:"ti-calendar-check",   label:"Présentiel",  bc:K.em},
           {k:"ef", ico:"ti-report-money",     label:"États fin."},
           {k:"fisc", ico:"ti-receipt-tax",    label:"Impôts"},
+          {k:"ac", ico:"ti-ticket",          label:"Accès"},
           {k:"nt", ico:"ti-bell",            label:"Notifications"},
           {k:"sg", ico:"ti-bulb",            label:"Suggestions", badge:nSugg, bc:K.wa},
           {k:"msg", ico:"ti-message-circle",  label:"Messages",   badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, bc:K.rd},
@@ -4560,6 +4615,7 @@ function AA({onOut}){
           {k:"pl",ico:"calendar-check", label:"Présentiel",     col:"#0A2A5C"},
           {k:"ef",ico:"report-money",   label:"États financiers",col:"#1D4ED8"},
           {k:"fisc",ico:"receipt-tax",  label:"Code des impôts",col:"#A3122A"},
+          {k:"ac",ico:"ticket",         label:"Tarifs et codes offerts",col:"#0D7A6B"},
           {k:"nt",ico:"bell",           label:"Notifications",col:"#1E4FA3"},
           {k:"sg",ico:"bulb",           label:"Suggestions",    badge:nSugg, col:"#C98A1B"},
           {k:"msg",ico:"message-circle",label:"Messages",       badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, col:"#BE123C"},
@@ -5033,6 +5089,7 @@ function AA({onOut}){
         <div style={{marginTop:13,padding:"10px 13px",background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:9,fontSize:13,color:K.t2}}>🔗 <b>Lien Google Drive</b> : dans Drive, Partager → « Tous les utilisateurs disposant du lien » (Lecteur), puis copiez le lien. Pour empêcher le téléchargement : Partager → ⚙️ → décochez « Les lecteurs et les commentateurs peuvent voir l'option de téléchargement ».</div>
       </div>}
     {tab==="param"&&<ParametresAdmin onOut={onOut}/>}
+    {tab==="ac"&&<AdminAcces K={K} mob={mob} db={db}/>}
     {tab==="nt"&&<AdminNotif K={K} mob={mob} db={db} users={users}/>}
     {tab==="sg"&&<AdminSuggestions K={K} mob={mob} db={db}/>}
     {tab==="an"&&<div style={{animation:"fadeIn .35s ease"}}>
@@ -5327,7 +5384,7 @@ function AA({onOut}){
       </div>;
     })()}
     </div>
-    {vm&&<Sheet title="Valider — Choisir la durée" onClose={()=>sVm(null)}><div style={{color:K.t3,fontSize:14,marginBottom:12}}>Paiement confirmé pour <b style={{color:K.t1}}>{users.find(u=>u.uid===vm)?.nom}</b>.</div><div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>{DUR.map(d=><div key={d.id} onClick={()=>genC(vm,d.id)} className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:9,padding:"10px 12px",cursor:"pointer",minHeight:50}} onMouseEnter={e=>{e.currentTarget.style.borderColor=K.emBd;e.currentTarget.style.background=K.emBg;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=K.b0;e.currentTarget.style.background=K.c2;}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{d.l}</div><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={d.j===36500?"∞":d.j+"j"}/></div></div>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t3,fontSize:13}}>Ou activer directement :</div><Btn ch="⚡ 3 mois" on={()=>actD(vm,"3m")} v="s" sm/></div></Sheet>}
+    {vm&&(()=>{const uV=users.find(u=>u.uid===vm)||{},oV=uV.abonnement==="demande"?offresA.find(x=>x.id===uV.demandeOffre):null;return <Sheet title="Valider — Choisir la durée" onClose={()=>sVm(null)}><div style={{color:K.t3,fontSize:14,marginBottom:oV?6:12}}>Paiement confirmé pour <b style={{color:K.t1}}>{uV.nom}</b>.</div>{oV&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:10,padding:"8px 11px",fontSize:13,color:K.t2,marginBottom:12,lineHeight:1.55}}>Offre demandée : <b style={{color:K.t1}}>{oV.l} ({oV.duree}) · {fUSD(oV.prix)}</b>{uV.demandeRef&&<><br/>Référence : <b style={{fontFamily:"'JetBrains Mono',monospace",color:K.t1}}>{uV.demandeRef}</b>{uV.demandeTel?` · ${uV.demandeTel}`:""}</>}<br/>Vérifiez la réception du paiement avant de valider.</div>}<div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>{DUR.map(d=><div key={d.id} onClick={()=>genC(vm,d.id)} className="bt" style={{background:oV&&oV.dureeId===d.id?K.emBg:K.c2,border:`${oV&&oV.dureeId===d.id?2:1}px solid ${oV&&oV.dureeId===d.id?K.em:K.b0}`,borderRadius:9,padding:"10px 12px",cursor:"pointer",minHeight:50}} onMouseEnter={e=>{e.currentTarget.style.borderColor=K.emBd;e.currentTarget.style.background=K.emBg;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=K.b0;e.currentTarget.style.background=K.c2;}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t1,fontWeight:700,fontSize:14}}>{d.l}{oV&&oV.dureeId===d.id&&<span style={{color:K.em,fontSize:12.5,fontWeight:800}}> · demandée</span>}</div><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={d.j===36500?"∞":d.j+"j"}/></div></div>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{color:K.t3,fontSize:13}}>Ou activer directement :</div><Btn ch={`⚡ ${(DUR.find(d=>d.id===(oV?.dureeId||"3m"))||{}).l}`} on={()=>actD(vm,oV?.dureeId||"3m")} v="s" sm/></div></Sheet>;})()}
     {cm&&<Sheet title="Code généré ✅" onClose={()=>sCm(null)} w={400}><div style={{background:K.bg,border:`2px solid ${K.emBd}`,borderRadius:12,padding:"16px",textAlign:"center",marginBottom:11}}><div style={{color:K.t3,fontSize:10,letterSpacing:2,fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",marginBottom:7}}>Code d'accès</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:800,fontSize:32,letterSpacing:6,color:K.em,marginBottom:7}}>{cm.code}</div><div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}><Tg c={K.em} bg={K.emBg} bd={K.emBd} ch={cm.d?.l||"—"}/><Tg c={K.t3} bg="none" bd={K.b0} ch={fD(dE(cm.d?.j||30))}/></div></div><Btn ch="✉ Envoyer par email + message" on={()=>mL({...users.find(u=>u.uid===cm.uid),...cm})} v="i" full sx={{padding:"10px",fontSize:14,marginBottom:7,minHeight:42}}/><div style={{background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:8,padding:"7px 10px",marginBottom:11,fontSize:13,color:K.t2}}>📨 Envoyé par email et dans la messagerie interne de l'apprenant.</div><Btn ch="Fermer" on={()=>sCm(null)} v="g" full/></Sheet>}
     {dm&&<Sheet title="Supprimer ?" onClose={()=>sDm(null)} w={320}><div style={{textAlign:"center",padding:"4px 0"}}><div style={{fontSize:30,marginBottom:7}}>⚠️</div><div style={{color:K.t1,fontWeight:700,fontSize:14,marginBottom:4}}>{users.find(u=>u.uid===dm)?.nom}</div><div style={{color:K.t3,fontSize:13,marginBottom:17}}>Action irréversible.</div><div style={{display:"flex",gap:7,justifyContent:"center"}}><Btn ch="Annuler" on={()=>sDm(null)} v="g" sx={{minHeight:42}}/><Btn ch="Supprimer" on={()=>delU(dm)} v="d" sx={{minHeight:42}}/></div></div></Sheet>}
   </div>;
