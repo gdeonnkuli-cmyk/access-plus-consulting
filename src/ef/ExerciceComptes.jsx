@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { CLASSES_REV } from "./syscohada";
 import { NB_QUESTIONS, corriger, enonce, reservoir, tirer } from "./syscohada/exercice";
+import { cleCpt, niveau } from "./syscohada/scores";
 
 // ══════════════ EXERCICE « QUEL COMPTE ? » ══════════════
 // Série de 10 écritures tirées des écritures types d'une classe (ou de toutes) : l'apprenant saisit comptes et sens,
 // la correction est donnée ligne par ligne, avec l'écriture type et le lien vers la fiche du compte.
+// Le meilleur score de chaque champ (users.scores["CPT-…"], reçu dans `scores`) est rappelé sur le choix de la classe et au bilan.
 // Rendu par fonctions (et non par sous-composants) pour que les champs de saisie gardent le focus.
 
 const mono = "'JetBrains Mono',monospace";
@@ -20,7 +22,7 @@ const ETATS = {
 };
 const vide = () => [{ c: "", s: "D" }, { c: "", s: "C" }];
 
-export default function ExerciceComptes({ K, mob, classes, k0 = 0, titreDe, ecriture, onFiche, onScore }) {
+export default function ExerciceComptes({ K, mob, classes, k0 = 0, titreDe, ecriture, onFiche, onScore, scores = {} }) {
   const [k, sK] = useState(k0);
   const [serie, sSerie] = useState(null);
   const [i, sI] = useState(0);
@@ -28,9 +30,10 @@ export default function ExerciceComptes({ K, mob, classes, k0 = 0, titreDe, ecri
   const [res, sRes] = useState(null);
   const [bilan, sBilan] = useState([]);
   const [indice, sIndice] = useState(false);
+  const [enreg, sEnreg] = useState(null); // null | "encours" | "ok" | "erreur"
   const pool = useMemo(() => reservoir(classes, k), [classes, k]);
 
-  const demarrer = (kk = k) => { sK(kk); sSerie(tirer(reservoir(classes, kk))); sI(0); sSaisie(vide()); sRes(null); sBilan([]); sIndice(false); };
+  const demarrer = (kk = k) => { sK(kk); sSerie(tirer(reservoir(classes, kk))); sI(0); sSaisie(vide()); sRes(null); sBilan([]); sIndice(false); sEnreg(null); };
   const q = serie && serie[i];
   const majLigne = (j, champ, v) => sSaisie(L => L.map((l, x) => x === j ? { ...l, [champ]: v } : l));
   const valider = abandon => {
@@ -38,13 +41,18 @@ export default function ExerciceComptes({ K, mob, classes, k0 = 0, titreDe, ecri
     sRes({ ...r, abandon });
     const b = [...bilan, { id: q.id, c: q.c, ok: r.ok }];
     sBilan(b);
-    if (b.length === serie.length && onScore) onScore({ k, s: b.filter(x => x.ok).length, t: b.length });
+    if (b.length === serie.length && onScore) {
+      sEnreg("encours");
+      Promise.resolve(onScore({ k, s: b.filter(x => x.ok).length, t: b.length })).then(() => sEnreg("ok"), () => sEnreg("erreur"));
+    }
   };
   const suivante = () => { sI(i + 1); sSaisie(vide()); sRes(null); sIndice(false); };
 
   const couleur = c => ({ ok: K.em, wa: K.wa, er: K.er }[c]);
+  const teinte = pct => ({ bon: K.em, moyen: K.wa, faible: K.er, aucun: K.t3 }[niveau(pct)]);
+  const meilleur = n => scores[cleCpt(n)];
   const choixClasse = (actif, onPick) => <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-    {[[0, "Toutes"], ...CLASSES_REV.map(([n]) => [n, `Classe ${n}`])].map(([n, l]) => <button key={n} onClick={() => onPick(n)} className="bt" style={{ ...btn(K), minHeight: 32, padding: "5px 11px", fontSize: 11.5, ...(actif === n ? { background: K.emBg, color: K.em, border: `1px solid ${K.emBd}` } : {}) }}>{l}</button>)}
+    {[[0, "Toutes"], ...CLASSES_REV.map(([n]) => [n, `Classe ${n}`])].map(([n, l]) => { const m = meilleur(n); return <button key={n} onClick={() => onPick(n)} className="bt" title={m ? `Meilleur score : ${m.pct} % (${m.n || 1} série${(m.n || 1) > 1 ? "s" : ""})` : "Pas encore de série"} style={{ ...btn(K), minHeight: 32, padding: "5px 11px", fontSize: 11.5, ...(actif === n ? { background: K.emBg, color: K.em, border: `1px solid ${K.emBd}` } : {}) }}>{l}{m && <span style={{ fontSize: 10.5, fontWeight: 800, color: teinte(m.pct) }}>{m.pct} %</span>}</button>; })}
   </div>;
 
   // ── Accueil de l'exercice
@@ -69,6 +77,8 @@ export default function ExerciceComptes({ K, mob, classes, k0 = 0, titreDe, ecri
       <div style={{ ...carte(K), padding: "18px", textAlign: "center" }}>
         <i className={`ti ti-${pct >= 80 ? "trophy" : pct >= 50 ? "thumb-up" : "book-2"}`} style={{ fontSize: 34, color: pct >= 50 ? K.em : K.wa }} />
         <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: 26, color: K.t1, marginTop: 6 }}>{nBons} / {serie.length}</div>
+        {(() => { const m = meilleur(k); return m ? <div style={{ fontSize: 12, color: K.t3, marginTop: 6 }}>Meilleur score {k ? `en classe ${k}` : "toutes classes"} : <b style={{ color: teinte(m.pct) }}>{m.pct} %</b> · {m.n || 1} série{(m.n || 1) > 1 ? "s" : ""}</div> : null; })()}
+        {enreg && <div style={{ fontSize: 11.5, marginTop: 4, color: enreg === "erreur" ? K.er : K.t3 }}><i className={`ti ti-${enreg === "ok" ? "cloud-check" : enreg === "erreur" ? "cloud-off" : "loader-2"}`} style={{ fontSize: 13, verticalAlign: -2 }} /> {enreg === "ok" ? "Score enregistré dans votre suivi" : enreg === "erreur" ? "Score non enregistré (connexion ?) — il le sera à la prochaine série réussie" : "Enregistrement du score…"}</div>}
         <div style={{ fontSize: 13, color: K.t2, marginTop: 4 }}>{pct >= 80 ? "Très bonne maîtrise des comptes de cette série." : pct >= 50 ? "Bonne base : revoyez les fiches des écritures manquées." : "Reprenez les fiches des comptes concernés, puis relancez une série."}</div>
       </div>
       <div style={carte(K)}>

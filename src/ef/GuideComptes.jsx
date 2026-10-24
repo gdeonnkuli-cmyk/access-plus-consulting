@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ExerciceComptes from "./ExerciceComptes";
+import { CLES_CPT, niveau, resumeCpt } from "./syscohada/scores";
 import { CLASSES_REV, REMARQUES, REPERES, CLOTURE, POINTS_CLES, chargerClasse, chargerTout, chargerPlan, subdivisions, chercherPlan, chercherTexte, decouper } from "./syscohada";
 
 // ══════════════ GUIDE « CONTENU ET FONCTIONNEMENT DES COMPTES » — SYSCOHADA RÉVISÉ ══════════════
@@ -17,7 +18,7 @@ const SUBS_VISIBLES = 14;
 const sansNumero = t => t.replace(/^\s*\d+\s*[—–).-]\s*/, "");
 const sansPrefixe = t => { const r = t.replace(/^Ce qui change avec le SYSCOHADA révisé\s*:\s*/i, ""); return r.charAt(0).toUpperCase() + r.slice(1); };
 
-export default function GuideComptes({ K, mob, fiche, onScore }) {
+export default function GuideComptes({ K, mob, fiche, onScore, scores }) {
   const [nav, sNav] = useState({ v: "accueil" }); // { v: accueil | classe | compte | annexe | reperes | cloture, k, c, sub }
   const [tousSubs, sTousSubs] = useState(false);
   const [plan, sPlan] = useState(null);
@@ -109,6 +110,23 @@ export default function GuideComptes({ K, mob, fiche, onScore }) {
       <span style={{ flex: 1 }}><span style={{ display: "block", fontSize: 14, fontWeight: 800, color: K.t1 }}>S'exercer : Quel compte ?</span><span style={{ display: "block", fontSize: 12, color: K.t3, lineHeight: 1.4, marginTop: 2 }}>Séries de 10 opérations à comptabiliser, corrigées ligne par ligne · 270 écritures, par classe ou toutes classes</span></span>
       <i className="ti ti-chevron-right" style={{ color: K.t3, fontSize: 16 }} />
     </button>
+    {(() => {
+      const r = resumeCpt(scores || {});
+      if (!Object.keys(r.parCle).length) return null;
+      const teinte = pct => ({ bon: K.em, moyen: K.wa, faible: K.er, aucun: K.t3 }[niveau(pct)]);
+      return <div style={{ ...carte(K), padding: "12px 14px", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color: K.t3, textTransform: "uppercase", letterSpacing: .4 }}>Mes exercices — meilleurs scores</span>
+          <span style={{ fontSize: 11.5, color: K.t3 }}>{r.nSeries} série{r.nSeries > 1 ? "s" : ""} · moyenne <b style={{ color: teinte(r.moyenne) }}>{r.moyenne} %</b></span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: mob ? "repeat(5,1fr)" : "repeat(10,1fr)", gap: 6 }}>
+          {CLES_CPT.map(c => { const x = r.parCle[c], n = c === "CPT-T" ? 0 : +c.slice(4); return <button key={c} onClick={() => aller({ v: "exo", k: n })} className="bt" title={x ? `${x.n || 1} série${(x.n || 1) > 1 ? "s" : ""}${x.derniere ? ` · dernière : ${x.derniere.pct} %` : ""}` : "Pas encore de série"} style={{ border: `1px solid ${x ? teinte(x.pct) + "55" : K.b0}`, background: x ? teinte(x.pct) + "12" : "transparent", borderRadius: 9, padding: "6px 2px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "center" }}>
+            <span style={{ display: "block", fontSize: 10, fontWeight: 800, color: K.t3 }}>{n ? `Cl. ${n}` : "Toutes"}</span>
+            <span style={{ display: "block", fontSize: 13.5, fontWeight: 800, color: x ? teinte(x.pct) : K.t3 }}>{x ? `${x.pct}%` : "—"}</span>
+          </button>; })}
+        </div>
+      </div>;
+    })()}
     <div style={{ ...carte(K), padding: "14px 16px", marginBottom: 12, background: `linear-gradient(135deg,${K.emBg},transparent)` }}>
       <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: mob ? 18 : 21, color: K.t1 }}>Contenu et fonctionnement des comptes</div>
       <div style={{ fontSize: 12.5, color: K.t2, lineHeight: 1.6, marginTop: 6 }}>Chapitre 2 du plan comptable, mis à jour selon le <b>SYSCOHADA révisé</b> (AUDCIF du 26 janvier 2017, applicable depuis le 1er janvier 2018). Pour chaque compte à deux chiffres : contenu, écritures types, fonctionnement au débit et au crédit, distinctions et exclusions, éléments de contrôle, subdivisions du plan révisé, commentaires et ce qui change par rapport au plan de 2000.</div>
@@ -254,7 +272,7 @@ export default function GuideComptes({ K, mob, fiche, onScore }) {
 
   const vueExo = () => !tout ? attente : <>
     {fil([["Classes", { v: "accueil" }], ["Exercice « Quel compte ? »"]])}
-    <ExerciceComptes key={nav.k} K={K} mob={mob} classes={Object.values(classes).sort((a, b) => a.classe - b.classe)} k0={nav.k || 0} titreDe={titreDe} ecriture={ecriture} onFiche={c => ouvrirCompte(c)} onScore={onScore} />
+    <ExerciceComptes key={nav.k} K={K} mob={mob} classes={Object.values(classes).sort((a, b) => a.classe - b.classe)} k0={nav.k || 0} titreDe={titreDe} ecriture={ecriture} onFiche={c => ouvrirCompte(c)} onScore={onScore} scores={scores || {}} />
   </>;
 
   const vueAnnexe = () => {
