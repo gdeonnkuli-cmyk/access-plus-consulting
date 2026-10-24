@@ -1,11 +1,12 @@
 import React,{useState,useEffect,useRef,useMemo}from"react";
-import{collection,doc,addDoc,setDoc,getDoc,updateDoc,deleteDoc,onSnapshot,query,where,getDocs,arrayUnion,arrayRemove}from"firebase/firestore";
+import{collection,doc,addDoc,setDoc,getDoc,updateDoc,deleteDoc,onSnapshot,query,where,getDocs,arrayUnion,arrayRemove,runTransaction}from"firebase/firestore";
 import{computeAll,parseBalance,mapCompte,num,fmt,LIB,ACTIF,PASSIF,CR,TFT}from"./ef/engine";
 import{CAS_PRATIQUES}from"./ef/casPratiques";
 import AtelierJournal,{CAS_JOURNAL}from"./journal/AtelierJournal";
 import{DEVISES,FORMES,PROVINCES,IDENTITE,FISC_DEFAUT,CATEGORIES,FORFAIT_SANS_CA,categorieDe,computeIBP}from"./ef/rdc";
 import{REGLES,ficheCompte,anomaliesSens,rubriqueDe}from"./ef/guide";
 import GuideComptes from"./ef/GuideComptes";
+import{cleCpt,fusionScore}from"./ef/syscohada/scores";
 import{computeNotes,fmtPct,TRANCHES,NATURES_TITRES,EFF_COLS,EFF_PROPRE,EFF_STATUT,EFF_EXT}from"./ef/notes";
 
 // ══════════════════ ATELIER ÉTATS FINANCIERS SYSCOHADA (multi-utilisateurs) ══════════════════
@@ -399,8 +400,15 @@ function FicheModal({K,ligne,onClose}){
   return <Modal K={K} title={`Compte ${c}${ligne.l?` — ${ligne.l}`:""}`} onClose={onClose}><FicheContenu K={K} c={c} f={f} ligne={ligne}/></Modal>;
 }
 function GuideView({K,mob,lignes,db,me}){
-  // Score de l'exercice « Quel compte ? » : users/{uid}.scores["CPT-<classe>"] (CPT-T pour toutes les classes)
-  const onScore=({k,s,t})=>{if(db&&me&&me.uid)updateDoc(doc(db,"users",me.uid),{[`scores.CPT-${k||"T"}`]:{s,t,pct:Math.round(s/t*100),date:new Date().toISOString()}}).catch(()=>{});};
+  // Exercice « Quel compte ? » : users/{uid}.scores["CPT-<classe>"] (CPT-T pour toutes les classes), meilleur score conservé
+  const[scores,sScores]=useState({});
+  const uid=me&&me.uid;
+  useEffect(()=>{if(!db||!uid)return;return onSnapshot(doc(db,"users",uid),d=>sScores((d.data()||{}).scores||{}),()=>{});},[db,uid]);
+  const onScore=({k,s,t})=>{
+    if(!db||!uid)return Promise.reject(new Error("hors connexion"));
+    const ref=doc(db,"users",uid),cle=cleCpt(k);
+    return runTransaction(db,async tx=>{const d=await tx.get(ref);tx.update(ref,{[`scores.${cle}`]:fusionScore(((d.data()||{}).scores||{})[cle],{s,t})});});
+  };
   const[vue,sVue]=useState("comptes");
   const ligneDe=k=>(lignes||[]).find(x=>String(x.c).startsWith(k));
   return <div>
@@ -414,7 +422,7 @@ function GuideView({K,mob,lignes,db,me}){
         <ul style={{margin:"8px 0 2px 18px",display:"flex",flexDirection:"column",gap:5}}>{r.p.map((x,j)=><li key={j} style={{fontSize:12,color:K.t2,lineHeight:1.55}}>{x}</li>)}</ul>
       </details>)}
     </div>
-    :<GuideComptes K={K} mob={mob} onScore={onScore} fiche={c=><FicheContenu K={K} c={c} f={ficheCompte(c)} ligne={ligneDe(c)}/>}/>}
+    :<GuideComptes K={K} mob={mob} onScore={onScore} scores={scores} fiche={c=><FicheContenu K={K} c={c} f={ficheCompte(c)} ligne={ligneDe(c)}/>}/>}
   </div>;
 }
 

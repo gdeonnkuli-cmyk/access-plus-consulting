@@ -17,6 +17,8 @@ import AdminAcces from"./acces/AdminAcces";
 import{pushPossible,pushActif,activerPush,desactiverPush}from"./notif/push";
 import{htmlCodeAcces,htmlNotification}from"./emails";
 import{PROVINCES}from"./ef/rdc";
+import SuiviExercices from"./ef/SuiviExercices";
+import{pctQcm,resumeCpt}from"./ef/syscohada/scores";
 import LOGO from"./assets/logo.png";
 import LOGO_CLAIR from"./assets/logo-clair.png";
 import LOGO_ICONE from"./assets/logo-icone.png";
@@ -335,13 +337,14 @@ const genAttestation=async({nom,mods,pr,sc})=>{
   d.save(`attestation-${(nom||"apprenant").replace(/\s+/g,"-").toLowerCase()}.pdf`);
 };
 const exportUsersCsv=users=>{
-  const headers=["Nom","Email","Rôle","Abonnement","Créé le","Dernière connexion","Modules complétés","Score moyen"];
+  const headers=["Nom","Email","Rôle","Abonnement","Créé le","Dernière connexion","Modules complétés","Score moyen QCM","Quel compte ? (moyenne des meilleurs scores)","Monographie ZAO"];
   const rows=users.map(u=>{
     const nMods=Object.values(u.progress||{}).filter(v=>v==="done").length;
-    const scoreVals=Object.values(u.scores||{}).map(sc=>sc?.pct).filter(p=>p!=null);
+    const scoreVals=pctQcm(u);
     const avg=scoreVals.length?Math.round(scoreVals.reduce((a,b)=>a+b,0)/scoreVals.length):"";
+    const cpt=resumeCpt(u.scores||{}).moyenne,zao=u.scores?.["JRN-ZAO"]?.pct;
     const lastLogin=u.lastLogin?new Date(u.lastLogin).toLocaleString("fr-FR"):"Jamais";
-    return [u.nom||"",u.mail||"",u.role==="formateur"?"Formateur":"Apprenant",u.abonnement||"aucun",u.createdAt||"",lastLogin,nMods,avg]
+    return [u.nom||"",u.mail||"",u.role==="formateur"?"Formateur":"Apprenant",u.abonnement||"aucun",u.createdAt||"",lastLogin,nMods,avg,cpt??"",zao??""]
       .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",");
   });
   const csv="\uFEFF"+[headers.join(","),...rows].join("\n");
@@ -3854,7 +3857,7 @@ function Prog({pr,sc,gp,nd,ok,mods}){
       <div style={{fontSize:14,color:K.t2,marginBottom:14}}>{nd} module{nd>1?"s":""} terminé{nd>1?"s":""} sur {mods.length}</div>
       <Bar p={gp} col={K.in_} h={6}/>
       <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
-        {[[`${nd}`,"Complétés",K.em],[`${mods.length-nd}`,"Restants",K.t3],[`${Object.values(sc).filter(s=>s.pct>=60).length}`,"Réussis",K.in_]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}
+        {[[`${nd}`,"Complétés",K.em],[`${mods.length-nd}`,"Restants",K.t3],[`${mods.filter(m=>sc[m.id]?.pct>=60).length}`,"Réussis",K.in_]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}
       </div>
     </div>
 
@@ -4630,7 +4633,7 @@ function AA({onOut}){
         // ── Calcul des indicateurs ──
         const apprenants=users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL);
         const formateurs=users.filter(u=>u.role==="formateur");
-        const scoreValsAll=apprenants.flatMap(u=>Object.values(u.scores||{}).map(s=>s?.pct).filter(p=>p!=null));
+        const scoreValsAll=apprenants.flatMap(pctQcm);
         const avgScoreGlobal=scoreValsAll.length?Math.round(scoreValsAll.reduce((a,b)=>a+b,0)/scoreValsAll.length):null;
         const withProgress=apprenants.filter(u=>Object.keys(u.progress||{}).length>0).length;
         let nEngage=0,nSurveiller=0,nInactif=0;
@@ -4724,7 +4727,7 @@ function AA({onOut}){
         </div>;
       })()}
       {["d","a","e","t"].includes(tab)&&<><div style={{marginBottom:10}}><input type="text" placeholder="🔍 Rechercher un nom ou un e-mail…" defaultValue="" onChange={e=>sQ(e.target.value)} style={{padding:"11px 14px",background:K.card,border:`1px solid ${K.b1}`,boxShadow:K.sh,borderRadius:12,color:K.t1,fontSize:15,outline:"none",width:"100%",maxWidth:420,fontFamily:"'Outfit',sans-serif",caretColor:K.em,minHeight:38}} onFocus={e=>e.target.style.borderColor=K.emBd} onBlur={e=>e.target.style.borderColor=K.b0}/></div>{tab==="d"&&nD>0&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"11px 14px",marginBottom:12,fontSize:14,color:K.t1,display:"flex",gap:8,alignItems:"center"}}><i className="ti ti-bulb" style={{fontSize:18,color:K.wa}}/>Vérifiez le paiement, puis <b>Valider</b> → choisissez la durée → le code est créé → envoyez-le avec <i className="ti ti-send"/>.</div>}<Liste list={byT[tab]||fl} empty="Aucun résultat"/></>}
-      {tab==="s"&&<div style={{animation:"up .25s ease"}}><div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:21,letterSpacing:"-.3px",lineHeight:1.2,color:K.t1,marginBottom:10}}>Performance modules</div>{users.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"38px",textAlign:"center"}}><div style={{color:K.t3,fontSize:14}}>Aucune donnée.</div></div>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>{mods.map(m=>{const at=users.filter(u=>u.scores?.[m.id]),av=at.length?Math.round(at.reduce((a,u)=>a+u.scores[m.id].pct,0)/at.length):0,pa=at.filter(u=>u.scores[m.id].pct>=60).length;return <div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"10px 12px"}}><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:7}}><div style={{width:24,height:24,borderRadius:7,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{icoEl(m.ico,m.col,14)}</div><div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}</div></div></div><div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:K.t3,marginBottom:4,fontFamily:"'JetBrains Mono',monospace"}}><span>{at.length} tentatives</span><span>{pa} réussi · {av}%</span></div><Bar p={av} col={m.col} h={3}/></div>;})}</div>}</div>}
+      {tab==="s"&&<div style={{animation:"up .25s ease"}}><div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:21,letterSpacing:"-.3px",lineHeight:1.2,color:K.t1,marginBottom:10}}>Performance modules</div>{users.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"38px",textAlign:"center"}}><div style={{color:K.t3,fontSize:14}}>Aucune donnée.</div></div>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>{mods.map(m=>{const at=users.filter(u=>u.scores?.[m.id]),av=at.length?Math.round(at.reduce((a,u)=>a+u.scores[m.id].pct,0)/at.length):0,pa=at.filter(u=>u.scores[m.id].pct>=60).length;return <div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"10px 12px"}}><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:7}}><div style={{width:24,height:24,borderRadius:7,background:`${m.col}18`,border:`1px solid ${m.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{icoEl(m.ico,m.col,14)}</div><div><div style={{color:K.t1,fontWeight:700,fontSize:13}}>{m.titre}</div><div style={{color:K.t3,fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>{m.code}</div></div></div><div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:K.t3,marginBottom:4,fontFamily:"'JetBrains Mono',monospace"}}><span>{at.length} tentatives</span><span>{pa} réussi · {av}%</span></div><Bar p={av} col={m.col} h={3}/></div>;})}</div>}<SuiviExercices K={K} mob={mob} users={users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL)}/></div>}
       {tab==="m"&&<div style={{animation:"up .25s ease"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}><div><div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:21,letterSpacing:"-.3px",lineHeight:1.2,color:K.t1}}>Gestion des cours</div><div style={{color:K.t3,fontSize:13,marginTop:2}}>{mods.length} modules · {mods.filter(m=>m.on!==false).length} actifs</div></div><div style={{display:"flex",gap:7,flexWrap:"wrap"}}>{mods.length===0&&<Btn ch="🚀 Initialiser SYSCOHADA" on={seedModules} v="i" sx={{minHeight:38,fontSize:13}}/>}<Btn ch="➕ Nouveau" on={()=>{sEM(null);sNM(true);}} sx={{minHeight:38,fontSize:14}}/></div></div>
         {newMod&&<div style={{background:K.card,border:`1px solid ${K.emBd}`,borderRadius:12,padding:"14px",marginBottom:13,maxHeight:"80vh",overflowY:"auto"}}><ModEditor mod={{}} onSave={()=>{sNM(false);}} onCancel={()=>sNM(false)}/></div>}
@@ -5294,8 +5297,9 @@ function AA({onOut}){
           const jamais=!u.lastLogin&&!activite.some(a=>a.id===u.uid);
           const isApprenant=u.role!=="formateur"&&u.mail!==ADM_EMAIL;
           const nMods=Object.values(u.progress||{}).filter(v=>v==="done").length;
-          const scoreVals=Object.values(u.scores||{}).map(s=>s?.pct).filter(p=>p!=null);
+          const scoreVals=pctQcm(u);
           const avgScore=scoreVals.length?Math.round(scoreVals.reduce((a,b)=>a+b,0)/scoreVals.length):null;
+          const avgCpt=resumeCpt(u.scores||{}).moyenne;
           const act=activite.find(a=>a.id===u.uid);const vuLe=Math.max(u.lastLogin||0,tsMs(act?.lastSeen));
           const enL=act&&act.enLigne!==false&&Date.now()-tsMs(act.lastSeen)<ENLIGNE_MS;
           const daysSince=vuLe?Math.floor((Date.now()-vuLe)/86400000):null;
@@ -5310,7 +5314,7 @@ function AA({onOut}){
                 {isApprenant&&<span style={{display:"flex",alignItems:"center",gap:4,fontSize:11,fontWeight:700,color:engagement.c}}><span style={{width:6,height:6,borderRadius:"50%",background:engagement.c,display:"inline-block"}}/>{engagement.l}</span>}
               </div>
               <div style={{fontSize:12,color:K.t3,fontFamily:"'JetBrains Mono',monospace"}}>{u.mail}</div>
-              {isApprenant&&<div style={{fontSize:11,color:K.t3,marginTop:2}}>{nMods} module{nMods>1?"s":""} complété{nMods>1?"s":""}{avgScore!=null?` · ${avgScore}% de moyenne`:""}</div>}
+              {isApprenant&&<div style={{fontSize:11,color:K.t3,marginTop:2}}>{nMods} module{nMods>1?"s":""} complété{nMods>1?"s":""}{avgScore!=null?` · ${avgScore}% de moyenne aux QCM`:""}{avgCpt!=null?` · Quel compte ? ${avgCpt}%`:""}</div>}
             </div>
             <div style={{textAlign:"right",flexShrink:0}}>
               <div style={{fontSize:11,color:K.t3}}>Créé le {u.createdAt}</div>
