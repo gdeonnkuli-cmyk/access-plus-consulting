@@ -37,3 +37,24 @@ test("découpage : gras et numéros de compte cliquables, années et pourcentage
   expect(liens).toEqual(["4011", "21", "24"]);
   expect(liens).not.toContain("2018");
 });
+
+test("compléments : chaque fiche a distinctions, éléments de contrôle et écritures types équilibrées en comptes connus", () => {
+  const X = require("./complements.json");
+  const fiches = new Set(classes.flatMap(C => C.comptes.map(x => x.c)));
+  const connus = n => index.has(n) || fiches.has(n) || ["9011", "9051"].includes(n);
+  for (const c of fiches) {
+    const x = X[c];
+    expect(x).toBeDefined();
+    expect(x.dist.length).toBeGreaterThan(20);
+    expect(x.ctrl.length).toBeGreaterThan(20);
+    expect(x.ecr.length).toBeGreaterThan(0);
+    for (const e of x.ecr) for (const [D, Cr] of e.l) {
+      expect(D.length && Cr.length).toBeTruthy();
+      [...D, ...Cr].forEach(n => expect(connus(n) ? n : `inconnu ${n} (${c})`).toBe(n));
+    }
+  }
+  // Corrections apportées au fichier source
+  expect(X["41"].dist).toMatch(/414/);
+  expect(X["61"].dist).toMatch(/6181/);
+  expect(JSON.stringify(X)).not.toMatch(/4784/);
+});

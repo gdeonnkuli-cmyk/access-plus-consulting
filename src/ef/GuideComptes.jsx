@@ -1,20 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CLASSES_REV, REMARQUES, chargerClasse, chargerTout, chargerPlan, subdivisions, chercherPlan, chercherTexte, decouper } from "./syscohada";
+import { CLASSES_REV, REMARQUES, REPERES, CLOTURE, POINTS_CLES, chargerClasse, chargerTout, chargerPlan, subdivisions, chercherPlan, chercherTexte, decouper } from "./syscohada";
 
 // ══════════════ GUIDE « CONTENU ET FONCTIONNEMENT DES COMPTES » — SYSCOHADA RÉVISÉ ══════════════
 // Accueil (9 classes + recherche) → classe (présentation + comptes à deux chiffres) → fiche du compte
-// (contenu, subdivisions du plan révisé, commentaires, fonctionnement, exclusions, changements, correspondances).
+// (contenu, écritures types, fonctionnement, distinctions et exclusions, éléments de contrôle, subdivisions du plan
+// révisé, commentaires, changements, correspondances). Vues transversales : repères débit/crédit, contrôles de clôture,
+// correspondances 2000 → révisé.
 // `fiche(c)` (facultatif) affiche sous la fiche la présentation aux états financiers fournie par l'atelier.
 
 const mono = "'JetBrains Mono',monospace";
 const carte = K => ({ background: K.card, border: `1px solid ${K.b0}`, borderRadius: 12 });
 const btn = (K, actif) => ({ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", minHeight: 32, whiteSpace: "nowrap", background: actif ? K.emBg : "transparent", color: actif ? K.em : K.t2, border: `1px solid ${actif ? K.emBd : K.b1}` });
-const SECTIONS = [["contenu", "Contenu"], ["subdiv", "Subdivisions"], ["comm", "Commentaires"], ["fonct", "Fonctionnement"], ["excl", "Exclusions"], ["chg", "Ce qui change"], ["corr", "Correspondances"], ["ef", "États financiers"]];
+const SECTIONS = [["contenu", "Contenu"], ["ecr", "Écritures types"], ["fonct", "Fonctionnement"], ["dist", "Distinctions"], ["ctrl", "Contrôle"], ["subdiv", "Subdivisions"], ["comm", "Commentaires"], ["chg", "Ce qui change"], ["corr", "Correspondances"], ["ef", "États financiers"]];
+const SUBS_VISIBLES = 14;
 const sansNumero = t => t.replace(/^\s*\d+\s*[—–).-]\s*/, "");
 const sansPrefixe = t => { const r = t.replace(/^Ce qui change avec le SYSCOHADA révisé\s*:\s*/i, ""); return r.charAt(0).toUpperCase() + r.slice(1); };
 
 export default function GuideComptes({ K, mob, fiche }) {
-  const [nav, sNav] = useState({ v: "accueil" }); // { v: accueil | classe | compte | annexe, k, c, sub }
+  const [nav, sNav] = useState({ v: "accueil" }); // { v: accueil | classe | compte | annexe | reperes | cloture, k, c, sub }
+  const [tousSubs, sTousSubs] = useState(false);
   const [plan, sPlan] = useState(null);
   const [classes, sClasses] = useState({});
   const [tout, sTout] = useState(false);
@@ -29,7 +33,7 @@ export default function GuideComptes({ K, mob, fiche }) {
     chargerTout().then(L => { sClasses(Object.fromEntries(L.map(C => [C.classe, C]))); sTout(true); });
   }, [besoinTout, tout]);
 
-  const aller = n => { sNav(n); sQ(""); setTimeout(() => haut.current && haut.current.scrollIntoView({ block: "start", behavior: "smooth" }), 30); };
+  const aller = n => { sNav(n); sQ(""); sTousSubs(false); setTimeout(() => haut.current && haut.current.scrollIntoView({ block: "start", behavior: "smooth" }), 30); };
   const ouvrirCompte = num => { const c2 = String(num).slice(0, 2); aller({ v: "compte", k: +c2[0], c: c2, sub: num.length > 2 ? num : null }); };
 
   // Sous-compte demandé : défilement vers sa ligne une fois la fiche affichée
@@ -54,6 +58,19 @@ export default function GuideComptes({ K, mob, fiche }) {
       {i > 0 && <i className="ti ti-chevron-right" style={{ fontSize: 12, color: K.t3 }} />}
       {n ? <button onClick={() => aller(n)} style={{ background: "none", border: "none", padding: 0, color: K.em, fontWeight: 700, cursor: "pointer", font: "inherit" }}>{l}</button> : <span style={{ color: K.t3, fontWeight: 600 }}>{l}</span>}
     </span>)}
+  </div>;
+  const titreDe = n => (plan && plan.index.get(n)) || (classes[n[0]] && (classes[n[0]].comptes.find(x => x.c === n) || {}).titre) || "";
+  const lienCompte = n => <button onClick={() => ouvrirCompte(n)} title="Ouvrir la fiche" style={{ background: "none", border: "none", padding: 0, fontFamily: mono, fontSize: 12, fontWeight: 800, color: K.em, cursor: "pointer", minWidth: 40, textAlign: "left" }}>{n}</button>;
+  // Écriture type : débits puis crédits décalés (présentation du journal)
+  const ecriture = (e, j) => <div key={j} style={{ background: K.c2, border: `1px solid ${K.b0}`, borderRadius: 10, padding: "9px 12px" }}>
+    <div style={{ display: "flex", gap: 8, alignItems: "baseline", marginBottom: 6 }}><span style={{ fontSize: 10.5, fontWeight: 800, color: K.t3, minWidth: 16 }}>{j + 1}.</span><span style={{ fontSize: 13, fontWeight: 700, color: K.t1, lineHeight: 1.35 }}>{e.op}</span></div>
+    {e.l.map(([D, Cr], k) => <div key={k} style={{ borderTop: k ? `1px dashed ${K.b1}` : "none", paddingTop: k ? 5 : 0, marginTop: k ? 5 : 0 }}>
+      {[...D.map(n => ["D", n]), ...Cr.map(n => ["C", n])].map(([s, n]) => <div key={s + n} style={{ display: "flex", alignItems: "baseline", gap: 8, padding: "2px 0", paddingLeft: s === "C" ? (mob ? 22 : 40) : 0 }}>
+        <span style={{ fontSize: 9.5, fontWeight: 800, color: s === "D" ? K.em : K.wa, background: s === "D" ? K.emBg : K.waBg, borderRadius: 4, padding: "1px 5px", flexShrink: 0 }}>{s === "D" ? "Débit" : "Crédit"}</span>
+        {lienCompte(n)}<span style={{ fontSize: 12, color: K.t2, lineHeight: 1.35 }}>{titreDe(n)}</span>
+      </div>)}
+    </div>)}
+    {e.n && <div style={{ fontSize: 11.5, color: K.t3, fontStyle: "italic", lineHeight: 1.45, marginTop: 6 }}>{riche(e.n)}</div>}
   </div>;
   const attente = <div style={{ ...carte(K), padding: 24, textAlign: "center", color: K.t3, fontSize: 13 }}><i className="ti ti-loader-2" style={{ fontSize: 22, display: "block", marginBottom: 6 }} />Chargement du guide…</div>;
 
@@ -88,7 +105,7 @@ export default function GuideComptes({ K, mob, fiche }) {
   const accueil = () => <>
     <div style={{ ...carte(K), padding: "14px 16px", marginBottom: 12, background: `linear-gradient(135deg,${K.emBg},transparent)` }}>
       <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: mob ? 18 : 21, color: K.t1 }}>Contenu et fonctionnement des comptes</div>
-      <div style={{ fontSize: 12.5, color: K.t2, lineHeight: 1.6, marginTop: 6 }}>Chapitre 2 du plan comptable, mis à jour selon le <b>SYSCOHADA révisé</b> (AUDCIF du 26 janvier 2017, applicable depuis le 1er janvier 2018). Pour chaque compte à deux chiffres : contenu, subdivisions du plan révisé, commentaires, fonctionnement au débit et au crédit, exclusions et ce qui change par rapport au plan de 2000.</div>
+      <div style={{ fontSize: 12.5, color: K.t2, lineHeight: 1.6, marginTop: 6 }}>Chapitre 2 du plan comptable, mis à jour selon le <b>SYSCOHADA révisé</b> (AUDCIF du 26 janvier 2017, applicable depuis le 1er janvier 2018). Pour chaque compte à deux chiffres : contenu, écritures types, fonctionnement au débit et au crédit, distinctions et exclusions, éléments de contrôle, subdivisions du plan révisé, commentaires et ce qui change par rapport au plan de 2000.</div>
     </div>
     <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(3,1fr)", gap: 8 }}>
       {CLASSES_REV.map(([k, l]) => <button key={k} onClick={() => aller({ v: "classe", k })} className="bt" style={{ ...carte(K), display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", textAlign: "left", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -97,11 +114,13 @@ export default function GuideComptes({ K, mob, fiche }) {
       </button>)}
     </div>
     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", margin: "12px 0" }}>
+      <button onClick={() => aller({ v: "reperes" })} className="bt" style={btn(K)}><i className="ti ti-scale" style={{ fontSize: 13 }} />Repères débit / crédit</button>
+      <button onClick={() => aller({ v: "cloture" })} className="bt" style={btn(K)}><i className="ti ti-checklist" style={{ fontSize: 13 }} />Contrôles de clôture</button>
       <button onClick={() => aller({ v: "annexe" })} className="bt" style={btn(K)}><i className="ti ti-arrows-exchange" style={{ fontSize: 13 }} />Correspondances plan 2000 → plan révisé</button>
     </div>
     <details style={{ ...carte(K), padding: "10px 13px" }}>
       <summary style={{ cursor: "pointer", fontWeight: 800, fontSize: 12.5, color: K.t1 }}>Sources et avertissement</summary>
-      <div style={{ fontSize: 12, color: K.t2, lineHeight: 1.6, marginTop: 8 }}>Les subdivisions reprennent la liste des comptes du plan révisé (1 330 comptes en 9 classes) ; chaque numéro cité dans le texte a été contrôlé par rapport à cette liste. Ce guide est un support de formation : il ne remplace pas les textes officiels de l'OHADA (AUDCIF, plan comptable général, guide d'application). En RDC, les règles du Code des impôts s'ajoutent aux règles comptables.</div>
+      <div style={{ fontSize: 12, color: K.t2, lineHeight: 1.6, marginTop: 8 }}>Les subdivisions reprennent la liste des comptes du plan révisé (1 330 comptes en 9 classes) ; chaque numéro cité dans le texte a été contrôlé par rapport à cette liste. Ce guide est un support de formation : il ne remplace pas les textes officiels de l'OHADA (AUDCIF, plan comptable général, guide d'application). En RDC, les règles du Code des impôts s'ajoutent aux règles comptables. Les écritures types sont des schémas pédagogiques, à adapter aux pièces, à la forme juridique et aux obligations fiscales de l'entité. Les entités à but non lucratif relèvent en principe, depuis le 1er janvier 2024, du SYCEBNL.</div>
       <ul style={{ margin: "8px 0 2px 18px", display: "flex", flexDirection: "column", gap: 4 }}>{REMARQUES.map((t, i) => <li key={i} style={{ fontSize: 12, color: K.t2, lineHeight: 1.5 }}>{riche(t)}</li>)}</ul>
     </details>
   </>;
@@ -135,7 +154,8 @@ export default function GuideComptes({ K, mob, fiche }) {
     const subs = plan ? subdivisions(plan.liste, x.c) : [];
     const fo = x.fonctionnement || {};
     const extra = fiche ? fiche(x.c) : null;
-    const presentes = { contenu: (x.contenu || []).length, subdiv: subs.length, comm: (x.commentaires || []).length, fonct: (fo.credit || []).length + (fo.debit || []).length, excl: (x.exclusions || []).length, chg: (x.changements || []).length, corr: (x.correspondance || []).length, ef: !!extra };
+    const presentes = { contenu: (x.contenu || []).length, ecr: (x.ecr || []).length, fonct: (fo.credit || []).length + (fo.debit || []).length, dist: (x.dist ? 1 : 0) + (x.exclusions || []).length, ctrl: x.ctrl ? 1 : 0, subdiv: subs.length, comm: (x.commentaires || []).length, chg: (x.changements || []).length, corr: (x.correspondance || []).length, ef: !!extra };
+    const voirSubs = tousSubs || subs.length <= SUBS_VISIBLES + 4 || (nav.sub && subs.findIndex(([c]) => c === nav.sub) >= SUBS_VISIBLES);
     const sens = (cle, l, ico) => (fo[cle] || []).length ? <div style={{ background: K.c2, border: `1px solid ${K.b0}`, borderRadius: 10, padding: "10px 12px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 800, fontSize: 12.5, color: K.t1, marginBottom: 6 }}><i className={`ti ti-${ico}`} style={{ color: K.em }} />{l}</div>{puces(fo[cle])}</div> : null;
     return <>
@@ -151,21 +171,28 @@ export default function GuideComptes({ K, mob, fiche }) {
 
         {presentes.contenu > 0 && <>{titreSec("contenu", "Contenu", "file-text")}{x.contenu.map(para)}</>}
 
-        {presentes.subdiv > 0 && <>{titreSec("subdiv", `Subdivisions du plan révisé · ${subs.length}`, "list-tree")}
-          <div style={{ border: `1px solid ${K.b0}`, borderRadius: 10, overflow: "hidden" }}>
-            {subs.map(([c, l]) => { const n3 = c.length === 3, vise = nav.sub && c === nav.sub; return <div key={c} id={`gc-sub-${c}`} style={{ display: "flex", gap: 10, padding: "6px 10px", borderTop: `1px solid ${K.b0}`, background: vise ? K.waBg : n3 ? K.c2 : "transparent", outline: vise ? `2px solid ${K.waBd}` : "none", outlineOffset: -2 }}>
-              <span style={{ fontFamily: mono, fontSize: 12, fontWeight: n3 ? 800 : 600, color: n3 ? K.em : K.t2, minWidth: 48, paddingLeft: n3 ? 0 : 10 }}>{c}</span>
-              <span style={{ fontSize: 12.5, color: K.t1, fontWeight: n3 ? 700 : 400, lineHeight: 1.4 }}>{l}</span>
-            </div>; })}
-          </div></>}
-
-        {presentes.comm > 0 && <>{titreSec("comm", "Commentaires", "message-2")}
-          <ol style={{ margin: "0 0 4px 20px", padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>{x.commentaires.map((t, j) => <li key={j} style={{ fontSize: 13, color: K.t2, lineHeight: 1.65, paddingLeft: 2 }}>{riche(sansNumero(t))}</li>)}</ol></>}
+        {presentes.ecr > 0 && <>{titreSec("ecr", "Écritures types", "notebook")}
+          <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 8, alignItems: "start" }}>{x.ecr.map(ecriture)}</div></>}
 
         {presentes.fonct > 0 && <>{titreSec("fonct", "Fonctionnement", "arrows-left-right")}
           <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 8 }}>{sens("credit", "Le compte est crédité", "arrow-bar-to-right")}{sens("debit", "Le compte est débité", "arrow-bar-to-left")}</div></>}
 
-        {presentes.excl > 0 && <>{titreSec("excl", "Exclusions", "ban")}{puces(x.exclusions)}</>}
+        {presentes.dist > 0 && <>{titreSec("dist", "Distinctions et exclusions", "ban")}{x.dist && para(x.dist, "d")}{(x.exclusions || []).length > 0 && puces(x.exclusions)}</>}
+
+        {presentes.ctrl > 0 && <>{titreSec("ctrl", "Éléments de contrôle", "shield-check")}
+          <div style={{ background: K.emBg, border: `1px solid ${K.emBd}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, color: K.t2, lineHeight: 1.6 }}><b style={{ color: K.t1 }}>Pièces et rapprochements à réunir : </b>{riche(x.ctrl)}</div></>}
+
+        {presentes.subdiv > 0 && <>{titreSec("subdiv", `Subdivisions du plan révisé · ${subs.length}`, "list-tree")}
+          <div style={{ border: `1px solid ${K.b0}`, borderRadius: 10, overflow: "hidden" }}>
+            {(voirSubs ? subs : subs.slice(0, SUBS_VISIBLES)).map(([c, l]) => { const n3 = c.length === 3, vise = nav.sub && c === nav.sub; return <div key={c} id={`gc-sub-${c}`} style={{ display: "flex", gap: 10, padding: "6px 10px", borderTop: `1px solid ${K.b0}`, background: vise ? K.waBg : n3 ? K.c2 : "transparent", outline: vise ? `2px solid ${K.waBd}` : "none", outlineOffset: -2 }}>
+              <span style={{ fontFamily: mono, fontSize: 12, fontWeight: n3 ? 800 : 600, color: n3 ? K.em : K.t2, minWidth: 48, paddingLeft: n3 ? 0 : 10 }}>{c}</span>
+              <span style={{ fontSize: 12.5, color: K.t1, fontWeight: n3 ? 700 : 400, lineHeight: 1.4 }}>{l}</span>
+            </div>; })}
+          </div>
+          {!voirSubs && <button onClick={() => sTousSubs(true)} className="bt" style={{ ...btn(K), marginTop: 8 }}><i className="ti ti-chevron-down" style={{ fontSize: 13 }} />Voir les {subs.length} subdivisions</button>}</>}
+
+        {presentes.comm > 0 && <>{titreSec("comm", "Commentaires", "message-2")}
+          <ol style={{ margin: "0 0 4px 20px", padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>{x.commentaires.map((t, j) => <li key={j} style={{ fontSize: 13, color: K.t2, lineHeight: 1.65, paddingLeft: 2 }}>{riche(sansNumero(t))}</li>)}</ol></>}
 
         {presentes.chg > 0 && <div id="gc-chg" style={{ marginTop: 18, background: K.waBg, borderLeft: `4px solid ${K.wa}`, borderRadius: "0 10px 10px 0", padding: "10px 14px", scrollMarginTop: 70 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 800, fontSize: 13, color: K.wa, marginBottom: 6 }}><i className="ti ti-sparkles" />Ce qui change avec le SYSCOHADA révisé</div>
@@ -188,6 +215,36 @@ export default function GuideComptes({ K, mob, fiche }) {
     </>;
   };
 
+  const vueReperes = () => <>
+    {fil([["Classes", { v: "accueil" }], ["Repères débit / crédit"]])}
+    <div style={{ ...carte(K), padding: "14px 16px", marginBottom: 10 }}>
+      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: mob ? 17 : 20, color: K.t1 }}>Repères débit / crédit</div>
+      <div style={{ fontSize: 12.5, color: K.t2, lineHeight: 1.6, marginTop: 6 }}>Sens habituel des mouvements selon la nature du compte. La fiche de chaque compte précise les exceptions.</div>
+    </div>
+    <div style={carte(K)}>
+      {REPERES.map((r, j) => <div key={j} style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "1.4fr .7fr .7fr 1.6fr", gap: mob ? "4px 10px" : 12, padding: "10px 14px", borderTop: j ? `1px solid ${K.b0}` : "none", alignItems: "baseline" }}>
+        <span style={{ fontSize: 13, fontWeight: 800, color: K.t1, gridColumn: mob ? "1 / -1" : "auto", lineHeight: 1.35 }}>{riche(r.n)}</span>
+        <span style={{ fontSize: 12 }}><span style={{ display: "block", fontSize: 9.5, fontWeight: 800, color: K.t3, textTransform: "uppercase" }}>Augmente</span><b style={{ color: K.em }}>{r.plus}</b></span>
+        <span style={{ fontSize: 12 }}><span style={{ display: "block", fontSize: 9.5, fontWeight: 800, color: K.t3, textTransform: "uppercase" }}>Diminue</span><b style={{ color: K.wa }}>{r.moins}</b></span>
+        <span style={{ fontSize: 12.5, color: K.t2, lineHeight: 1.5, gridColumn: mob ? "1 / -1" : "auto" }}>{riche(r.r)}</span>
+      </div>)}
+    </div>
+  </>;
+
+  const vueCloture = () => <>
+    {fil([["Classes", { v: "accueil" }], ["Contrôles de clôture"]])}
+    <div style={{ ...carte(K), padding: "14px 16px", marginBottom: 10 }}>
+      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: mob ? 17 : 20, color: K.t1 }}>Synthèse des contrôles de clôture</div>
+      <div style={{ fontSize: 12.5, color: K.t2, lineHeight: 1.6, marginTop: 6 }}>Les travaux à mener avant d'arrêter la balance et d'établir les états financiers. Chaque fiche de compte détaille les pièces justificatives correspondantes.</div>
+    </div>
+    <div style={carte(K)}>
+      {CLOTURE.map((t, j) => <div key={j} style={{ display: "flex", gap: 10, padding: "10px 14px", borderTop: j ? `1px solid ${K.b0}` : "none" }}>
+        <span style={{ width: 22, height: 22, borderRadius: 99, background: K.emBg, color: K.em, fontSize: 11, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0 }}>{j + 1}</span>
+        <span style={{ fontSize: 13, color: K.t2, lineHeight: 1.55 }}>{riche(t)}</span>
+      </div>)}
+    </div>
+  </>;
+
   const vueAnnexe = () => {
     if (!tout) return attente;
     const L = Object.values(classes).sort((a, b) => a.classe - b.classe).flatMap(C => C.comptes.flatMap(x => (x.correspondance || []).map(r => ({ ...r, k: C.classe, c: x.c }))));
@@ -195,6 +252,7 @@ export default function GuideComptes({ K, mob, fiche }) {
       {fil([["Classes", { v: "accueil" }], ["Correspondances"]])}
       <div style={{ ...carte(K), padding: "14px 16px", marginBottom: 10 }}>
         <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: mob ? 17 : 20, color: K.t1 }}>Correspondances plan 2000 → plan révisé</div>
+        <ul style={{ margin: "8px 0 8px 18px", display: "flex", flexDirection: "column", gap: 5 }}>{POINTS_CLES.map((t, j) => <li key={j} style={{ fontSize: 12.5, color: K.t2, lineHeight: 1.55 }}>{riche(t)}</li>)}</ul>
         <div style={{ fontSize: 12.5, color: K.t2, lineHeight: 1.6, marginTop: 6 }}>{L.length} comptes du SYSCOHADA de 2000 dont le numéro, l'intitulé ou le traitement change, relevés au fil des fiches. Cliquez sur un numéro pour ouvrir le compte.</div>
       </div>
       <div style={carte(K)}>
@@ -209,6 +267,6 @@ export default function GuideComptes({ K, mob, fiche }) {
 
   return <div ref={haut} style={{ scrollMarginTop: 70 }}>
     {recherche}
-    {q.trim() ? resultats : nav.v === "classe" ? vueClasse() : nav.v === "compte" ? vueCompte() : nav.v === "annexe" ? vueAnnexe() : accueil()}
+    {q.trim() ? resultats : nav.v === "classe" ? vueClasse() : nav.v === "compte" ? vueCompte() : nav.v === "annexe" ? vueAnnexe() : nav.v === "reperes" ? vueReperes() : nav.v === "cloture" ? vueCloture() : accueil()}
   </div>;
 }
