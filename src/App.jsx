@@ -495,7 +495,7 @@ const lienDrive=u=>(u||"").match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\
 const lienDocs=u=>(u||"").match(/docs\.google\.com\/(document|presentation|spreadsheets)\/d\/([\w-]{10,})/);
 const apercuLien=u=>{
   const d=lienDrive(u);if(d)return`https://drive.google.com/file/d/${d[1]}/preview`;
-  const g=lienDocs(u);if(g)return`https://docs.google.com/${g[1]}/d/${g[2]}/preview`;
+  const g=lienDocs(u);if(g)return /[?&]rtpof=true/i.test(u)?`https://drive.google.com/file/d/${g[2]}/preview`:`https://docs.google.com/${g[1]}/d/${g[2]}/preview`;
   return null;
 };
 // Miniature de la première page, générée par Google Drive (fichier partagé par lien)

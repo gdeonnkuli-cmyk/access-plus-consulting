@@ -18,6 +18,8 @@ export function embedPresentation(brut) {
   const u = srcIframe(brut);
   if (!/^https?:\/\//i.test(u)) return { src: null, hebergeur: null };
   let m = u.match(/docs\.google\.com\/presentation\/d\/([\w-]+)/);
+  // Fichier PowerPoint stocké dans Drive (ouvert dans Slides : « rtpof=true ») : le lecteur Slides intégré ne l'affiche pas, l'aperçu Drive oui
+  if (m && /[?&]rtpof=true/i.test(u)) return { src: `https://drive.google.com/file/d/${m[1]}/preview`, hebergeur: "google" };
   if (m) return { src: `https://docs.google.com/presentation/d/${m[1]}/embed?start=false&loop=false&delayms=3000`, hebergeur: "google" };
   m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{10,})/);
   if (m) return { src: `https://drive.google.com/file/d/${m[1]}/preview`, hebergeur: "google" };
