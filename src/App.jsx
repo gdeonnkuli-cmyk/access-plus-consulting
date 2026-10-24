@@ -833,6 +833,16 @@ function Miniature({url,w,h,r=8,K,alt="",fallback=null}){
     style={{width:w,height:h,objectFit:"cover",objectPosition:"top",borderRadius:r,border:`1px solid ${K.b0}`,background:K.c2,flexShrink:0,display:"block"}}/>;
 }
 
+// Rappel du partage Drive : sans « Tous les utilisateurs disposant du lien », l'apprenant tombe sur « Demander l'accès »
+const PARTAGE_DRIVE="Tous les utilisateurs disposant du lien";
+function RappelPartage({K,url}){
+  return <div style={{marginTop:7,background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:8,padding:"8px 10px",fontSize:11.5,color:K.t2,lineHeight:1.5}}>
+    <div style={{fontWeight:800,color:K.t1,marginBottom:2}}><i className="ti ti-share" style={{fontSize:13,verticalAlign:-2,color:K.wa}}/> Avant d'enregistrer, vérifiez le partage dans Drive</div>
+    Partager → Accès général → <b>« {PARTAGE_DRIVE} »</b> → rôle <b>Lecteur</b>. Sinon, l'apprenant verra « Demander l'accès ». Conseil : dans ⚙ (paramètres du partage), décochez le téléchargement, l'impression et la copie pour les lecteurs.
+    <div style={{marginTop:5}}><a href={apercuLien(url)} target="_blank" rel="noopener noreferrer" style={{color:K.em,fontWeight:700,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:12,verticalAlign:-1}}/> Tester comme un apprenant</a> <span style={{color:K.t3}}>— ouvrez le lien dans une fenêtre de navigation privée : si Google demande l'accès, le partage n'est pas encore ouvert.</span></div>
+  </div>;
+}
+
 function ChampLien({K,val,onChange,lb}){
   const ok=!val.trim()||lienValide(val);
   return <div>
@@ -842,6 +852,7 @@ function ChampLien({K,val,onChange,lb}){
     {val.trim()&&<div style={{fontSize:11.5,marginTop:4,color:!ok?K.er:apercuLien(val)?K.em:K.t3}}>
       {!ok?"Le lien doit commencer par https://":apercuLien(val)?"✓ Lien Google reconnu : il s'ouvrira dans l'application.":"Lien externe : il doit pointer directement vers un fichier PDF public."}
     </div>}
+    {ok&&apercuLien(val)&&<RappelPartage K={K} url={val}/>}
     {ok&&miniatureLien(val)&&<div style={{marginTop:7,display:"flex",alignItems:"center",gap:9}}>
       <Miniature key={val} url={val} w={54} h={72} r={6} K={K} fallback={<div style={{fontSize:11.5,color:K.wa}}>⚠ Couverture indisponible : vérifiez que le fichier est partagé en « Tous les utilisateurs disposant du lien ».</div>}/>
     </div>}
@@ -883,6 +894,9 @@ function PdfV({url,name,onClose,modId,uid,showRating=false}){
           style={{width:"100%",height:"100%",border:"none"}}
           sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
           allow="fullscreen"/>
+        {apercuLien(url)&&<div style={{position:"absolute",left:0,right:0,bottom:0,padding:"6px 12px",background:"rgba(0,0,0,.72)",color:"rgba(255,255,255,.85)",fontSize:11.5,textAlign:"center",lineHeight:1.4}}>
+          <i className="ti ti-info-circle" style={{fontSize:12,verticalAlign:-1}}/> Google vous demande une autorisation ? Le fichier n'est pas encore partagé par lien : signalez-le à l'équipe Éco-Campus (Messages).
+        </div>}
       </div>
       :<div style={{flex:1,overflowY:"auto",padding:mob?"14px":"20px 28px",maxWidth:560,margin:"0 auto",width:"100%"}}>
         <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:4}}>{name}</div>
@@ -4772,7 +4786,7 @@ function AA({onOut}){
   {addPres&&<div style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:12,padding:"14px",marginBottom:13,animation:"sc .2s ease"}}>
     <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:10}}>Nouvelle présentation</div>
     <Inp lb="Titre *" rf={rPT} ph="Titre de la présentation"/>
-    <Inp lb="URL *" rf={rPU} ph="https://docs.google.com/presentation/... ou lien Canva" note="Google Slides (lien de publication) · Canva (lien d'intégration) · URL directe"/>
+    <Inp lb="URL *" rf={rPU} ph="https://docs.google.com/presentation/... ou lien Canva" note="Google Slides (lien de publication : Fichier → Partager → Publier sur le Web) · Canva (lien d'intégration) · URL directe. Un fichier Drive doit être partagé en « Tous les utilisateurs disposant du lien — Lecteur », sinon l'apprenant verra « Demander l'accès »."/>
     <Inp lb="Description" rf={rPD} ph="Résumé du contenu"/>
     <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:5}}>Matière</div><input ref={rPM} placeholder="SYSCOHADA, Droit OHADA..." style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:14,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box",minHeight:44}}/></div>
     <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:7}}>{[[true,"🆓 Gratuit","Tous"],[false,"💎 Premium","Abonnés"]].map(([val,lb,note])=><div key={String(val)} onClick={()=>sPresGr(val)} style={{flex:1,background:presGr===val?K.inBg:K.c2,border:`1px solid ${presGr===val?K.inBd:K.b0}`,borderRadius:9,padding:"9px 11px",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:13,color:presGr===val?K.in_:K.t1,marginBottom:1}}>{lb}</div><div style={{fontSize:11,color:K.t3}}>{note}</div></div>)}</div></div>
