@@ -3508,7 +3508,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
     {key:"stages",ico:"briefcase",label:"Stages",desc:"Expériences virtuelles",action:onStages},{key:"videos",ico:"video",label:"Vidéos",desc:`${vids.length} vidéos disponibles`,action:onVid},
     ...(onEf?[{key:"ef",ico:"report-money",label:"États financiers",desc:"Atelier SYSCOHADA : Bilan, CR, TFT, notes",action:onEf}]:[]),
     ...(onJrn?[{key:"jrn",ico:"notebook",label:"Monographie comptable",desc:"ZAO IMMO 2021 : du journal aux états financiers",action:onJrn}]:[]),
-    ...(onCpt?[{key:"cpt",ico:"books",label:"Guide des comptes",desc:"SYSCOHADA révisé : contenu et fonctionnement des comptes",action:onCpt}]:[]),
+    ...(onCpt?[{key:"cpt",ico:"books",label:"Guide des comptes",desc:"SYSCOHADA révisé : fiches, écritures types et exercice « Quel compte ? »",action:onCpt}]:[]),
     ...(onFisc?[{key:"fisc",ico:"receipt-tax",label:"Code des impôts",desc:"12 modules RDC : IBP, IPR, TVA pratique, paie, import-export… avec QCM",action:onFisc}]:[]),
   ];
 
