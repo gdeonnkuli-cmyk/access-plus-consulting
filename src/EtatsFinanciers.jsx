@@ -80,11 +80,11 @@ function NumCell({K,value,onChange,dis}){
 }
 
 // ══════════════════ RACINE ══════════════════
-export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
+export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub,journal0=false}){
   const staff=me.role==="formateur"||me.role==="admin";
   useEffect(()=>{if(me.role!=="admin")inscrireAnnuaire(db,me);},[db,me.uid,me.nom,me.mail,me.role]);
   const[dossiers,sDos]=useState([]),[loading,sL]=useState(true),[err,sErr]=useState("");
-  const[openId,sOpen]=useState(null),[guide,sGuide]=useState(false),[creer,sCreer]=useState(false),[journal,sJournal]=useState(false),[scope,sScope]=useState(staff?"tous":"miens"),[filtre,sFiltre]=useState("");
+  const[openId,sOpen]=useState(null),[guide,sGuide]=useState(false),[creer,sCreer]=useState(false),[journal,sJournal]=useState(journal0),[scope,sScope]=useState(staff?"tous":"miens"),[filtre,sFiltre]=useState("");
   useEffect(()=>{
     if(!me.uid)return;
     const q=staff&&scope==="tous"?collection(db,COLL):query(collection(db,COLL),where("membres","array-contains",me.uid));
@@ -109,7 +109,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?20:24,color:K.t1}}>Atelier États financiers</div>
         <div style={{color:K.t3,fontSize:12,marginTop:3}}>République Démocratique du Congo · SYSCOHADA révisé · Système Normal · Bilan, Compte de résultat, TFT et IBP générés depuis la balance</div>
       </div>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><B K={K} v="g" ico="notebook" ch="Tenue comptable (journal)" on={()=>sJournal(true)}/><B K={K} v="g" ico="book" ch="Règles & fonctionnement des comptes" on={()=>sGuide(true)}/><B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/></div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><B K={K} v="g" ico="notebook" ch="Monographie ZAO IMMO (journal)" on={()=>sJournal(true)}/><B K={K} v="g" ico="book" ch="Règles & fonctionnement des comptes" on={()=>sGuide(true)}/><B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/></div>
     </div>
     <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
       {staff&&[["tous","Tous les dossiers"],["miens","Mes dossiers"]].map(([k,l])=><B key={k} K={K} sm v={scope===k?"p":"g"} ch={l} on={()=>sScope(k)}/>)}
@@ -119,7 +119,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
     </div>
     <div onClick={()=>sJournal(true)} className="hv" style={{display:"flex",gap:12,alignItems:"center",background:`linear-gradient(135deg,${K.emBg},${K.card})`,border:`1px solid ${K.emBd}`,borderRadius:14,padding:"12px 14px",marginBottom:12,cursor:"pointer"}}>
       <div style={{width:42,height:42,borderRadius:12,background:K.em,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-notebook" style={{fontSize:21,color:"#fff"}}/></div>
-      <div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:14.5,color:K.t1}}>Nouveau : la tenue comptable, du journal aux états financiers</div>
+      <div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:14.5,color:K.t1}}>Nouveau : monographie ZAO IMMO, du journal aux états financiers</div>
         <div style={{fontSize:12.5,color:K.t3,lineHeight:1.45}}>Passez les 35 écritures de {CAS_JOURNAL.societe} (exercice {CAS_JOURNAL.exercice}) : l'application corrige et explique chaque écriture, puis vous montez le Bilan et le Compte de résultat.</div></div>
       <i className="ti ti-chevron-right" style={{color:K.em,fontSize:20}}/>
     </div>

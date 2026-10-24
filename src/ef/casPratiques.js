@@ -432,7 +432,7 @@ export const CAS_PRATIQUES = [
   },
   {
     id: "zao-immo",
-    titre: "ZAO IMMO SARL — Immobilier, exercice 2021 (après tenue comptable)",
+    titre: "Monographie ZAO IMMO SARL — Immobilier, exercice 2021",
     societe: "ZAO IMMO SARL",
     exercice: 2021,
     devise: "CDF",

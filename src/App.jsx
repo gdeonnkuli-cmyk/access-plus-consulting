@@ -102,7 +102,7 @@ const CARD_PALETTES={
     {bg:"#F5F0FF",bd:"#D0C0F0",ac:"#6040A0"},
   ],
 };
-const TILE_COLORS={modules:["#1E4FA3","#4F7FD6"],qcm:["#4F46E5","#8B7CF6"],pres:["#D97706","#F5B342"],stages:["#0D7A6B","#19B39B"],videos:["#C2410C","#F2733F"],ef:["#1D4ED8","#4F8DF7"],fisc:["#A3122A","#E0475F"]};
+const TILE_COLORS={modules:["#1E4FA3","#4F7FD6"],qcm:["#4F46E5","#8B7CF6"],pres:["#D97706","#F5B342"],stages:["#0D7A6B","#19B39B"],videos:["#C2410C","#F2733F"],ef:["#1D4ED8","#4F8DF7"],fisc:["#A3122A","#E0475F"],jrn:["#0D7A6B","#2BB39B"]};
 const getCardPalette=(tid,idx)=>{const p=CARD_PALETTES[tid]||CARD_PALETTES.dark;return p[idx%p.length];};
 const bK=id=>{const t=TH[id]||TH.eco;const sombre=["dark","blue","green","purple"].includes(id);return{sh:sombre?"0 8px 22px rgba(0,0,0,.28)":"0 1px 2px rgba(10,42,92,.04),0 8px 22px rgba(10,42,92,.07)",bg:t.bg,card:t.ca,c2:t.c2,b0:t.b0,b1:t.b1,t1:t.t1,t2:t.t2,t3:t.t3,...ACC,...(sombre?ACC_SOMBRE:{})};};
 const Ctx=createContext({K:bK("dark"),tid:"dark",setT:()=>{}});
@@ -2849,7 +2849,7 @@ function Auth({onL}){
 function UA({uid,onOut}){
   const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
   // Vue initiale : raccourcis de l'application installée (?vue=ef, ?vue=pres…)
-  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","fisc","psycho","services","prog","res","param","sugg","apropos"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
+  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","jrn","fisc","psycho","services","prog","res","param","sugg","apropos"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
   const[uData,sUD]=useState(null),[pdfs,sPdfs]=useState({});
   const[showOnboarding,sShowOnboarding]=useState(false);
   const{mods,loading:mL}=useModules();
@@ -2894,7 +2894,7 @@ function UA({uid,onOut}){
   if(openQuiz)return W(<OpenQuiz mod={openQuiz} uid={uid} uNom={uData.nom} onDone={()=>{sOpenQuiz(null);sM(null);sV("res");}} onBack={()=>sOpenQuiz(null)}/>,true);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onOpenQ={()=>sOpenQuiz(mod)} onMarkDone={()=>markDoneNoEval(mod.id)} doneNoEval={pr[mod.id]==="done"} openAnswer={myOpenAnswers.find(a=>a.modId===mod.id)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]} uid={uid} uNom={uData.nom}/>,true);
   return W(<>
-    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} live={live} presCount={allPres.length} uid={uid} onGo={sV}/>}
+    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} onJrn={()=>sV("jrn")} live={live} presCount={allPres.length} uid={uid} onGo={sV}/>}
     {vue==="videos"&&<VidsPage ok={ok} onSub={()=>sSub(true)} vids={vids} live={live}/>}
     {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres.filter(p=>p.on!==false)}/>
     }{vue==="stages"&&<StagePage stages={allStages} plats={allPlats} ok={ok}/>
@@ -2904,6 +2904,7 @@ function UA({uid,onOut}){
     {vue==="psycho"&&<PsychoPage uid={uid} u={uData}/>}
     {vue==="param"&&<ParametresPage role="apprenant" uid={uid} data={uData} onOut={onOut} onGo={sV}/>}
     {vue==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)}/>}
+    {vue==="jrn"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)} journal0/>}
     {vue==="fisc"&&<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="sugg"&&<Suggestions K={K} mob={mob} db={db} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}}/>}
     {vue==="apropos"&&<Apropos K={K} mob={mob} onGo={sV}/>}
@@ -3470,7 +3471,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
   </nav>;
 }
 
-function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onEf,onFisc,live,presCount=0,uid,onGo}){
+function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onEf,onFisc,onJrn,live,presCount=0,uid,onGo}){
   const K=useK();const{mob}=useW();const jr=jR(u.dateExpiration);
   const{tid}=useContext(Ctx);
   const[pdfMod,setPdfMod]=useState(null);
@@ -3505,6 +3506,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
     {key:"pres",ico:"presentation",label:"Présentations",desc:`${presCount||0} support${presCount>1?"s":""} de cours`,action:onPres},
     {key:"stages",ico:"briefcase",label:"Stages",desc:"Expériences virtuelles",action:onStages},{key:"videos",ico:"video",label:"Vidéos",desc:`${vids.length} vidéos disponibles`,action:onVid},
     ...(onEf?[{key:"ef",ico:"report-money",label:"États financiers",desc:"Atelier SYSCOHADA : Bilan, CR, TFT, notes",action:onEf}]:[]),
+    ...(onJrn?[{key:"jrn",ico:"notebook",label:"Monographie comptable",desc:"ZAO IMMO 2021 : du journal aux états financiers",action:onJrn}]:[]),
     ...(onFisc?[{key:"fisc",ico:"receipt-tax",label:"Code des impôts",desc:"12 modules RDC : IBP, IPR, TVA pratique, paie, import-export… avec QCM",action:onFisc}]:[]),
   ];
 

@@ -8,7 +8,7 @@ import{COMPTES}from"../ef/guide";
 // L'apprenant passe chaque écriture ; l'application vérifie (comptes par racine, montants au franc près,
 // équilibre), explique, puis présente la balance du corrigé et ouvre l'atelier États financiers.
 // Progression : localStorage (par appareil) ; score : users/{uid}.scores["JRN-ZAO"] = { s, t, pct, date }.
-export const CAS_JOURNAL={id:"zao-immo",cle:"JRN-ZAO",societe:"ZAO IMMO SARL",exercice:2021,titre:"ZAO IMMO SARL — Tenue comptable 2021",
+export const CAS_JOURNAL={id:"zao-immo",cle:"JRN-ZAO",societe:"ZAO IMMO SARL",exercice:2021,titre:"Monographie ZAO IMMO SARL — tenue comptable 2021",
   intro:"Société immobilière de Kinshasa (location de bureaux, d'appartements et nuitées), assujettie à la TVA de 16 %. Comptabilité tenue en francs congolais : 1 $ = 2 000 FC pendant l'exercice, 2 350 FC au 31/12/2021. Passez les écritures de l'exercice puis celles d'inventaire, à partir du bilan d'ouverture."};
 const fmt=v=>Math.round(Number(v)||0).toLocaleString("fr-FR").replace(/ | /g," ");
 const chiffres=s=>String(s||"").replace(/\D/g,"");
@@ -83,7 +83,7 @@ export default function AtelierJournal({K,mob,db,me,onBack,onEtats}){
     {entete}
     <div style={{background:`linear-gradient(135deg,${K.emD},${K.em} 60%,#0D7A6B)`,borderRadius:20,padding:mob?"18px 16px":"24px 26px",color:"#fff",marginBottom:14,position:"relative",overflow:"hidden"}}>
       <i className="ti ti-notebook" style={{position:"absolute",right:-8,bottom:-20,fontSize:140,opacity:.1}}/>
-      <div style={{fontSize:12,fontWeight:800,letterSpacing:1.1,textTransform:"uppercase",opacity:.85}}>Tenue comptable · SYSCOHADA révisé</div>
+      <div style={{fontSize:12,fontWeight:800,letterSpacing:1.1,textTransform:"uppercase",opacity:.85}}>Monographie comptable · SYSCOHADA révisé</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?22:28,lineHeight:1.2,margin:"6px 0 8px"}}>Du journal aux états financiers : {CAS_JOURNAL.societe}</div>
       <div style={{fontSize:14,opacity:.92,lineHeight:1.55,maxWidth:640}}>{CAS_JOURNAL.intro}</div>
       <div style={{height:8,background:"rgba(255,255,255,.2)",borderRadius:99,overflow:"hidden",margin:"14px 0 6px",maxWidth:420}}><div style={{width:`${nFait/total*100}%`,height:"100%",background:"#fff",borderRadius:99}}/></div>
