@@ -1,6 +1,9 @@
+import * as ZAO from "../journal/zao";
+import { corrigeComplet } from "../journal/moteur";
 // ── CAS PRATIQUES DE FORMATION ────────────────────────────────────────────────
 // Balances fictives, équilibrées et cohérentes N / N-1 (montants en francs congolais).
 // CAS_MEUBLES reprend les balances du cas pratique du manuel « Montage des états financiers du SYSCOHADA révisé ».
+// ZAO IMMO : balance issue du corrigé de l'atelier « Tenue comptable » (src/journal).
 
 export const CAS_LIGNES = [
   { c: "101", l: "Capital social", dn: 0, cn: 250000000, dn1: 0, cn1: 200000000, md: 0, mc: 50000000 },
@@ -426,5 +429,21 @@ export const CAS_PRATIQUES = [
     ],
     complementsCorriges: {},
     lignes: CAS_MINOTERIE,
+  },
+  {
+    id: "zao-immo",
+    titre: "Monographie ZAO IMMO SARL — Immobilier, exercice 2021",
+    societe: "ZAO IMMO SARL",
+    exercice: 2021,
+    devise: "CDF",
+    niveau: "Avancé",
+    identite: { sigle: "ZAO IMMO", forme: "SARL", activite: "Promotion et location immobilières (bureaux, appartements, nuitées)", ville: "Kinshasa", commune: "Gombe", province: "Kinshasa", centre: "DGE — Direction des Grandes Entreprises", duree: "12", dureeN1: "12" },
+    enonce: [
+      "ZAO IMMO SARL (Kinshasa) loue des bureaux, des appartements et des chambres à la nuitée ; elle est assujettie à la TVA de 16 %. Sa balance au 31/12/2021 est issue des 35 écritures de l'atelier « Tenue comptable » (bilan d'ouverture reclassé, opérations de l'exercice, inventaire, liquidation de la TVA et IBP). Montants en francs congolais (1 $ = 2 000 FC ; 2 350 FC au 31/12/2021 pour l'emprunt en dollars).",
+      "Points clés de l'exercice : acomptes sur le marché de construction du nouveau siège (COGECO) ; emprunt Rawbank de 100 000 $ actualisé au cours de clôture (écart de conversion actif et provision pour perte de change) ; cession d'un véhicule et achat de deux Mazda (TVA non déductible) ; reprise de la dépréciation d'une créance de 2020 ; provision pour litige ; charges constatées d'avance.",
+      "Travail demandé : établir le Bilan, le Compte de résultat et le TFT ; vérifier l'IBP (provisions réintégrées) ; commenter la place de l'écart de conversion (4784) et des acomptes sur immobilisations (252).",
+    ],
+    complementsCorriges: {},
+    lignes: corrigeComplet(ZAO).lignes.map(({ c, l, dn, cn, dn1, cn1, md, mc }) => ({ c, l, dn, cn, dn1, cn1, md, mc })),
   },
 ];

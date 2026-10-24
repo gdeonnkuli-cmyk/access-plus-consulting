@@ -2,6 +2,7 @@ import React,{useState,useEffect,useRef,useMemo}from"react";
 import{collection,doc,addDoc,setDoc,getDoc,updateDoc,deleteDoc,onSnapshot,query,where,getDocs,arrayUnion,arrayRemove}from"firebase/firestore";
 import{computeAll,parseBalance,mapCompte,num,fmt,LIB,ACTIF,PASSIF,CR,TFT}from"./ef/engine";
 import{CAS_PRATIQUES}from"./ef/casPratiques";
+import AtelierJournal,{CAS_JOURNAL}from"./journal/AtelierJournal";
 import{DEVISES,FORMES,PROVINCES,IDENTITE,FISC_DEFAUT,CATEGORIES,FORFAIT_SANS_CA,categorieDe,computeIBP}from"./ef/rdc";
 import{COMPTES,CLASSES,REGLES,ficheCompte,anomaliesSens,rubriqueDe}from"./ef/guide";
 import{computeNotes,fmtPct,TRANCHES,NATURES_TITRES,EFF_COLS,EFF_PROPRE,EFF_STATUT,EFF_EXT}from"./ef/notes";
@@ -79,11 +80,11 @@ function NumCell({K,value,onChange,dis}){
 }
 
 // ══════════════════ RACINE ══════════════════
-export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
+export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub,journal0=false}){
   const staff=me.role==="formateur"||me.role==="admin";
   useEffect(()=>{if(me.role!=="admin")inscrireAnnuaire(db,me);},[db,me.uid,me.nom,me.mail,me.role]);
   const[dossiers,sDos]=useState([]),[loading,sL]=useState(true),[err,sErr]=useState("");
-  const[openId,sOpen]=useState(null),[guide,sGuide]=useState(false),[creer,sCreer]=useState(false),[scope,sScope]=useState(staff?"tous":"miens"),[filtre,sFiltre]=useState("");
+  const[openId,sOpen]=useState(null),[guide,sGuide]=useState(false),[creer,sCreer]=useState(false),[journal,sJournal]=useState(journal0),[scope,sScope]=useState(staff?"tous":"miens"),[filtre,sFiltre]=useState("");
   useEffect(()=>{
     if(!me.uid)return;
     const q=staff&&scope==="tous"?collection(db,COLL):query(collection(db,COLL),where("membres","array-contains",me.uid));
@@ -98,6 +99,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
     <div style={{color:K.t3,fontSize:13,marginBottom:16}}>Réservé aux apprenants disposant d'un abonnement actif.</div>
     {onSub&&<B K={K} ch="Obtenir l'accès" on={onSub}/>}
   </div>;
+  if(journal)return <AtelierJournal K={K} mob={mob} db={db} me={me} onBack={()=>sJournal(false)} onEtats={()=>{sJournal(false);sCreer(CAS_JOURNAL.id);}}/>;
   if(guide)return <div style={{animation:"fadeIn .3s ease"}}><div style={{marginBottom:12}}><B K={K} v="g" sm ico="arrow-left" ch="Dossiers" on={()=>sGuide(false)}/></div><GuideView K={K} mob={mob}/></div>;
   if(cur)return <><style>{PRINT_CSS}</style><Dossier db={db} K={K} mob={mob} me={me} staff={staff} d={cur} onBack={()=>sOpen(null)}/></>;
   const list=dossiers.filter(d=>!filtre||d.statut===filtre);
@@ -107,13 +109,19 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?20:24,color:K.t1}}>Atelier États financiers</div>
         <div style={{color:K.t3,fontSize:12,marginTop:3}}>République Démocratique du Congo · SYSCOHADA révisé · Système Normal · Bilan, Compte de résultat, TFT et IBP générés depuis la balance</div>
       </div>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><B K={K} v="g" ico="book" ch="Règles & fonctionnement des comptes" on={()=>sGuide(true)}/><B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/></div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><B K={K} v="g" ico="notebook" ch="Monographie ZAO IMMO (journal)" on={()=>sJournal(true)}/><B K={K} v="g" ico="book" ch="Règles & fonctionnement des comptes" on={()=>sGuide(true)}/><B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/></div>
     </div>
     <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
       {staff&&[["tous","Tous les dossiers"],["miens","Mes dossiers"]].map(([k,l])=><B key={k} K={K} sm v={scope===k?"p":"g"} ch={l} on={()=>sScope(k)}/>)}
       <select value={filtre} onChange={e=>sFiltre(e.target.value)} style={{...fieldSt(K),width:"auto",minHeight:32,padding:"5px 9px",fontSize:12}}>
         <option value="">Tous statuts</option>{Object.entries(STATUTS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
       </select>
+    </div>
+    <div onClick={()=>sJournal(true)} className="hv" style={{display:"flex",gap:12,alignItems:"center",background:`linear-gradient(135deg,${K.emBg},${K.card})`,border:`1px solid ${K.emBd}`,borderRadius:14,padding:"12px 14px",marginBottom:12,cursor:"pointer"}}>
+      <div style={{width:42,height:42,borderRadius:12,background:K.em,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-notebook" style={{fontSize:21,color:"#fff"}}/></div>
+      <div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:14.5,color:K.t1}}>Nouveau : monographie ZAO IMMO, du journal aux états financiers</div>
+        <div style={{fontSize:12.5,color:K.t3,lineHeight:1.45}}>Passez les 35 écritures de {CAS_JOURNAL.societe} (exercice {CAS_JOURNAL.exercice}) : l'application corrige et explique chaque écriture, puis vous montez le Bilan et le Compte de résultat.</div></div>
+      <i className="ti ti-chevron-right" style={{color:K.em,fontSize:20}}/>
     </div>
     {err&&<div style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"9px 12px",fontSize:12,marginBottom:10}}>{err}</div>}
     {loading?<div style={{color:K.t3,fontSize:13,padding:20}}>Chargement…</div>
@@ -137,12 +145,12 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub}){
           <div style={{color:K.t3,fontSize:10,marginTop:6}}>Modifié {fDT(d.updatedAt)}{d.updatedByNom?` par ${d.updatedByNom}`:""}</div>
         </div>;})}
     </div>}
-    {creer&&<NewDossier db={db} K={K} me={me} onClose={()=>sCreer(false)} onCreated={id=>{sCreer(false);sOpen(id);}}/>}
+    {creer&&<NewDossier db={db} K={K} me={me} src0={typeof creer==="string"?creer:"vierge"} onClose={()=>sCreer(false)} onCreated={id=>{sCreer(false);sOpen(id);}}/>}
   </div>;
 }
 
-function NewDossier({db,K,me,onClose,onCreated}){
-  const[f,sF]=useState({societe:"",exercice:new Date().getFullYear()-1,devise:"CDF",forme:"SA",province:"Kinshasa",src:"vierge"});
+function NewDossier({db,K,me,src0="vierge",onClose,onCreated}){
+  const[f,sF]=useState({societe:"",exercice:new Date().getFullYear()-1,devise:"CDF",forme:"SA",province:"Kinshasa",src:src0});
   const[busy,sBusy]=useState(false),[err,sErr]=useState("");
   const cas=CAS_PRATIQUES.find(c=>c.id===f.src);
   const create=async()=>{
