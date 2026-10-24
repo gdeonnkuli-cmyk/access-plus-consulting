@@ -2,6 +2,7 @@ import { embedPresentation, srcIframe } from "./presentation";
 
 test("Google Slides et fichier Drive", () => {
   expect(embedPresentation("https://docs.google.com/presentation/d/AbC_123-xyz/pub?start=false").src).toMatch(/presentation\/d\/AbC_123-xyz\/embed/);
+  expect(embedPresentation("https://docs.google.com/presentation/d/1rbKociYSXcvVvmjyc7rhyA-1O2F1SkHE/edit?usp=drivesdk&ouid=1170&rtpof=true&sd=true").src).toBe("https://drive.google.com/file/d/1rbKociYSXcvVvmjyc7rhyA-1O2F1SkHE/preview");
   expect(embedPresentation("https://drive.google.com/file/d/1na2KJz0RuXa_fLayEtNFbgvS0shMMAxW/view?usp=sharing").src).toBe("https://drive.google.com/file/d/1na2KJz0RuXa_fLayEtNFbgvS0shMMAxW/preview");
 });
 
