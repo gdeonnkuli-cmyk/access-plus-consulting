@@ -18,6 +18,7 @@ import{pushPossible,pushActif,activerPush,desactiverPush}from"./notif/push";
 import{htmlCodeAcces,htmlNotification}from"./emails";
 import{PROVINCES}from"./ef/rdc";
 import SuiviExercices from"./ef/SuiviExercices";
+import{embedPresentation,srcIframe,estOneDrive}from"./presentation";
 import{pctQcm,resumeCpt}from"./ef/syscohada/scores";
 import LOGO from"./assets/logo.png";
 import LOGO_CLAIR from"./assets/logo-clair.png";
@@ -868,7 +869,8 @@ function PdfV({url,name,onClose,modId,uid,showRating=false}){
     document.addEventListener("keydown",blockSave);
     return()=>document.removeEventListener("keydown",blockSave);
   },[]);
-  const embedUrl=apercuLien(url)||`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
+  const od=estOneDrive(url)?embedPresentation(url):null;
+  const embedUrl=apercuLien(url)||(od&&od.src)||(od?null:`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`);
   return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 15px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -890,10 +892,15 @@ function PdfV({url,name,onClose,modId,uid,showRating=false}){
     </div>
     {tab==="pdf"
       ?<div style={{flex:1,position:"relative",overflow:"hidden"}} onContextMenu={e=>e.preventDefault()}>
-        <iframe src={embedUrl} title={name}
+        {embedUrl?<iframe src={embedUrl} title={name}
           style={{width:"100%",height:"100%",border:"none"}}
           sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
           allow="fullscreen"/>
+        :<div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",padding:24,color:"rgba(255,255,255,.85)"}}>
+          <div style={{fontWeight:800,fontSize:16,marginBottom:6}}>Document hébergé sur OneDrive</div>
+          <div style={{fontSize:13,color:"rgba(255,255,255,.7)",marginBottom:14,maxWidth:380,lineHeight:1.55}}>OneDrive n'autorise pas l'affichage de ce lien dans l'application.</div>
+          <a href={srcIframe(url)} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,padding:"10px 16px",borderRadius:10,background:"#FFFFFF",color:ACC.em,fontWeight:800,fontSize:14,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:15}}/>Ouvrir le document</a>
+        </div>}
         {apercuLien(url)&&<div style={{position:"absolute",left:0,right:0,bottom:0,padding:"6px 12px",background:"rgba(0,0,0,.72)",color:"rgba(255,255,255,.85)",fontSize:11.5,textAlign:"center",lineHeight:1.4}}>
           <i className="ti ti-info-circle" style={{fontSize:12,verticalAlign:-1}}/> Google vous demande une autorisation ? Le fichier n'est pas encore partagé par lien : signalez-le à l'équipe Éco-Campus (Messages).
         </div>}
@@ -964,19 +971,9 @@ function PrivacyModal({onClose}){
 // ── SÉLECTEUR THÈME ───────────────────────────────────────────────────────────
 function PresViewer({url,titre,desc,onClose}){
   const K=useK();const{mob}=useW();
-  // Detect Google Slides / Canva / generic embed
-  const getEmbedUrl=u=>{
-    if(!u)return null;
-    // Google Slides: convert /pub to /embed or extract embed src
-    let m=u.match(/docs\.google\.com\/presentation\/d\/([^/]+)/);
-    if(m)return `https://docs.google.com/presentation/d/${m[1]}/embed?start=false&loop=false&delayms=3000`;
-    // Canva embed
-    if(u.includes('canva.com'))return u;
-    // Generic iframe src
-    if(u.startsWith('http'))return u;
-    return null;
-  };
-  const embedUrl=getEmbedUrl(url);
+  // Lien d'intégration selon l'hébergeur (Google Slides, Drive, Canva, OneDrive) — voir src/presentation.js
+  const{src:embedUrl,hebergeur}=embedPresentation(url);
+  const lienExterne=srcIframe(url);
   return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:1000,display:"flex",flexDirection:"column"}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 15px",background:K.card,borderBottom:`1px solid ${K.b0}`,flexShrink:0}}>
       <div style={{display:"flex",alignItems:"center",gap:9}}>
@@ -988,12 +985,19 @@ function PresViewer({url,titre,desc,onClose}){
     <div style={{flex:1,background:"#1a1a2e",display:"flex",alignItems:"center",justifyContent:"center"}}>
       {embedUrl
         ?<iframe src={embedUrl} title={titre} style={{width:"100%",height:"100%",border:"none"}} allowFullScreen/>
-        :<div style={{textAlign:"center",color:K.t3,padding:40}}><div style={{fontSize:40,marginBottom:10}}>⚠️</div><div>URL non supportée.</div><div style={{fontSize:13,marginTop:5}}>Utilisez un lien Google Slides ou Canva.</div></div>
+        :hebergeur==="onedrive"
+          ?<div style={{textAlign:"center",color:"rgba(255,255,255,.85)",padding:"32px 24px",maxWidth:420}}>
+            <i className="ti ti-presentation" style={{fontSize:42,color:"rgba(255,255,255,.6)"}}/>
+            <div style={{fontWeight:800,fontSize:16,margin:"10px 0 6px"}}>Présentation hébergée sur OneDrive</div>
+            <div style={{fontSize:13,lineHeight:1.55,color:"rgba(255,255,255,.7)",marginBottom:16}}>OneDrive n'autorise pas l'affichage de ce lien à l'intérieur de l'application. Ouvrez la présentation dans un nouvel onglet.</div>
+            <a href={lienExterne} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,padding:"11px 18px",borderRadius:10,background:"#FFFFFF",color:ACC.em,fontWeight:800,fontSize:14,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:16}}/>Ouvrir la présentation</a>
+          </div>
+          :<div style={{textAlign:"center",color:K.t3,padding:40}}><div style={{fontSize:40,marginBottom:10}}>⚠️</div><div>URL non supportée.</div><div style={{fontSize:13,marginTop:5}}>Utilisez un lien Google Slides, Canva ou le lien « Incorporer » de PowerPoint en ligne.</div></div>
       }
     </div>
     <div style={{background:K.card,borderTop:`1px solid ${K.b0}`,padding:"8px 15px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-      <div style={{fontSize:12,color:K.t3}}>💡 Utilisez les flèches du clavier pour naviguer dans la présentation</div>
-      <a href={url} target="_blank" rel="noreferrer" style={{fontSize:12,color:K.in_,fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}><i className="ti ti-external-link" style={{fontSize:13}}/>Ouvrir dans un nouvel onglet</a>
+      <div style={{fontSize:12,color:K.t3}}>{mob?"":"💡 Utilisez les flèches du clavier pour naviguer dans la présentation"}</div>
+      <a href={lienExterne} target="_blank" rel="noreferrer" style={{fontSize:12,color:K.in_,fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}><i className="ti ti-external-link" style={{fontSize:13}}/>Ouvrir dans un nouvel onglet</a>
     </div>
   </div>;
 }
@@ -4786,11 +4790,11 @@ function AA({onOut}){
   {addPres&&<div style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:12,padding:"14px",marginBottom:13,animation:"sc .2s ease"}}>
     <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:10}}>Nouvelle présentation</div>
     <Inp lb="Titre *" rf={rPT} ph="Titre de la présentation"/>
-    <Inp lb="URL *" rf={rPU} ph="https://docs.google.com/presentation/... ou lien Canva" note="Google Slides (lien de publication : Fichier → Partager → Publier sur le Web) · Canva (lien d'intégration) · URL directe. Un fichier Drive doit être partagé en « Tous les utilisateurs disposant du lien — Lecteur », sinon l'apprenant verra « Demander l'accès »."/>
+    <Inp lb="URL *" rf={rPU} ph="https://docs.google.com/presentation/... ou lien Canva" note="Google Slides (lien de publication : Fichier → Partager → Publier sur le Web) · Canva (lien d'intégration) · PowerPoint OneDrive : Fichier → Partager → Incorporer, collez le code obtenu (un simple lien de partage OneDrive ne s'affiche pas dans l'app) · URL directe. Un fichier Drive doit être partagé en « Tous les utilisateurs disposant du lien — Lecteur », sinon l'apprenant verra « Demander l'accès »."/>
     <Inp lb="Description" rf={rPD} ph="Résumé du contenu"/>
     <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:5}}>Matière</div><input ref={rPM} placeholder="SYSCOHADA, Droit OHADA..." style={{width:"100%",padding:"10px 12px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:8,color:K.t1,fontSize:14,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box",minHeight:44}}/></div>
     <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:7}}>{[[true,"🆓 Gratuit","Tous"],[false,"💎 Premium","Abonnés"]].map(([val,lb,note])=><div key={String(val)} onClick={()=>sPresGr(val)} style={{flex:1,background:presGr===val?K.inBg:K.c2,border:`1px solid ${presGr===val?K.inBd:K.b0}`,borderRadius:9,padding:"9px 11px",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:13,color:presGr===val?K.in_:K.t1,marginBottom:1}}>{lb}</div><div style={{fontSize:11,color:K.t3}}>{note}</div></div>)}</div></div>
-    <div style={{display:"flex",gap:7}}><Btn ch="Annuler" on={()=>sAddPres(false)} v="g" full/><Btn ch={saving?"…":"➕ Ajouter"} on={async()=>{const titre=rPT.current?.value?.trim()||"";const url=rPU.current?.value?.trim()||"";if(!titre||!url){alert("Titre et URL requis");return;}sSav(true);await savePresentation({titre,url,desc:rPD.current?.value?.trim()||"",mat:rPM.current?.value?.trim()||"",gr:presGr,ordre:Date.now()});sSav(false);sAddPres(false);[rPT,rPU,rPD,rPM].forEach(r=>{if(r.current)r.current.value="";});}} full dis={saving}/></div>
+    <div style={{display:"flex",gap:7}}><Btn ch="Annuler" on={()=>sAddPres(false)} v="g" full/><Btn ch={saving?"…":"➕ Ajouter"} on={async()=>{const titre=rPT.current?.value?.trim()||"";const url=srcIframe(rPU.current?.value||"");if(!titre||!url){alert("Titre et URL requis");return;}if(estOneDrive(url)&&!embedPresentation(url).src&&!window.confirm("Ce lien OneDrive ne pourra pas s'afficher dans l'application : les apprenants devront l'ouvrir dans un nouvel onglet.\n\nPour l'afficher dans l'app : PowerPoint en ligne → Fichier → Partager → Incorporer, puis collez le code obtenu.\n\nEnregistrer quand même ?"))return;sSav(true);await savePresentation({titre,url,desc:rPD.current?.value?.trim()||"",mat:rPM.current?.value?.trim()||"",gr:presGr,ordre:Date.now()});sSav(false);sAddPres(false);[rPT,rPU,rPD,rPM].forEach(r=>{if(r.current)r.current.value="";});}} full dis={saving}/></div>
   </div>}
   {allPresAdmin.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"38px",textAlign:"center"}}><div style={{fontSize:32,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>📊</div><div style={{color:K.t2,fontWeight:700,fontSize:14,marginBottom:3}}>Aucune présentation</div><div style={{color:K.t3,fontSize:13}}>Ajoutez votre première présentation Google Slides ou Canva.</div></div>
   :<div style={{display:"flex",flexDirection:"column",gap:8}}>{allPresAdmin.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:11,padding:"12px 14px",display:"flex",alignItems:"center",gap:11,flexWrap:"wrap"}}>
