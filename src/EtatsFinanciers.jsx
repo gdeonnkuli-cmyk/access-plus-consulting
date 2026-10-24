@@ -4,7 +4,8 @@ import{computeAll,parseBalance,mapCompte,num,fmt,LIB,ACTIF,PASSIF,CR,TFT}from"./
 import{CAS_PRATIQUES}from"./ef/casPratiques";
 import AtelierJournal,{CAS_JOURNAL}from"./journal/AtelierJournal";
 import{DEVISES,FORMES,PROVINCES,IDENTITE,FISC_DEFAUT,CATEGORIES,FORFAIT_SANS_CA,categorieDe,computeIBP}from"./ef/rdc";
-import{COMPTES,CLASSES,REGLES,ficheCompte,anomaliesSens,rubriqueDe}from"./ef/guide";
+import{REGLES,ficheCompte,anomaliesSens,rubriqueDe}from"./ef/guide";
+import GuideComptes from"./ef/GuideComptes";
 import{computeNotes,fmtPct,TRANCHES,NATURES_TITRES,EFF_COLS,EFF_PROPRE,EFF_STATUT,EFF_EXT}from"./ef/notes";
 
 // ══════════════════ ATELIER ÉTATS FINANCIERS SYSCOHADA (multi-utilisateurs) ══════════════════
@@ -80,11 +81,11 @@ function NumCell({K,value,onChange,dis}){
 }
 
 // ══════════════════ RACINE ══════════════════
-export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub,journal0=false}){
+export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub,journal0=false,guide0=false}){
   const staff=me.role==="formateur"||me.role==="admin";
   useEffect(()=>{if(me.role!=="admin")inscrireAnnuaire(db,me);},[db,me.uid,me.nom,me.mail,me.role]);
   const[dossiers,sDos]=useState([]),[loading,sL]=useState(true),[err,sErr]=useState("");
-  const[openId,sOpen]=useState(null),[guide,sGuide]=useState(false),[creer,sCreer]=useState(false),[journal,sJournal]=useState(journal0),[scope,sScope]=useState(staff?"tous":"miens"),[filtre,sFiltre]=useState("");
+  const[openId,sOpen]=useState(null),[guide,sGuide]=useState(guide0),[creer,sCreer]=useState(false),[journal,sJournal]=useState(journal0),[scope,sScope]=useState(staff?"tous":"miens"),[filtre,sFiltre]=useState("");
   useEffect(()=>{
     if(!me.uid)return;
     const q=staff&&scope==="tous"?collection(db,COLL):query(collection(db,COLL),where("membres","array-contains",me.uid));
@@ -109,7 +110,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub,journal0=fals
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?20:24,color:K.t1}}>Atelier États financiers</div>
         <div style={{color:K.t3,fontSize:12,marginTop:3}}>République Démocratique du Congo · SYSCOHADA révisé · Système Normal · Bilan, Compte de résultat, TFT et IBP générés depuis la balance</div>
       </div>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><B K={K} v="g" ico="notebook" ch="Monographie ZAO IMMO (journal)" on={()=>sJournal(true)}/><B K={K} v="g" ico="book" ch="Règles & fonctionnement des comptes" on={()=>sGuide(true)}/><B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/></div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><B K={K} v="g" ico="notebook" ch="Monographie ZAO IMMO (journal)" on={()=>sJournal(true)}/><B K={K} v="g" ico="book" ch="Guide des comptes (SYSCOHADA révisé)" on={()=>sGuide(true)}/><B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/></div>
     </div>
     <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
       {staff&&[["tous","Tous les dossiers"],["miens","Mes dossiers"]].map(([k,l])=><B key={k} K={K} sm v={scope===k?"p":"g"} ch={l} on={()=>sScope(k)}/>)}
@@ -398,12 +399,11 @@ function FicheModal({K,ligne,onClose}){
   return <Modal K={K} title={`Compte ${c}${ligne.l?` — ${ligne.l}`:""}`} onClose={onClose}><FicheContenu K={K} c={c} f={f} ligne={ligne}/></Modal>;
 }
 function GuideView({K,mob,lignes}){
-  const[vue,sVue]=useState("regles"),[q,sQ]=useState(""),[sel,sSel]=useState(null);
-  const liste=Object.entries(COMPTES).filter(([k,f])=>!q||k.startsWith(q.replace(/\s/g,""))||f.l.toLowerCase().includes(q.toLowerCase())).sort(([a],[b])=>a.localeCompare(b));
+  const[vue,sVue]=useState("comptes");
   const ligneDe=k=>(lignes||[]).find(x=>String(x.c).startsWith(k));
   return <div>
     <div className="tn ef-noprint" style={{gap:6,marginBottom:12}}>
-      {[["regles","list-check","Règles de montage"],["comptes","books","Fonctionnement des comptes"]].map(([k,ico,l])=><B key={k} K={K} sm v={vue===k?"p":"g"} ico={ico} ch={l} on={()=>sVue(k)}/>)}
+      {[["comptes","books","Contenu et fonctionnement des comptes"],["regles","list-check","Règles de montage"]].map(([k,ico,l])=><B key={k} K={K} sm v={vue===k?"p":"g"} ico={ico} ch={l} on={()=>sVue(k)}/>)}
     </div>
     {vue==="regles"?<div style={{display:"flex",flexDirection:"column",gap:8}}>
       <div style={{fontSize:12,color:K.t3,lineHeight:1.5}}>Synthèse du manuel « Montage des états financiers du SYSCOHADA révisé » et de l'Acte uniforme relatif au droit comptable et à l'information financière, adaptée à la RDC.</div>
@@ -412,24 +412,7 @@ function GuideView({K,mob,lignes}){
         <ul style={{margin:"8px 0 2px 18px",display:"flex",flexDirection:"column",gap:5}}>{r.p.map((x,j)=><li key={j} style={{fontSize:12,color:K.t2,lineHeight:1.55}}>{x}</li>)}</ul>
       </details>)}
     </div>
-    :<div style={{display:"grid",gridTemplateColumns:mob?"1fr":"300px 1fr",gap:10,alignItems:"start"}}>
-      <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:8}}>
-        <input value={q} onChange={e=>sQ(e.target.value)} placeholder="N° de compte ou intitulé (ex. 401, caisse)" style={{...fieldSt(K),minHeight:36,fontSize:12,marginBottom:6}}/>
-        <div style={{maxHeight:mob?260:"62vh",overflowY:"auto"}}>
-          {CLASSES.map(([cl,lib])=>{const items=liste.filter(([k])=>k[0]===cl);if(!items.length)return null;return <div key={cl}>
-            <div style={{fontSize:10,fontWeight:800,color:K.em,textTransform:"uppercase",letterSpacing:.4,padding:"8px 6px 3px"}}>Classe {cl} — {lib}</div>
-            {items.map(([k,f])=><button key={k} onClick={()=>sSel(k)} className="bt" style={{display:"flex",gap:8,width:"100%",textAlign:"left",padding:"6px 7px",border:"none",borderRadius:7,background:sel===k?K.c2:"transparent",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
-              <span style={{fontFamily:mono,fontSize:11,fontWeight:800,color:sel===k?K.em:K.t3,minWidth:34}}>{k}</span><span style={{fontSize:12,color:K.t1,lineHeight:1.3}}>{f.l}</span>
-            </button>)}
-          </div>;})}
-          {!liste.length&&<div style={{fontSize:12,color:K.t3,padding:8}}>Aucun compte trouvé.</div>}
-        </div>
-      </div>
-      <div style={{background:K.card,border:`1px solid ${K.b0}`,borderRadius:12,padding:"12px 14px"}}>
-        {sel?<><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:8}}>{sel} — {COMPTES[sel].l}</div><FicheContenu K={K} c={sel} f={{prefixe:sel,...COMPTES[sel]}} ligne={ligneDe(sel)}/></>
-        :<div style={{fontSize:12,color:K.t3,lineHeight:1.6}}>Choisissez un compte pour voir son fonctionnement : ce qui s'inscrit au débit et au crédit, le sens normal de son solde et le poste des états financiers où il est présenté. Dans la balance d'un dossier, touchez la rubrique d'un compte pour ouvrir directement sa fiche.</div>}
-      </div>
-    </div>}
+    :<GuideComptes K={K} mob={mob} fiche={c=><FicheContenu K={K} c={c} f={ficheCompte(c)} ligne={ligneDe(c)}/>}/>}
   </div>;
 }
 
