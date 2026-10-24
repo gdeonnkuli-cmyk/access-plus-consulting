@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import ExerciceComptes from "./ExerciceComptes";
 import { CLASSES_REV, REMARQUES, REPERES, CLOTURE, POINTS_CLES, chargerClasse, chargerTout, chargerPlan, subdivisions, chercherPlan, chercherTexte, decouper } from "./syscohada";
 
 // ══════════════ GUIDE « CONTENU ET FONCTIONNEMENT DES COMPTES » — SYSCOHADA RÉVISÉ ══════════════
 // Accueil (9 classes + recherche) → classe (présentation + comptes à deux chiffres) → fiche du compte
 // (contenu, écritures types, fonctionnement, distinctions et exclusions, éléments de contrôle, subdivisions du plan
 // révisé, commentaires, changements, correspondances). Vues transversales : repères débit/crédit, contrôles de clôture,
-// correspondances 2000 → révisé.
+// correspondances 2000 → révisé, et l'exercice « Quel compte ? » (ExerciceComptes) bâti sur les écritures types.
 // `fiche(c)` (facultatif) affiche sous la fiche la présentation aux états financiers fournie par l'atelier.
 
 const mono = "'JetBrains Mono',monospace";
@@ -16,7 +17,7 @@ const SUBS_VISIBLES = 14;
 const sansNumero = t => t.replace(/^\s*\d+\s*[—–).-]\s*/, "");
 const sansPrefixe = t => { const r = t.replace(/^Ce qui change avec le SYSCOHADA révisé\s*:\s*/i, ""); return r.charAt(0).toUpperCase() + r.slice(1); };
 
-export default function GuideComptes({ K, mob, fiche }) {
+export default function GuideComptes({ K, mob, fiche, onScore }) {
   const [nav, sNav] = useState({ v: "accueil" }); // { v: accueil | classe | compte | annexe | reperes | cloture, k, c, sub }
   const [tousSubs, sTousSubs] = useState(false);
   const [plan, sPlan] = useState(null);
@@ -27,7 +28,7 @@ export default function GuideComptes({ K, mob, fiche }) {
 
   useEffect(() => { let vivant = true; chargerPlan().then(p => vivant && sPlan(p)); return () => { vivant = false; }; }, []);
   useEffect(() => { if (nav.k) chargerClasse(nav.k).then(C => sClasses(o => o[C.classe] ? o : { ...o, [C.classe]: C })); }, [nav.k]);
-  const besoinTout = nav.v === "annexe" || (q.trim().length >= 3 && !/^\d+$/.test(q.trim()));
+  const besoinTout = nav.v === "annexe" || nav.v === "exo" || (q.trim().length >= 3 && !/^\d+$/.test(q.trim()));
   useEffect(() => {
     if (!besoinTout || tout) return;
     chargerTout().then(L => { sClasses(Object.fromEntries(L.map(C => [C.classe, C]))); sTout(true); });
@@ -103,6 +104,11 @@ export default function GuideComptes({ K, mob, fiche }) {
 
   // ── Vues
   const accueil = () => <>
+    <button onClick={() => aller({ v: "exo", k: 0 })} className="bt" style={{ ...carte(K), display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "12px 14px", marginBottom: 12, textAlign: "left", cursor: "pointer", fontFamily: "'Outfit',sans-serif", border: `1px solid ${K.emBd}` }}>
+      <span style={{ width: 40, height: 40, borderRadius: 10, background: `linear-gradient(135deg,${K.emD},${K.em})`, color: "#fff", display: "grid", placeItems: "center", flexShrink: 0 }}><i className="ti ti-pencil-check" style={{ fontSize: 21 }} /></span>
+      <span style={{ flex: 1 }}><span style={{ display: "block", fontSize: 14, fontWeight: 800, color: K.t1 }}>S'exercer : Quel compte ?</span><span style={{ display: "block", fontSize: 12, color: K.t3, lineHeight: 1.4, marginTop: 2 }}>Séries de 10 opérations à comptabiliser, corrigées ligne par ligne · 270 écritures, par classe ou toutes classes</span></span>
+      <i className="ti ti-chevron-right" style={{ color: K.t3, fontSize: 16 }} />
+    </button>
     <div style={{ ...carte(K), padding: "14px 16px", marginBottom: 12, background: `linear-gradient(135deg,${K.emBg},transparent)` }}>
       <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: mob ? 18 : 21, color: K.t1 }}>Contenu et fonctionnement des comptes</div>
       <div style={{ fontSize: 12.5, color: K.t2, lineHeight: 1.6, marginTop: 6 }}>Chapitre 2 du plan comptable, mis à jour selon le <b>SYSCOHADA révisé</b> (AUDCIF du 26 janvier 2017, applicable depuis le 1er janvier 2018). Pour chaque compte à deux chiffres : contenu, écritures types, fonctionnement au débit et au crédit, distinctions et exclusions, éléments de contrôle, subdivisions du plan révisé, commentaires et ce qui change par rapport au plan de 2000.</div>
@@ -133,6 +139,7 @@ export default function GuideComptes({ K, mob, fiche }) {
       <div style={{ ...carte(K), padding: "14px 16px", marginBottom: 10 }}>
         <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: mob ? 18 : 20, color: K.t1, marginBottom: 8 }}>Classe {C.classe} — {C.titre}</div>
         {(C.intro || []).map(para)}
+        <button onClick={() => aller({ v: "exo", k: C.classe })} className="bt" style={{ ...btn(K, true), marginTop: 4 }}><i className="ti ti-pencil-check" style={{ fontSize: 13 }} />S'exercer sur la classe {C.classe}</button>
       </div>
       <div style={carte(K)}>
         {C.comptes.map(x => <button key={x.c} onClick={() => aller({ v: "compte", k: nav.k, c: x.c })} className="bt" style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "10px 14px", border: "none", borderTop: `1px solid ${K.b0}`, background: "transparent", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -245,6 +252,11 @@ export default function GuideComptes({ K, mob, fiche }) {
     </div>
   </>;
 
+  const vueExo = () => !tout ? attente : <>
+    {fil([["Classes", { v: "accueil" }], ["Exercice « Quel compte ? »"]])}
+    <ExerciceComptes key={nav.k} K={K} mob={mob} classes={Object.values(classes).sort((a, b) => a.classe - b.classe)} k0={nav.k || 0} titreDe={titreDe} ecriture={ecriture} onFiche={c => ouvrirCompte(c)} onScore={onScore} />
+  </>;
+
   const vueAnnexe = () => {
     if (!tout) return attente;
     const L = Object.values(classes).sort((a, b) => a.classe - b.classe).flatMap(C => C.comptes.flatMap(x => (x.correspondance || []).map(r => ({ ...r, k: C.classe, c: x.c }))));
@@ -267,6 +279,6 @@ export default function GuideComptes({ K, mob, fiche }) {
 
   return <div ref={haut} style={{ scrollMarginTop: 70 }}>
     {recherche}
-    {q.trim() ? resultats : nav.v === "classe" ? vueClasse() : nav.v === "compte" ? vueCompte() : nav.v === "annexe" ? vueAnnexe() : nav.v === "reperes" ? vueReperes() : nav.v === "cloture" ? vueCloture() : accueil()}
+    {q.trim() ? resultats : nav.v === "classe" ? vueClasse() : nav.v === "compte" ? vueCompte() : nav.v === "annexe" ? vueAnnexe() : nav.v === "exo" ? vueExo() : nav.v === "reperes" ? vueReperes() : nav.v === "cloture" ? vueCloture() : accueil()}
   </div>;
 }
