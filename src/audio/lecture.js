@@ -93,25 +93,26 @@ export function texteModuleFiscal(mod) {
 }
 
 // ── Fiche d'un compte du guide (classes SYSCOHADA + compléments) ; titres : numéro → intitulé
-export function texteFiche(x, titreDe = () => "") {
+// Sections lisibles séparément (bouton 🔊 de chaque cadre de la fiche) ou ensemble (« Écouter la fiche »)
+export const SECTIONS_FICHE = ["contenu", "ecr", "fonct", "dist", "ctrl", "comm", "chg"];
+function texteSectionBrut(x, id, titreDe) {
   const sansNum = t => String(t).replace(/^\s*\d+\s*[—–).-]\s*/, "");
   const fo = x.fonctionnement || {};
-  const T = [point(`Compte ${x.c}. ${x.titre}`)];
-  if ((x.contenu || []).length) T.push("Contenu.", ...x.contenu.map(point));
-  if ((x.ecr || []).length) {
-    T.push("Écritures types.");
-    x.ecr.forEach(e => {
-      const lignes = e.l.map(([D, C]) => `au débit, ${D.map(n => `${n} ${titreDe(n)}`).join(" et ")} ; au crédit, ${C.map(n => `${n} ${titreDe(n)}`).join(" et ")}`).join(" ; puis ");
-      T.push(point(`${e.q || e.op} : ${lignes}`));
-    });
-  }
-  if ((fo.credit || []).length) T.push("Le compte est crédité.", ...fo.credit.map(point));
-  if ((fo.debit || []).length) T.push("Le compte est débité.", ...fo.debit.map(point));
-  if (x.dist || (x.exclusions || []).length) T.push("Distinctions et exclusions.", point(x.dist), ...(x.exclusions || []).map(point));
-  if (x.ctrl) T.push("Éléments de contrôle.", point(x.ctrl));
-  if ((x.commentaires || []).length) T.push("Commentaires.", ...x.commentaires.map(c => point(sansNum(c))));
-  if ((x.changements || []).length) T.push("Ce qui change avec le Syscohada révisé.", ...x.changements.map(c => point(String(c).replace(/^Ce qui change avec le SYSCOHADA révisé\s*:\s*/i, ""))));
-  return segments(T);
+  if (id === "contenu") return (x.contenu || []).length ? ["Contenu.", ...x.contenu.map(point)] : [];
+  if (id === "ecr") return (x.ecr || []).length ? ["Écritures types.", ...x.ecr.map(e => point(`${e.q || e.op} : ${e.l.map(([D, C]) => `au débit, ${D.map(n => `${n} ${titreDe(n)}`).join(" et ")} ; au crédit, ${C.map(n => `${n} ${titreDe(n)}`).join(" et ")}`).join(" ; puis ")}`))] : [];
+  if (id === "fonct") return [...((fo.credit || []).length ? ["Le compte est crédité.", ...fo.credit.map(point)] : []), ...((fo.debit || []).length ? ["Le compte est débité.", ...fo.debit.map(point)] : [])];
+  if (id === "dist") return x.dist || (x.exclusions || []).length ? ["Distinctions et exclusions.", point(x.dist), ...(x.exclusions || []).map(point)] : [];
+  if (id === "ctrl") return x.ctrl ? ["Éléments de contrôle.", point(x.ctrl)] : [];
+  if (id === "comm") return (x.commentaires || []).length ? ["Commentaires.", ...x.commentaires.map(c => point(sansNum(c)))] : [];
+  if (id === "chg") return (x.changements || []).length ? ["Ce qui change avec le Syscohada révisé.", ...x.changements.map(c => point(String(c).replace(/^Ce qui change avec le SYSCOHADA révisé\s*:\s*/i, "")))] : [];
+  return [];
+}
+export const texteSection = (x, id, titreDe = () => "") => {
+  const T = texteSectionBrut(x, id, titreDe);
+  return T.length ? segments([point(`Compte ${x.c}`), ...T]) : [];
+};
+export function texteFiche(x, titreDe = () => "") {
+  return segments([point(`Compte ${x.c}. ${x.titre}`), ...SECTIONS_FICHE.flatMap(id => texteSectionBrut(x, id, titreDe))]);
 }
 
 // ── Module de cours (titre, description, exercice si accessible)
