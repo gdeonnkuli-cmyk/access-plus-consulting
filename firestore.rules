@@ -149,8 +149,6 @@ service cloud.firestore {
     match /annonces/{id}    { allow read: if connecte(); allow write: if estAdmin(); }
     match /pdfs/{id}        { allow read: if connecte(); allow write: if estAdmin(); }
     match /config/{id}      { allow read: if connecte(); allow write: if estAdmin(); }
-    // Enregistrements de la voix du formateur (lecture audio des leçons, fiches et modules)
-    match /audios/{cle}     { allow read: if connecte(); allow write: if estAdmin(); }
     match /presences/{id}   { allow read, write: if estAdmin(); }
 
     // ── Échanges et évaluations ─────────────────────────────────────────────────
