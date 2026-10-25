@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ExerciceComptes from "./ExerciceComptes";
 import LecteurAudio from "../audio/LecteurAudio";
-import { texteFiche } from "../audio/lecture";
+import { texteFiche, texteSection } from "../audio/lecture";
 import { CLES_CPT, niveau, resumeCpt } from "./syscohada/scores";
 import { CLASSES_REV, REMARQUES, REPERES, CLOTURE, POINTS_CLES, chargerClasse, chargerTout, chargerPlan, subdivisions, chercherPlan, chercherTexte, decouper } from "./syscohada";
 
@@ -55,7 +55,9 @@ export default function GuideComptes({ K, mob, fiche, onScore, scores }) {
     : x.compte ? <button key={i} onClick={() => ouvrirCompte(x.compte)} title={plan.index.get(x.compte)} style={{ background: "none", border: "none", padding: 0, color: K.em, fontWeight: 700, cursor: "pointer", font: "inherit", textDecoration: "underline dotted", textUnderlineOffset: 2 }}>{x.t}</button>
     : <span key={i}>{x.t}</span>);
   const para = (t, i) => <p key={i} style={{ fontSize: 13, color: K.t2, lineHeight: 1.65, margin: "0 0 8px", textAlign: mob ? "left" : "justify" }}>{riche(t)}</p>;
-  const titreSec = (id, l, ico) => <div id={`gc-${id}`} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 800, color: K.em, textTransform: "uppercase", letterSpacing: .5, margin: "18px 0 8px", scrollMarginTop: 70 }}><i className={`ti ti-${ico}`} style={{ fontSize: 14 }} />{l}</div>;
+  // Titre de section ; segs (facultatif) : bouton 🔊 pour écouter cette section seule
+  const titreSec = (id, l, ico, segs) => <div id={`gc-${id}`} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 11, fontWeight: 800, color: K.em, textTransform: "uppercase", letterSpacing: .5, margin: "18px 0 8px", scrollMarginTop: 70 }}><i className={`ti ti-${ico}`} style={{ fontSize: 14 }} />{l}
+    {segs && segs.length > 0 && <span className="ef-noprint" style={{ marginLeft: "auto", display: "contents" }}><LecteurAudio K={K} segments={segs} titre={`Écouter : ${l}`} compact sx={{ marginLeft: "auto" }} /></span>}</div>;
   const puces = L => <ul style={{ margin: "0 0 4px 18px", padding: 0, display: "flex", flexDirection: "column", gap: 6 }}>{L.map((t, i) => <li key={i} style={{ fontSize: 13, color: K.t2, lineHeight: 1.6 }}>{riche(t)}</li>)}</ul>;
   const fil = items => <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", fontSize: 12, marginBottom: 10 }}>
     {items.map(([l, n], i) => <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -197,17 +199,17 @@ export default function GuideComptes({ K, mob, fiche, onScore, scores }) {
           {SECTIONS.filter(([id]) => presentes[id]).map(([id, l]) => <button key={id} onClick={() => { const el = document.getElementById(`gc-${id}`); if (el) el.scrollIntoView({ block: "start", behavior: "smooth" }); }} style={{ ...btn(K), minHeight: 28, padding: "4px 9px", fontSize: 10.5 }}>{l}</button>)}
         </div>
 
-        {presentes.contenu > 0 && <>{titreSec("contenu", "Contenu", "file-text")}{x.contenu.map(para)}</>}
+        {presentes.contenu > 0 && <>{titreSec("contenu", "Contenu", "file-text", texteSection(x, "contenu", titreDe))}{x.contenu.map(para)}</>}
 
-        {presentes.ecr > 0 && <>{titreSec("ecr", "Écritures types", "notebook")}
+        {presentes.ecr > 0 && <>{titreSec("ecr", "Écritures types", "notebook", texteSection(x, "ecr", titreDe))}
           <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 8, alignItems: "start" }}>{x.ecr.map(ecriture)}</div></>}
 
-        {presentes.fonct > 0 && <>{titreSec("fonct", "Fonctionnement", "arrows-left-right")}
+        {presentes.fonct > 0 && <>{titreSec("fonct", "Fonctionnement", "arrows-left-right", texteSection(x, "fonct", titreDe))}
           <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 8 }}>{sens("credit", "Le compte est crédité", "arrow-bar-to-right")}{sens("debit", "Le compte est débité", "arrow-bar-to-left")}</div></>}
 
-        {presentes.dist > 0 && <>{titreSec("dist", "Distinctions et exclusions", "ban")}{x.dist && para(x.dist, "d")}{(x.exclusions || []).length > 0 && puces(x.exclusions)}</>}
+        {presentes.dist > 0 && <>{titreSec("dist", "Distinctions et exclusions", "ban", texteSection(x, "dist", titreDe))}{x.dist && para(x.dist, "d")}{(x.exclusions || []).length > 0 && puces(x.exclusions)}</>}
 
-        {presentes.ctrl > 0 && <>{titreSec("ctrl", "Éléments de contrôle", "shield-check")}
+        {presentes.ctrl > 0 && <>{titreSec("ctrl", "Éléments de contrôle", "shield-check", texteSection(x, "ctrl", titreDe))}
           <div style={{ background: K.emBg, border: `1px solid ${K.emBd}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, color: K.t2, lineHeight: 1.6 }}><b style={{ color: K.t1 }}>Pièces et rapprochements à réunir : </b>{riche(x.ctrl)}</div></>}
 
         {presentes.subdiv > 0 && <>{titreSec("subdiv", `Subdivisions du plan révisé · ${subs.length}`, "list-tree")}
@@ -219,11 +221,11 @@ export default function GuideComptes({ K, mob, fiche, onScore, scores }) {
           </div>
           {!voirSubs && <button onClick={() => sTousSubs(true)} className="bt" style={{ ...btn(K), marginTop: 8 }}><i className="ti ti-chevron-down" style={{ fontSize: 13 }} />Voir les {subs.length} subdivisions</button>}</>}
 
-        {presentes.comm > 0 && <>{titreSec("comm", "Commentaires", "message-2")}
+        {presentes.comm > 0 && <>{titreSec("comm", "Commentaires", "message-2", texteSection(x, "comm", titreDe))}
           <ol style={{ margin: "0 0 4px 20px", padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>{x.commentaires.map((t, j) => <li key={j} style={{ fontSize: 13, color: K.t2, lineHeight: 1.65, paddingLeft: 2 }}>{riche(sansNumero(t))}</li>)}</ol></>}
 
         {presentes.chg > 0 && <div id="gc-chg" style={{ marginTop: 18, background: K.waBg, borderLeft: `4px solid ${K.wa}`, borderRadius: "0 10px 10px 0", padding: "10px 14px", scrollMarginTop: 70 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 800, fontSize: 13, color: K.wa, marginBottom: 6 }}><i className="ti ti-sparkles" />Ce qui change avec le SYSCOHADA révisé</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontWeight: 800, fontSize: 13, color: K.wa, marginBottom: 6 }}><i className="ti ti-sparkles" />Ce qui change avec le SYSCOHADA révisé<span className="ef-noprint" style={{ display: "contents" }}><LecteurAudio K={K} segments={texteSection(x, "chg", titreDe)} titre="Écouter : Ce qui change" compact sx={{ marginLeft: "auto" }} /></span></div>
           {puces(x.changements.map(sansPrefixe))}
         </div>}
 
