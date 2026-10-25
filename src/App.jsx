@@ -1,7 +1,7 @@
 import React,{useState,useRef,useEffect,useCallback,useMemo,createContext,useContext}from"react";
 import{initializeApp,deleteApp}from"firebase/app";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup,updatePassword,reauthenticateWithCredential,EmailAuthProvider}from"firebase/auth";
-import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,orderBy,limit,deleteField,writeBatch}from"firebase/firestore";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,orderBy,limit,deleteField,runTransaction,writeBatch}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
 import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
 import CodeImpots from"./fiscal/CodeImpots";
@@ -22,7 +22,10 @@ import{embedPresentation,srcIframe,estOneDrive}from"./presentation";
 import LecteurAudio from"./audio/LecteurAudio";
 import{texteModuleCours}from"./audio/lecture";
 import EcouterCours from"./audio/EcouterCours";
-import{pctQcm,resumeCpt}from"./ef/syscohada/scores";
+import{pctQcm,resumeCpt,fusionScore}from"./ef/syscohada/scores";
+import MesAttestations from"./attest/MesAttestations";
+import VerifAttestation from"./attest/VerifAttestation";
+import AdminAttestations from"./attest/AdminAttestations";
 import LOGO from"./assets/logo.png";
 import LOGO_CLAIR from"./assets/logo-clair.png";
 import LOGO_ICONE from"./assets/logo-icone.png";
@@ -289,8 +292,11 @@ const activerCode=async(uid,saisie)=>{
   if(ud.activationCode!==c)return{err:"Code incorrect."};
   await updateDoc(doc(db,"users",uid),{abonnement:"actif",codeValide:true});return{ok:true};
 };
+// QCM d'un module : meilleur score conservé (fusionScore : n séries, dernière tentative) — base des attestations
 const saveProgress=async(uid,modId,score)=>{
-  await updateDoc(doc(db,"users",uid),{[`scores.${modId}`]:score,[`progress.${modId}`]:"done"});
+  const ref=doc(db,"users",uid);
+  await runTransaction(db,async tx=>{const d=await tx.get(ref);const ancien=((d.data()||{}).scores||{})[modId];
+    tx.update(ref,{[`scores.${modId}`]:fusionScore(ancien,{s:score.s,t:score.t}),[`progress.${modId}`]:"done"});});
 };
 const saveModule=async(mod)=>{
   const{id,...data}=mod;
@@ -305,41 +311,6 @@ const saveAnnonce=async(an)=>{
   else{const ref_=doc(collection(db,"annonces"));await setDoc(ref_,{...data,createdAt:Date.now()});}
 };
 const deleteAnnonce=async(id)=>{await deleteDoc(doc(db,"annonces",id));};
-const loadJsPDF=()=>new Promise((res,rej)=>{
-  if(window.jspdf?.jsPDF)return res(window.jspdf.jsPDF);
-  const sc=document.createElement("script");
-  sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-  sc.onload=()=>res(window.jspdf.jsPDF);
-  sc.onerror=()=>rej(new Error("Impossible de charger le générateur PDF. Vérifiez votre connexion."));
-  document.head.appendChild(sc);
-});
-const genAttestation=async({nom,mods,pr,sc})=>{
-  const jsPDF=await loadJsPDF();
-  const done=mods.filter(m=>pr[m.id]==="done");
-  const vals=done.map(m=>sc[m.id]?.pct).filter(p=>p!=null);
-  const avg=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
-  const d=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
-  d.setDrawColor(26,107,58);d.setLineWidth(1.5);d.rect(8,8,281,194);
-  d.setDrawColor(218,168,84);d.setLineWidth(.5);d.rect(11,11,275,188);
-  d.setTextColor(26,107,58);d.setFont("times","bold");d.setFontSize(30);
-  d.text("ATTESTATION DE FORMATION",148.5,42,{align:"center"});
-  d.setDrawColor(218,168,84);d.setLineWidth(.8);d.line(98,48,199,48);
-  d.setTextColor(80,80,80);d.setFont("helvetica","normal");d.setFontSize(13);
-  d.text("Éco-Campus RDC certifie que",148.5,64,{align:"center"});
-  d.setFont("times","bolditalic");d.setFontSize(26);d.setTextColor(20,20,20);
-  d.text(nom||"—",148.5,80,{align:"center"});
-  d.setFont("helvetica","normal");d.setFontSize(12);d.setTextColor(80,80,80);
-  d.text(`a suivi avec succès ${done.length} module${done.length>1?"s":""} de formation en comptabilité SYSCOHADA Révisé`,148.5,93,{align:"center"});
-  if(avg!=null)d.text(`avec un score moyen de ${avg} %`,148.5,101,{align:"center"});
-  d.setFontSize(9);d.setTextColor(120,120,120);
-  done.slice(0,6).forEach((m,i)=>d.text(`• ${m.titre}`,148.5,113+i*5.5,{align:"center"}));
-  if(done.length>6)d.text(`… et ${done.length-6} autre${done.length-6>1?"s":""} module${done.length-6>1?"s":""}`,148.5,113+6*5.5,{align:"center"});
-  d.setFontSize(11);d.setTextColor(80,80,80);
-  d.text(`Fait à Kinshasa, le ${new Date().toLocaleDateString("fr-FR")}`,148.5,168,{align:"center"});
-  d.setFont("helvetica","bold");d.setTextColor(26,107,58);
-  d.text("Éco-Campus RDC · eco-campus-rdc.vercel.app · +243 813 165 403",148.5,180,{align:"center"});
-  d.save(`attestation-${(nom||"apprenant").replace(/\s+/g,"-").toLowerCase()}.pdf`);
-};
 const exportUsersCsv=users=>{
   const headers=["Nom","Email","Rôle","Abonnement","Créé le","Dernière connexion","Modules complétés","Score moyen QCM","Quel compte ? (moyenne des meilleurs scores)","Monographie ZAO"];
   const rows=users.map(u=>{
@@ -2911,7 +2882,7 @@ function UA({uid,onOut}){
   const aMods=mods.filter(m=>m.on!==false);
   const pr=uData.progress||{},sc=uData.scores||{};
   const nd=aMods.filter(m=>pr[m.id]==="done").length,gp=aMods.length?Math.round(nd/aMods.length*100):0;
-  const save=async(modId,s,t)=>{await saveProgress(uid,modId,{s,t,pct:Math.round(s/t*100)});};
+  const save=async(modId,s,t)=>{try{await saveProgress(uid,modId,{s,t,pct:Math.round(s/t*100)});}catch(e){alert("Score non enregistré (connexion ?). Repassez l'évaluation une fois en ligne.");}};
   const markDoneNoEval=async modId=>{await updateDoc(doc(db,"users",uid),{[`progress.${modId}`]:"done"});sM(null);sV("res");};
   const W=(ch,hideNav)=><div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}><style>{mCss(K)}</style>{!hideNav&&<Nav u={uData} vue={vue} sV={v=>{sV(v);sM(null);}} ok={ok} onSub={()=>sSub(true)} onOut={onOut} live={live.on} uid={uid}/>}<main className="mp" style={{maxWidth:1060,margin:"0 auto",padding:hideNav?"14px":undefined,paddingBottom:hideNav?20:(mob?80:20)}}>{ch}</main>{sub&&<SubM onClose={()=>sSub(false)} uid={uid} u={uData}/>}{showOnboarding&&<Onboarding u={uData} onDone={doneOnboarding} mods={aMods}/>}<AutoLogoutBanner warning={uaWarn} mob={mob}/></div>;
   if(quiz)return W(<QZ mod={quiz} onDone={async(s,t)=>{await save(quiz.id,s,t);sQ(null);sM(null);sV("res");}} onBack={()=>sQ(null)}/>);
@@ -2924,7 +2895,7 @@ function UA({uid,onOut}){
     }{vue==="stages"&&<StagePage stages={allStages} plats={allPlats} ok={ok}/>
     }{vue==="services"&&<ServicesPage user={uData}/>}
     {vue==="prog"&&<Prog pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods}/>}
-    {vue==="res"&&<Res sc={sc} ok={ok} mods={aMods} u={uData} pr={pr} nd={nd} gp={gp}/>}
+    {vue==="res"&&<Res sc={sc} ok={ok} mods={aMods} u={uData} uid={uid} onSub={()=>sSub(true)}/>}
     {vue==="psycho"&&<PsychoPage uid={uid} u={uData}/>}
     {vue==="param"&&<ParametresPage role="apprenant" uid={uid} data={uData} onOut={onOut} onGo={sV}/>}
     {vue==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)}/>}
@@ -3908,26 +3879,15 @@ function Prog({pr,sc,gp,nd,ok,mods}){
     </div></>}
   </div></div>;}
 
-function Res({sc,ok,mods,u,pr,nd,gp}){
-  const[attBusy,sAttBusy]=useState(false);
+function Res({sc,ok,mods,u,uid,onSub}){
   const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
   const isLight=['light','sepia'].includes(tid);
   const att=mods.filter(m=>sc[m.id]);
   const avg=att.length?Math.round(att.reduce((a,m)=>a+sc[m.id].pct,0)/att.length):0;
   const pass=att.filter(m=>sc[m.id].pct>=60).length;
   const fail=att.filter(m=>sc[m.id].pct<60).length;
-  const attReady=gp===100&&nd>0;
   return <div style={{maxWidth:700,margin:"0 auto",animation:"up .25s ease"}}>
-    {ok&&<div style={{background:K.card,border:`1px solid ${attReady?K.emBd:K.b0}`,borderRadius:14,padding:"15px 17px",marginBottom:14,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-      <div style={{width:40,height:40,borderRadius:11,background:attReady?K.emBg:K.c2,border:`1px solid ${attReady?K.emBd:K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-        <i className="ti ti-certificate" style={{fontSize:19,color:attReady?K.em:K.t3}}/>
-      </div>
-      <div style={{flex:1,minWidth:150}}>
-        <div style={{fontWeight:800,fontSize:14,color:K.t1}}>Attestation de formation</div>
-        <div style={{fontSize:13,color:K.t3}}>{attReady?"Félicitations ! Votre attestation est prête.":`Terminez tous les modules pour la débloquer (${nd}/${mods.length}).`}</div>
-      </div>
-      <Btn ch={attBusy?"Génération…":"📜 Télécharger (PDF)"} dis={!attReady||attBusy} on={async()=>{sAttBusy(true);try{await genAttestation({nom:u?.nom,mods,pr,sc});}catch(e){alert(e.message);}sAttBusy(false);}} v={attReady?"p":"g"} sm/>
-    </div>}
+    <MesAttestations K={K} mob={mob} db={db} uid={uid} user={u} mods={mods} ok={ok} onSub={onSub}/>
     {/* Header */}
     <div style={{background:`linear-gradient(135deg,${K.wa}18,${K.em}10)`,border:`1px solid ${K.waBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
       <div style={{fontSize:13,color:K.wa,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-trophy" style={{fontSize:14}}/> Tableau des résultats</div>
@@ -4616,6 +4576,7 @@ function AA({onOut}){
           {k:"ef", ico:"ti-report-money",     label:"États fin."},
           {k:"fisc", ico:"ti-receipt-tax",    label:"Impôts"},
           {k:"ac", ico:"ti-ticket",          label:"Accès"},
+          {k:"att", ico:"ti-certificate",    label:"Attestations"},
           {k:"nt", ico:"ti-bell",            label:"Notifications"},
           {k:"sg", ico:"ti-bulb",            label:"Suggestions", badge:nSugg, bc:K.wa},
           {k:"msg", ico:"ti-message-circle",  label:"Messages",   badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, bc:K.rd},
@@ -4651,6 +4612,7 @@ function AA({onOut}){
           {k:"ef",ico:"report-money",   label:"États financiers",col:"#1D4ED8"},
           {k:"fisc",ico:"receipt-tax",  label:"Code des impôts",col:"#A3122A"},
           {k:"ac",ico:"ticket",         label:"Tarifs et codes offerts",col:"#0D7A6B"},
+          {k:"att",ico:"certificate",   label:"Attestations",   col:"#B7791F"},
           {k:"nt",ico:"bell",           label:"Notifications",col:"#1E4FA3"},
           {k:"sg",ico:"bulb",           label:"Suggestions",    badge:nSugg, col:"#C98A1B"},
           {k:"msg",ico:"message-circle",label:"Messages",       badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, col:"#BE123C"},
@@ -5125,6 +5087,7 @@ function AA({onOut}){
       </div>}
     {tab==="param"&&<ParametresAdmin onOut={onOut}/>}
     {tab==="ac"&&<AdminAcces K={K} mob={mob} db={db}/>}
+    {tab==="att"&&<AdminAttestations K={K} mob={mob} db={db}/>}
     {tab==="nt"&&<><AdminNotif K={K} mob={mob} db={db} users={users}/><AdminMarketing K={K} mob={mob} db={db}/></>}
     {tab==="sg"&&<AdminSuggestions K={K} mob={mob} db={db}/>}
     {tab==="an"&&<div style={{animation:"fadeIn .35s ease"}}>
@@ -5486,6 +5449,7 @@ export default function App(){
   const[tid,sTid]=useState(()=>{try{return localStorage.getItem("ap_theme")||"eco";}catch{return"eco";}});
   const[showTP,sShowTP]=useState(false);
   const K=bK(tid);
+  const[verif,sVerif]=useState(()=>{try{return new URLSearchParams(window.location.search).get("attestation");}catch{return null;}});
   function setT(id){sTid(id);try{localStorage.setItem("ap_theme",id);}catch{}}
   useEffect(()=>{
     const unsub=onAuthStateChanged(auth,async user=>{
@@ -5505,6 +5469,8 @@ export default function App(){
   return <Ctx.Provider value={{K,tid,setT}}>
     <style>{mCss(K)}</style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css"/>
+    {verif!=null&&<VerifAttestation K={K} db={db} numero={verif} logo={LOGO_ICONE} onFermer={()=>{try{window.history.replaceState(null,"",window.location.pathname);}catch{}sVerif(null);}}/>}
+    {verif==null&&<>
     <ThemePicker open={showTP} onClose={()=>sShowTP(false)}/>
     <button onClick={()=>sShowTP(true)} className="bt tp-btn" title="Changer de thème"
       style={{position:"fixed",bottom:18,right:18,zIndex:998,width:44,height:44,borderRadius:"50%",background:K.card,border:`1px solid ${K.b1}`,color:K.t2,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 16px rgba(0,0,0,.25)"}}>
@@ -5517,5 +5483,6 @@ export default function App(){
     {!loading&&who?.role==="admin"&&<ErrorBoundary><AA onOut={async()=>{await signOut(auth);sW(null);}}/></ErrorBoundary>}
     {!loading&&who?.role==="formateur"&&<ErrorBoundary><FA uid={who.uid} onOut={async()=>{await signOut(auth);sW(null);}}/></ErrorBoundary>}
     {!loading&&who?.role==="user"&&<ErrorBoundary><UA uid={who.uid} onOut={async()=>{await signOut(auth);sW(null);}}/></ErrorBoundary>}
+    </>}
   </Ctx.Provider>;
 }
