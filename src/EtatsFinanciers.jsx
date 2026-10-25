@@ -422,7 +422,7 @@ function GuideView({K,mob,lignes,db,me}){
         <ul style={{margin:"8px 0 2px 18px",display:"flex",flexDirection:"column",gap:5}}>{r.p.map((x,j)=><li key={j} style={{fontSize:12,color:K.t2,lineHeight:1.55}}>{x}</li>)}</ul>
       </details>)}
     </div>
-    :<GuideComptes K={K} mob={mob} db={db} onScore={onScore} scores={scores} fiche={c=><FicheContenu K={K} c={c} f={ficheCompte(c)} ligne={ligneDe(c)}/>}/>}
+    :<GuideComptes K={K} mob={mob} onScore={onScore} scores={scores} fiche={c=><FicheContenu K={K} c={c} f={ficheCompte(c)} ligne={ligneDe(c)}/>}/>}
   </div>;
 }
 
