@@ -4,9 +4,13 @@ import { MODULES_FISC } from "../fiscal/modules";
 test("réécriture pour l'oral : abréviations, symboles, grands nombres", () => {
   expect(pourLecture("**IPR** : 30 % (art. 84 O.-L. n° 69/009)")).toBe("IPR: 30 pour cent (article 84 ordonnance-loi numéro 69/009)");
   expect(pourLecture("Plafond de 10 000 000 FC")).toBe("Plafond de 10000000 francs congolais");
-  expect(pourLecture("CA ≤ 80 000 000 FC → petite entreprise")).toBe("CA inférieur ou égal à 80000000 francs congolais, petite entreprise");
+  expect(pourLecture("CA ≤ 80 000 000 FC → petite entreprise")).toBe("chiffre d'affaires inférieur ou égal à 80000000 francs congolais, petite entreprise");
   expect(pourLecture("actif/passif · SYSCOHADA")).toBe("actif ou passif, Syscohada");
   expect(pourLecture("Brut − CNSS")).toBe("Brut moins CNSS");
+  expect(pourLecture("Le Code des impôts de la RDC")).toBe("Le Code des impôts de la République démocratique du Congo");
+  expect(pourLecture("1 % du CA, prix HT et TTC, résultat H.A.O.")).toBe("1 pour cent du chiffre d'affaires, prix hors taxes et toutes taxes comprises, résultat hors activités ordinaires");
+  expect(pourLecture("art. 2 L.F. 2025 ; AMR ; R.H.A.O.")).toBe("article 2 loi de finances 2025; avis de mise en recouvrement; résultat hors activités ordinaires");
+  expect(pourLecture("CARDINAL SARL")).toBe("CARDINAL SARL");
 });
 
 test("découpage en phrases de longueur limitée", () => {
