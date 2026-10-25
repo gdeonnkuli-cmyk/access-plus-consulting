@@ -1,4 +1,6 @@
-import React,{useState,useEffect}from"react";
+import React,{useState,useEffect,useMemo}from"react";
+import LecteurAudio from"../audio/LecteurAudio";
+import{texteModuleFiscal}from"../audio/lecture";
 import{doc,updateDoc}from"firebase/firestore";
 import{MODULES_FISC}from"./modules";
 import{tirerSerie,lireSerie,ecrireSerie}from"./tirage";
@@ -297,6 +299,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
   const[open,sOpen]=useState(null),[mode,sMode]=useState("lecon"),[loc,sLoc]=useState({});
   const sc=id=>loc[id]||scores[cleScore(id)];
   const mod=MODULES_FISC.find(m=>m.id===open);
+  const segsLecon=useMemo(()=>mod?texteModuleFiscal(mod):[],[mod]);
   const acces=m=>ok||m.libre;
   useEffect(()=>{window.scrollTo({top:0,behavior:"smooth"});},[open,mode]);
   const valides=MODULES_FISC.filter(m=>(sc(m.id)?.pct||0)>=60).length;
@@ -320,6 +323,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
         </div>
       </div>
       {mode==="lecon"?<>
+        <div style={{marginBottom:14}}><LecteurAudio K={K} segments={segsLecon} titre="Écouter la leçon"/></div>
         {mod.blocs.map((b,i)=><Bloc key={i} K={K} b={b} col={mod.col}/>)}
         <div style={{display:"flex",justifyContent:"center",margin:"6px 0 18px"}}><Bouton K={K} ico="checklist" ch="Passer le QCM du module" on={()=>sMode("qcm")} sx={{minWidth:240}}/></div>
       </>:<Qcm key={mod.id} K={K} mod={mod} db={db} uid={uid} ancien={s} onFin={(r,retour)=>{if(r)sLoc(l=>({...l,[mod.id]:r}));if(retour)sMode("lecon");}}/>}

@@ -1,4 +1,4 @@
-import React,{useState,useRef,useEffect,useCallback,createContext,useContext}from"react";
+import React,{useState,useRef,useEffect,useCallback,useMemo,createContext,useContext}from"react";
 import{initializeApp,deleteApp}from"firebase/app";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup,updatePassword,reauthenticateWithCredential,EmailAuthProvider}from"firebase/auth";
 import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,orderBy,limit,deleteField,writeBatch}from"firebase/firestore";
@@ -19,6 +19,8 @@ import{htmlCodeAcces,htmlNotification}from"./emails";
 import{PROVINCES}from"./ef/rdc";
 import SuiviExercices from"./ef/SuiviExercices";
 import{embedPresentation,srcIframe,estOneDrive}from"./presentation";
+import LecteurAudio from"./audio/LecteurAudio";
+import{texteModuleCours}from"./audio/lecture";
 import{pctQcm,resumeCpt}from"./ef/syscohada/scores";
 import LOGO from"./assets/logo.png";
 import LOGO_CLAIR from"./assets/logo-clair.png";
@@ -3736,6 +3738,7 @@ function MV({mod,sc,ok,onQ,onOpenQ,onMarkDone,doneNoEval,openAnswer,onBack,onSub
   const[pl,sPl]=useState(null),[plIdx,sPlIdx]=useState(0),[pdfO,sPdfO]=useState(false),[corr,sCorr]=useState(false),[exO,sExO]=useState(false);
   const[contact,sContact]=useState(false),[cTxt,sCTxt]=useState(""),[cSending,sCSending]=useState(false),[cSent,sCSent]=useState(false);
   const ex=mod.ex;
+  const segsAudio=useMemo(()=>texteModuleCours(mod,ok),[mod,ok]);
   return <div style={{maxWidth:640,margin:"0 auto",animation:"up .25s ease"}}>
     {pl&&<Player url={pl.url} titre={pl.titre} onClose={()=>{sPl(null);sPlIdx(0);}} playlist={vids.map(v=>({url:v.url,titre:v.titre,gr:v.gr}))} startIdx={plIdx}/>}
     {pdfO&&pdf&&<PdfV url={pdf.url} name={pdf.name} onClose={()=>sPdfO(false)}/>}
@@ -3749,6 +3752,7 @@ function MV({mod,sc,ok,onQ,onOpenQ,onMarkDone,doneNoEval,openAnswer,onBack,onSub
     </Sheet>}
     <div style={{background:K.card,border:`1px solid ${K.b1}`,boxShadow:K.sh,borderRadius:16,padding:mob?"13px":"18px 20px",marginBottom:10}}>
       <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:12}}><div style={{width:42,height:42,borderRadius:11,background:`${mod.col}18`,border:`1px solid ${mod.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{icoEl(mod.ico,mod.col,20)}</div><div><Tg c={K.t3} bg="none" bd={K.b0} ch={mod.code}/>{mod.mat&&<span style={{marginLeft:7}}><Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={mod.mat}/></span>}<div style={{fontWeight:800,fontSize:mob?14:17,color:K.t1,marginTop:5,marginBottom:3}}>{mod.titre}</div><div style={{color:K.t3,fontSize:13}}>{mod.desc||""}</div></div></div>
+      <div style={{marginBottom:10}}><LecteurAudio K={K} segments={segsAudio} titre={ok&&ex?"Écouter le module et l'exercice":"Écouter le module"}/></div>
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{[["❓",`${mod.q?.length||0}q`],["📝","Exercice"],vids.length>0?["🎬",`${vids.length} vid.`]:null,pdf?["📄","PDF"]:null].filter(Boolean).map(([ic,v])=><div key={v} style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,padding:"4px 9px",fontSize:12,color:K.t2,display:"flex",alignItems:"center",gap:3}}>{ic} {v}</div>)}</div>
     </div>
     {sc&&ok&&<div style={{background:sc.pct>=60?K.emBg:K.erBg,border:`1px solid ${sc.pct>=60?K.emBd:K.erBd}`,borderRadius:11,padding:"10px 13px",marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{color:K.t2,fontSize:14}}>Dernier résultat</span><span style={{color:sc.pct>=60?K.em:K.er,fontWeight:700,fontSize:14}}>{sc.s}/{sc.t} — {sc.pct}%</span></div><Bar p={sc.pct} col={sc.pct>=60?K.em:K.er} h={4}/></div>}

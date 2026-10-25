@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ExerciceComptes from "./ExerciceComptes";
+import LecteurAudio from "../audio/LecteurAudio";
+import { texteFiche } from "../audio/lecture";
 import { CLES_CPT, niveau, resumeCpt } from "./syscohada/scores";
 import { CLASSES_REV, REMARQUES, REPERES, CLOTURE, POINTS_CLES, chargerClasse, chargerTout, chargerPlan, subdivisions, chercherPlan, chercherTexte, decouper } from "./syscohada";
 
@@ -190,6 +192,7 @@ export default function GuideComptes({ K, mob, fiche, onScore, scores }) {
           <span style={{ fontFamily: mono, fontWeight: 800, fontSize: 22, color: K.em, lineHeight: 1.1 }}>{x.c}</span>
           <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: mob ? 17 : 20, color: K.t1, lineHeight: 1.25 }}>{x.titre}</div>
         </div>
+        <div className="ef-noprint" style={{ marginTop: 12 }}><LecteurAudio K={K} segments={texteFiche(x, titreDe)} titre="Écouter la fiche" /></div>
         <div className="ef-noprint" style={{ display: "flex", gap: 5, flexWrap: "wrap", margin: "12px 0 2px" }}>
           {SECTIONS.filter(([id]) => presentes[id]).map(([id, l]) => <button key={id} onClick={() => { const el = document.getElementById(`gc-${id}`); if (el) el.scrollIntoView({ block: "start", behavior: "smooth" }); }} style={{ ...btn(K), minHeight: 28, padding: "4px 9px", fontSize: 10.5 }}>{l}</button>)}
         </div>
