@@ -19,7 +19,9 @@ import{htmlCodeAcces,htmlNotification}from"./emails";
 import{PROVINCES}from"./ef/rdc";
 import SuiviExercices from"./ef/SuiviExercices";
 import{embedPresentation,srcIframe,estOneDrive}from"./presentation";
-import LecteurAudio from"./audio/LecteurAudio";
+import Ecoute from"./audio/Ecoute";
+import AdminVoix from"./audio/AdminVoix";
+import{cleModule}from"./audio/voix";
 import{texteModuleCours}from"./audio/lecture";
 import{pctQcm,resumeCpt}from"./ef/syscohada/scores";
 import LOGO from"./assets/logo.png";
@@ -3752,7 +3754,7 @@ function MV({mod,sc,ok,onQ,onOpenQ,onMarkDone,doneNoEval,openAnswer,onBack,onSub
     </Sheet>}
     <div style={{background:K.card,border:`1px solid ${K.b1}`,boxShadow:K.sh,borderRadius:16,padding:mob?"13px":"18px 20px",marginBottom:10}}>
       <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:12}}><div style={{width:42,height:42,borderRadius:11,background:`${mod.col}18`,border:`1px solid ${mod.col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{icoEl(mod.ico,mod.col,20)}</div><div><Tg c={K.t3} bg="none" bd={K.b0} ch={mod.code}/>{mod.mat&&<span style={{marginLeft:7}}><Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={mod.mat}/></span>}<div style={{fontWeight:800,fontSize:mob?14:17,color:K.t1,marginTop:5,marginBottom:3}}>{mod.titre}</div><div style={{color:K.t3,fontSize:13}}>{mod.desc||""}</div></div></div>
-      <div style={{marginBottom:10}}><LecteurAudio K={K} segments={segsAudio} titre={ok&&ex?"Écouter le module et l'exercice":"Écouter le module"}/></div>
+      <div style={{marginBottom:10}}><Ecoute K={K} db={db} cle={cleModule(mod.id)} segments={segsAudio} titre={ok&&ex?"Écouter le module et l'exercice":"Écouter le module"}/></div>
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{[["❓",`${mod.q?.length||0}q`],["📝","Exercice"],vids.length>0?["🎬",`${vids.length} vid.`]:null,pdf?["📄","PDF"]:null].filter(Boolean).map(([ic,v])=><div key={v} style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:7,padding:"4px 9px",fontSize:12,color:K.t2,display:"flex",alignItems:"center",gap:3}}>{ic} {v}</div>)}</div>
     </div>
     {sc&&ok&&<div style={{background:sc.pct>=60?K.emBg:K.erBg,border:`1px solid ${sc.pct>=60?K.emBd:K.erBd}`,borderRadius:11,padding:"10px 13px",marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{color:K.t2,fontSize:14}}>Dernier résultat</span><span style={{color:sc.pct>=60?K.em:K.er,fontWeight:700,fontSize:14}}>{sc.s}/{sc.t} — {sc.pct}%</span></div><Bar p={sc.pct} col={sc.pct>=60?K.em:K.er} h={4}/></div>}
@@ -4613,6 +4615,7 @@ function AA({onOut}){
           {k:"ef", ico:"ti-report-money",     label:"États fin."},
           {k:"fisc", ico:"ti-receipt-tax",    label:"Impôts"},
           {k:"ac", ico:"ti-ticket",          label:"Accès"},
+          {k:"voix",ico:"ti-microphone",     label:"Ma voix"},
           {k:"nt", ico:"ti-bell",            label:"Notifications"},
           {k:"sg", ico:"ti-bulb",            label:"Suggestions", badge:nSugg, bc:K.wa},
           {k:"msg", ico:"ti-message-circle",  label:"Messages",   badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, bc:K.rd},
@@ -4648,6 +4651,7 @@ function AA({onOut}){
           {k:"ef",ico:"report-money",   label:"États financiers",col:"#1D4ED8"},
           {k:"fisc",ico:"receipt-tax",  label:"Code des impôts",col:"#A3122A"},
           {k:"ac",ico:"ticket",         label:"Tarifs et codes offerts",col:"#0D7A6B"},
+          {k:"voix",ico:"microphone",   label:"Ma voix (audio des cours)",col:"#7C3AED"},
           {k:"nt",ico:"bell",           label:"Notifications",col:"#1E4FA3"},
           {k:"sg",ico:"bulb",           label:"Suggestions",    badge:nSugg, col:"#C98A1B"},
           {k:"msg",ico:"message-circle",label:"Messages",       badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, col:"#BE123C"},
@@ -5122,6 +5126,7 @@ function AA({onOut}){
       </div>}
     {tab==="param"&&<ParametresAdmin onOut={onOut}/>}
     {tab==="ac"&&<AdminAcces K={K} mob={mob} db={db}/>}
+    {tab==="voix"&&<AdminVoix K={K} mob={mob} db={db} storage={storage} mods={mods}/>}
     {tab==="nt"&&<><AdminNotif K={K} mob={mob} db={db} users={users}/><AdminMarketing K={K} mob={mob} db={db}/></>}
     {tab==="sg"&&<AdminSuggestions K={K} mob={mob} db={db}/>}
     {tab==="an"&&<div style={{animation:"fadeIn .35s ease"}}>
