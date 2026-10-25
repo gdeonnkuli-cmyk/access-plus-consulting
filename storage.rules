@@ -19,6 +19,12 @@ service firebase.storage {
       allow create, update: if connecte() && request.auth.uid == uid && tailleOk();
       allow delete: if (connecte() && request.auth.uid == uid) || estAdmin();
     }
+    // Voix du formateur : enregistrements audio déposés par l'administrateur
+    match /audios/{cle}/{fichier} {
+      allow read: if connecte();
+      allow create, update: if estAdmin() && tailleOk() && request.resource.contentType.matches('audio/.*');
+      allow delete: if estAdmin();
+    }
     match /documents/{uid}/{fichier} {
       allow read: if connecte();
       allow create, update: if connecte() && request.auth.uid == uid && tailleOk();

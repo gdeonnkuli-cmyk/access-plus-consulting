@@ -1,5 +1,6 @@
 import React,{useState,useEffect,useMemo}from"react";
-import LecteurAudio from"../audio/LecteurAudio";
+import Ecoute from"../audio/Ecoute";
+import{cleFisc}from"../audio/voix";
 import{texteModuleFiscal}from"../audio/lecture";
 import{doc,updateDoc}from"firebase/firestore";
 import{MODULES_FISC}from"./modules";
@@ -323,7 +324,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
         </div>
       </div>
       {mode==="lecon"?<>
-        <div style={{marginBottom:14}}><LecteurAudio K={K} segments={segsLecon} titre="Écouter la leçon"/></div>
+        <div style={{marginBottom:14}}><Ecoute K={K} db={db} cle={cleFisc(mod.id)} segments={segsLecon} titre="Écouter la leçon"/></div>
         {mod.blocs.map((b,i)=><Bloc key={i} K={K} b={b} col={mod.col}/>)}
         <div style={{display:"flex",justifyContent:"center",margin:"6px 0 18px"}}><Bouton K={K} ico="checklist" ch="Passer le QCM du module" on={()=>sMode("qcm")} sx={{minWidth:240}}/></div>
       </>:<Qcm key={mod.id} K={K} mod={mod} db={db} uid={uid} ancien={s} onFin={(r,retour)=>{if(r)sLoc(l=>({...l,[mod.id]:r}));if(retour)sMode("lecon");}}/>}
