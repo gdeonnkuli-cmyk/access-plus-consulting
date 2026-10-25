@@ -309,5 +309,18 @@ service cloud.firestore {
         && nouveau().get("reponse", "") is string && nouveau().get("reponse", "").size() <= 2000;
       allow delete: if estAdmin();
     }
+
+    // ── Attestations (délivrées uniquement par le serveur : api/attestation.js) ─
+    // Lecture d'un numéro pour tous (page publique de vérification) ; liste réservée au titulaire et à l'admin ;
+    // l'admin ne peut que révoquer ou rétablir.
+    match /attestations/{numero} {
+      allow get: if true;
+      allow list: if estAdmin() || (connecte() && resource.data.uid == request.auth.uid);
+      allow update: if estAdmin()
+        && champsModifies().hasOnly(["statut", "revoqueLe", "motif"])
+        && nouveau().statut in ["valide", "revoquee"]
+        && texteCourt(nouveau().get("motif", null), 300);
+      allow create, delete: if false;
+    }
   }
 }
