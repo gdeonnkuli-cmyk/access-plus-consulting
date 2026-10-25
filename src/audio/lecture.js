@@ -4,11 +4,18 @@
 // en segments courts, réécrits pour l'oral (abréviations, symboles, grands nombres).
 
 const ABREVIATIONS = [
-  [/\bO\.-L\./g, "ordonnance-loi"], [/\bA\.M\./g, "arrêté ministériel"], [/\bH\.A\.O\./g, "hors activités ordinaires"],
+  [/\bO\.-L\./g, "ordonnance-loi"], [/\bA\.M\./g, "arrêté ministériel"],
   [/\bT\.V\.A\./g, "TVA"], [/\bArt\.\s*/g, "Article "], [/\bart\.\s*/g, "article "], [/\bn°\s*/gi, "numéro "],
   [/\bal\.\s*/g, "alinéa "], [/\bcf\.\s*/gi, "voir "], [/\bex\.\s*/g, "par exemple "], [/\betc\./g, "et cetera"],
   [/\bSYSCOHADA\b/g, "Syscohada"], [/\bOHADA\b/g, "Ohada"], [/\bAUDCIF\b/g, "acte uniforme comptable"],
   [/\bN\s*\+\s*1\b/g, "N plus 1"], [/\bN\s*-\s*1\b/g, "N moins 1"],
+  // Sigles mal prononcés par la voix de synthèse (« RDC » lu « rez-de-chaussée », « CA » lu « ça »…)
+  [/\bR\.D\.C\.|\bRDC\b/g, "République démocratique du Congo"], [/\bR\.H\.A\.O\.?/g, "résultat hors activités ordinaires"],
+  [/\bH\.A\.O\.?|\bHAO\b/g, "hors activités ordinaires"], [/\bL\.\s?F\./g, "loi de finances"],
+  [/\bCA\b/g, "chiffre d'affaires"], [/\bSA\b/g, "S.A."], [/\bHT\b/g, "hors taxes"], [/\bTTC\b/g, "toutes taxes comprises"],
+  [/\bIM\b/g, "impôt mobilier"], [/\bAMR\b/g, "avis de mise en recouvrement"], [/\bATD\b/g, "avis à tiers détenteur"],
+  [/\bPV\b/g, "procès-verbal"], [/\bETS\b/g, "établissements"], [/\bASBL\b/g, "association sans but lucratif"],
+  [/\bC\.M\.P\.?/g, "coût moyen pondéré"], [/\bP\.E\.P\.S\.?/g, "premier entré, premier sorti"], [/\bG\.I\.E\.?/g, "groupement d'intérêt économique"],
 ];
 const SYMBOLES = [
   [/≤/g, " inférieur ou égal à "], [/≥/g, " supérieur ou égal à "], [/→/g, ", "], [/⇒/g, ", donc "],
