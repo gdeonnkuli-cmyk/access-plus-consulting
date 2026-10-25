@@ -19,10 +19,12 @@ const ABREVIATIONS = [
 ];
 const SYMBOLES = [
   [/≤/g, " inférieur ou égal à "], [/≥/g, " supérieur ou égal à "], [/→/g, ", "], [/⇒/g, ", donc "],
-  [/\s<\s/g, " moins de "], [/\s>\s/g, " plus de "], [/±/g, " plus ou moins "], [/×/g, " fois "],
+  [/\s=\s/g, " égale "], [/\s<\s/g, " moins de "], [/\s>\s/g, " plus de "], [/±/g, " plus ou moins "], [/×/g, " fois "],
   [/(\d)\s*%/g, "$1 pour cent"], [/\bFC\b/g, "francs congolais"], [/\bUSD\b/g, "dollars"], [/\$/g, " dollars"],
   [/[«»“”"]/g, ""], [/\s\u2212\s/g, " moins "], [/\s[–—-]\s/g, ", "], [/·/g, ", "],
   [/([a-zà-ÿ])\/([a-zà-ÿ])/gi, "$1 ou $2"],
+  // Parenthèses et crochets : courte pause, comme à l'oral (la voix les ignore sinon)
+  [/\s*[([]\s*/g, ", "], [/\s*[)\]]\s*(?=[.,;:!?]|$)/g, ""], [/\s*[)\]]\s*/g, ", "],
 ];
 
 // Texte affiché → texte à prononcer
@@ -33,24 +35,29 @@ export function pourLecture(t) {
   for (const [re, r] of ABREVIATIONS) s = s.replace(re, r);
   for (const [re, r] of SYMBOLES) s = s.replace(re, r);
   s = s.replace(/^[\u2212-]\s*/, "moins ").replace(/^=\s*/, "égale ").replace(/^\+\s*/, "plus ");
-  return s.replace(/\s+([,.;:])/g, "$1").replace(/,\s*,/g, ",").replace(/\s+/g, " ").trim();
+  return s.replace(/\s+([,.;:])/g, "$1").replace(/,\s*,/g, ",").replace(/,([.;:!?])/g, "$1").replace(/([.;:!?])\s*,/g, "$1").replace(/\s+/g, " ").trim().replace(/^[,;]\s*/, "");
 }
 
-// Découpe en phrases courtes (la synthèse vocale s'interrompt sur les textes trop longs)
+// Regroupe des morceaux successifs tant que la longueur reste sous le maximum
+function regrouper(parts, sep, max) {
+  const out = [];
+  let cur = "";
+  for (const x of parts) {
+    if (cur && (cur + sep + x).length > max) { out.push(cur); cur = x; }
+    else cur = cur ? cur + sep + x : x;
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+// Découpe en phrases courtes (la synthèse vocale s'interrompt sur les textes trop longs) : d'abord aux fins de
+// phrase (. ! ? ; :), puis, pour une phrase encore trop longue, aux virgules suivies d'une espace (« 3,5 » reste entier)
 export function decouperPhrases(t, max = 220) {
   const s = pourLecture(t);
   if (!s) return [];
   if (s.length <= max) return [s];
-  const morceaux = s.match(/[^.!?;:]+[.!?;:]*\s*/g) || [s];
-  const out = [];
-  let cur = "";
-  for (const m of morceaux) {
-    if ((cur + m).length > max && cur) { out.push(cur.trim()); cur = ""; }
-    if (m.length > max) { m.split(/,\s*/).forEach(x => { if ((cur + x).length > max && cur) { out.push(cur.trim()); cur = ""; } cur += x + ", "; }); }
-    else cur += m;
-  }
-  if (cur.trim()) out.push(cur.trim().replace(/,$/, "."));
-  return out.filter(Boolean);
+  const phrases = (s.match(/[^.!?;:]+(?:[.!?;:]+|$)/g) || [s]).map(x => x.trim()).filter(Boolean);
+  const pieces = phrases.flatMap(p => (p.length <= max ? [p] : regrouper(p.split(/,\s+/), ", ", max)));
+  return regrouper(pieces, " ", max);
 }
 
 // Liste de textes → segments prêts à lire

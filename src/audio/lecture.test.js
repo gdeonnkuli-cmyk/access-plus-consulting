@@ -2,7 +2,7 @@ import { pourLecture, decouperPhrases, texteModuleFiscal, texteFiche, texteModul
 import { MODULES_FISC } from "../fiscal/modules";
 
 test("réécriture pour l'oral : abréviations, symboles, grands nombres", () => {
-  expect(pourLecture("**IPR** : 30 % (art. 84 O.-L. n° 69/009)")).toBe("IPR: 30 pour cent (article 84 ordonnance-loi numéro 69/009)");
+  expect(pourLecture("**IPR** : 30 % (art. 84 O.-L. n° 69/009)")).toBe("IPR: 30 pour cent, article 84 ordonnance-loi numéro 69/009");
   expect(pourLecture("Plafond de 10 000 000 FC")).toBe("Plafond de 10000000 francs congolais");
   expect(pourLecture("CA ≤ 80 000 000 FC → petite entreprise")).toBe("chiffre d'affaires inférieur ou égal à 80000000 francs congolais, petite entreprise");
   expect(pourLecture("actif/passif · SYSCOHADA")).toBe("actif ou passif, Syscohada");
@@ -11,6 +11,9 @@ test("réécriture pour l'oral : abréviations, symboles, grands nombres", () =>
   expect(pourLecture("1 % du CA, prix HT et TTC, résultat H.A.O.")).toBe("1 pour cent du chiffre d'affaires, prix hors taxes et toutes taxes comprises, résultat hors activités ordinaires");
   expect(pourLecture("art. 2 L.F. 2025 ; AMR ; R.H.A.O.")).toBe("article 2 loi de finances 2025; avis de mise en recouvrement; résultat hors activités ordinaires");
   expect(pourLecture("CARDINAL SARL")).toBe("CARDINAL SARL");
+  expect(pourLecture("Les retenues (CNSS et IPR) sont versées le 15.")).toBe("Les retenues, CNSS et IPR, sont versées le 15.");
+  expect(pourLecture("Tranche 2 : (6 000 000 − 1 944 000) = 4 056 000")).toBe("Tranche 2: 6000000 moins 1944000, égale 4056000");
+  expect(pourLecture("INPP : 3,5 % (1 à 50 travailleurs) ; ONEM : 0,5 %.")).toBe("INPP: 3,5 pour cent, 1 à 50 travailleurs; ONEM: 0,5 pour cent.");
 });
 
 test("découpage en phrases de longueur limitée", () => {
@@ -18,6 +21,11 @@ test("découpage en phrases de longueur limitée", () => {
   const P = decouperPhrases(long, 220);
   expect(P.length).toBeGreaterThan(5);
   expect(P.every(p => p.length <= 240)).toBe(true);
+  const virgules = Array(20).fill("taux de 3,5 pour cent pour la tranche").join(", ");
+  expect(decouperPhrases(virgules, 120).join(" ")).toMatch(/3,5 pour cent/);
+  expect(decouperPhrases(virgules, 120).join(" ")).not.toMatch(/3, 5/);
+  const long2 = Array(12).fill("Le taux est de 30 %. Il s'applique au bénéfice imposable, après réintégrations, déductions et reports").join(", ");
+  expect(decouperPhrases(long2, 120).some(p => /[.;:]\s*,|^,/.test(p))).toBe(false);
 });
 
 test("les 12 leçons fiscales produisent un texte lisible, sans balises ni symboles bruts", () => {
