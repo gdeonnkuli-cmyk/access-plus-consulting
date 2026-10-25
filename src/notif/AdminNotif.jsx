@@ -3,7 +3,7 @@ import{collection,doc,onSnapshot,deleteDoc,writeBatch,setDoc,getDoc}from"firebas
 import{TYPES,GROUPES,estGroupe,notifier,depuis}from"./notif";
 
 // Liens proposés : vue ouverte quand le destinataire touche la notification
-export const VUES=[["","Aucun lien"],["home","Accueil"],["fisc","Code des impôts"],["ef","États financiers"],["videos","Vidéos"],["pres","Cours"],["msg","Messages"],["sugg","Suggestions"],["param","Paramètres"]];
+export const VUES=[["","Aucun lien"],["home","Accueil"],["audio","Écouter les cours"],["cpt","Guide des comptes"],["fisc","Code des impôts"],["ef","États financiers"],["videos","Vidéos"],["pres","Cours"],["msg","Messages"],["sugg","Suggestions"],["param","Paramètres"]];
 const PURGE_J=90;
 
 const champ=K=>({width:"100%",boxSizing:"border-box",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:10,padding:"10px 12px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif"});

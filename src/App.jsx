@@ -3415,7 +3415,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
             ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"3px 9px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:11,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ Actif":"✓ Actif"}</span></div>
             :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:12,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>Accéder</button>
           }
-          <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} mob onGo={v=>v==="acces"?onSub&&onSub():sV(NAV_ITEMS.some(n=>n.k===v)||["param","sugg","apropos"].includes(v)?v:"home")} taille={28}/>
+          <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} mob onGo={v=>v==="acces"?onSub&&onSub():sV(NAV_ITEMS.some(n=>n.k===v)||["param","sugg","apropos","audio","cpt"].includes(v)?v:"home")} taille={28}/>
           <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:28,height:28,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
             <i className="ti ti-key" style={{fontSize:14,color:K.t2}}/>
           </button>
@@ -3483,7 +3483,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
         ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 11px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:12,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ À vie":"✓ Actif"}</span></div>
         :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>Obtenir l'accès</button>
       }
-      <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} onGo={v=>v==="acces"?onSub&&onSub():sV(NAV_ITEMS.some(n=>n.k===v)||["param","sugg","apropos"].includes(v)?v:"home")} taille={32}/>
+      <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} onGo={v=>v==="acces"?onSub&&onSub():sV(NAV_ITEMS.some(n=>n.k===v)||["param","sugg","apropos","audio","cpt"].includes(v)?v:"home")} taille={32}/>
       <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:32,height:32,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
         <i className="ti ti-key" style={{fontSize:15,color:K.t2}}/>
       </button>
