@@ -4,7 +4,7 @@
 // en segments courts, réécrits pour l'oral (abréviations, symboles, grands nombres).
 
 const ABREVIATIONS = [
-  [/\bO\.-L\./g, "ordonnance-loi"], [/\bA\.M\./g, "arrêté ministériel"], [/\bH\.A\.O\./g, "hors activités ordinaires"],
+  [/\bO\.-L\./g, "ordonnance-loi"], [/\bA\.M\./g, "arrêté ministériel"],
   [/\bT\.V\.A\./g, "TVA"], [/\bArt\.\s*/g, "Article "], [/\bart\.\s*/g, "article "], [/\bn°\s*/gi, "numéro "],
   [/\bal\.\s*/g, "alinéa "], [/\bcf\.\s*/gi, "voir "], [/\bex\.\s*/g, "par exemple "], [/\betc\./g, "et cetera"],
   [/\bSYSCOHADA\b/g, "Syscohada"], [/\bOHADA\b/g, "Ohada"], [/\bAUDCIF\b/g, "acte uniforme comptable"],
