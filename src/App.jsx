@@ -21,7 +21,7 @@ import SuiviExercices from"./ef/SuiviExercices";
 import{embedPresentation,srcIframe,estOneDrive}from"./presentation";
 import{pVid,estPublie,lienGoogle,apercuValidation}from"./contenu";
 import LecteurAudio from"./audio/LecteurAudio";
-import{texteModuleCours,texteNarration}from"./audio/lecture";
+import{texteModuleCours,texteNarration,paragraphesNarration}from"./audio/lecture";
 import EcouterCours from"./audio/EcouterCours";
 import{pctQcm,resumeCpt,fusionScore}from"./ef/syscohada/scores";
 import MesAttestations from"./attest/MesAttestations";
@@ -3977,7 +3977,8 @@ function VidsPage({ok,onSub,vids,live}){
 function NarrationPres({K,p}){
   const[ouvert,sOuvert]=useState(false);const[t,sT]=useState(p.narration||"");const[etat,sEtat]=useState("");
   useEffect(()=>{if(!ouvert)sT(p.narration||"");},[p.narration,ouvert]);
-  const n=texteNarration({titre:p.titre,narration:t}).length;
+  const n=texteNarration({titre:p.titre,narration:t}).length,nP=paragraphesNarration(t).length;
+  const importer=e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;const r=new FileReader();r.onload=()=>{sT(String(r.result||""));sEtat("Fichier chargé : vérifiez, puis enregistrez");};r.onerror=()=>sEtat("Erreur : fichier illisible");r.readAsText(f,"utf-8");};
   const enregistrer=async()=>{sEtat("…");try{await updateDoc(doc(db,"presentations",p.id),{narration:t.trim()});sEtat("Enregistré");}catch(e){sEtat(`Erreur : ${e.message}`);}};
   const b={background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 10px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",cursor:"pointer",minHeight:30,display:"inline-flex",alignItems:"center",gap:4};
   return <div style={{flexBasis:"100%",minWidth:0,maxWidth:"100%",display:"flex",flexDirection:"column",gap:8}}>
@@ -3988,8 +3989,9 @@ function NarrationPres({K,p}){
     {ouvert&&<>
       <textarea value={t} onChange={e=>{sT(e.target.value);sEtat("");}} rows={8} placeholder={"Diapositive 1. Texte lu pour la première diapositive…\n\nDiapositive 2. …"}
         style={{width:"100%",boxSizing:"border-box",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13.5,lineHeight:1.5,fontFamily:"'Outfit',sans-serif",resize:"vertical"}}/>
-      <div style={{fontSize:12,color:K.t3,lineHeight:1.5}}>Un paragraphe par diapositive, séparés par une ligne vide. {n?`${n} phrases lues.`:""}</div>
+      <div style={{fontSize:12,color:K.t3,lineHeight:1.5}}>Un paragraphe par diapositive, séparés par une ligne vide. {nP?`${nP} paragraphe${nP>1?"s":""} (diapositives), ${n} phrases lues.`:""}</div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",minWidth:0}}>
+        <label className="bt" style={b}><i className="ti ti-file-upload" style={{fontSize:13}}/>Importer un fichier .txt<input type="file" accept=".txt,text/plain" onChange={importer} style={{display:"none"}}/></label>
         <Btn ch="Enregistrer" on={enregistrer} sm/>
       </div>
       {n>0&&<div style={{minWidth:0,maxWidth:"100%"}}><LecteurAudio K={K} segments={texteNarration({titre:p.titre,narration:t})} titre="Écouter un aperçu" compact/></div>}
