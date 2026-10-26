@@ -83,12 +83,12 @@ export default function LecteurAudio({ K, segments, titre = "Écouter", sx, comp
     {titre}<span style={{ fontWeight: 600, color: K.t3, fontSize: 12 }}>· ≈ {duree} min</span>
   </button>;
 
-  return <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 14, border: `1px solid ${K.emBd}`, background: K.card, boxShadow: K.sh, flexWrap: "wrap", textTransform: "none", letterSpacing: 0, ...(compact ? { width: "100%", boxSizing: "border-box" } : null), ...sx }}>
+  return <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 14, border: `1px solid ${K.emBd}`, background: K.card, boxShadow: K.sh, flexWrap: "wrap", textTransform: "none", letterSpacing: 0, minWidth: 0, maxWidth: "100%", boxSizing: "border-box", ...(compact ? { width: "100%", boxSizing: "border-box" } : null), ...sx }}>
     {rond("player-skip-back", () => demarrer(Math.max(0, iRef.current - 1)), "Phrase précédente")}
     {etat === "lecture" ? rond("player-pause", pause, "Pause", true) : rond("player-play", () => demarrer(iRef.current), "Reprendre", true)}
     {rond("player-skip-forward", () => demarrer(Math.min(segs.length - 1, iRef.current + 1)), "Phrase suivante")}
     {rond("player-stop", stop, "Arrêter")}
-    <div style={{ flex: 1, minWidth: 120 }}>
+    <div style={{ flex: 1, minWidth: 120, overflow: "hidden" }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: K.t3, fontWeight: 700, marginBottom: 4 }}>
         <span>{etat === "lecture" ? "Lecture en cours" : "En pause"}</span><span>{i + 1} / {segs.length}</span>
       </div>
