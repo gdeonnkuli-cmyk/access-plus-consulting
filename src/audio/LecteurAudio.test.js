@@ -10,7 +10,7 @@ test("repérage des voix masculines", () => {
 
 test("réglage par défaut : voix d’homme", () => {
   localStorage.removeItem("ec_audio_voix");
-  expect(lireReglagesVoix()).toEqual({ mode: "homme", voix: "" });
+  expect(lireReglagesVoix()).toEqual({ mode: "homme", voix: "", grave: "grave" });
   localStorage.setItem("ec_audio_voix", JSON.stringify({ mode: "femme", voix: "X" }));
-  expect(lireReglagesVoix()).toEqual({ mode: "femme", voix: "X" });
+  expect(lireReglagesVoix()).toEqual({ mode: "femme", voix: "X", grave: "grave" });
 });
