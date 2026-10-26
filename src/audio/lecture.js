@@ -126,3 +126,11 @@ export function texteModuleCours(mod, avecExercice = true) {
   }
   return segments(T);
 }
+
+// ── Narration d'une présentation (champ « narration » saisi par l'administration) : paragraphes séparés
+// par une ligne vide, en général un par diapositive (« Diapositive 3. … ») pour suivre à l'écran
+export const paragraphesNarration = t => String(t || "").split(/\n\s*\n/).map(x => x.replace(/\s+/g, " ").trim()).filter(Boolean);
+export function texteNarration(p) {
+  const P = paragraphesNarration(p && p.narration);
+  return P.length ? segments([point(p.titre), ...P.map(point)]) : [];
+}

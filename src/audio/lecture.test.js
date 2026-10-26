@@ -1,4 +1,4 @@
-import { pourLecture, decouperPhrases, texteModuleFiscal, texteFiche, texteModuleCours, dureeMinutes } from "./lecture";
+import { pourLecture, decouperPhrases, texteModuleFiscal, texteFiche, texteModuleCours, dureeMinutes, texteNarration, paragraphesNarration } from "./lecture";
 import { MODULES_FISC } from "../fiscal/modules";
 
 test("réécriture pour l'oral : abréviations, symboles, grands nombres", () => {
@@ -48,4 +48,11 @@ test("fiche du guide et module de cours", () => {
   const mod = { titre: "Bilan SYSCOHADA", desc: "Établir le bilan", ex: { ti: "Bilan", en: "Établissez le bilan.", dn: [{ a: "211 Terrains", b: "2 000 000" }], tv: ["1. Classez."] } };
   expect(texteModuleCours(mod, true).join(" ")).toMatch(/Données\. 211 Terrains: 2000000\./);
   expect(texteModuleCours(mod, false).join(" ")).not.toMatch(/Données/);
+});
+
+test("narration d'une présentation", () => {
+  expect(texteNarration({ titre: "Préparer les états financiers", narration: "" })).toEqual([]);
+  expect(paragraphesNarration("Diapositive 1. Bienvenue\n\n\nDiapositive 2.\nLe calendrier  ")).toEqual(["Diapositive 1. Bienvenue", "Diapositive 2. Le calendrier"]);
+  expect(texteNarration({ titre: "Clôture", narration: "Diapositive 1. Le compte 585 doit être nul au 31/12\n\nDiapositive 2. Fin" }))
+    .toEqual(["Clôture.", "Diapositive 1. Le compte 585 doit être nul au 31/12.", "Diapositive 2. Fin."]);
 });
