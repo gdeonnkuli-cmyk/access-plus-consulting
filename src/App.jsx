@@ -21,7 +21,7 @@ import SuiviExercices from"./ef/SuiviExercices";
 import{embedPresentation,srcIframe,estOneDrive}from"./presentation";
 import{pVid,estPublie,lienGoogle,apercuValidation}from"./contenu";
 import LecteurAudio from"./audio/LecteurAudio";
-import{texteModuleCours}from"./audio/lecture";
+import{texteModuleCours,texteNarration}from"./audio/lecture";
 import EcouterCours from"./audio/EcouterCours";
 import{pctQcm,resumeCpt,fusionScore}from"./ef/syscohada/scores";
 import MesAttestations from"./attest/MesAttestations";
@@ -970,8 +970,9 @@ function PrivacyModal({onClose}){
 }
 
 // ── SÉLECTEUR THÈME ───────────────────────────────────────────────────────────
-function PresViewer({url,titre,desc,onClose}){
+function PresViewer({url,titre,desc,narration,onClose}){
   const K=useK();const{mob}=useW();
+  const segsAudio=useMemo(()=>texteNarration({titre,narration}),[titre,narration]);
   // Lien d'intégration selon l'hébergeur (Google Slides, Drive, Canva, OneDrive) — voir src/presentation.js
   const{src:embedUrl,hebergeur}=embedPresentation(url);
   const lienExterne=srcIframe(url);
@@ -996,6 +997,10 @@ function PresViewer({url,titre,desc,onClose}){
           :<div style={{textAlign:"center",color:K.t3,padding:40}}><div style={{fontSize:40,marginBottom:10}}>⚠️</div><div>URL non supportée.</div><div style={{fontSize:13,marginTop:5}}>Utilisez un lien Google Slides, Canva ou le lien « Incorporer » de PowerPoint en ligne.</div></div>
       }
     </div>
+    {segsAudio.length>0&&<div style={{background:K.card,borderTop:`1px solid ${K.b0}`,padding:"8px 15px",flexShrink:0}}>
+      <LecteurAudio K={K} segments={segsAudio} titre="Écouter la présentation"/>
+      <div style={{fontSize:11.5,color:K.t3,marginTop:4}}>La narration annonce chaque diapositive : avancez la présentation au fil de l'écoute.</div>
+    </div>}
     <div style={{background:K.card,borderTop:`1px solid ${K.b0}`,padding:"8px 15px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
       <div style={{fontSize:12,color:K.t3}}>{mob?"":"💡 Utilisez les flèches du clavier pour naviguer dans la présentation"}</div>
       <a href={lienExterne} target="_blank" rel="noreferrer" style={{fontSize:12,color:K.in_,fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}><i className="ti ti-external-link" style={{fontSize:13}}/>Ouvrir dans un nouvel onglet</a>
@@ -2933,7 +2938,7 @@ function UA({uid,onOut}){
     {vue==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="jrn"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)} journal0/>}
     {vue==="cpt"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)} guide0/>}
-    {vue==="audio"&&<EcouterCours K={K} mob={mob} mods={aMods} ok={ok} onSub={()=>sSub(true)}/>}
+    {vue==="audio"&&<EcouterCours K={K} mob={mob} mods={aMods} pres={allPres.filter(estPublie)} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="fisc"&&<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="sugg"&&<Suggestions K={K} mob={mob} db={db} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}}/>}
     {vue==="apropos"&&<Apropos K={K} mob={mob} onGo={sV}/>}
@@ -3968,6 +3973,29 @@ function VidsPage({ok,onSub,vids,live}){
 }
 
 // ── ADMIN ─────────────────────────────────────────────────────────────────────
+// Admin : narration audio d'une présentation (lue par la synthèse vocale dans la visionneuse et « Écouter les cours »)
+function NarrationPres({K,p}){
+  const[ouvert,sOuvert]=useState(false);const[t,sT]=useState(p.narration||"");const[etat,sEtat]=useState("");
+  useEffect(()=>{if(!ouvert)sT(p.narration||"");},[p.narration,ouvert]);
+  const n=texteNarration({titre:p.titre,narration:t}).length;
+  const enregistrer=async()=>{sEtat("…");try{await updateDoc(doc(db,"presentations",p.id),{narration:t.trim()});sEtat("Enregistré");}catch(e){sEtat(`Erreur : ${e.message}`);}};
+  const b={background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 10px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",cursor:"pointer",minHeight:30,display:"inline-flex",alignItems:"center",gap:4};
+  return <div style={{flexBasis:"100%",display:"flex",flexDirection:"column",gap:8}}>
+    <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+      <button onClick={()=>sOuvert(o=>!o)} className="bt" style={b}><i className="ti ti-headphones" style={{fontSize:13}}/>{p.narration?"Narration audio ✓":"Ajouter une narration audio"}</button>
+      {etat&&<span style={{fontSize:12,color:/^Erreur/.test(etat)?K.er:K.em,fontWeight:700}}>{etat}</span>}
+    </div>
+    {ouvert&&<>
+      <textarea value={t} onChange={e=>{sT(e.target.value);sEtat("");}} rows={8} placeholder={"Diapositive 1. Texte lu pour la première diapositive…\n\nDiapositive 2. …"}
+        style={{width:"100%",boxSizing:"border-box",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13.5,lineHeight:1.5,fontFamily:"'Outfit',sans-serif",resize:"vertical"}}/>
+      <div style={{fontSize:12,color:K.t3,lineHeight:1.5}}>Un paragraphe par diapositive, séparés par une ligne vide. {n?`${n} phrases lues.`:""}</div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <Btn ch="Enregistrer" on={enregistrer} sm/>
+        {n>0&&<LecteurAudio K={K} segments={texteNarration({titre:p.titre,narration:t})} titre="Écouter un aperçu" compact/>}
+      </div>
+    </>}
+  </div>;
+}
 function PresPage({ok,onSub,pres}){
   const K=useK();const{mob}=useW();
   const{tid}=useContext(Ctx);
@@ -3979,7 +4007,7 @@ function PresPage({ok,onSub,pres}){
   const mats=[...new Set(pres.map(p=>p.mat||"Général"))];
   const fil=fi==="Toutes"?pres:pres.filter(p=>(p.mat||"Général")===fi);
   return <div style={{animation:"up .3s ease"}}>
-    {open&&<PresViewer url={open.url} titre={open.titre} desc={open.desc} onClose={()=>sOpen(null)}/>}
+    {open&&<PresViewer url={open.url} titre={open.titre} desc={open.desc} narration={open.narration} onClose={()=>sOpen(null)}/>}
     {/* Bannière */}
     <div style={{background:`linear-gradient(135deg,${K.in_}18,${K.inD}10)`,border:`1px solid ${K.inBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
       <div style={{fontSize:13,color:K.in_,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-presentation" style={{fontSize:14}}/> Présentations</div>
@@ -4001,6 +4029,7 @@ function PresPage({ok,onSub,pres}){
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
                 <div style={{width:40,height:40,borderRadius:11,background:isLight?"rgba(255,255,255,.8)":K.b1,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className={lk?"ti ti-lock":"ti ti-presentation"} style={{fontSize:18,color:lk?K.t3:K.in_}}/></div>
                 <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                  {p.narration&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch="🎧 Audio"/>}
                   {p.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}
                 </div>
               </div>
@@ -4922,7 +4951,7 @@ function AA({onOut}){
   :<div style={{display:"flex",flexDirection:"column",gap:8}}>{allPresAdmin.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:11,padding:"12px 14px",display:"flex",alignItems:"center",gap:11,flexWrap:"wrap"}}>
     <div style={{width:38,height:38,borderRadius:10,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-presentation" style={{fontSize:18,color:K.in_}}/></div>
     <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div><div style={{display:"flex",gap:5,marginTop:3,flexWrap:"wrap"}}>{p.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}{p.mat&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={p.mat}/>}</div></div>
-    <div style={{display:"flex",gap:5,flexShrink:0}}><a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:13}}/>Voir</a><Btn ch="🗑" on={async()=>deletePresentation(p.id)} v="d" sm/></div>{statutContenu(p,"pres")}
+    <div style={{display:"flex",gap:5,flexShrink:0}}><a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:13}}/>Voir</a><Btn ch="🗑" on={async()=>deletePresentation(p.id)} v="d" sm/></div>{statutContenu(p,"pres")}<NarrationPres K={K} p={p}/>
   </div>)}</div>}
 </div>}
 {tab==="st"&&<div style={{animation:"up .25s ease"}}>

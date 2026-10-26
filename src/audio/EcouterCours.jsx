@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import LecteurAudio from "./LecteurAudio";
-import { dureeMinutes, texteFiche, texteModuleCours, texteModuleFiscal } from "./lecture";
+import { dureeMinutes, texteFiche, texteModuleCours, texteModuleFiscal, texteNarration } from "./lecture";
 import { MODULES_FISC } from "../fiscal/modules";
 import { CLASSES_REV, chargerPlan, chargerTout } from "../ef/syscohada";
 
 // ══════════════ ÉCOUTER LES COURS ══════════════
-// Page audio de l'accueil : leçons du Code des impôts, fiches du guide des comptes et modules de cours,
+// Page audio de l'accueil : leçons du Code des impôts, fiches du guide des comptes, modules de cours et narrations des présentations,
 // lues par la voix de synthèse, avec enchaînement automatique sur le contenu suivant de la même liste.
 // Accès : leçons fiscales « libres » ou abonnés ; fiches du guide réservées aux abonnés ; modules ouverts
 // (l'exercice n'est lu qu'aux abonnés).
@@ -14,7 +14,7 @@ const carte = K => ({ background: K.card, border: `1px solid ${K.b0}`, borderRad
 const puce = (K, actif) => ({ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap",
   background: actif ? `linear-gradient(135deg,${K.emD},${K.em})` : "transparent", color: actif ? "#fff" : K.t2, border: actif ? "none" : `1px solid ${K.b1}` });
 
-export default function EcouterCours({ K, mob, mods = [], ok, onSub }) {
+export default function EcouterCours({ K, mob, mods = [], pres = [], ok, onSub }) {
   const [onglet, sOnglet] = useState("fisc");
   const [guide, sGuide] = useState(null);
   const [classe, sClasse] = useState(4);
@@ -32,8 +32,9 @@ export default function EcouterCours({ K, mob, mods = [], ok, onSub }) {
   const listes = useMemo(() => ({
     fisc: MODULES_FISC.map(m => ({ cle: `F-${m.id}`, titre: `${m.id} · ${m.titre}`, sous: m.court, libre: ok || m.libre, segs: texteModuleFiscal(m) })),
     mod: mods.filter(m => m.on !== false).map(m => ({ cle: `M-${m.id}`, titre: m.titre, sous: m.mat || m.code || "", libre: true, segs: texteModuleCours(m, ok) })),
+    pres: pres.filter(p => p.narration).map(p => ({ cle: `P-${p.id}`, titre: p.titre, sous: p.mat || "Présentation", libre: ok || !!p.gr, segs: texteNarration(p) })),
     guide: guide ? guide.classes.filter(C => C.classe === classe).flatMap(C => C.comptes.map(x => ({ cle: `C-${x.c}`, titre: `${x.c} — ${x.titre}`, sous: `Classe ${C.classe}`, libre: ok, segs: texteFiche(x, guide.titreDe) }))) : [],
-  }), [mods, ok, guide, classe]);
+  }), [mods, pres, ok, guide, classe]);
   const liste = listes[onglet];
 
   const jouer = (it, L) => { if (!it.libre) { if (onSub) onSub(); return; } sSel({ cle: it.cle, titre: it.titre, segs: it.segs, liste: L }); };
@@ -65,7 +66,7 @@ export default function EcouterCours({ K, mob, mods = [], ok, onSub }) {
     </div>}
 
     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
-      {[["fisc", "receipt-tax", `Code des impôts (${MODULES_FISC.length})`], ["guide", "books", "Guide des comptes"], ["mod", "book-2", `Modules (${listes.mod.length})`]].map(([k, ico, l]) => <button key={k} onClick={() => sOnglet(k)} className="bt" style={puce(K, onglet === k)}><i className={`ti ti-${ico}`} style={{ fontSize: 14 }} />{l}</button>)}
+      {[["fisc", "receipt-tax", `Code des impôts (${MODULES_FISC.length})`], ["guide", "books", "Guide des comptes"], ["mod", "book-2", `Modules (${listes.mod.length})`], ...(listes.pres.length ? [["pres", "presentation", `Présentations (${listes.pres.length})`]] : [])].map(([k, ico, l]) => <button key={k} onClick={() => sOnglet(k)} className="bt" style={puce(K, onglet === k)}><i className={`ti ti-${ico}`} style={{ fontSize: 14 }} />{l}</button>)}
     </div>
     {onglet === "guide" && <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
       {CLASSES_REV.map(([k]) => <button key={k} onClick={() => sClasse(k)} className="bt" style={{ ...puce(K, classe === k), padding: "5px 10px", fontSize: 11.5 }}>Classe {k}</button>)}
