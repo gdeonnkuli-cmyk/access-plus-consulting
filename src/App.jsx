@@ -640,7 +640,7 @@ function useW(){const[w,sW]=useState(typeof window!=="undefined"?window.innerWid
 // ── UI PRIMITIVES ─────────────────────────────────────────────────────────────
 const Logo=({sm,h})=>{const{tid}=useContext(Ctx);const sombre=["dark","blue","green","purple"].includes(tid);
   return <img src={sombre?LOGO_CLAIR:LOGO} alt="Éco-Campus" style={{height:h||(sm?28:34),width:"auto",display:"block",flexShrink:0}}/>;};
-const Tg=({c,bg,bd,ch})=>{const K=useK();return <span style={{background:bg||K.c2,color:c||K.t2,border:`1px solid ${bd||K.b0}`,borderRadius:99,padding:"2px 8px",fontSize:12,fontWeight:600,fontFamily:"'JetBrains Mono',monospace",whiteSpace:"nowrap"}}>{ch}</span>;};
+const Tg=({c,bg,bd,ch})=>{const K=useK();return <span style={{background:bg||K.c2,color:c||K.t2,border:`1px solid ${bd||K.b0}`,borderRadius:99,padding:"2px 8px",fontSize:12,fontWeight:600,fontFamily:"'JetBrains Mono',monospace",whiteSpace:"nowrap",display:"inline-block",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",verticalAlign:"middle",boxSizing:"border-box"}}>{ch}</span>;};
 const Bar=({p,col,h=4})=>{const K=useK();return <div style={{background:K.b0,borderRadius:99,height:h,overflow:"hidden"}}><div style={{width:`${Math.min(p,100)}%`,height:"100%",background:col||K.em,borderRadius:99,transition:"width .6s ease"}}/></div>;};
 const Spin=()=>{const K=useK();return <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:24,background:K.bg}}><div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{position:"absolute",width:70,height:70,borderRadius:"50%",background:`${K.em}14`,animation:"pulse 2s ease-in-out infinite"}}/><div style={{position:"absolute",width:52,height:52,borderRadius:"50%",background:`${K.em}0D`,animation:"pulse 2s ease-in-out infinite .4s"}}/><div style={{width:46,height:46,borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 8px 24px ${K.emD}40`,animation:"logofl 2.4s ease-in-out infinite"}}><img src={LOGO_ICONE} alt="" style={{width:46,height:46,borderRadius:14}}/></div></div><div style={{textAlign:"center"}}><div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:6}}>Éco-Campus</div><div style={{display:"flex",alignItems:"center",gap:5,justifyContent:"center"}}>{[0,1,2].map(i=><span key={i} style={{width:5,height:5,borderRadius:"50%",background:K.em,display:"inline-block",animation:"dotfl 1.4s ease-in-out infinite",animationDelay:`${i*0.22}s`}}/>)}</div></div></div>;};
 function Btn({ch,on,v="p",sm,full,dis,sx}){const K=useK();const M={p:{bg:`linear-gradient(135deg,${K.emD},${K.em})`,col:"#FFFFFF",sh:`0 6px 16px ${K.emD}40`},g:{bg:"transparent",col:K.t2,bo:`1px solid ${K.b1}`},d:{bg:K.erBg,col:K.er,bo:`1px solid ${K.erBd}`},w:{bg:K.waBg,col:K.wa,bo:`1px solid ${K.waBd}`},i:{bg:`linear-gradient(135deg,${K.inD},${K.in_})`,col:"#fff",sh:`0 2px 10px ${K.inD}44`},s:{bg:K.c2,col:K.t2,bo:`1px solid ${K.b0}`},r:{bg:K.rdBg,col:K.rd,bo:`1px solid ${K.rdBd}`}}[v]||{};return <button onClick={dis?null:on} className="bt" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,padding:sm?"7px 12px":"11px 19px",borderRadius:sm?10:12,fontSize:sm?13:14,fontWeight:700,letterSpacing:.1,border:M.bo||"none",background:M.bg,color:M.col,boxShadow:M.sh||"none",width:full?"100%":undefined,opacity:dis?.45:1,cursor:dis?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif",minHeight:sm?36:44,transition:"filter .15s,transform .12s,box-shadow .2s",...sx}}>{ch}</button>;}
@@ -3980,7 +3980,7 @@ function NarrationPres({K,p}){
   const n=texteNarration({titre:p.titre,narration:t}).length;
   const enregistrer=async()=>{sEtat("…");try{await updateDoc(doc(db,"presentations",p.id),{narration:t.trim()});sEtat("Enregistré");}catch(e){sEtat(`Erreur : ${e.message}`);}};
   const b={background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 10px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",cursor:"pointer",minHeight:30,display:"inline-flex",alignItems:"center",gap:4};
-  return <div style={{flexBasis:"100%",display:"flex",flexDirection:"column",gap:8}}>
+  return <div style={{flexBasis:"100%",minWidth:0,maxWidth:"100%",display:"flex",flexDirection:"column",gap:8}}>
     <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
       <button onClick={()=>sOuvert(o=>!o)} className="bt" style={b}><i className="ti ti-headphones" style={{fontSize:13}}/>{p.narration?"Narration audio ✓":"Ajouter une narration audio"}</button>
       {etat&&<span style={{fontSize:12,color:/^Erreur/.test(etat)?K.er:K.em,fontWeight:700}}>{etat}</span>}
@@ -3989,10 +3989,10 @@ function NarrationPres({K,p}){
       <textarea value={t} onChange={e=>{sT(e.target.value);sEtat("");}} rows={8} placeholder={"Diapositive 1. Texte lu pour la première diapositive…\n\nDiapositive 2. …"}
         style={{width:"100%",boxSizing:"border-box",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:8,padding:"9px 11px",color:K.t1,fontSize:13.5,lineHeight:1.5,fontFamily:"'Outfit',sans-serif",resize:"vertical"}}/>
       <div style={{fontSize:12,color:K.t3,lineHeight:1.5}}>Un paragraphe par diapositive, séparés par une ligne vide. {n?`${n} phrases lues.`:""}</div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",minWidth:0}}>
         <Btn ch="Enregistrer" on={enregistrer} sm/>
-        {n>0&&<LecteurAudio K={K} segments={texteNarration({titre:p.titre,narration:t})} titre="Écouter un aperçu" compact/>}
       </div>
+      {n>0&&<div style={{minWidth:0,maxWidth:"100%"}}><LecteurAudio K={K} segments={texteNarration({titre:p.titre,narration:t})} titre="Écouter un aperçu" compact/></div>}
     </>}
   </div>;
 }
