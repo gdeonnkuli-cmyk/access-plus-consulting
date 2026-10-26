@@ -17,19 +17,23 @@ let compteur = 0;
 // Sans voix masculine installée, la voix par défaut est rendue plus grave (hauteur abaissée).
 const MASC = /paul|henri|thomas|daniel|claude|nicolas|mathieu|jacques|antoine|gr[ée]goire|yves|fabrice|olivier|jean|guillaume|male|homme|masculin|fr-fr-x-frb|fr-fr-x-frd|fr-ca-x-cab|fr-ca-x-cad/i;
 const FEM = /female|femme|amélie|amelie|audrey|aurélie|julie|marie|hortense|denise|celine|céline|léa|lea|virginie|chantal|fr-fr-x-fra|fr-fr-x-frc|fr-fr-x-vlf|fr-ca-x-caa|fr-ca-x-cac/i;
+// Hauteur appliquée à une voix féminine pour la rendre masculine (aucune voix d'homme sur l'appareil)
+const GRAVE = { grave: 0.6, tres: 0.45 };
 export const estMasculine = v => !!v && MASC.test(`${v.name} ${v.voiceURI || ""}`) && !FEM.test(v.name);
 const voixFrDispo = () => { const s = synth(); return s ? s.getVoices().filter(v => /^fr/i.test(v.lang)) : []; };
+export { choisirVoix };
 export function lireReglagesVoix() {
-  try { const r = JSON.parse(localStorage.getItem("ec_audio_voix") || "{}"); return { mode: r.mode === "femme" ? "femme" : "homme", voix: r.voix || "" }; }
-  catch (e) { return { mode: "homme", voix: "" }; }
+  try { const r = JSON.parse(localStorage.getItem("ec_audio_voix") || "{}"); return { mode: r.mode === "femme" ? "femme" : "homme", voix: r.voix || "", grave: GRAVE[r.grave] ? r.grave : "grave" }; }
+  catch (e) { return { mode: "homme", voix: "", grave: "grave" }; }
 }
 function choisirVoix(R) {
   const V = voixFrDispo();
   const fr = V.filter(v => /fr[-_]FR/i.test(v.lang)), pool = fr.length ? fr : V;
   const qualite = L => L.find(v => /google|natural|premium|enhanced/i.test(v.name)) || L[0] || null;
   const precise = R.voix && V.find(v => v.name === R.voix);
-  if (precise) return { v: precise, pitch: R.mode === "homme" && !estMasculine(precise) ? 0.78 : 1 };
-  if (R.mode === "homme") { const m = qualite(pool.filter(estMasculine)) || qualite(V.filter(estMasculine)); return m ? { v: m, pitch: 1 } : { v: qualite(pool), pitch: 0.78 }; }
+  const grave = GRAVE[R.grave] || GRAVE.grave;
+  if (precise) return { v: precise, pitch: R.mode === "homme" && !estMasculine(precise) ? grave : 1 };
+  if (R.mode === "homme") { const m = qualite(pool.filter(estMasculine)) || qualite(V.filter(estMasculine)); return m ? { v: m, pitch: 1 } : { v: qualite(pool), pitch: grave }; }
   return { v: qualite(pool.filter(v => !estMasculine(v))) || qualite(pool), pitch: 1 };
 }
 
@@ -128,6 +132,14 @@ export default function LecteurAudio({ K, segments, titre = "Écouter", sx, comp
         <button onClick={() => regler({ mode: "homme", voix: "" })} className="bt" style={puce(reglages.mode === "homme" && !reglages.voix)}>Voix d’homme</button>
         <button onClick={() => regler({ mode: "femme", voix: "" })} className="bt" style={puce(reglages.mode === "femme" && !reglages.voix)}>Voix de femme</button>
       </div>
+      {(() => { const c = choisirVoix(reglages); return <>
+        {reglages.mode === "homme" && c.pitch < 1 && <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: K.t2, fontWeight: 700 }}>Hauteur :</span>
+          <button onClick={() => regler({ grave: "grave" })} className="bt" style={puce(reglages.grave !== "tres")}>Grave</button>
+          <button onClick={() => regler({ grave: "tres" })} className="bt" style={puce(reglages.grave === "tres")}>Très grave</button>
+        </div>}
+        <div style={{ fontSize: 11.5, color: K.t2 }}>Voix utilisée : <b>{c.v ? c.v.name : "voix du système"}</b>{c.pitch < 1 ? " (rendue plus grave)" : ""}</div>
+      </>; })()}
       {voixListe.length > 1 && <select value={reglages.voix} onChange={e => regler({ voix: e.target.value })} style={{ maxWidth: "100%", padding: "7px 9px", borderRadius: 8, border: `1px solid ${K.b1}`, background: K.c2, color: K.t1, fontSize: 12.5, fontFamily: "'Outfit',sans-serif" }}>
         <option value="">Voix automatique</option>
         {voixListe.map(v => <option key={v.name} value={v.name}>{v.name}{estMasculine(v) ? " · homme" : ""}</option>)}
