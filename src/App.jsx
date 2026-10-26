@@ -19,6 +19,7 @@ import{htmlCodeAcces,htmlNotification}from"./emails";
 import{PROVINCES}from"./ef/rdc";
 import SuiviExercices from"./ef/SuiviExercices";
 import{embedPresentation,srcIframe,estOneDrive}from"./presentation";
+import{pVid,estPublie,lienGoogle,apercuValidation}from"./contenu";
 import LecteurAudio from"./audio/LecteurAudio";
 import{texteModuleCours}from"./audio/lecture";
 import EcouterCours from"./audio/EcouterCours";
@@ -185,7 +186,6 @@ const icoEl=(ico,col,sz=16)=>{
   return <span style={{fontSize:sz}}>{ico}</span>;
 };
 const ICOS=["book-2","world","pencil","scale","chart-bar","building-bank","shopping-cart","users","crane","shield","clipboard-list","briefcase","target","microscope","bulb","building","bolt","globe"];
-const pVid=u=>{if(!u)return null;u=u.trim();let m=u.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);if(m)return{t:"yt",id:m[1],src:`https://www.youtube.com/embed/${m[1]}?rel=0`};m=u.match(/vimeo\.com\/(\d+)/);if(m)return{t:"vi",src:`https://player.vimeo.com/video/${m[1]}`};if(u.includes("facebook.com"))return{t:"fb",src:`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(u)}&show_text=false`};if(u.startsWith("http"))return{t:"url",src:u};return null;};
 
 // ── FIREBASE HOOKS ────────────────────────────────────────────────────────────
 function useModules(){
@@ -800,6 +800,23 @@ function RatingPanel({modId,uid,K,mob}){
   </div>;
 }
 
+// Validation par l'admin : lien du contenu, rappel du partage Google et aperçu intégré avant d'approuver
+function ApercuLien({url,video,ouvrir=true}){
+  const K=useK();const[vu,sVu]=useState(false);
+  if(!url)return <div style={{fontSize:12,color:K.er,marginBottom:8}}>Aucun lien fourni.</div>;
+  const src=apercuValidation(url,video);
+  const bouton={display:"inline-flex",alignItems:"center",gap:4,background:K.inBg,border:`1px solid ${K.inBd}`,color:K.in_,borderRadius:8,padding:"6px 10px",fontSize:12.5,fontWeight:700,fontFamily:"'Outfit',sans-serif",cursor:"pointer",textDecoration:"none",minHeight:32};
+  return <div style={{marginBottom:8}}>
+    <div style={{fontSize:12,color:K.t3,marginBottom:6,wordBreak:"break-all",lineHeight:1.4}}><i className="ti ti-link" style={{fontSize:12,marginRight:3}}/>{url}</div>
+    {lienGoogle(url)&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,color:K.t2,borderRadius:8,padding:"7px 10px",fontSize:12,lineHeight:1.5,marginBottom:6}}><b style={{color:K.wa}}>Partage à vérifier :</b> le fichier doit être réglé sur « Tous les utilisateurs disposant du lien ». Test : ouvrez le lien dans une fenêtre de navigation privée ; s'il demande l'accès, les apprenants seront bloqués.</div>}
+    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+      {ouvrir&&<a href={url} target="_blank" rel="noreferrer" className="bt" style={bouton}><i className="ti ti-external-link" style={{fontSize:13}}/>Ouvrir le lien</a>}
+      {src?<button onClick={()=>sVu(x=>!x)} className="bt" style={bouton}><i className={`ti ti-${vu?"eye-off":"eye"}`} style={{fontSize:13}}/>{vu?"Masquer l'aperçu":"Aperçu"}</button>
+        :<span style={{fontSize:12,color:K.t3,alignSelf:"center"}}>Aperçu intégré impossible pour ce lien : ouvrez-le pour le vérifier.</span>}
+    </div>
+    {vu&&src&&<iframe src={src} title="Aperçu du contenu" style={{width:"100%",aspectRatio:"16/9",border:`1px solid ${K.b0}`,borderRadius:10,marginTop:8,background:"#000"}} allow="autoplay; fullscreen" allowFullScreen/>}
+  </div>;
+}
 function Miniature({url,w,h,r=8,K,alt="",fallback=null}){
   const src=miniatureLien(url,typeof w==="number"?Math.max(w,h)*2:600);
   const[ko,sKo]=useState(false);
@@ -2851,7 +2868,8 @@ function UA({uid,onOut}){
   const allPres=usePresentations();
   const allStages=useStages();
   const allPlats=usePlateformes();
-  const{vids,live}=useVideos();
+  const{vids:tousVids,live}=useVideos();
+  const vids=useMemo(()=>tousVids.filter(estPublie),[tousVids]); // vidéos des formateurs : visibles une fois approuvées
   useEffect(()=>{
     const unsub=onSnapshot(doc(db,"users",uid),(snap)=>{if(snap.exists())sUD({uid,...snap.data()});});
     const loadPdfs=async()=>{const snap=await getDocs(collection(db,"pdfs"));const p={};snap.forEach(d=>p[d.id]=d.data());sPdfs(p);};
@@ -2889,9 +2907,9 @@ function UA({uid,onOut}){
   if(openQuiz)return W(<OpenQuiz mod={openQuiz} uid={uid} uNom={uData.nom} onDone={()=>{sOpenQuiz(null);sM(null);sV("res");}} onBack={()=>sOpenQuiz(null)}/>,true);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onOpenQ={()=>sOpenQuiz(mod)} onMarkDone={()=>markDoneNoEval(mod.id)} doneNoEval={pr[mod.id]==="done"} openAnswer={myOpenAnswers.find(a=>a.modId===mod.id)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]} uid={uid} uNom={uData.nom}/>,true);
   return W(<>
-    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} onJrn={()=>sV("jrn")} onCpt={()=>sV("cpt")} onAudio={()=>sV("audio")} live={live} presCount={allPres.length} uid={uid} onGo={sV}/>}
+    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} onJrn={()=>sV("jrn")} onCpt={()=>sV("cpt")} onAudio={()=>sV("audio")} live={live} presCount={allPres.filter(estPublie).length} uid={uid} onGo={sV}/>}
     {vue==="videos"&&<VidsPage ok={ok} onSub={()=>sSub(true)} vids={vids} live={live}/>}
-    {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres.filter(p=>p.on!==false)}/>
+    {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres.filter(estPublie)}/>
     }{vue==="stages"&&<StagePage stages={allStages} plats={allPlats} ok={ok}/>
     }{vue==="services"&&<ServicesPage user={uData}/>}
     {vue==="prog"&&<Prog pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods}/>}
@@ -4637,6 +4655,7 @@ function AA({onOut}){
         const presPubliees=allPresAdmin.filter(p=>p.on!==false).length;
         const presAttente=allPresAdmin.filter(p=>p.status==="pending").length;
         const docsAttente=allDocsAdmin.filter(d=>d.status==="pending").length;
+        const vidsAttente=vids.filter(v=>v.status==="pending").length;
         const totalApprenantsEncadres=formateurs.reduce((sum,f)=>{
           const fModIds=mods.filter(m=>m.createdBy===f.uid).map(m=>m.id);
           return sum+apprenants.filter(u=>fModIds.some(id=>u.progress?.[id]||u.scores?.[id])).length;
@@ -4657,7 +4676,7 @@ function AA({onOut}){
 
         return <div style={{animation:"fadeIn .35s ease"}}>
           <StaffHero role="admin" label="Administration" title="Tableau de bord"
-            sub={`${nD} demande${nD>1?"s":""} d'accès en attente · ${nMsgNonLus} message${nMsgNonLus>1?"s":""} non lu${nMsgNonLus>1?"s":""} · ${modsAttente+presAttente+docsAttente} contenu${modsAttente+presAttente+docsAttente>1?"s":""} à valider`}
+            sub={`${nD} demande${nD>1?"s":""} d'accès en attente · ${nMsgNonLus} message${nMsgNonLus>1?"s":""} non lu${nMsgNonLus>1?"s":""} · ${modsAttente+presAttente+docsAttente+vidsAttente} contenu${modsAttente+presAttente+docsAttente+vidsAttente>1?"s":""} à valider`}
             stats={[[`${users.length}`,"Inscrits","users",()=>sT("t")],[`${nD}`,"Demandes","clock",()=>sT("d")],[`${nA}`,"Actifs","circle-check",()=>sT("a")],[`${mods.filter(m=>m.on!==false).length}`,"Modules","book-2",()=>sT("m")]]}/>
 
           <div className="h-sec" style={{color:K.t1,marginBottom:12}}>Accès rapide</div>
@@ -4692,6 +4711,7 @@ function AA({onOut}){
             <KpiCard label="Slides publiées" val={presPubliees} col="#1E4FA3"/>
             <KpiCard label="Slides en attente" val={presAttente} col={K.wa}/>
             <KpiCard label="Documents en attente" val={docsAttente} col={K.wa}/>
+            <KpiCard label="Vidéos en attente" val={vidsAttente} col={K.wa}/>
             <KpiCard label="Stages" val={allStagesAdmin.length} col={K.t2}/>
           </KpiGroup>
 
@@ -4913,7 +4933,8 @@ function AA({onOut}){
       {(()=>{
         const pendingMods=mods.filter(m=>m.status==="pending");
         const pendingPres=allPresAdmin.filter(p=>p.status==="pending");
-        const total=pendingMods.length+pendingPres.length+pendingDocs.length;
+        const pendingVids=vids.filter(v=>v.status==="pending");
+        const total=pendingMods.length+pendingPres.length+pendingVids.length+pendingDocs.length;
         if(!total)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:14,color:K.t3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-circle-check" style={{fontSize:14,color:K.em}}/>Aucun contenu en attente de validation.</div>;
         const DocTypeInfo={
           "application/pdf":{label:"PDF",ico:"file-text",col:"#EF4444"},
@@ -4951,12 +4972,32 @@ function AA({onOut}){
               <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
             </div>
             <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===p.createdBy)?.nom||"—"} · {p.mat||"—"}</div>
+            <ApercuLien url={p.url}/>
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>approveContent("pres",p.id)} className="bt"
                 style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
                 <i className="ti ti-check" style={{fontSize:13}}/>Approuver
               </button>
               <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent("pres",p.id,r);}} className="bt"
+                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
+              </button>
+            </div>
+          </div>)}
+          {/* Vidéos en attente */}
+          {pendingVids.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px",marginBottom:8}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+              <div style={{background:"#C2410C18",border:"1px solid #C2410C30",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#C2410C"}}>VIDÉO</div>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
+            </div>
+            <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===p.createdBy)?.nom||"—"}{p.desc?` · ${p.desc}`:""}</div>
+            <ApercuLien url={p.url} video/>
+            <div style={{display:"flex",gap:6}}>
+              <button onClick={()=>approveContent("vid",p.id)} className="bt"
+                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-check" style={{fontSize:13}}/>Approuver
+              </button>
+              <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent("vid",p.id,r);}} className="bt"
                 style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
                 <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
               </button>
@@ -4973,6 +5014,7 @@ function AA({onOut}){
               <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===d.createdBy)?.nom||"—"} · {d.size?(d.size/1024/1024).toFixed(1)+" MB":""}</div>
               {d.desc&&<div style={{fontSize:13,color:K.t2,marginBottom:8,lineHeight:1.5}}>{d.desc}</div>}
               {d.type==="lien"&&<div style={{marginBottom:8}}><Miniature url={d.url} w={90} h={120} r={8} K={K} alt={d.titre}/></div>}
+              {d.type==="lien"&&<ApercuLien url={d.url} ouvrir={false}/>}
               <div style={{display:"flex",gap:6}}>
                 {d.url&&<a href={d.url} target="_blank" rel="noreferrer" className="bt"
                   style={{flex:1,background:K.inBg,border:`1px solid ${K.inBd}`,color:K.in_,borderRadius:8,padding:"7px",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4,textDecoration:"none"}}>
