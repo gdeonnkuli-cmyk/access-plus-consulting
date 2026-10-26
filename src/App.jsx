@@ -357,6 +357,16 @@ const markMsgsRead=async(apprenantUid,side)=>{
     await Promise.all(snap.docs.filter(d=>!d.data()[field]).map(d=>updateDoc(d.ref,{[field]:true})));
   }catch(e){console.log("markMsgsRead error",e);}
 };
+// Contenu soumis par un formateur : notification à l'administration (cloche + push), qui ouvre « À valider »
+const alerterAdmin=async(coll,id)=>{
+  try{
+    const c=(await getDoc(doc(db,coll,id))).data()||{};
+    const u=c.createdBy?(await getDoc(doc(db,"users",c.createdBy))).data()||{}:{};
+    const genre={modules:"un module",presentations:"une présentation",videos:"une vidéo",documents:"un document"}[coll]||"un contenu";
+    const nom=u.nom||"Un formateur";
+    notifier({dest:"admin",type:"contenu",titre:`À valider : ${c.titre||genre}`,texte:`${nom} a soumis ${genre} pour validation.`,vue:"val",auteurNom:nom});
+  }catch(e){console.log("alerterAdmin",e.message);}
+};
 const saveVideo=async(vid)=>{
   const{id,...data}=vid;
   if(id){await setDoc(doc(db,"videos",id),data,{merge:true});}
@@ -1726,7 +1736,8 @@ function FA({uid,onOut}){
     sSav(true);
     const coll=type==="mod"?"modules":type==="pres"?"presentations":"videos";
     await updateDoc(doc(db,coll,id),{status:"pending",submittedBy:uid,submittedAt:new Date().toISOString()});
-    toast("o","Soumis pour validation !");sSav(false);
+    alerterAdmin(coll,id);
+    toast("o","Soumis pour validation : l'administrateur est prévenu.");sSav(false);
   };
 
   const nUngraded=myOpenAnswersFA.filter(a=>!a.graded).length;
@@ -2027,9 +2038,10 @@ function FASlides({uid,pres,onSubmit,saving,toast}){
       const id="P"+Date.now();
       await setDoc(doc(db,"presentations",id),{
         id,titre:form.titre,url:form.url,desc:form.desc,mat:form.mat||"SYSCOHADA",
-        status:"draft",on:false,createdBy:uid,createdAt:new Date().toISOString(),gr:true,ordre:Date.now()
+        status:"pending",submittedBy:uid,submittedAt:new Date().toISOString(),on:false,createdBy:uid,createdAt:new Date().toISOString(),gr:true,ordre:Date.now()
       });
-      toast("o","Slide ajoutée ! Soumettez-la pour validation.");
+      alerterAdmin("presentations",id);
+      toast("o","Slide envoyée pour validation : l'administrateur est prévenu.");
       setForm({titre:"",url:"",desc:"",mat:""});
     }catch(e){toast("e",e.message);}
     setSavingNew(false);
@@ -2237,9 +2249,10 @@ function FAVids({uid,vids,onSubmit,saving,toast}){
       const id="V"+Date.now();
       await setDoc(doc(db,"videos",id),{
         id,titre:form.titre,url:form.url,desc:form.desc,
-        status:"draft",createdBy:uid,createdAt:new Date().toISOString(),gr:false
+        status:"pending",submittedBy:uid,submittedAt:new Date().toISOString(),on:false,createdBy:uid,createdAt:new Date().toISOString(),gr:false
       });
-      toast("o","Vidéo ajoutée ! Soumettez-la pour validation.");
+      alerterAdmin("videos",id);
+      toast("o","Vidéo envoyée pour validation : l'administrateur est prévenu.");
       setForm({titre:"",url:"",desc:""});
     }catch(e){toast("e",e.message);}
     setSavingNew(false);
@@ -2516,7 +2529,8 @@ function FADocs({uid,toast}){
 
   const submitDoc=async(id)=>{
     await updateDoc(doc(db,"documents",id),{status:"pending",submittedAt:new Date().toISOString()});
-    toast("o","Soumis pour validation !");
+    alerterAdmin("documents",id);
+    toast("o","Soumis pour validation : l'administrateur est prévenu.");
   };
 
   const statusInfo={
@@ -4574,8 +4588,10 @@ function AA({onOut}){
       <div style={{display:"flex",gap:8}}><Btn ch="Annuler" on={onCancel} v="g" full/><Btn ch={saving?"Enregistrement…":isNew?"Créer →":"Enregistrer →"} on={save} full dis={saving}/></div>
     </div>;
   }
+    const nAValider=mods.filter(m=>m.status==="pending").length+allPresAdmin.filter(p=>p.status==="pending").length+vids.filter(v=>v.status==="pending").length+pendingDocs.length;
     const ADMIN_TABS=[
           {k:"home",ico:"ti-layout-grid",  label:"Accueil"},
+          {k:"val", ico:"ti-checklist",     label:"À valider", badge:nAValider, bc:K.wa},
           {k:"d",  ico:"ti-clock",         label:`Dem.`,      badge:nD,  bc:K.wa},
           {k:"a",  ico:"ti-circle-check",  label:"Actifs",    badge:nA,  bc:K.em},
           {k:"e",  ico:"ti-clock-off",     label:"Expirés",   badge:nE,  bc:K.er},
@@ -4599,6 +4615,122 @@ function AA({onOut}){
           {k:"sg", ico:"ti-bulb",            label:"Suggestions", badge:nSugg, bc:K.wa},
           {k:"msg", ico:"ti-message-circle",  label:"Messages",   badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, bc:K.rd},
     ];
+  // Contenus des formateurs à valider (modules, présentations, vidéos, documents)
+  const blocValidation=()=>{
+        const pendingMods=mods.filter(m=>m.status==="pending");
+        const pendingPres=allPresAdmin.filter(p=>p.status==="pending");
+        const pendingVids=vids.filter(v=>v.status==="pending");
+        const total=pendingMods.length+pendingPres.length+pendingVids.length+pendingDocs.length;
+        if(!total)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:14,color:K.t3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-circle-check" style={{fontSize:14,color:K.em}}/>Aucun contenu en attente de validation.</div>;
+        const DocTypeInfo={
+          "application/pdf":{label:"PDF",ico:"file-text",col:"#EF4444"},
+          "lien":{label:"Lien",ico:"link",col:"#1E4FA3"},
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation":{label:"PPT",ico:"presentation",col:"#F59E0B"},
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document":{label:"Word",ico:"file-type-doc",col:"#3B82F6"},
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{label:"Excel",ico:"file-spreadsheet",col:"#1E4FA3"},
+        };
+        return <div style={{marginBottom:20}}>
+          <div style={{fontWeight:700,fontSize:14,color:"#F59E0B",marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
+            <i className="ti ti-clock" style={{fontSize:14}}/>En attente de validation ({total})
+          </div>
+          {/* Modules en attente */}
+          {pendingMods.map(m=><div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px",marginBottom:8}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+              <div style={{background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#8B5CF6"}}>MODULE</div>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>
+            </div>
+            <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===m.createdBy)?.nom||"—"} · {m.q?.length||0} questions</div>
+            <div style={{display:"flex",gap:6}}>
+              <button onClick={()=>approveContent("mod",m.id)} className="bt"
+                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-check" style={{fontSize:13}}/>Approuver
+              </button>
+              <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent("mod",m.id,r);}} className="bt"
+                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
+              </button>
+            </div>
+          </div>)}
+          {/* Slides en attente */}
+          {pendingPres.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px",marginBottom:8}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+              <div style={{background:"#1E4FA318",border:"1px solid #1E4FA330",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#1E4FA3"}}>SLIDE</div>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
+            </div>
+            <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===p.createdBy)?.nom||"—"} · {p.mat||"—"}</div>
+            <ApercuLien url={p.url}/>
+            <div style={{display:"flex",gap:6}}>
+              <button onClick={()=>approveContent("pres",p.id)} className="bt"
+                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-check" style={{fontSize:13}}/>Approuver
+              </button>
+              <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent("pres",p.id,r);}} className="bt"
+                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
+              </button>
+            </div>
+          </div>)}
+          {/* Vidéos en attente */}
+          {pendingVids.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px",marginBottom:8}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+              <div style={{background:"#C2410C18",border:"1px solid #C2410C30",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#C2410C"}}>VIDÉO</div>
+              <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
+            </div>
+            <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===p.createdBy)?.nom||"—"}{p.desc?` · ${p.desc}`:""}</div>
+            <ApercuLien url={p.url} video/>
+            <div style={{display:"flex",gap:6}}>
+              <button onClick={()=>approveContent("vid",p.id)} className="bt"
+                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-check" style={{fontSize:13}}/>Approuver
+              </button>
+              <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent("vid",p.id,r);}} className="bt"
+                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
+              </button>
+            </div>
+          </div>)}
+          {/* Documents en attente */}
+          {pendingDocs.map(d=>{
+            const ft=DocTypeInfo[d.type]||{label:d.ext?.toUpperCase()||"Doc",ico:"file",col:"#8B5CF6"};
+            return <div key={d.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px",marginBottom:8}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                <div style={{background:`${ft.col}18`,border:`1px solid ${ft.col}30`,borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:ft.col}}>{ft.label}</div>
+                <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.titre}</div>
+              </div>
+              <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===d.createdBy)?.nom||"—"} · {d.size?(d.size/1024/1024).toFixed(1)+" MB":""}</div>
+              {d.desc&&<div style={{fontSize:13,color:K.t2,marginBottom:8,lineHeight:1.5}}>{d.desc}</div>}
+              {d.type==="lien"&&<div style={{marginBottom:8}}><Miniature url={d.url} w={90} h={120} r={8} K={K} alt={d.titre}/></div>}
+              {d.type==="lien"&&<ApercuLien url={d.url} ouvrir={false}/>}
+              <div style={{display:"flex",gap:6}}>
+                {d.url&&<a href={d.url} target="_blank" rel="noreferrer" className="bt"
+                  style={{flex:1,background:K.inBg,border:`1px solid ${K.inBd}`,color:K.in_,borderRadius:8,padding:"7px",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4,textDecoration:"none"}}>
+                  <i className="ti ti-external-link" style={{fontSize:13}}/>Ouvrir
+                </a>}
+                <button onClick={()=>approveDoc(d.id)} className="bt"
+                  style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                  <i className="ti ti-check" style={{fontSize:13}}/>Approuver
+                </button>
+                <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectDoc(d.id,r);}} className="bt"
+                  style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                  <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
+                </button>
+              </div>
+            </div>;
+          })}
+        </div>;
+        };
+  // Statut d'un contenu de formateur dans les listes Présentations / Vidéos, avec publication directe
+  const statutContenu=(c,type)=>{
+    if(!c.createdBy||c.status==="approved")return null;
+    const st={pending:["En attente de validation",K.wa,K.waBg,K.waBd],rejected:["Rejetée",K.er,K.erBg,K.erBd]}[c.status]||["Brouillon (non soumis)",K.t3,K.c2,K.b0];
+    const b=(col,bg,bd)=>({background:bg,border:`1px solid ${bd}`,color:col,borderRadius:7,padding:"5px 9px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",cursor:"pointer",minHeight:30,display:"inline-flex",alignItems:"center",gap:4});
+    return <div style={{flexBasis:"100%",display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",paddingTop:6,borderTop:`1px dashed ${K.b0}`}}>
+      <Tg c={st[1]} bg={st[2]} bd={st[3]} ch={st[0]}/>
+      <span style={{fontSize:12,color:K.t3,flex:1,minWidth:120}}>Formateur : {users.find(u=>u.uid===c.createdBy)?.nom||"—"}</span>
+      <button onClick={()=>approveContent(type,c.id)} className="bt" style={b(K.em,K.emBg,K.emBd)}><i className="ti ti-check" style={{fontSize:13}}/>Publier</button>
+      {c.status!=="rejected"&&<button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent(type,c.id,r);}} className="bt" style={b(K.er,K.erBg,K.erBd)}><i className="ti ti-x" style={{fontSize:13}}/>Rejeter</button>}
+    </div>;
+  };
   return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
     <AutoLogoutBanner warning={aaWarn} mob={mob}/>
@@ -4613,6 +4745,7 @@ function AA({onOut}){
       {tab==="home"&&(()=>{
         const dashTiles=[
           {k:"d", ico:"clock",          label:"Demandes",       badge:nD, col:"#D97706"},
+          {k:"val",ico:"checklist",     label:"Contenus à valider",badge:nAValider, col:"#C98A1B"},
           {k:"a", ico:"circle-check",   label:"Actifs",         badge:nA, col:"#0A2A5C"},
           {k:"e", ico:"clock-off",      label:"Expirés",        badge:nE, col:"#DC2626"},
           {k:"t", ico:"users",          label:"Tous les inscrits",badge:users.length, col:"#475569"},
@@ -4769,7 +4902,7 @@ function AA({onOut}){
           <div style={{marginBottom:12}}><div style={{color:K.t2,fontSize:13,fontWeight:600,marginBottom:6}}>Accès</div><div style={{display:"flex",gap:7}}>{[[true,"🆓 Gratuit","Tous"],[false,"💎 Premium","Abonnés"]].map(([val,lb,note])=><div key={String(val)} onClick={()=>sGr(val)} style={{flex:1,background:gr===val?K.emBg:K.c2,border:`1px solid ${gr===val?K.emBd:K.b0}`,borderRadius:9,padding:"9px 11px",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:13,color:gr===val?K.em:K.t1,marginBottom:1}}>{lb}</div><div style={{fontSize:11,color:K.t3}}>{note}</div></div>)}</div></div>
           <div style={{display:"flex",gap:7}}><Btn ch="Annuler" on={()=>sAV(false)} v="g" full/><Btn ch={saving?"…":"➕ Ajouter"} on={addVidFn} full dis={saving}/></div>
         </div>}
-        <div style={{display:"flex",flexDirection:"column",gap:7}}>{vids.map(v=>{const pv=pVid(v.url);return <div key={v.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:46,height:32,borderRadius:6,background:K.c2,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>{pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:14}}>🎬</span>}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div><div style={{display:"flex",alignItems:"center",gap:5,marginTop:2,flexWrap:"wrap"}}>{v.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}{v.mid&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={mods.find(m=>m.id===v.mid)?.code||""}/>}</div></div><Btn ch="🗑" on={async()=>deleteVideo(v.id)} v="d" sm/></div>;})} </div>
+        <div style={{display:"flex",flexDirection:"column",gap:7}}>{vids.map(v=>{const pv=pVid(v.url);return <div key={v.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"11px 13px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><div style={{width:46,height:32,borderRadius:6,background:K.c2,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>{pv?.t==="yt"?<img src={`https://img.youtube.com/vi/${pv.id}/default.jpg`} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:14}}>🎬</span>}</div><div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v.titre}</div><div style={{display:"flex",alignItems:"center",gap:5,marginTop:2,flexWrap:"wrap"}}>{v.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}{v.mid&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={mods.find(m=>m.id===v.mid)?.code||""}/>}</div></div><Btn ch="🗑" on={async()=>deleteVideo(v.id)} v="d" sm/>{statutContenu(v,"vid")}</div>;})} </div>
       </div>}
       {tab==="pr"&&<div style={{animation:"up .25s ease"}}>
   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}>
@@ -4789,7 +4922,7 @@ function AA({onOut}){
   :<div style={{display:"flex",flexDirection:"column",gap:8}}>{allPresAdmin.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.inBd}`,borderRadius:11,padding:"12px 14px",display:"flex",alignItems:"center",gap:11,flexWrap:"wrap"}}>
     <div style={{width:38,height:38,borderRadius:10,background:K.inBg,border:`1px solid ${K.inBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-presentation" style={{fontSize:18,color:K.in_}}/></div>
     <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div><div style={{display:"flex",gap:5,marginTop:3,flexWrap:"wrap"}}>{p.gr?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="Gratuit"/>:<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="Premium"/>}{p.mat&&<Tg c={K.in_} bg={K.inBg} bd={K.inBd} ch={p.mat}/>}</div></div>
-    <div style={{display:"flex",gap:5,flexShrink:0}}><a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:13}}/>Voir</a><Btn ch="🗑" on={async()=>deletePresentation(p.id)} v="d" sm/></div>
+    <div style={{display:"flex",gap:5,flexShrink:0}}><a href={p.url} target="_blank" rel="noreferrer" className="bt" style={{background:K.c2,border:`1px solid ${K.b0}`,color:K.t2,borderRadius:7,padding:"5px 9px",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,minHeight:30,textDecoration:"none"}}><i className="ti ti-external-link" style={{fontSize:13}}/>Voir</a><Btn ch="🗑" on={async()=>deletePresentation(p.id)} v="d" sm/></div>{statutContenu(p,"pres")}
   </div>)}</div>}
 </div>}
 {tab==="st"&&<div style={{animation:"up .25s ease"}}>
@@ -4925,114 +5058,16 @@ function AA({onOut}){
     </div>
   }
 </div>}
+{tab==="val"&&<div style={{animation:"fadeIn .35s ease"}}>
+      <div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:21,letterSpacing:"-.3px",lineHeight:1.2,color:K.t1,marginBottom:6,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-checklist" style={{fontSize:20,color:K.wa}}/>Contenus à valider</div>
+      <div style={{fontSize:13,color:K.t3,marginBottom:14,lineHeight:1.5}}>Modules, présentations, vidéos et documents soumis par les formateurs. Un brouillon non soumis se publie depuis les onglets Présentations ou Vidéos.</div>
+      {blocValidation()}
+    </div>}
 {tab==="fo"&&<div style={{animation:"fadeIn .35s ease"}}>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:21,letterSpacing:"-.3px",lineHeight:1.2,color:K.t1,marginBottom:14,display:"flex",alignItems:"center",gap:7}}>
         <i className="ti ti-school" style={{fontSize:20,color:"#8B5CF6"}}/>Gestion des formateurs
       </div>
-      {/* Contenu en attente de validation */}
-      {(()=>{
-        const pendingMods=mods.filter(m=>m.status==="pending");
-        const pendingPres=allPresAdmin.filter(p=>p.status==="pending");
-        const pendingVids=vids.filter(v=>v.status==="pending");
-        const total=pendingMods.length+pendingPres.length+pendingVids.length+pendingDocs.length;
-        if(!total)return <div style={{background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:14,color:K.t3,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-circle-check" style={{fontSize:14,color:K.em}}/>Aucun contenu en attente de validation.</div>;
-        const DocTypeInfo={
-          "application/pdf":{label:"PDF",ico:"file-text",col:"#EF4444"},
-          "lien":{label:"Lien",ico:"link",col:"#1E4FA3"},
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation":{label:"PPT",ico:"presentation",col:"#F59E0B"},
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document":{label:"Word",ico:"file-type-doc",col:"#3B82F6"},
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{label:"Excel",ico:"file-spreadsheet",col:"#1E4FA3"},
-        };
-        return <div style={{marginBottom:20}}>
-          <div style={{fontWeight:700,fontSize:14,color:"#F59E0B",marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
-            <i className="ti ti-clock" style={{fontSize:14}}/>En attente de validation ({total})
-          </div>
-          {/* Modules en attente */}
-          {pendingMods.map(m=><div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px",marginBottom:8}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-              <div style={{background:"#8B5CF618",border:"1px solid #8B5CF630",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#8B5CF6"}}>MODULE</div>
-              <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>
-            </div>
-            <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===m.createdBy)?.nom||"—"} · {m.q?.length||0} questions</div>
-            <div style={{display:"flex",gap:6}}>
-              <button onClick={()=>approveContent("mod",m.id)} className="bt"
-                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                <i className="ti ti-check" style={{fontSize:13}}/>Approuver
-              </button>
-              <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent("mod",m.id,r);}} className="bt"
-                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
-              </button>
-            </div>
-          </div>)}
-          {/* Slides en attente */}
-          {pendingPres.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px",marginBottom:8}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-              <div style={{background:"#1E4FA318",border:"1px solid #1E4FA330",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#1E4FA3"}}>SLIDE</div>
-              <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
-            </div>
-            <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===p.createdBy)?.nom||"—"} · {p.mat||"—"}</div>
-            <ApercuLien url={p.url}/>
-            <div style={{display:"flex",gap:6}}>
-              <button onClick={()=>approveContent("pres",p.id)} className="bt"
-                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                <i className="ti ti-check" style={{fontSize:13}}/>Approuver
-              </button>
-              <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent("pres",p.id,r);}} className="bt"
-                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
-              </button>
-            </div>
-          </div>)}
-          {/* Vidéos en attente */}
-          {pendingVids.map(p=><div key={p.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px",marginBottom:8}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-              <div style={{background:"#C2410C18",border:"1px solid #C2410C30",borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#C2410C"}}>VIDÉO</div>
-              <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.titre}</div>
-            </div>
-            <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===p.createdBy)?.nom||"—"}{p.desc?` · ${p.desc}`:""}</div>
-            <ApercuLien url={p.url} video/>
-            <div style={{display:"flex",gap:6}}>
-              <button onClick={()=>approveContent("vid",p.id)} className="bt"
-                style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                <i className="ti ti-check" style={{fontSize:13}}/>Approuver
-              </button>
-              <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectContent("vid",p.id,r);}} className="bt"
-                style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
-              </button>
-            </div>
-          </div>)}
-          {/* Documents en attente */}
-          {pendingDocs.map(d=>{
-            const ft=DocTypeInfo[d.type]||{label:d.ext?.toUpperCase()||"Doc",ico:"file",col:"#8B5CF6"};
-            return <div key={d.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"13px 15px",marginBottom:8}}>
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-                <div style={{background:`${ft.col}18`,border:`1px solid ${ft.col}30`,borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,color:ft.col}}>{ft.label}</div>
-                <div style={{fontWeight:700,fontSize:14,color:K.t1,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.titre}</div>
-              </div>
-              <div style={{fontSize:12,color:K.t3,marginBottom:8}}>Par : {users.find(u=>u.uid===d.createdBy)?.nom||"—"} · {d.size?(d.size/1024/1024).toFixed(1)+" MB":""}</div>
-              {d.desc&&<div style={{fontSize:13,color:K.t2,marginBottom:8,lineHeight:1.5}}>{d.desc}</div>}
-              {d.type==="lien"&&<div style={{marginBottom:8}}><Miniature url={d.url} w={90} h={120} r={8} K={K} alt={d.titre}/></div>}
-              {d.type==="lien"&&<ApercuLien url={d.url} ouvrir={false}/>}
-              <div style={{display:"flex",gap:6}}>
-                {d.url&&<a href={d.url} target="_blank" rel="noreferrer" className="bt"
-                  style={{flex:1,background:K.inBg,border:`1px solid ${K.inBd}`,color:K.in_,borderRadius:8,padding:"7px",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4,textDecoration:"none"}}>
-                  <i className="ti ti-external-link" style={{fontSize:13}}/>Ouvrir
-                </a>}
-                <button onClick={()=>approveDoc(d.id)} className="bt"
-                  style={{flex:1,background:K.emBg,border:`1px solid ${K.emBd}`,color:K.em,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                  <i className="ti ti-check" style={{fontSize:13}}/>Approuver
-                </button>
-                <button onClick={()=>{const r=window.prompt("Motif du rejet (visible par le formateur) :");if(r!==null)rejectDoc(d.id,r);}} className="bt"
-                  style={{flex:1,background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                  <i className="ti ti-x" style={{fontSize:13}}/>Rejeter
-                </button>
-              </div>
-            </div>;
-          })}
-        </div>;
-      })()}
+      {blocValidation()}
       {/* Liste formateurs */}
       <div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:10}}>Formateurs actifs</div>
       {(()=>{

@@ -250,6 +250,8 @@ service cloud.firestore {
       allow create: if notifValide() && (
         estAdmin()
         || (estFormateur() && !destGroupe(nouveau().dest) && nouveau().type in ["correction", "message", "contenu", "info"])
+        // contenu soumis par un formateur : alerte de l'administration
+        || (estFormateur() && nouveau().dest == "admin" && nouveau().type == "contenu")
         || (connecte() && nouveau().type in ["message", "suggestion"]
             && (nouveau().dest == "admin"
                 || get(/databases/$(database)/documents/users/$(nouveau().dest)).data.get("role", "") == "formateur")));
