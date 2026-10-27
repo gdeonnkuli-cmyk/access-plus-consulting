@@ -55,7 +55,7 @@ Sans cette étape, l'application installée depuis le Play Store affiche une bar
 > L'accès aux contenus de formation est réservé aux apprenants disposant d'un abonnement actif, délivré par Éco-Campus RDC.
 
 - **Catégorie** : Enseignement · **Tags** : formation, comptabilité, finance
-- **Coordonnées** : contact@accessplusconsulting.com
+- **Coordonnées** : gnkuli@outlook.fr · WhatsApp +243 979 075 970
 - **Règles de confidentialité** : https://eco-campus-rdc.vercel.app/confidentialite.html
 - **Graphiques** (dossier `android/store/`) : icône `icone-512.png` (512×512), bannière `banniere-1024x500.png`, captures `capture-1-accueil.png`, `capture-2-formations.png`, `capture-3-services.png` (1082×1922). Ajouter de préférence 2 ou 3 captures prises dans l'application (tableau de bord, cours, atelier États financiers).
 

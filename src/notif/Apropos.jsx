@@ -33,10 +33,11 @@ export default function Apropos({K,mob,onGo}){
       <P>Les contenus ont une vocation pédagogique et ne remplacent pas un conseil professionnel.</P>
     </Bloc>
     <Bloc ico="lifebuoy" col="#C98A1B" titre="Contact et aide">
-      <P>Une question, un problème ou une idée ? Écrivez-nous depuis la boîte à suggestions ou par e-mail.</P>
+      <P>Une question, un problème ou une idée ? Écrivez-nous depuis la boîte à suggestions, par e-mail ou sur WhatsApp.</P>
       <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:6}}>
         {onGo&&<button onClick={()=>onGo("sugg")} className="bt" style={{display:"inline-flex",alignItems:"center",gap:6,padding:"9px 14px",borderRadius:11,background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",color:"#fff",fontWeight:800,fontSize:13.5,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-bulb"/>Envoyer une suggestion</button>}
-        <a href="mailto:contact@accessplusconsulting.com" style={{display:"inline-flex",alignItems:"center",gap:6,padding:"9px 14px",borderRadius:11,background:K.c2,border:`1px solid ${K.b1}`,color:K.t1,fontWeight:700,fontSize:13.5,textDecoration:"none"}}><i className="ti ti-mail"/>contact@accessplusconsulting.com</a>
+        <a href="mailto:gnkuli@outlook.fr" style={{display:"inline-flex",alignItems:"center",gap:6,padding:"9px 14px",borderRadius:11,background:K.c2,border:`1px solid ${K.b1}`,color:K.t1,fontWeight:700,fontSize:13.5,textDecoration:"none"}}><i className="ti ti-mail"/>gnkuli@outlook.fr</a>
+        <a href="https://wa.me/243979075970" target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:6,padding:"9px 14px",borderRadius:11,background:K.c2,border:`1px solid ${K.b1}`,color:K.t1,fontWeight:700,fontSize:13.5,textDecoration:"none"}}><i className="ti ti-brand-whatsapp" style={{color:"#25D366"}}/>+243 979 075 970</a>
       </div>
     </Bloc>
     <Bloc ico="shield-lock" col="#4A5B78" titre="Vos données">

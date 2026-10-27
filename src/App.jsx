@@ -926,10 +926,10 @@ function PrivacyModal({onClose}){
     {ico:"ti-history",title:"Journal de connexion",body:"Pour la sécurité de la plateforme et le suivi pédagogique, nous enregistrons la date et l'heure de vos connexions, le type d'appareil (téléphone ou ordinateur, système, navigateur ou application) et la rubrique consultée. Ces informations sont visibles uniquement par l'administrateur."},
     {ico:"ti-share",title:"Partage des données",body:"Vos données ne sont jamais vendues ni partagées avec des tiers à des fins commerciales. Elles sont stockées de manière sécurisée sur Firebase (Google Cloud), conforme au RGPD."},
     {ico:"ti-clock",title:"Durée de conservation",body:"Vos données sont conservées pendant la durée de votre abonnement et 12 mois après expiration. Vous pouvez demander la suppression de votre compte à tout moment."},
-    {ico:"ti-adjustments",title:"Vos droits",body:"Vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : contact@accessplusconsulting.com"},
+    {ico:"ti-adjustments",title:"Vos droits",body:"Vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : gnkuli@outlook.fr"},
     {ico:"ti-brand-google",title:"Connexion sociale",body:"Si vous utilisez la connexion Google ou Facebook, nous récupérons uniquement votre nom et email publics. Aucun autre accès à vos comptes n'est effectué."},
     {ico:"ti-cookie",title:"Cookies",body:"Nous utilisons uniquement un cookie de session Firebase pour maintenir votre connexion et un cookie de préférence de thème (stocké localement). Aucun cookie publicitaire."},
-    {ico:"ti-mail",title:"Contact",body:"Éco-Campus RDC · contact@accessplusconsulting.com · Pour toute question relative à vos données personnelles."},
+    {ico:"ti-mail",title:"Contact",body:"Éco-Campus RDC · gnkuli@outlook.fr · Pour toute question relative à vos données personnelles."},
   ];
   return <div onClick={e=>{if(e.target===e.currentTarget)onClose();}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",backdropFilter:"blur(6px)",zIndex:1200,display:"flex",alignItems:"flex-end",justifyContent:"center",padding:mob?"0":"20px 16px"}}>
     <div style={{width:"100%",maxWidth:560,background:K.card,border:`1px solid ${K.b1}`,borderRadius:mob?"18px 18px 0 0":"18px",maxHeight:"88vh",display:"flex",flexDirection:"column",animation:"su .25s ease",overflow:"hidden"}}>
@@ -1248,8 +1248,9 @@ function LandingPage({onLogin}){
       display:"flex",alignItems:"center",justifyContent:"space-between",
       flexWrap:"wrap",gap:10}}>
       <div style={{fontSize:13,color:K.t3}}>© 2026 Éco-Campus RDC · Tous droits réservés</div>
-      <div style={{fontSize:13,color:K.t3,display:"flex",gap:16}}>
-        <span>contact@accessplusconsulting.com</span>
+      <div style={{fontSize:13,color:K.t3,display:"flex",gap:"6px 16px",flexWrap:"wrap"}}>
+        <span>gnkuli@outlook.fr</span>
+        <a href="https://wa.me/243979075970" target="_blank" rel="noreferrer" style={{color:K.t3,textDecoration:"none"}}>WhatsApp +243 979 075 970</a>
       </div>
     </div>
 
@@ -3713,7 +3714,7 @@ function SubM({onClose,uid,u}){
     {nums.length?nums.map(n=><div key={n.k} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"6px 0",borderTop:`1px solid ${K.b0}`}}>
       <span style={{fontSize:13.5,color:K.t2}}>{n.l}</span>
       <button onClick={()=>copier(cfg[n.k])} className="bt" title="Copier le numéro" style={{display:"inline-flex",alignItems:"center",gap:6,background:"none",border:"none",cursor:"pointer",fontFamily:"'JetBrains Mono',monospace",fontWeight:800,fontSize:14,color:K.em}}>{cfg[n.k]}<i className={`ti ti-${copie===cfg[n.k]?"check":"copy"}`} style={{fontSize:15}}/></button>
-    </div>):<div style={{fontSize:13.5,color:K.t2,lineHeight:1.6}}>Les numéros de paiement seront bientôt affichés ici. En attendant, écrivez-nous à <b>contact@accessplusconsulting.com</b>.</div>}
+    </div>):<div style={{fontSize:13.5,color:K.t2,lineHeight:1.6}}>Les numéros de paiement seront bientôt affichés ici. En attendant, écrivez-nous à <b>gnkuli@outlook.fr</b>.</div>}
     {cfg?.beneficiaire&&<div style={{fontSize:13,color:K.t2,marginTop:6}}>Bénéficiaire : <b style={{color:K.t1}}>{cfg.beneficiaire}</b></div>}
     {rappel&&<div style={{fontSize:12.5,color:K.t3,marginTop:6,lineHeight:1.5}}>Gardez le SMS de confirmation : sa référence est demandée ci-dessous.</div>}
   </div>;
@@ -4289,8 +4290,8 @@ function ServicesPage({user}){
     sSending(false);
   };
 
-  const WA_NUM="+243813165403";
-  const EMAIL="contact@accessplusconsulting.com";
+  const WA_NUM="+243979075970";
+  const EMAIL="gnkuli@outlook.fr";
 
   return <div style={{animation:"up .3s ease",maxWidth:900,margin:"0 auto"}}>
     {/* Bannière hero */}
