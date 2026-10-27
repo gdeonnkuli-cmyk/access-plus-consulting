@@ -83,7 +83,8 @@ function NumCell({K,value,onChange,dis}){
 }
 
 // ══════════════════ RACINE ══════════════════
-export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub,journal0=false,guide0=false}){
+// sansRaccourcis : la navigation de l'apprenant propose déjà la monographie et le guide (sous-rubriques « Parcours métier »)
+export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub,journal0=false,guide0=false,sansRaccourcis=false}){
   const staff=me.role==="formateur"||me.role==="admin";
   useEffect(()=>{if(me.role!=="admin")inscrireAnnuaire(db,me);},[db,me.uid,me.nom,me.mail,me.role]);
   const[dossiers,sDos]=useState([]),[loading,sL]=useState(true),[err,sErr]=useState("");
@@ -112,7 +113,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub,journal0=fals
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?20:24,color:K.t1}}>Atelier États financiers</div>
         <div style={{color:K.t3,fontSize:12,marginTop:3}}>République Démocratique du Congo · SYSCOHADA révisé · Système Normal · Bilan, Compte de résultat, TFT et IBP générés depuis la balance</div>
       </div>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><B K={K} v="g" ico="notebook" ch="Monographie ZAO IMMO (journal)" on={()=>sJournal(true)}/><B K={K} v="g" ico="book" ch="Guide des comptes (SYSCOHADA révisé)" on={()=>sGuide(true)}/><B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/></div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{!sansRaccourcis&&<><B K={K} v="g" ico="notebook" ch="Monographie ZAO IMMO (journal)" on={()=>sJournal(true)}/><B K={K} v="g" ico="book" ch="Guide des comptes (SYSCOHADA révisé)" on={()=>sGuide(true)}/></>}<B K={K} ico="plus" ch="Nouveau dossier" on={()=>sCreer(true)}/></div>
     </div>
     <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
       {staff&&[["tous","Tous les dossiers"],["miens","Mes dossiers"]].map(([k,l])=><B key={k} K={K} sm v={scope===k?"p":"g"} ch={l} on={()=>sScope(k)}/>)}
@@ -120,12 +121,12 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub,journal0=fals
         <option value="">Tous statuts</option>{Object.entries(STATUTS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
       </select>
     </div>
-    <div onClick={()=>sJournal(true)} className="hv" style={{display:"flex",gap:12,alignItems:"center",background:`linear-gradient(135deg,${K.emBg},${K.card})`,border:`1px solid ${K.emBd}`,borderRadius:14,padding:"12px 14px",marginBottom:12,cursor:"pointer"}}>
+    {!sansRaccourcis&&<div onClick={()=>sJournal(true)} className="hv" style={{display:"flex",gap:12,alignItems:"center",background:`linear-gradient(135deg,${K.emBg},${K.card})`,border:`1px solid ${K.emBd}`,borderRadius:14,padding:"12px 14px",marginBottom:12,cursor:"pointer"}}>
       <div style={{width:42,height:42,borderRadius:12,background:K.em,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className="ti ti-notebook" style={{fontSize:21,color:"#fff"}}/></div>
       <div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:14.5,color:K.t1}}>Nouveau : monographie ZAO IMMO, du journal aux états financiers</div>
         <div style={{fontSize:12.5,color:K.t3,lineHeight:1.45}}>Passez les 35 écritures de {CAS_JOURNAL.societe} (exercice {CAS_JOURNAL.exercice}) : l'application corrige et explique chaque écriture, puis vous montez le Bilan et le Compte de résultat.</div></div>
       <i className="ti ti-chevron-right" style={{color:K.em,fontSize:20}}/>
-    </div>
+    </div>}
     {err&&<div style={{background:K.erBg,border:`1px solid ${K.erBd}`,color:K.er,borderRadius:8,padding:"9px 12px",fontSize:12,marginBottom:10}}>{err}</div>}
     {loading?<div style={{color:K.t3,fontSize:13,padding:20}}>Chargement…</div>
     :!list.length?<div style={{background:K.card,border:`1px dashed ${K.b1}`,borderRadius:14,padding:"36px 20px",textAlign:"center"}}>
