@@ -1583,9 +1583,9 @@ function ParametresPage({role,uid,data,onOut,onGo}){
   const champ={width:"100%",padding:"11px 14px",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:12,color:K.t1,fontSize:15,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box",minHeight:46};
   const lab=t=><div style={{color:K.t1,fontSize:13.5,fontWeight:700,marginBottom:6}}>{t}</div>;
   return <div style={{maxWidth:760,margin:"0 auto",animation:"fadeIn .3s ease"}}>
-    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20}}>
+    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20,flexWrap:"wrap"}}>
       <div style={{width:58,height:58,borderRadius:"50%",background:`linear-gradient(135deg,${K.emD},${K.em})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:900,fontSize:22,flexShrink:0}}>{(data?.nom||"?").split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase()}</div>
-      <div style={{flex:1,minWidth:0}}>
+      <div style={{flex:"1 1 160px",minWidth:0}}>
         <div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:mob?24:28,color:K.t1,lineHeight:1.15}}>Paramètres</div>
         <div style={{fontSize:14,color:K.t2,marginTop:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{data?.nom} · {role==="formateur"?"Formateur":"Apprenant"}</div>
       </div>
@@ -1672,8 +1672,8 @@ function ParametresAdmin({onOut}){
   const[msg,sMsg]=useState("");
   const maj=async p=>{try{await setDoc(doc(db,"config","securite"),p,{merge:true});sMsg("Réglage enregistré.");}catch(e){sMsg("Enregistrement impossible : "+e.message);}setTimeout(()=>sMsg(""),3000);};
   return <div style={{maxWidth:760,margin:"0 auto",animation:"fadeIn .3s ease"}}>
-    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20}}>
-      <div style={{flex:1}}><div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:mob?24:28,color:K.t1}}>Paramètres</div><div style={{fontSize:14,color:K.t2,marginTop:3}}>Administrateur · {ADM_EMAIL}</div></div>
+    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20,flexWrap:"wrap"}}>
+      <div style={{flex:"1 1 200px",minWidth:0}}><div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:mob?24:28,color:K.t1}}>Paramètres</div><div style={{fontSize:14,color:K.t2,marginTop:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>Administrateur · {ADM_EMAIL}</div></div>
       <Btn ch={<><i className="ti ti-logout" style={{fontSize:16}}/>Se déconnecter</>} on={onOut} v="d" sm/>
     </div>
     {msg&&<Pop t={msg.startsWith("Enregistrement impossible")?"e":"o"} m={msg}/>}
