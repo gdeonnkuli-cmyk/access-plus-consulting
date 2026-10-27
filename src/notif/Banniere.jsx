@@ -2,6 +2,7 @@ import React,{useState,useEffect,useRef}from"react";
 import{doc,onSnapshot,setDoc}from"firebase/firestore";
 import{TYPES_MKT,CIBLES,INTERVALLES,MKT_DEFAUT,BANQUE,rotation,intervalleMs,useBanniere,mktDesactive,setMktDesactive}from"./marketing";
 import{VUES}from"./AdminNotif";
+import{PLAY_STORE,parlePrix}from"../acces/plateforme";
 
 const CSS_PUB=`@keyframes pubIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes pubBarre{from{transform:scaleX(0)}to{transform:scaleX(1)}}
@@ -11,7 +12,7 @@ const CSS_PUB=`@keyframes pubIn{from{opacity:0;transform:translateY(8px)}to{opac
 // pause au survol ou au toucher ; points pour naviguer ; croix pour la masquer (réactivable dans Paramètres).
 export default function Banniere({K,mob,db,uid,user,onGo}){
   const{cfg,prix,off}=useBanniere(db);
-  const L=cfg&&!off?rotation({uid,user,cfg,prix}):[];
+  const L=cfg&&!off?rotation({uid,user,cfg,prix}).filter(m=>!PLAY_STORE||!parlePrix(m)):[];
   const[i,sI]=useState(0),[pause,sPause]=useState(false),[cache,sCache]=useState(typeof document!=="undefined"&&document.hidden);
   const pas=intervalleMs(cfg),n=L.length,idx=n?i%n:0;
   const minuteur=useRef(null);

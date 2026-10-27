@@ -14,6 +14,7 @@ import Apropos from"./notif/Apropos";
 import Banniere,{ReglageMarketing,AdminMarketing}from"./notif/Banniere";
 import{DUR,OFFRES,INCLUS,offresAvecPrix,parMois,fUSD,numerosRenseignes,usePaiement,utiliserCodeOffert}from"./acces/acces";
 import AdminAcces from"./acces/AdminAcces";
+import{PLAY_STORE,LIB_ACCES}from"./acces/plateforme";
 import{pushPossible,pushActif,activerPush,desactiverPush}from"./notif/push";
 import{htmlCodeAcces,htmlNotification}from"./emails";
 import{PROVINCES}from"./ef/rdc";
@@ -1038,7 +1039,7 @@ function LandingPage({onLogin}){
     {val:"10+",label:"Modules SYSCOHADA",ico:"book-2"},
     {val:"100%",label:"En ligne, partout",ico:"wifi"},
     {val:"3",label:"Types de profils",ico:"users"},
-    {val:"24h",label:"Accès après paiement",ico:"bolt"},
+    PLAY_STORE?{val:"1 code",label:"pour tout débloquer",ico:"key"}:{val:"24h",label:"Accès après paiement",ico:"bolt"},
   ];
   const publics=[
     {ico:"building-store",label:"Entrepreneurs",desc:"Services et accompagnement pour structurer votre activité"},
@@ -3489,7 +3490,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
       {ok
         ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 11px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:12,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ À vie":"✓ Actif"}</span></div>
-        :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>Obtenir l'accès</button>
+        :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>{LIB_ACCES}</button>
       }
       <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} onGo={v=>v==="acces"?onSub&&onSub():sV(NAV_ITEMS.some(n=>n.k===v)||["param","sugg","apropos","audio","cpt"].includes(v)?v:"home")} taille={32}/>
       <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:32,height:32,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
@@ -3561,7 +3562,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
     })}
     {/* Alertes */}
     {!ok&&<div style={{background:u.abonnement==="expiré"?K.erBg:K.waBg,border:`1px solid ${u.abonnement==="expiré"?K.erBd:K.waBd}`,borderRadius:12,padding:"11px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}><div><div style={{fontWeight:700,fontSize:14,color:u.abonnement==="expiré"?K.er:K.wa,marginBottom:2}}>{u.abonnement==="expiré"?"Accès expiré":"Cours verrouillés"}</div><div style={{fontSize:13,color:K.t3}}>{u.abonnement==="demande"?"Demande en cours — code sous 24h.":u.abonnement==="expiré"?"Contactez Éco-Campus.":"Effectuez le paiement."}</div></div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{isSocial&&<Btn ch="J'ai un code" on={()=>sShowCode(true)} v="s" sm/>}{u.abonnement!=="demande"&&<Btn ch="Obtenir l'accès" on={onSub} v="w" sm/>}</div></div>}
-    {ok&&jr<=30&&jr>0&&u.dureeId!=="v"&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"9px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><div style={{fontSize:14,color:K.wa}}>⏰ Expire dans <b>{jr}j</b></div><Btn ch="Renouveler" on={onSub} v="w" sm/></div>}
+    {ok&&jr<=30&&jr>0&&u.dureeId!=="v"&&<div style={{background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:12,padding:"9px 14px",marginBottom:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><div style={{fontSize:14,color:K.wa}}>⏰ Expire dans <b>{jr}j</b></div><Btn ch={PLAY_STORE?"Saisir un code":"Renouveler"} on={onSub} v="w" sm/></div>}
 
     {/* Bannière principale */}
     <div className="card-enter" style={{background:"linear-gradient(135deg,#001433 0%,#0A2A5C 55%,#1E4FA3 100%)",borderRadius:24,padding:mob?"22px 18px 20px":"30px 32px",marginBottom:20,position:"relative",overflow:"hidden",color:"#fff",boxShadow:"0 16px 36px rgba(10,42,92,.28)"}}>
@@ -3580,7 +3581,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
             </div>)}
           </div>
           <button onClick={ok?()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'}):onSub} className="bt" style={{background:"#fff",color:"#0A2A5C",border:"none",borderRadius:12,padding:"12px 20px",fontSize:15,fontWeight:800,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:8,boxShadow:"0 6px 18px rgba(0,0,0,.18)"}}>
-            {ok?(nd===0?"Commencer":"Continuer mes cours"):"Obtenir l'accès"}<i className="ti ti-arrow-right" style={{fontSize:17}}/>
+            {ok?(nd===0?"Commencer":"Continuer mes cours"):LIB_ACCES}<i className="ti ti-arrow-right" style={{fontSize:17}}/>
           </button>
         </div>
         {!mob&&<div style={{flexShrink:0,background:"rgba(255,255,255,.1)",borderRadius:"50%",padding:10,border:"1px solid rgba(255,255,255,.18)"}}><ProgressRing pct={gp} size={124} stroke={10} col="#fff" track="rgba(255,255,255,.18)" txt="#fff"/></div>}
@@ -3716,6 +3717,12 @@ function SubM({onClose,uid,u}){
     {cfg?.beneficiaire&&<div style={{fontSize:13,color:K.t2,marginTop:6}}>Bénéficiaire : <b style={{color:K.t1}}>{cfg.beneficiaire}</b></div>}
     {rappel&&<div style={{fontSize:12.5,color:K.t3,marginTop:6,lineHeight:1.5}}>Gardez le SMS de confirmation : sa référence est demandée ci-dessous.</div>}
   </div>;
+  if(PLAY_STORE)return <Sheet title="Activer mon accès" onClose={onClose}>
+    <div style={{color:K.t2,fontSize:14,marginBottom:12,lineHeight:1.55}}>Saisissez le code d'accès qui vous a été remis par Éco-Campus RDC : tous les contenus s'ouvrent aussitôt.</div>
+    <Inp lb="Code d'accès ou code offert" rf={rCode} ph="EC-XXXXXXXX ou OF-XXXXXXXX" mono/>
+    {cErr&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{cErr}</div>}
+    <Btn ch={cBusy?"Vérification…":"Activer mon code"} on={code} full dis={cBusy} sx={{minHeight:46}}/>
+  </Sheet>;
   return <Sheet title="Obtenir l'accès" onClose={onClose}>
     {a?<div style={{padding:"2px 0"}}>
       <div style={{textAlign:"center"}}><div style={{fontSize:40,marginBottom:9,animation:"fl 3s ease-in-out infinite"}}>⏳</div><div style={{fontWeight:800,fontSize:15.5,color:K.t1,marginBottom:5}}>Demande en cours de vérification</div>
@@ -3787,7 +3794,7 @@ function MV({mod,sc,ok,onQ,onOpenQ,onMarkDone,doneNoEval,openAnswer,onBack,onSub
       </div>}
     </div>}
     <div style={{background:K.card,border:`1px solid ${K.b1}`,boxShadow:K.sh,borderRadius:16,padding:mob?"13px":"16px 18px"}}>
-      {!ok?<div style={{textAlign:"center",padding:"7px 0"}}><div style={{fontSize:28,marginBottom:7}}>🔒</div><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Module verrouillé</div><div style={{color:K.t3,fontSize:13,marginBottom:12}}>Abonnement requis (50 USD).</div><Btn ch="Obtenir l'accès →" on={onSub} v="w" sx={{minHeight:44}}/></div>
+      {!ok?<div style={{textAlign:"center",padding:"7px 0"}}><div style={{fontSize:28,marginBottom:7}}>🔒</div><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Module verrouillé</div><div style={{color:K.t3,fontSize:13,marginBottom:12}}>Réservé aux apprenants disposant d'un accès actif.</div><Btn ch={`${LIB_ACCES} →`} on={onSub} v="w" sx={{minHeight:44}}/></div>
       :mod.evalType==="none"?<><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Sans évaluation</div><div style={{color:K.t3,fontSize:13,marginBottom:13}}>Ce module ne comporte pas de test noté.</div><Btn ch={doneNoEval?"✓ Terminé":"Marquer comme terminé"} on={onMarkDone} dis={doneNoEval} sx={{minHeight:44,fontSize:14}}/></>
       :mod.evalType==="open"?<><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Questions ouvertes</div><div style={{color:K.t3,fontSize:13,marginBottom:13}}>{mod.openQ?.length||0} question(s) · Corrigé par votre formateur</div>{openAnswer?<div style={{background:openAnswer.graded?K.emBg:K.waBg,border:`1px solid ${openAnswer.graded?K.emBd:K.waBd}`,borderRadius:9,padding:"9px 12px",fontSize:13,color:openAnswer.graded?K.em:K.wa,fontWeight:600}}>{openAnswer.graded?`✓ Corrigé — ${openAnswer.totalPoints}/${openAnswer.maxPoints} pts (${openAnswer.pct}%)`:"⏳ En attente de correction par le formateur"}</div>:<Btn ch="Répondre →" on={onOpenQ} sx={{minHeight:44,fontSize:14}} dis={!mod.openQ?.length}/>}</>
       :<><div style={{fontWeight:700,fontSize:14,color:K.t1,marginBottom:4}}>Évaluation QCM</div><div style={{color:K.t3,fontSize:13,marginBottom:13}}>{mod.q?.length||0} questions · Feedback immédiat</div><Btn ch={sc?"Repasser →":"Commencer →"} on={onQ} sx={{minHeight:44,fontSize:14}} dis={!mod.q?.length}/></>}
