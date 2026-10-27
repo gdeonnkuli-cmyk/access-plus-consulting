@@ -105,7 +105,7 @@ export default function FinanceEntreprise({K,mob,db,uid,scores={},ok,onSub}){
       <i className="ti ti-chart-pie" style={{position:"absolute",right:-10,bottom:-22,fontSize:150,opacity:.1}}/>
       <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Finance · RDC et espace OHADA</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Finance d'entreprise</div>
-      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:580}}>7 modules et 16 cas corrigés situés dans des entreprises congolaises : coût du capital, levier et création de valeur, investissement, financement, évaluation, risque de change USD/CDF et affectation du résultat selon l'OHADA. Chaque leçon s'écoute en audio.</div>
+      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:580}}>7 modules et 16 cas corrigés situés dans des entreprises congolaises : coût du capital, levier et création de valeur, investissement, financement, évaluation, risque de change USD/CDF et affectation du résultat selon l'OHADA. Chaque leçon s'écoute en audio. Réussissez les 7 QCM pour obtenir votre attestation (rubrique « Mes résultats »).</div>
       <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
         <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>{valides} / {MODULES_FIN.length} modules validés</span>
         <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}><i className="ti ti-headphones" style={{marginRight:4}}/>Cours audio</span>

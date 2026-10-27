@@ -22,6 +22,13 @@ const FISC = [
   ["F11", "La paie en RDC : du brut au net, cotisations et écritures"], ["F12", "La TVA en pratique : déclarer son mois sans erreur"],
 ];
 
+// Modules de finance d'entreprise (doit rester aligné sur src/finance/modules — vérifié par regles.test.js)
+const FIN = [
+  ["FE1", "Le coût du capital"], ["FE2", "Rentabilité, effet de levier et création de valeur"], ["FE3", "Choisir un investissement"],
+  ["FE4", "Choisir un financement"], ["FE5", "Évaluer une entreprise"], ["FE6", "Gérer le risque de change USD/CDF"],
+  ["FE7", "Affecter le résultat d'une société (OHADA)"],
+];
+
 const PARCOURS = [
   { id: "SYS-N1", titre: "Comptabilité SYSCOHADA révisé — Niveau 1 : fondamentaux", court: "SYSCOHADA · Niveau 1",
     description: "Modules de cours de comptabilité générale et exercice « Quel compte ? » sur l'ensemble du plan." },
@@ -29,6 +36,8 @@ const PARCOURS = [
     description: "Les 12 modules du Code des impôts : IBP, IPR, IM et IRL, TVA, obligations, contentieux, import-export, paie." },
   { id: "SYS-N2", titre: "Comptabilité SYSCOHADA révisé — Niveau 2 : pratique", court: "SYSCOHADA · Niveau 2",
     description: "Monographie ZAO IMMO SARL (tenue comptable d'un exercice) et exercice « Quel compte ? » classe par classe." },
+  { id: "FIN", titre: "Finance d'entreprise — RDC et espace OHADA", court: "Finance d'entreprise",
+    description: "Les 7 modules de finance d'entreprise : coût du capital, levier et création de valeur, investissement, financement, évaluation, risque de change USD/CDF et affectation du résultat OHADA, avec 16 cas corrigés." },
 ];
 
 // Modules de cours pris en compte : ceux publiés (on !== false), dans l'ordre du catalogue
@@ -41,6 +50,8 @@ function elementsParcours(id, modules) {
     { cle: "CPT-T", titre: "Exercice « Quel compte ? » — toutes classes", heures: 2, evalue: true },
   ];
   if (id === "FISC") return FISC.map(([f, t]) => ({ cle: `FISC-${f}`, titre: `${f} · ${t}`, heures: 1, evalue: true }));
+  // 2 h par module : leçon et cas corrigés
+  if (id === "FIN") return FIN.map(([f, t]) => ({ cle: `FIN-${f}`, titre: `${f} · ${t}`, heures: 2, evalue: true }));
   if (id === "SYS-N2") return [
     { cle: "JRN-ZAO", titre: "Monographie ZAO IMMO SARL — tenue comptable 2021", heures: 10, evalue: true },
     ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => ({ cle: `CPT-${k}`, titre: `Exercice « Quel compte ? » — classe ${k}`, heures: 1, evalue: true })),
@@ -82,4 +93,4 @@ function numeroAttestation(alea = Math.random, annee = new Date().getFullYear())
 }
 const numeroValide = n => /^EC-\d{4}-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/.test(String(n || ""));
 
-module.exports = { SEUIL_ELEMENT, SEUIL_MOYENNE, SIGNATAIRE, ORGANISME, FISC, PARCOURS, elementsParcours, evaluer, mention, numeroAttestation, numeroValide, modulesActifs };
+module.exports = { SEUIL_ELEMENT, SEUIL_MOYENNE, SIGNATAIRE, ORGANISME, FISC, FIN, PARCOURS, elementsParcours, evaluer, mention, numeroAttestation, numeroValide, modulesActifs };
