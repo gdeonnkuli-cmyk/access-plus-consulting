@@ -30,6 +30,7 @@ export const BANQUE = [
   { id: "v5", cible: "visiteurs", type: "nouveaute", titre: "Calculez un bulletin de paie en une minute", texte: "Le simulateur du module Paie donne le net, la CNSS, l'IPR et le coût employeur. Inclus dans l'abonnement.", vue: "acces" },
   { id: "v6", cible: "visiteurs", type: "motivation", titre: "La TVA ne vous fera plus peur", texte: "Tri des factures, prorata, crédit, écritures : le module TVA en pratique vous guide pas à pas.", vue: "acces" },
   { id: "v7", cible: "visiteurs", type: "offre", titre: "Commencez dès {m} $", texte: "Un mois pour tout essayer : modules, QCM, simulateurs et cas pratiques corrigés.", vue: "acces" },
+  { id: "v8", cible: "visiteurs", type: "nouveaute", titre: "Finance d'entreprise : le module FE1 est gratuit", texte: "Coût du capital, MEDAF avec prime de risque pays et CMPC, avec trois cas corrigés et le cours en audio.", vue: "fin" },
   // Abonnés : défis et nouveautés
   { id: "a1", cible: "abonnes", type: "defi", titre: "Défi du moment : 80 % au QCM TVA en pratique", texte: "10 questions tirées au hasard : saurez-vous déclarer un mois de TVA sans faute ?", vue: "fisc" },
   { id: "a2", cible: "abonnes", type: "defi", titre: "Refaites un QCM, il a changé", texte: "À chaque essai, au moins 30 % des questions sont nouvelles et les réponses sont mélangées.", vue: "fisc" },
@@ -38,6 +39,7 @@ export const BANQUE = [
   { id: "a5", cible: "abonnes", type: "nouveaute", titre: "Nouveau : la paie en RDC (F11)", texte: "CNSS, IPR, INPP, ONEM, SMIG 2026 et un simulateur de bulletin de paie.", vue: "fisc" },
   { id: "a6", cible: "abonnes", type: "defi", titre: "Import-export : testez-vous", texte: "Le module F10 et ses 15 questions : procédures, documents et change.", vue: "fisc" },
   { id: "a7", cible: "abonnes", type: "defi", titre: "Le simulateur de paie vous attend", texte: "Saisissez votre propre bulletin et comparez avec votre fiche de paie : surprises garanties.", vue: "fisc" },
+  { id: "a8", cible: "abonnes", type: "nouveaute", titre: "Nouveau : Finance d'entreprise", texte: "7 modules, 16 cas corrigés (VAN, DCF, change USD/CDF, affectation OHADA) et chaque leçon en audio.", vue: "fin" },
   // Tout le monde : astuces
   { id: "t1", cible: "tous", type: "astuce", titre: "1 000 000 FC payés en espèces ?", texte: "Entre assujettis, une facture d'au moins 1 000 000 FC réglée en espèces perd son droit à déduction de TVA (art. 59 bis).", vue: "fisc" },
   { id: "t2", cible: "tous", type: "astuce", titre: "Carburant : la moitié seulement", texte: "Hors cas particuliers, la TVA sur le carburant n'est déductible qu'à 50 % (art. 41).", vue: "fisc" },

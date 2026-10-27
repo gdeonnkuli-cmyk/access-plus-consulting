@@ -134,3 +134,8 @@ export function texteNarration(p) {
   const P = paragraphesNarration(p && p.narration);
   return P.length ? segments([point(p.titre), ...P.map(point)]) : [];
 }
+
+// ── Module de finance d'entreprise (src/finance/modules.js) : narration écrite pour l'oral
+export function texteModuleFinance(mod) {
+  return segments([point(`Finance d'entreprise, module ${String(mod.id).replace(/^FE/, "")}. ${mod.titre}`), ...(mod.narration || []).map(point)]);
+}
