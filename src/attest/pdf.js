@@ -79,6 +79,6 @@ export async function telechargerAttestation(a) {
   d.setFontSize(7.5); d.setTextColor(110, 110, 110);
   d.text(`Vérifier l'authenticité : ${lien}`, C, 192, { align: "center" });
   d.setFont("helvetica", "bold"); d.setTextColor(10, 42, 92); d.setFontSize(8.5);
-  d.text("Éco-Campus RDC · eco-campus-rdc.vercel.app · +243 813 165 403", C, 197, { align: "center" });
+  d.text("Éco-Campus RDC · eco-campus-rdc.vercel.app · +243 979 075 970", C, 197, { align: "center" });
   d.save(`attestation-${a.numero}.pdf`);
 }
