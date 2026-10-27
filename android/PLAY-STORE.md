@@ -71,5 +71,13 @@ Sans cette étape, l'application installée depuis le Play Store affiche une bar
   - Suppression des données : https://eco-campus-rdc.vercel.app/suppression-compte.html
 - **Application gouvernementale / financière** : non (application éducative ; elle n'effectue aucune opération financière).
 
+## 5 bis. Paiements : version sans tarifs ni Mobile Money
+Les règles de Google Play interdisent de proposer dans l'application un paiement extérieur (Mobile Money) pour des contenus numériques. L'application ouvre le site sur `/?source=android` : le site reconnaît alors la version Play Store (`src/acces/plateforme.js`) et
+- remplace la fenêtre « Obtenir l'accès » (offres, prix, numéros Mobile Money, référence de transaction) par **« Activer mon accès »** : saisie du code uniquement ;
+- retire de la bannière d'accueil les messages qui citent un prix ou mènent aux offres ;
+- remplace les libellés « Obtenir l'accès » et « Renouveler » par « Activer mon accès » et « Saisir un code ».
+
+Le site web et l'application installée depuis Chrome gardent la page d'offres complète. Pour quitter le mode Play Store sur un navigateur, ouvrir une fois `/?source=web`. Questionnaire « Accès à l'application » : indiquer que l'accès complet se fait par **code d'activation** et fournir un compte de test déjà actif.
+
 ## 6. Nouvelles versions
 Augmenter `versionCode` (et `versionName`) dans `android/app/build.gradle`, pousser, récupérer le nouvel `.aab` dans Actions et l'envoyer dans la Play Console. Pour les contenus du site, aucune nouvelle version Android n'est nécessaire.

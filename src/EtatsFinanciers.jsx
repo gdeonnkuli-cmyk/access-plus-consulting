@@ -8,6 +8,7 @@ import{REGLES,ficheCompte,anomaliesSens,rubriqueDe}from"./ef/guide";
 import GuideComptes from"./ef/GuideComptes";
 import{cleCpt,fusionScore}from"./ef/syscohada/scores";
 import{computeNotes,fmtPct,TRANCHES,NATURES_TITRES,EFF_COLS,EFF_PROPRE,EFF_STATUT,EFF_EXT}from"./ef/notes";
+import{LIB_ACCES}from"./acces/plateforme";
 
 // ══════════════════ ATELIER ÉTATS FINANCIERS SYSCOHADA (multi-utilisateurs) ══════════════════
 // Collection Firestore « ef_dossiers » : un document par dossier (balance, compléments TFT, membres, suivi).
@@ -99,7 +100,7 @@ export default function EtatsFinanciers({db,K,mob,me,ok=true,onSub,journal0=fals
     <i className="ti ti-lock" style={{fontSize:34,color:K.t3}}/>
     <div style={{fontWeight:800,fontSize:16,color:K.t1,margin:"10px 0 6px"}}>Atelier États financiers SYSCOHADA</div>
     <div style={{color:K.t3,fontSize:13,marginBottom:16}}>Réservé aux apprenants disposant d'un abonnement actif.</div>
-    {onSub&&<B K={K} ch="Obtenir l'accès" on={onSub}/>}
+    {onSub&&<B K={K} ch={LIB_ACCES} on={onSub}/>}
   </div>;
   if(journal)return <AtelierJournal K={K} mob={mob} db={db} me={me} onBack={()=>sJournal(false)} onEtats={()=>{sJournal(false);sCreer(CAS_JOURNAL.id);}}/>;
   if(guide)return <div style={{animation:"fadeIn .3s ease"}}><div style={{marginBottom:12}}><B K={K} v="g" sm ico="arrow-left" ch="Dossiers" on={()=>sGuide(false)}/></div><GuideView K={K} mob={mob} db={db} me={me}/></div>;

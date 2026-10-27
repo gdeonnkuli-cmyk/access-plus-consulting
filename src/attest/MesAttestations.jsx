@@ -3,6 +3,7 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { PARCOURS, SEUIL_ELEMENT, SEUIL_MOYENNE, evaluer } from "./regles";
 import { lienVerification, telechargerAttestation } from "./pdf";
+import { LIB_ACCES } from "../acces/plateforme";
 
 // ══════════════ MES ATTESTATIONS (apprenant) ══════════════
 // Avancement de chaque parcours (aperçu local), puis délivrance par le serveur (/api/attestation), qui relit
@@ -49,7 +50,7 @@ export default function MesAttestations({ K, mob, db, uid, user, mods, ok, onSub
   if (!ok) return <div style={{ ...carte(K), padding: "14px 16px", marginBottom: 14, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
     <i className="ti ti-certificate" style={{ fontSize: 22, color: K.t3 }} />
     <div style={{ flex: 1, minWidth: 160 }}><div style={{ fontWeight: 800, fontSize: 14, color: K.t1 }}>Attestations de formation</div><div style={{ fontSize: 12.5, color: K.t3 }}>Réservées aux abonnés actifs.</div></div>
-    {onSub && <button onClick={onSub} className="bt" style={btn(K, "p")}>Obtenir l'accès</button>}
+    {onSub && <button onClick={onSub} className="bt" style={btn(K, "p")}>{LIB_ACCES}</button>}
   </div>;
 
   return <div style={{ marginBottom: 16 }}>

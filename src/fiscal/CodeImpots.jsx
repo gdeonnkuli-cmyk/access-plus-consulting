@@ -6,6 +6,7 @@ import{MODULES_FISC}from"./modules";
 import{tirerSerie,lireSerie,ecrireSerie}from"./tirage";
 import{calculPaie,INPP}from"./paie";
 import{liquidationTVA}from"./tva";
+import{LIB_ACCES}from"../acces/plateforme";
 
 // ══════════════════ CODE DES IMPÔTS RDC EXPLIQUÉ ══════════════════
 // 12 modules (src/fiscal/modules : Code des impôts mis à jour au 31 mars 2021, TVA pratique, import-export et paie) : leçon structurée en blocs,
@@ -348,7 +349,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
     {!ok&&<div style={{display:"flex",alignItems:"center",gap:10,background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:14,padding:"11px 14px",marginBottom:14,flexWrap:"wrap"}}>
       <i className="ti ti-lock-open" style={{fontSize:18,color:K.wa}}/>
       <div style={{flex:1,minWidth:200,fontSize:13.5,color:K.t1,lineHeight:1.5}}>Le module <b>F1</b> est en accès libre. Les modules F2 à F10 sont réservés aux abonnés.</div>
-      {onSub&&<Bouton K={K} ch="Obtenir l'accès" on={onSub} sx={{minHeight:38,padding:"8px 14px",fontSize:13}}/>}
+      {onSub&&<Bouton K={K} ch={LIB_ACCES} on={onSub} sx={{minHeight:38,padding:"8px 14px",fontSize:13}}/>}
     </div>}
     <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
       {MODULES_FISC.map(m=>{const s=sc(m.id),lk=!acces(m);return <div key={m.id} onClick={()=>lk?onSub&&onSub():(sOpen(m.id),sMode("lecon"))} className="hv tile"
