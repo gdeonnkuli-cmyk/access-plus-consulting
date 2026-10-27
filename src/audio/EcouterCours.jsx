@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import LecteurAudio from "./LecteurAudio";
-import { dureeMinutes, texteFiche, texteModuleCours, texteModuleFiscal, texteNarration } from "./lecture";
+import { dureeMinutes, texteFiche, texteModuleCours, texteModuleFinance, texteModuleFiscal, texteNarration } from "./lecture";
 import { MODULES_FISC } from "../fiscal/modules";
+import { MODULES_FIN } from "../finance/modules";
 import { CLASSES_REV, chargerPlan, chargerTout } from "../ef/syscohada";
 
 // ══════════════ ÉCOUTER LES COURS ══════════════
-// Page audio de l'accueil : leçons du Code des impôts, fiches du guide des comptes, modules de cours et narrations des présentations,
+// Page audio de l'accueil : leçons du Code des impôts, cours de finance d'entreprise, fiches du guide des comptes, modules de cours et narrations des présentations,
 // lues par la voix de synthèse, avec enchaînement automatique sur le contenu suivant de la même liste.
 // Accès : leçons fiscales « libres » ou abonnés ; fiches du guide réservées aux abonnés ; modules ouverts
 // (l'exercice n'est lu qu'aux abonnés).
@@ -31,6 +32,7 @@ export default function EcouterCours({ K, mob, mods = [], pres = [], ok, onSub }
 
   const listes = useMemo(() => ({
     fisc: MODULES_FISC.map(m => ({ cle: `F-${m.id}`, titre: `${m.id} · ${m.titre}`, sous: m.court, libre: ok || m.libre, segs: texteModuleFiscal(m) })),
+    fin: MODULES_FIN.map(m => ({ cle: `FE-${m.id}`, titre: `${m.id} · ${m.titre}`, sous: "Finance d'entreprise", libre: ok || m.libre, segs: texteModuleFinance(m) })),
     mod: mods.filter(m => m.on !== false).map(m => ({ cle: `M-${m.id}`, titre: m.titre, sous: m.mat || m.code || "", libre: true, segs: texteModuleCours(m, ok) })),
     pres: pres.filter(p => p.narration).map(p => ({ cle: `P-${p.id}`, titre: p.titre, sous: p.mat || "Présentation", libre: ok || !!p.gr, segs: texteNarration(p) })),
     guide: guide ? guide.classes.filter(C => C.classe === classe).flatMap(C => C.comptes.map(x => ({ cle: `C-${x.c}`, titre: `${x.c} — ${x.titre}`, sous: `Classe ${C.classe}`, libre: ok, segs: texteFiche(x, guide.titreDe) }))) : [],
@@ -66,7 +68,7 @@ export default function EcouterCours({ K, mob, mods = [], pres = [], ok, onSub }
     </div>}
 
     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
-      {[["fisc", "receipt-tax", `Code des impôts (${MODULES_FISC.length})`], ["guide", "books", "Guide des comptes"], ["mod", "book-2", `Modules (${listes.mod.length})`], ...(listes.pres.length ? [["pres", "presentation", `Présentations (${listes.pres.length})`]] : [])].map(([k, ico, l]) => <button key={k} onClick={() => sOnglet(k)} className="bt" style={puce(K, onglet === k)}><i className={`ti ti-${ico}`} style={{ fontSize: 14 }} />{l}</button>)}
+      {[["fisc", "receipt-tax", `Code des impôts (${MODULES_FISC.length})`], ["fin", "chart-pie", `Finance (${MODULES_FIN.length})`], ["guide", "books", "Guide des comptes"], ["mod", "book-2", `Modules (${listes.mod.length})`], ...(listes.pres.length ? [["pres", "presentation", `Présentations (${listes.pres.length})`]] : [])].map(([k, ico, l]) => <button key={k} onClick={() => sOnglet(k)} className="bt" style={puce(K, onglet === k)}><i className={`ti ti-${ico}`} style={{ fontSize: 14 }} />{l}</button>)}
     </div>
     {onglet === "guide" && <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
       {CLASSES_REV.map(([k]) => <button key={k} onClick={() => sClasse(k)} className="bt" style={{ ...puce(K, classe === k), padding: "5px 10px", fontSize: 11.5 }}>Classe {k}</button>)}

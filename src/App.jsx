@@ -5,6 +5,7 @@ import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnap
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
 import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
 import CodeImpots from"./fiscal/CodeImpots";
+import FinanceEntreprise from"./finance/FinanceEntreprise";
 import{initNotif,notifier}from"./notif/notif";
 import Cloche from"./notif/Cloche";
 import AdminNotif from"./notif/AdminNotif";
@@ -1759,6 +1760,7 @@ function FA({uid,onOut}){
     {k:"stats",ico:"chart-bar",label:"Statistiques"},
     {k:"ef",ico:"report-money",label:"États financiers"},
     {k:"fisc",ico:"receipt-tax",label:"Code des impôts"},
+    {k:"fin",ico:"chart-pie",label:"Finance"},
     {k:"sugg",ico:"bulb",label:"Suggestions"},
     {k:"apropos",ico:"info-circle",label:"À propos"},
   ];
@@ -1791,6 +1793,7 @@ function FA({uid,onOut}){
         {ico:"message-circle",col:"#0D7A6B",label:"Messages",desc:unreadMsgFA?`${unreadMsgFA} non lu${unreadMsgFA>1?"s":""}`:"Échanges avec vos apprenants",badge:unreadMsgFA,on:()=>sV("fmsg")},
         {ico:"report-money",col:"#1D4ED8",label:"États financiers",desc:"Atelier SYSCOHADA et suivi des dossiers",on:()=>sV("ef")},
         {ico:"receipt-tax",col:"#A3122A",label:"Code des impôts",desc:"12 modules : fiscalité, TVA, paie et import-export",on:()=>sV("fisc")},
+        {ico:"chart-pie",col:"#B7791F",label:"Finance d'entreprise",desc:"7 modules, 16 cas corrigés et cours audio",on:()=>sV("fin")},
       ].map((t,i)=><ActionTile key={t.label} {...t} i={i}/>)}
     </div>
 
@@ -1842,6 +1845,7 @@ function FA({uid,onOut}){
   if(vue==="param")return W(<ParametresPage role="formateur" uid={uid} data={fData} onOut={onOut} onGo={sV}/>);
   if(vue==="ef")return W(<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:fData.nom,mail:fData.mail,role:"formateur"}}/>);
   if(vue==="fisc")return W(<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={fData.scores||{}} ok/>);
+  if(vue==="fin")return W(<FinanceEntreprise K={K} mob={mob} db={db} uid={uid} scores={fData.scores||{}} ok/>);
   if(vue==="sugg")return W(<Suggestions K={K} mob={mob} db={db} me={{uid,nom:fData.nom,mail:fData.mail,role:"formateur"}}/>);
   if(vue==="apropos")return W(<Apropos K={K} mob={mob} onGo={sV}/>);
 
@@ -2882,7 +2886,7 @@ function Auth({onL}){
 function UA({uid,onOut}){
   const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
   // Vue initiale : raccourcis de l'application installée (?vue=ef, ?vue=pres…)
-  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","jrn","cpt","audio","fisc","psycho","services","prog","res","param","sugg","apropos"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
+  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","jrn","cpt","audio","fisc","fin","psycho","services","prog","res","param","sugg","apropos"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
   const[uData,sUD]=useState(null),[pdfs,sPdfs]=useState({});
   const[showOnboarding,sShowOnboarding]=useState(false);
   const{mods,loading:mL}=useModules();
@@ -2928,7 +2932,7 @@ function UA({uid,onOut}){
   if(openQuiz)return W(<OpenQuiz mod={openQuiz} uid={uid} uNom={uData.nom} onDone={()=>{sOpenQuiz(null);sM(null);sV("res");}} onBack={()=>sOpenQuiz(null)}/>,true);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onOpenQ={()=>sOpenQuiz(mod)} onMarkDone={()=>markDoneNoEval(mod.id)} doneNoEval={pr[mod.id]==="done"} openAnswer={myOpenAnswers.find(a=>a.modId===mod.id)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]} uid={uid} uNom={uData.nom}/>,true);
   return W(<>
-    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} onJrn={()=>sV("jrn")} onCpt={()=>sV("cpt")} onAudio={()=>sV("audio")} live={live} presCount={allPres.filter(estPublie).length} uid={uid} onGo={sV}/>}
+    {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} onFin={()=>sV("fin")} onJrn={()=>sV("jrn")} onCpt={()=>sV("cpt")} onAudio={()=>sV("audio")} live={live} presCount={allPres.filter(estPublie).length} uid={uid} onGo={sV}/>}
     {vue==="videos"&&<VidsPage ok={ok} onSub={()=>sSub(true)} vids={vids} live={live}/>}
     {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres.filter(estPublie)}/>
     }{vue==="stages"&&<StagePage stages={allStages} plats={allPlats} ok={ok}/>
@@ -2942,6 +2946,7 @@ function UA({uid,onOut}){
     {vue==="cpt"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)} guide0/>}
     {vue==="audio"&&<EcouterCours K={K} mob={mob} mods={aMods} pres={allPres.filter(estPublie)} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="fisc"&&<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)}/>}
+    {vue==="fin"&&<FinanceEntreprise K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="sugg"&&<Suggestions K={K} mob={mob} db={db} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}}/>}
     {vue==="apropos"&&<Apropos K={K} mob={mob} onGo={sV}/>}
     {vue==="msg"&&<MessagerieApprenant uid={uid} uNom={uData.nom}/>}
@@ -3407,6 +3412,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     {k:"videos", ico:"video",         label:"Vidéos", live:true},
     {k:"ef",     ico:"report-money",  label:"États fin."},
     {k:"fisc",   ico:"receipt-tax",   label:"Impôts"},
+    {k:"fin",    ico:"chart-pie",     label:"Finance"},
     {k:"psycho", ico:"brain",         label:"Psycho"},
     {k:"services",ico:"building",     label:"Services"},
     {k:"prog",   ico:"chart-line",    label:"Progrès"},
@@ -3507,7 +3513,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
   </nav>;
 }
 
-function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onEf,onFisc,onJrn,onCpt,onAudio,live,presCount=0,uid,onGo}){
+function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onEf,onFisc,onFin,onJrn,onCpt,onAudio,live,presCount=0,uid,onGo}){
   const K=useK();const{mob}=useW();const jr=jR(u.dateExpiration);
   const{tid}=useContext(Ctx);
   const[pdfMod,setPdfMod]=useState(null);
@@ -3546,6 +3552,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
     ...(onCpt?[{key:"cpt",ico:"books",label:"Guide des comptes",desc:"SYSCOHADA révisé : fiches, écritures types et exercice « Quel compte ? »",action:onCpt}]:[]),
     ...(onAudio?[{key:"audio",ico:"headphones",label:"Écouter les cours",desc:"Leçons fiscales, fiches des comptes et modules en audio",action:onAudio}]:[]),
     ...(onFisc?[{key:"fisc",ico:"receipt-tax",label:"Code des impôts",desc:"12 modules RDC : IBP, IPR, TVA pratique, paie, import-export… avec QCM",action:onFisc}]:[]),
+    ...(onFin?[{key:"fin",ico:"chart-pie",label:"Finance d'entreprise",desc:"Coût du capital, VAN, évaluation, change USD/CDF : 16 cas corrigés et audio",action:onFin}]:[]),
   ];
 
   return <div style={{animation:"up .3s ease"}}>
@@ -4648,6 +4655,7 @@ function AA({onOut}){
           {k:"pl", ico:"ti-calendar-check",   label:"Présentiel",  bc:K.em},
           {k:"ef", ico:"ti-report-money",     label:"États fin."},
           {k:"fisc", ico:"ti-receipt-tax",    label:"Impôts"},
+          {k:"fin",  ico:"ti-chart-pie",      label:"Finance"},
           {k:"ac", ico:"ti-ticket",          label:"Accès"},
           {k:"att", ico:"ti-certificate",    label:"Attestations"},
           {k:"nt", ico:"ti-bell",            label:"Notifications"},
@@ -4801,6 +4809,7 @@ function AA({onOut}){
           {k:"pl",ico:"calendar-check", label:"Présentiel",     col:"#0A2A5C"},
           {k:"ef",ico:"report-money",   label:"États financiers",col:"#1D4ED8"},
           {k:"fisc",ico:"receipt-tax",  label:"Code des impôts",col:"#A3122A"},
+          {k:"fin",ico:"chart-pie",     label:"Finance d'entreprise",col:"#B7791F"},
           {k:"ac",ico:"ticket",         label:"Tarifs et codes offerts",col:"#0D7A6B"},
           {k:"att",ico:"certificate",   label:"Attestations",   col:"#B7791F"},
           {k:"nt",ico:"bell",           label:"Notifications",col:"#1E4FA3"},
@@ -5463,6 +5472,7 @@ function AA({onOut}){
     </Sheet>}
     {tab==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid:auth.currentUser?.uid,nom:"Administrateur",mail:ADM_EMAIL,role:"admin"}}/>}
     {tab==="fisc"&&<CodeImpots K={K} mob={mob} db={db} ok/>}
+    {tab==="fin"&&<FinanceEntreprise K={K} mob={mob} db={db} ok/>}
     {tab==="pl"&&(()=>{
       const apprs=users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL);
       const day=plAll.find(p=>p.id===plDate);

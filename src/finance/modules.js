@@ -1,0 +1,388 @@
+// ══════════════════ FINANCE D'ENTREPRISE : 7 MODULES ══════════════════
+// Même format de leçon que les modules fiscaux (blocs affichés par Bloc, voir src/fiscal/CodeImpots.jsx), plus :
+// - cas : numéros des cas corrigés de src/finance/cas.js rattachés au module ;
+// - narration : texte écrit pour l'oral (lu par la voix de synthèse), sans formules ni symboles illisibles ;
+// - qcm : banque de 10 questions { q, r, b, e }, séries de 8 tirées au hasard.
+// FE1 est en accès libre ; FE2 à FE7 sont réservés aux abonnés.
+
+const FE1 = {
+  id: "FE1", titre: "Le coût du capital", court: "Coût du capital", ico: "percentage", col: "#0A2A5C", duree: "35 min",
+  resume: "Combien coûtent les fonds de l'entreprise ? MEDAF avec prime de risque pays, bêta d'une société non cotée et CMPC.",
+  cas: [1, 2, 3],
+  blocs: [
+    { type: "essentiel", texte: "Le **coût du capital** est la rentabilité minimale qu'un investissement doit dégager pour satisfaire à la fois les actionnaires et les prêteurs. On le calcule en deux temps : le **coût des capitaux propres** (par le MEDAF, avec une prime de risque pays en RDC), puis la **moyenne pondérée** avec le coût de la dette après impôt : le **CMPC**. Un projet qui rapporte moins que le CMPC détruit de la valeur." },
+    { type: "texte", titre: "Le coût des capitaux propres : le MEDAF",
+      p: ["Les actionnaires prennent plus de risques que les prêteurs : ils ne sont payés qu'après eux et rien ne leur est garanti. Ils exigent donc une rentabilité plus forte. Le **modèle d'équilibre des actifs financiers (MEDAF)** la décompose en trois éléments :"],
+      puces: [
+        "**Taux sans risque (r_f)** : ce que rapporte un placement sans risque de défaut, dans la monnaie de l'évaluation (titre public en USD si l'on raisonne en dollars).",
+        "**Bêta × prime de risque du marché** : le bêta mesure la sensibilité de l'action aux variations du marché. Bêta 1 : l'action suit le marché ; bêta 1,2 : elle amplifie ses mouvements de 20 %.",
+        "**Prime de risque pays** : pour une société congolaise, elle rémunère les risques propres au pays (change, risque politique, rapatriement des fonds) que le bêta ne mesure pas.",
+        "Formule : **kₑ = r_f + β × (E(R_m) − r_f) + prime pays**.",
+      ] },
+    { type: "schema", kind: "flux", titre: "Du MEDAF au CMPC : la méthode en 4 étapes", etapes: [
+      { op: "1", l: "Coût des capitaux propres", d: "kₑ = r_f + β × prime de marché + prime pays" },
+      { op: "2", l: "Coût de la dette après impôt", d: "k_d × (1 − t) : les intérêts sont déductibles de l'IBP (30 %)" },
+      { op: "3", l: "Poids de chaque source", d: "CP / (CP + D) et D / (CP + D), en valeurs de marché si possible" },
+      { op: "=", l: "CMPC", d: "kₑ × poids des CP + k_d × (1 − t) × poids des dettes", fort: true },
+    ], note: "Cas KIN-BÂTI SA : kₑ = 20,40 %, dette à 14 % soit 9,80 % après impôt, 60 % de capitaux propres : CMPC = 16,16 %." },
+    { type: "texte", titre: "Société non cotée : emprunter le bêta des comparables",
+      p: ["Une SARL de Kinshasa n'a pas de cours de bourse : impossible de mesurer son bêta. On part de sociétés cotées du même métier, en trois temps :"],
+      puces: [
+        "**Désendetter** le bêta de chaque comparable : β_actif = β_endetté / [1 + (1 − t) × D/CP]. On obtient le risque du métier seul.",
+        "Faire la **moyenne** des bêtas d'actif.",
+        "**Réendetter** avec la structure de l'entreprise étudiée : β_endetté = β_actif × [1 + (1 − t) × D/CP]. Plus elle est endettée, plus le risque de ses actionnaires est élevé.",
+      ] },
+    { type: "pieges", puces: [
+      "Pondérer avec les valeurs comptables du bilan alors que les valeurs de marché sont connues.",
+      "Oublier l'économie d'impôt : le coût de la dette se prend **après** IBP.",
+      "Utiliser le CMPC de l'entreprise pour un projet beaucoup plus (ou moins) risqué que son activité habituelle.",
+      "Ajouter une prime pays alors que le taux sans risque retenu l'inclut déjà (par exemple un taux d'emprunt d'État congolais) : on compterait le risque deux fois.",
+    ] },
+  ],
+  narration: [
+    "Bienvenue dans ce premier module de finance d'entreprise. Une seule question nous occupe : combien coûte l'argent que l'entreprise utilise ?",
+    "Une entreprise se finance de deux façons. Avec l'argent de ses actionnaires, les capitaux propres. Et avec l'argent des prêteurs, les dettes. Aucun des deux n'est gratuit. Les prêteurs demandent des intérêts. Les actionnaires, eux, attendent une rentabilité, sous forme de dividendes et de plus-values.",
+    "Commençons par les actionnaires. Ils sont payés en dernier et rien ne leur est garanti. Ils exigent donc plus que les prêteurs. Pour mesurer cette exigence, on utilise le Médaf, le modèle d'équilibre des actifs financiers.",
+    "Le Médaf additionne trois choses. D'abord le taux sans risque, ce que rapporte un placement sûr. Ensuite une prime pour le risque de marché, multipliée par le bêta de l'action. Le bêta dit si l'action bouge plus ou moins que le marché : un bêta de 1,2 signifie qu'elle amplifie les variations de 20 pour cent. Enfin, pour une société congolaise, on ajoute une prime de risque pays : elle couvre l'instabilité du franc, le risque politique, la difficulté à rapatrier des fonds.",
+    "Prenons Kin-Bâti, une entreprise de travaux publics de Kinshasa. Taux sans risque : 8 pour cent. Prime de marché : 7 pour cent. Bêta : 1,2. Prime pays : 4 pour cent. Le calcul donne 8, plus 1,2 fois 7, soit 8,4, plus 4. Total : 20,4 pour cent. Les actionnaires de Kin-Bâti exigent au moins 20,4 pour cent par an.",
+    "Passons à la dette. Kin-Bâti emprunte à 14 pour cent. Mais les intérêts sont déductibles de l'impôt sur les bénéfices, au taux de 30 pour cent. Chaque dollar d'intérêt fait donc économiser 30 cents d'impôt. Le vrai coût de la dette est de 14 fois 0,7, soit 9,8 pour cent.",
+    "Il reste à faire la moyenne, pondérée par le poids de chaque source. Kin-Bâti est financée à 60 pour cent par ses actionnaires et à 40 pour cent par la dette. 60 pour cent de 20,4 donne 12,24. 40 pour cent de 9,8 donne 3,92. Le coût moyen pondéré du capital, le CMPC, est donc de 16,16 pour cent.",
+    "C'est le chiffre clé. Un projet de même risque qui rapporte moins de 16,16 pour cent ne paie pas le coût de son financement : il détruit de la valeur, même s'il est bénéficiaire.",
+    "Dernier point : la société n'est pas cotée ? On ne peut pas mesurer son bêta. On prend alors des sociétés cotées du même métier. On retire de leur bêta l'effet de leur propre endettement, on fait la moyenne, puis on réintègre l'endettement de l'entreprise étudiée. C'est ce qu'on appelle désendetter puis réendetter le bêta.",
+    "Retenez trois réflexes. Le coût de la dette se prend après impôt. Les poids se calculent de préférence en valeurs de marché. Et en République démocratique du Congo, on n'oublie pas la prime de risque pays. Vous pouvez maintenant faire les trois cas corrigés, puis le QCM.",
+  ],
+  qcm: [
+    { q: "Selon le MEDAF complété d'une prime pays, le coût des capitaux propres est égal à :", r: ["r_f + β × prime de marché + prime pays", "r_f × β", "k_d × (1 − t)", "Dividende / cours de l'action"], b: 0, e: "Le taux sans risque rémunère le temps, β × prime de marché le risque systématique, la prime pays les risques propres à la RDC." },
+    { q: "Taux sans risque 6 %, bêta 1,5, prime de marché 6 %, prime pays 3 %. Coût des capitaux propres ?", r: ["18 %", "15 %", "12 %", "21 %"], b: 0, e: "6 % + 1,5 × 6 % + 3 % = 6 + 9 + 3 = **18 %**." },
+    { q: "Une action a un bêta de 1,3. Cela signifie que :", r: ["Elle amplifie de 30 % les variations du marché", "Elle rapporte 1,3 % de plus que le marché", "Elle est sans risque", "Elle varie en sens inverse du marché"], b: 0, e: "Le bêta mesure la sensibilité au marché : quand le marché gagne 10 %, l'action gagne en moyenne 13 %." },
+    { q: "Emprunt à 12 %, IBP 30 %. Coût de la dette après impôt ?", r: ["8,4 %", "12 %", "3,6 %", "15,6 %"], b: 0, e: "12 % × (1 − 0,30) = **8,4 %** : les intérêts réduisent l'IBP." },
+    { q: "Capitaux propres 50 % à 20 %, dettes 50 % à 8 % après impôt. CMPC ?", r: ["14 %", "28 %", "20 %", "10 %"], b: 0, e: "0,5 × 20 % + 0,5 × 8 % = **14 %**." },
+    { q: "Pourquoi le coût de la dette entre-t-il dans le CMPC après impôt ?", r: ["Parce que les intérêts sont déductibles de l'IBP", "Parce que la dette n'est jamais remboursée", "Parce que les dividendes sont déductibles", "Par simple convention, sans raison économique"], b: 0, e: "Chaque dollar d'intérêt réduit l'impôt de 30 cents : le coût réel est k_d × (1 − t)." },
+    { q: "Pour pondérer le CMPC, on retient de préférence :", r: ["Les valeurs de marché des capitaux propres et des dettes", "Le capital social seul", "Les valeurs du bilan d'ouverture", "Le chiffre d'affaires"], b: 0, e: "Les valeurs de marché reflètent ce que les investisseurs ont réellement engagé aujourd'hui." },
+    { q: "Bêta endetté 1,2, dettes / capitaux propres 0,5, IBP 30 %. Bêta désendetté ?", r: ["0,89", "0,80", "1,62", "1,20"], b: 0, e: "1,2 / (1 + 0,7 × 0,5) = 1,2 / 1,35 = **0,89**." },
+    { q: "Un projet de même risque que l'activité rapporte 14 % ; le CMPC est de 16 %. Que faire ?", r: ["Le refuser : il détruit de la valeur", "L'accepter : il est rentable", "L'accepter si l'IBP baisse", "Indifférent"], b: 0, e: "Rapporter moins que le CMPC, c'est ne pas couvrir le coût des fonds qui financent le projet." },
+    { q: "La prime de risque pays rémunère surtout :", r: ["Les risques propres au pays (change, politique, rapatriement)", "La sensibilité de l'action au marché", "L'inflation américaine", "Les frais bancaires"], b: 0, e: "Le bêta mesure le risque de marché ; la prime pays couvre les risques spécifiques à la RDC." },
+  ],
+};
+
+const FE2 = {
+  id: "FE2", titre: "Rentabilité, effet de levier et création de valeur", court: "Levier et EVA", ico: "chart-line", col: "#1D4ED8", duree: "30 min",
+  resume: "Rentabilité économique ou financière, effet de levier et effet massue, EVA : savoir si l'entreprise crée vraiment de la valeur.",
+  cas: [4, 5],
+  blocs: [
+    { type: "essentiel", texte: "La **rentabilité économique** mesure ce que rapporte l'outil de production, quel que soit son financement. La **rentabilité financière** mesure ce que gagnent les actionnaires. La dette crée un **effet de levier** : positif si l'actif rapporte plus que le coût net de la dette, négatif (« **effet massue** ») sinon. L'**EVA** dit si le résultat couvre le coût de tous les fonds engagés." },
+    { type: "texte", titre: "Deux rentabilités à ne pas confondre", puces: [
+      "**Rentabilité économique** après impôt : R_e = résultat d'exploitation × (1 − t) / actif économique (immobilisations + BFR).",
+      "**Rentabilité financière** : R_f = résultat net / capitaux propres.",
+      "**Formule du levier** : R_f = R_e + [R_e − i × (1 − t)] × D/CP. Le second terme est l'effet de levier.",
+    ] },
+    { type: "schema", kind: "arbre", titre: "Effet de levier : dans quel sens joue la dette ?", question: "La rentabilité économique dépasse-t-elle le coût net de la dette ?", branches: [
+      { si: "Oui : R_e > i(1 − t)", alors: "Levier positif", d: "Chaque dollar emprunté rapporte plus qu'il ne coûte : la rentabilité financière augmente avec la dette." },
+      { si: "Non : R_e < i(1 − t)", alors: "Effet massue", d: "La dette coûte plus qu'elle ne rapporte : la rentabilité financière chute, plus vite que la rentabilité économique." },
+    ] },
+    { type: "texte", titre: "L'EVA : la valeur ajoutée économique",
+      p: ["Un bénéfice comptable ne suffit pas : il faut qu'il rémunère aussi les actionnaires au niveau qu'ils exigent. L'EVA retranche du résultat d'exploitation après impôt (NOPAT) le coût de tous les capitaux investis."],
+      puces: ["**EVA = NOPAT − CMPC × capitaux investis**, ou **(ROCE − CMPC) × capitaux investis**.", "EVA positive : l'entreprise crée de la valeur. EVA négative : elle en détruit, même bénéficiaire.", "Un investissement nouveau ne crée de la valeur que si **sa propre** rentabilité dépasse le CMPC."] },
+    { type: "pieges", puces: [
+      "Calculer la rentabilité économique avant impôt et la comparer à un coût de la dette après impôt.",
+      "Croire que l'endettement est toujours bon : en saison basse ou en crise, l'effet massue frappe d'abord les entreprises les plus endettées.",
+      "Conclure qu'un projet crée de la valeur parce que le bénéfice augmente : seule la comparaison avec le CMPC compte.",
+    ] },
+  ],
+  narration: [
+    "Dans ce module, nous allons répondre à une question simple : l'entreprise gagne-t-elle vraiment de l'argent pour ses actionnaires ?",
+    "Il faut distinguer deux rentabilités. La rentabilité économique mesure ce que rapporte l'outil de travail : les camions, les machines, les stocks, quel que soit leur mode de financement. La rentabilité financière mesure ce que gagnent les actionnaires sur l'argent qu'ils ont apporté.",
+    "Prenons Transkin, un transporteur entre Matadi et Kinshasa. Son actif économique vaut 10 millions de dollars. Il dégage un résultat d'exploitation de 1,8 million. Après 30 pour cent d'impôt, il reste 1,26 million, soit une rentabilité économique de 12,6 pour cent.",
+    "Transkin est financée par 6 millions de capitaux propres et 4 millions de dettes à 10 pour cent. Après impôt, la dette coûte 7 pour cent. Or l'actif rapporte 12,6 pour cent. Sur chaque dollar emprunté, l'entreprise gagne donc 5,6 cents de plus que ce qu'elle paie. Ce surplus revient aux actionnaires. Leur rentabilité monte à 16,33 pour cent. C'est l'effet de levier.",
+    "Mais le levier joue dans les deux sens. Pendant la saison des pluies, la route est coupée et le résultat d'exploitation tombe à 800 000 dollars. La rentabilité économique chute à 5,6 pour cent, moins que le coût de la dette. Les intérêts, eux, restent dus. La rentabilité des actionnaires s'effondre à 4,67 pour cent. C'est l'effet massue. Une activité saisonnière ou risquée doit donc rester prudente sur l'endettement.",
+    "Passons à la création de valeur, avec l'EVA, la valeur ajoutée économique. L'idée : un bénéfice n'est pas une création de valeur s'il ne rémunère pas tous les fonds engagés à leur coût. On prend le résultat d'exploitation après impôt et on lui retire le coût du capital investi.",
+    "La brasserie Bomoko, à Lubumbashi, a 12 millions de capitaux investis et un résultat d'exploitation après impôt de 1,68 million. Son coût du capital est de 13 pour cent, soit 1,56 million. L'EVA est de 120 000 dollars : Bomoko crée de la valeur.",
+    "La direction propose une nouvelle ligne d'embouteillage : 2 millions de plus investis pour 175 000 dollars de résultat après impôt supplémentaire. Le bénéfice augmente. Pourtant l'EVA baisse à 35 000 dollars. Pourquoi ? Parce que cette ligne ne rapporte que 8,75 pour cent, moins que les 13 pour cent exigés. Elle détruit de la valeur.",
+    "À retenir : la dette n'enrichit les actionnaires que si l'actif rapporte plus qu'elle ne coûte. Et un bénéfice en hausse ne prouve rien : seule la comparaison avec le coût du capital dit si l'on crée de la valeur. Place maintenant aux deux cas corrigés et au QCM.",
+  ],
+  qcm: [
+    { q: "La rentabilité économique après impôt se calcule par :", r: ["Résultat d'exploitation × (1 − t) / actif économique", "Résultat net / capitaux propres", "Chiffre d'affaires / total du bilan", "Dividendes / capital"], b: 0, e: "Elle mesure la performance de l'outil de production, indépendamment de son financement." },
+    { q: "R_e = 15 %, coût net de la dette 7 %, dettes / capitaux propres = 1. Rentabilité financière ?", r: ["23 %", "15 %", "22 %", "8 %"], b: 0, e: "15 % + (15 % − 7 %) × 1 = **23 %**." },
+    { q: "L'effet de levier est positif lorsque :", r: ["La rentabilité économique dépasse le coût net de la dette", "L'entreprise n'a pas de dettes", "Le taux d'intérêt dépasse la rentabilité économique", "Les capitaux propres dépassent les dettes"], b: 0, e: "La dette rapporte alors plus qu'elle ne coûte : l'écart profite aux actionnaires." },
+    { q: "R_e = 6 %, coût net de la dette 8 %, dettes / capitaux propres = 2. Rentabilité financière ?", r: ["2 %", "6 %", "10 %", "−2 %"], b: 0, e: "6 % + (6 % − 8 %) × 2 = 6 % − 4 % = **2 %** : c'est l'effet massue." },
+    { q: "« L'effet massue » désigne :", r: ["La chute de la rentabilité financière quand l'actif rapporte moins que la dette ne coûte", "Une hausse brutale du chiffre d'affaires", "Le remboursement anticipé d'un emprunt", "Une augmentation de capital"], b: 0, e: "La dette amplifie alors les pertes au lieu des gains." },
+    { q: "Le NOPAT est égal à :", r: ["Résultat d'exploitation × (1 − taux d'IBP)", "Résultat net + dividendes", "EBE − intérêts", "Chiffre d'affaires − achats"], b: 0, e: "C'est le résultat d'exploitation après un impôt théorique, comme si l'entreprise n'avait pas de dettes." },
+    { q: "NOPAT 1 000 000 USD, capitaux investis 8 000 000 USD, CMPC 12 %. EVA ?", r: ["40 000 USD", "1 000 000 USD", "−40 000 USD", "960 000 USD"], b: 0, e: "1 000 000 − 12 % × 8 000 000 = 1 000 000 − 960 000 = **40 000 USD**." },
+    { q: "ROCE 10 %, CMPC 12 %, capitaux investis 5 000 000 USD. EVA ?", r: ["−100 000 USD", "100 000 USD", "500 000 USD", "0"], b: 0, e: "(10 % − 12 %) × 5 000 000 = **−100 000 USD** : l'entreprise détruit de la valeur." },
+    { q: "Un investissement fait monter le bénéfice mais baisser l'EVA. Pourquoi ?", r: ["Sa rentabilité propre est inférieure au CMPC", "Il est financé par emprunt", "L'IBP a augmenté", "C'est impossible"], b: 0, e: "Le supplément de résultat ne couvre pas le coût des capitaux supplémentaires engagés." },
+    { q: "Quand l'entreprise s'endette davantage, la rentabilité exigée par les actionnaires :", r: ["Augmente, car leur risque augmente", "Diminue", "Reste toujours identique", "Devient égale au taux d'intérêt"], b: 0, e: "Plus de dette, c'est plus de risque pour les actionnaires : leur bêta et leur kₑ montent." },
+  ],
+};
+
+const FE3 = {
+  id: "FE3", titre: "Choisir un investissement", court: "Investissement", ico: "building-factory-2", col: "#0D7A6B", duree: "45 min",
+  resume: "Flux nets de trésorerie, VAN, TRI, indice de profitabilité, délai de récupération, durées différentes et avenir incertain.",
+  cas: [6, 7, 8],
+  blocs: [
+    { type: "essentiel", texte: "Investir, c'est décaisser aujourd'hui pour encaisser demain. On compare donc des **flux de trésorerie** à des dates différentes en les **actualisant** au coût du capital. Si la somme des flux actualisés dépasse l'investissement, la **VAN** est positive : le projet crée de la valeur." },
+    { type: "schema", kind: "flux", titre: "Construire les flux nets de trésorerie (FNT)", etapes: [
+      { op: "+", l: "CAF d'exploitation", d: "Résultat d'exploitation × (1 − t) + dotations aux amortissements" },
+      { op: "−", l: "Investissement", d: "Au début du projet (et renouvellements éventuels)" },
+      { op: "−", l: "Variation du BFR", d: "Chaque hausse du BFR est un décaissement" },
+      { op: "+", l: "Fin du projet", d: "Récupération du BFR et valeur résiduelle nette d'impôt" },
+      { op: "=", l: "Flux net de trésorerie de l'année", fort: true },
+    ], note: "Les frais financiers n'entrent pas dans les flux : leur coût est déjà dans le taux d'actualisation." },
+    { type: "schema", kind: "tableau", titre: "Les quatre critères de choix", entetes: ["Critère", "Calcul", "Règle de décision"], lignes: [
+      ["VAN", "Σ FNT actualisés − investissement", "Accepter si VAN > 0 ; entre deux projets exclusifs, la plus forte"],
+      ["TRI", "Taux qui annule la VAN", "Accepter si TRI > coût du capital"],
+      ["Indice de profitabilité", "1 + VAN / investissement", "Accepter si IP > 1 ; utile quand les fonds sont limités"],
+      ["Délai de récupération actualisé", "Date où le cumul des flux actualisés couvre l'investissement", "Plus il est court, moins le projet est risqué"],
+    ] },
+    { type: "texte", titre: "Deux situations particulières", puces: [
+      "**Durées différentes** : on ne compare pas directement une VAN sur 3 ans et une VAN sur 6 ans. On calcule l'**annuité équivalente** (VAN / facteur d'annuité) ou on ramène les projets à une durée commune.",
+      "**Avenir incertain** : on construit des scénarios probabilisés. L'**espérance de la VAN** mesure la rentabilité attendue, l'**écart-type** mesure le risque. Une petite VAN espérée avec un gros écart-type est un pari risqué.",
+    ] },
+    { type: "pieges", puces: [
+      "Actualiser des résultats comptables au lieu de flux de trésorerie.",
+      "Oublier le BFR, sa constitution au départ et sa récupération à la fin.",
+      "Oublier l'impôt sur la plus-value de revente du matériel.",
+      "Mettre les intérêts de l'emprunt dans les flux : on compterait le coût du financement deux fois.",
+    ] },
+  ],
+  narration: [
+    "Ce module vous apprend à décider si un investissement vaut la peine. C'est la question que se pose tout chef d'entreprise avant d'acheter une machine ou d'ouvrir un site.",
+    "Le principe est simple. Un dollar aujourd'hui vaut plus qu'un dollar dans cinq ans, parce qu'on peut le placer et parce que l'avenir est incertain. Pour comparer des sommes à des dates différentes, on les actualise, c'est-à-dire qu'on les ramène à leur valeur d'aujourd'hui, avec le coût du capital comme taux.",
+    "Première étape : construire les flux de trésorerie du projet. On part du résultat d'exploitation après impôt, on rajoute les amortissements qui ne sont pas des sorties d'argent, on retire l'investissement et les hausses du besoin en fonds de roulement. À la fin, on récupère ce besoin en fonds de roulement et on encaisse la revente du matériel, nette d'impôt.",
+    "Attention à un piège classique : on ne met pas les intérêts de l'emprunt dans les flux. Le coût du financement est déjà dans le taux d'actualisation. Les compter deux fois pénaliserait le projet à tort.",
+    "Prenons la boulangerie industrielle Pain d'Or, à Limete. Investissement : 600 000 dollars, plus 75 000 dollars de besoin en fonds de roulement au départ. Les flux annuels vont de 154 500 dollars la première année à 336 000 la cinquième, revente comprise. Actualisés à 15 pour cent, ils valent 684 873 dollars, soit 9 873 de plus que les 675 000 engagés.",
+    "Cette différence, c'est la valeur actuelle nette, la VAN. Elle est positive : le projet crée de la valeur. Le taux de rentabilité interne, le TRI, est le taux qui annulerait la VAN. Ici, 15,55 pour cent, juste au-dessus des 15 pour cent exigés. Et l'investissement n'est récupéré qu'au bout de quatre ans et onze mois environ. Conclusion : projet acceptable, mais fragile. Une hausse du prix de la farine importée suffirait à le faire basculer.",
+    "Deux situations demandent une méthode adaptée. Si deux machines n'ont pas la même durée de vie, leurs VAN ne sont pas comparables. On divise chaque VAN par le facteur d'annuité pour obtenir un gain moyen par an : c'est l'annuité équivalente. Dans le cas de l'imprimerie Mwinda, la presse reconditionnée sur trois ans l'emporte sur la presse neuve, pourtant à plus forte VAN.",
+    "Si l'avenir dépend de la pluie, comme pour la coopérative Maïs du Kongo, on raisonne par scénarios. On calcule la VAN de chacun, puis la moyenne pondérée par les probabilités, et l'écart-type pour mesurer le risque. Une VAN espérée de 3 960 dollars avec une chance sur cinq de perdre plus de 83 000 dollars, c'est un pari dangereux pour une petite coopérative.",
+    "Retenez : on actualise des flux de trésorerie, jamais des bénéfices. On n'oublie ni le fonds de roulement, ni l'impôt sur la revente. Et un bon critère ne suffit pas : regardez toujours la marge de sécurité. Passez maintenant aux trois cas corrigés.",
+  ],
+  qcm: [
+    { q: "Une VAN positive signifie que :", r: ["Le projet rapporte plus que le coût du capital : il crée de la valeur", "Le projet est sans risque", "Le projet est rentable dès la première année", "Le TRI est inférieur au coût du capital"], b: 0, e: "Les flux actualisés au coût du capital dépassent l'investissement." },
+    { q: "Dans un choix d'investissement, on actualise :", r: ["Des flux de trésorerie", "Des résultats nets comptables", "Des chiffres d'affaires", "Des dotations aux amortissements"], b: 0, e: "Seuls les flux de trésorerie mesurent l'argent réellement encaissé et décaissé." },
+    { q: "Les intérêts de l'emprunt qui finance le projet :", r: ["N'entrent pas dans les flux : leur coût est dans le taux d'actualisation", "Se retranchent des flux chaque année", "S'ajoutent aux flux", "Se retranchent de l'investissement initial"], b: 0, e: "Les compter dans les flux et dans le taux reviendrait à pénaliser deux fois le projet." },
+    { q: "Une augmentation du BFR pendant le projet est :", r: ["Un décaissement, récupéré en fin de projet", "Un encaissement", "Sans effet sur la trésorerie", "Une charge déductible"], b: 0, e: "Il faut financer les stocks et le crédit clients supplémentaires ; ils se dénouent à la fin." },
+    { q: "Matériel totalement amorti revendu 50 000 USD en fin de projet, IBP 30 %. Flux à retenir ?", r: ["35 000 USD", "50 000 USD", "15 000 USD", "65 000 USD"], b: 0, e: "La plus-value de 50 000 est imposée : 50 000 × (1 − 0,30) = **35 000 USD**." },
+    { q: "Le TRI est :", r: ["Le taux d'actualisation qui annule la VAN", "Le taux d'intérêt de l'emprunt", "Le rapport résultat / investissement", "Le coût du capital"], b: 0, e: "On accepte le projet si son TRI dépasse le coût du capital." },
+    { q: "VAN 20 000 USD pour un investissement de 200 000 USD. Indice de profitabilité ?", r: ["1,10", "0,10", "10", "1,20"], b: 0, e: "IP = 1 + 20 000 / 200 000 = **1,10** : chaque dollar investi rapporte 1,10 dollar actualisé." },
+    { q: "Deux projets de durées différentes (3 ans et 6 ans) se comparent par :", r: ["L'annuité équivalente ou une durée commune", "La VAN brute", "Le TRI seul", "Le chiffre d'affaires cumulé"], b: 0, e: "L'annuité équivalente ramène chaque VAN à un gain moyen par an." },
+    { q: "Investissement 100 000 USD, 45 000 USD par an pendant 3 ans, taux 10 % (facteur d'annuité 2,4869). VAN ?", r: ["11 908 USD", "35 000 USD", "−11 908 USD", "45 000 USD"], b: 0, e: "45 000 × 2,4869 − 100 000 = 111 908 − 100 000 = **11 908 USD**." },
+    { q: "Deux scénarios équiprobables : VAN 100 000 USD ou −50 000 USD. Espérance de la VAN ?", r: ["25 000 USD", "50 000 USD", "75 000 USD", "0"], b: 0, e: "0,5 × 100 000 + 0,5 × (−50 000) = **25 000 USD**, avec un risque de perte d'une chance sur deux." },
+  ],
+};
+
+const FE4 = {
+  id: "FE4", titre: "Choisir un financement", court: "Financement", ico: "building-bank", col: "#7C3AED", duree: "30 min",
+  resume: "Emprunt bancaire, crédit-bail ou fonds propres : calculer le vrai coût d'un financement après impôt et frais.",
+  cas: [9],
+  blocs: [
+    { type: "essentiel", texte: "Le vrai coût d'un financement n'est pas son taux affiché : c'est son **coût actuariel après impôt**, le taux qui égalise les fonds réellement reçus et tous les décaissements, nets des économies d'impôt. On compare les financements sur ce coût, puis sur leurs avantages pratiques (garanties, rapidité, apport)." },
+    { type: "schema", kind: "cartes", titre: "Les principales sources de financement", cartes: [
+      { ico: "users", t: "Fonds propres", d: "Apports des associés, augmentation de capital, autofinancement. Coût : la rentabilité exigée par les actionnaires (kₑ)." },
+      { ico: "building-bank", t: "Emprunt bancaire", d: "Intérêts déductibles de l'IBP. Souvent conditionné à des garanties (hypothèque, caution)." },
+      { ico: "truck", t: "Crédit-bail", d: "La banque achète le bien et le loue. Loyers déductibles, pas d'apport, mais perte de l'amortissement fiscal." },
+      { ico: "file-invoice", t: "Crédits de trésorerie", d: "Découvert, escompte, crédit de campagne : pour le BFR, pas pour les investissements." },
+    ] },
+    { type: "schema", kind: "flux", titre: "Calculer le coût actuariel d'un financement", etapes: [
+      { op: "+", l: "Fonds réellement reçus", d: "Montant emprunté − frais de dossier ; en crédit-bail : valeur du bien financé" },
+      { op: "−", l: "Remboursements et intérêts après impôt", d: "Les intérêts et les loyers sont déductibles ; le remboursement du capital ne l'est pas" },
+      { op: "±", l: "Effets fiscaux propres", d: "Économie d'impôt sur les frais ; en crédit-bail, perte de l'économie d'impôt sur l'amortissement" },
+      { op: "=", l: "Taux qui égalise fonds reçus et décaissements", d: "Fonction TRI d'Excel sur la série des flux", fort: true },
+    ] },
+    { type: "pieges", puces: [
+      "Comparer les taux nominaux sans tenir compte des frais et de l'impôt.",
+      "Oublier, en crédit-bail, que l'entreprise perd l'économie d'impôt liée à l'amortissement du bien.",
+      "Considérer le remboursement du capital comme une charge déductible.",
+      "Financer un investissement durable par des crédits de trésorerie à court terme.",
+    ] },
+  ],
+  narration: [
+    "Une fois le projet jugé rentable, il faut le financer. Ce module vous apprend à comparer les offres des banques sur leur vrai coût.",
+    "Le taux affiché ne dit pas tout. Il faut tenir compte de trois choses : les frais payés au départ, l'économie d'impôt sur les intérêts, et, pour le crédit-bail, ce que l'on perd en ne devenant pas propriétaire.",
+    "La méthode est toujours la même. On liste les flux du financement : l'argent réellement reçu au départ, puis chaque année ce que l'on paie, après impôt. Ensuite on cherche le taux qui équilibre ces deux colonnes. C'est le coût actuariel après impôt. Sur Excel, la fonction TRI le donne immédiatement.",
+    "Prenons Agro-Kasaï, qui doit financer une décortiqueuse de 300 000 dollars. Première offre : un emprunt sur quatre ans à 12 pour cent, avec 2 pour cent de frais de dossier. L'entreprise ne reçoit donc que 294 000 dollars. Elle rembourse 75 000 dollars de capital par an et paie des intérêts, réduits de 30 pour cent grâce à l'impôt. Son coût réel ressort à 9,09 pour cent.",
+    "Deuxième offre : un crédit-bail, avec quatre loyers de 102 000 dollars. Les loyers sont déductibles. Mais attention : la machine appartient à la banque. Agro-Kasaï perd donc l'économie d'impôt sur l'amortissement, 22 500 dollars par an. Une fois ce manque à gagner intégré, le crédit-bail coûte 9,64 pour cent.",
+    "L'emprunt est donc moins cher. Pourtant, le crédit-bail garde des atouts pour une PME congolaise : pas d'apport, pas d'hypothèque à fournir, une mise en place rapide. Le bon choix dépend aussi des garanties dont dispose l'entreprise.",
+    "Retenez la règle : on compare des coûts après impôt et frais compris. Et en crédit-bail, on n'oublie jamais la perte de l'amortissement fiscal. Faites maintenant le cas corrigé et le QCM.",
+  ],
+  qcm: [
+    { q: "Le coût actuariel d'un emprunt est :", r: ["Le taux qui égalise les fonds reçus nets et les décaissements", "Le taux nominal affiché par la banque", "Le total des intérêts divisé par la durée", "Le taux directeur de la banque centrale"], b: 0, e: "Il intègre les frais, le calendrier de remboursement et, après impôt, la déductibilité des intérêts." },
+    { q: "Des frais de dossier payés au départ :", r: ["Augmentent le coût réel de l'emprunt", "Diminuent le coût de l'emprunt", "N'ont aucun effet", "Sont remboursés par la banque"], b: 0, e: "On reçoit moins d'argent pour les mêmes remboursements." },
+    { q: "En crédit-bail, l'entreprise locataire :", r: ["Perd l'économie d'impôt sur l'amortissement du bien", "Amortit le bien dans ses comptes sociaux comme un propriétaire", "Ne peut pas déduire les loyers", "Doit fournir une hypothèque"], b: 0, e: "La banque reste propriétaire : c'est elle qui amortit le bien." },
+    { q: "Les loyers de crédit-bail sont, pour le calcul de l'IBP :", r: ["Déductibles", "Non déductibles", "Déductibles à 50 %", "Imposables"], b: 0, e: "Ce sont des charges d'exploitation : ils réduisent l'impôt." },
+    { q: "Emprunt remboursé in fine à 10 %, sans frais, IBP 30 %. Coût après impôt ?", r: ["7 %", "10 %", "3 %", "13 %"], b: 0, e: "10 % × (1 − 0,30) = **7 %**." },
+    { q: "Avec un remboursement par amortissements constants :", r: ["Le capital remboursé est le même chaque année et les intérêts diminuent", "Les annuités sont constantes", "Tout le capital est remboursé à la fin", "Les intérêts augmentent chaque année"], b: 0, e: "Le capital restant dû baisse régulièrement, donc les intérêts aussi." },
+    { q: "Pour une PME sans garanties, l'atout principal du crédit-bail est :", r: ["Il ne demande ni apport ni hypothèque", "Il est toujours moins cher", "Il rend l'entreprise propriétaire dès la signature", "Il supprime l'IBP"], b: 0, e: "Le bien financé sert lui-même de garantie, puisque la banque en reste propriétaire." },
+    { q: "Intérêts de l'année 20 000 USD, IBP 30 %. Économie d'impôt ?", r: ["6 000 USD", "20 000 USD", "14 000 USD", "3 000 USD"], b: 0, e: "20 000 × 30 % = **6 000 USD** : l'intérêt ne coûte réellement que 14 000 USD." },
+    { q: "Le remboursement du capital d'un emprunt est :", r: ["Un décaissement non déductible", "Une charge déductible", "Un produit", "Sans effet sur la trésorerie"], b: 0, e: "Seuls les intérêts sont des charges ; le capital rembourse une dette." },
+    { q: "Pour financer un investissement durable, il faut privilégier :", r: ["Des ressources stables (fonds propres, emprunt à moyen ou long terme, crédit-bail)", "Le découvert bancaire", "Les crédits fournisseurs", "L'escompte d'effets"], b: 0, e: "Un emploi durable se finance par une ressource durable, sinon la trésorerie est menacée." },
+  ],
+};
+
+const FE5 = {
+  id: "FE5", titre: "Évaluer une entreprise", court: "Évaluation", ico: "scale", col: "#B7791F", duree: "50 min",
+  resume: "Actif net corrigé et goodwill, actualisation des flux (DCF), multiples de comparables, Gordon-Shapiro : combien vaut une société ?",
+  cas: [10, 11, 12, 13],
+  blocs: [
+    { type: "essentiel", texte: "Il n'y a pas une valeur d'entreprise mais une **fourchette**, obtenue en croisant plusieurs méthodes : ce que vaut son **patrimoine** (actif net corrigé), ce qu'elle va **rapporter** (flux actualisés), ce que valent des **sociétés comparables** (multiples). Le prix final se négocie à l'intérieur de cette fourchette." },
+    { type: "schema", kind: "cartes", titre: "Les quatre familles de méthodes", cartes: [
+      { ico: "building-warehouse", t: "Patrimoniale", d: "Actif net comptable corrigé (ANCC), éventuellement + goodwill. Adaptée aux sociétés à fort patrimoine." },
+      { ico: "chart-arrows", t: "Flux (DCF)", d: "Flux de trésorerie disponibles actualisés au CMPC + valeur terminale − dette nette." },
+      { ico: "arrows-left-right", t: "Comparative", d: "Multiples de sociétés comparables (VE / EBE, PER), avec décote si la société n'est pas cotée." },
+      { ico: "coins", t: "Dividendes", d: "Gordon-Shapiro : V₀ = D₁ / (k − g). Pour les actions de sociétés matures, par exemple à la BRVM." },
+    ] },
+    { type: "texte", titre: "Approche patrimoniale : ANCC et goodwill", puces: [
+      "**ANCC** = actif net comptable ± écarts entre valeurs réelles et valeurs comptables − impôt latent sur ces écarts − actifs sans valeur (stocks périmés, créances irrécouvrables).",
+      "**Goodwill par la rente** : l'entreprise gagne-t-elle plus que la rémunération normale de son patrimoine ? Rente = bénéfice − r × ANCC, actualisée sur une durée limitée (souvent 5 ans).",
+      "**Valeur** = ANCC + goodwill.",
+    ] },
+    { type: "schema", kind: "flux", titre: "La méthode DCF pas à pas", etapes: [
+      { op: "1", l: "Flux de trésorerie disponibles (FCF)", d: "RE × (1 − t) + dotations − investissements − hausse du BFR, année par année" },
+      { op: "2", l: "Valeur terminale", d: "FCF de l'année suivant le plan / (CMPC − g)" },
+      { op: "3", l: "Valeur de l'entreprise", d: "Somme des FCF et de la valeur terminale, actualisés au CMPC" },
+      { op: "−", l: "Dette financière nette", d: "Emprunts − trésorerie" },
+      { op: "=", l: "Valeur des capitaux propres", fort: true },
+    ], note: "Si la valeur terminale pèse plus de 60 % du total, testez la sensibilité au taux de croissance g et au CMPC." },
+    { type: "pieges", puces: [
+      "Appliquer un PER à l'EBE, ou retrancher la dette nette d'une valeur obtenue par le PER (elle revient déjà aux actionnaires).",
+      "Oublier l'impôt latent sur les plus-values de réévaluation.",
+      "Retenir un taux de croissance à l'infini g proche ou supérieur au CMPC : la formule n'a plus de sens.",
+      "Évaluer une société non cotée comme si elle était cotée, sans décote d'illiquidité.",
+    ] },
+  ],
+  narration: [
+    "Combien vaut une entreprise ? C'est la question de tout acheteur, de tout associé qui entre ou qui sort, de tout banquier qui prend une garantie. Ce module vous donne les quatre grandes méthodes.",
+    "Première méthode : la méthode patrimoniale. On part des capitaux propres du bilan et on les corrige. Un terrain acheté il y a vingt ans à la Gombe vaut bien plus que sa valeur comptable : on ajoute l'écart. Des marchandises périmées ne valent plus rien : on les retire. Et sur les plus-values, on déduit l'impôt qu'il faudrait payer si on les réalisait. On obtient l'actif net comptable corrigé.",
+    "Pour le grossiste Mboka Distribution, l'actif net comptable est de 750 000 dollars. Les corrections ajoutent 185 000 dollars, moins 55 500 dollars d'impôt latent. L'actif net corrigé atteint 879 500 dollars.",
+    "Mais MBOKA vaut plus que ses murs : elle a un emplacement, une clientèle, des fournisseurs fidèles. Elle gagne 140 000 dollars par an, alors qu'un patrimoine comme le sien ne rapporterait normalement que 12 pour cent, soit 105 540 dollars. Ce surplus de 34 460 dollars par an, actualisé sur cinq ans, forme le goodwill : environ 115 500 dollars. Valeur totale : environ 995 000 dollars.",
+    "Deuxième méthode, la plus utilisée par les financiers : l'actualisation des flux, le DCF. On prend le plan d'affaires, on calcule chaque année le flux de trésorerie disponible : ce que l'activité dégage après impôt, investissements et besoin en fonds de roulement. Au-delà du plan, on suppose une croissance régulière, et on calcule une valeur terminale.",
+    "Pour Congo Plastiques, les cinq années de flux actualisés valent 1,4 million de dollars, et la valeur terminale 2,6 millions. La valeur de l'entreprise atteint donc 4 millions. On retire la dette nette de 1,2 million : les capitaux propres valent 2,82 millions, soit 28,22 dollars par action. Remarquez que la valeur terminale pèse 65 pour cent du total : tout repose sur les hypothèses de long terme. Avec une croissance de 4 au lieu de 5 pour cent, la valeur des actions baisse de 8 pour cent.",
+    "Troisième méthode : les comparables. On regarde à combien se négocient des sociétés semblables, par exemple sur la Bourse régionale d'Abidjan. Un multiple de l'excédent brut d'exploitation donne la valeur de l'entreprise, dont on retire la dette. Un multiple du bénéfice, le PER, donne directement la valeur des actions. Et comme Congo Plastiques n'est pas cotée, on applique une décote d'environ 20 pour cent. On trouve entre 2,57 et 2,65 millions : proche du DCF. Les méthodes se confirment.",
+    "Quatrième méthode, pour une action qui distribue régulièrement : le modèle de Gordon-Shapiro. La valeur de l'action est égale au prochain dividende divisé par la différence entre la rentabilité exigée et le taux de croissance du dividende. Avec un dividende de 1 248 francs CFA, une exigence de 13 pour cent et une croissance de 4 pour cent, l'action vaut 13 867 francs CFA.",
+    "À retenir : aucune méthode n'est parfaite. On en croise plusieurs, on vérifie qu'elles convergent, et on présente une fourchette. Quatre cas corrigés vous attendent pour vous entraîner.",
+  ],
+  qcm: [
+    { q: "L'actif net comptable corrigé (ANCC) est égal à :", r: ["Actif net comptable ± écarts d'évaluation − impôt latent − actifs sans valeur", "Total de l'actif du bilan", "Capital social + dettes", "Chiffre d'affaires × multiple"], b: 0, e: "On remplace les valeurs comptables par des valeurs réelles, nettes de l'impôt latent." },
+    { q: "Terrain : valeur comptable 100, valeur réelle 160, impôt latent 30 %. Correction de l'actif net ?", r: ["+42", "+60", "+18", "+160"], b: 0, e: "Écart de 60, moins 30 % d'impôt latent (18) : **+42**." },
+    { q: "Par la méthode de la rente, le goodwill est :", r: ["La rente (bénéfice − r × ANCC) actualisée sur une durée limitée", "L'écart entre l'actif et le passif", "Le total des immobilisations incorporelles", "Le bénéfice multiplié par le PER"], b: 0, e: "Il mesure la capacité de l'entreprise à gagner plus que la rémunération normale de son patrimoine." },
+    { q: "Dans le calcul des flux de trésorerie disponibles (FCF) d'un DCF :", r: ["On ne déduit pas les intérêts : la dette est retranchée à la fin", "On déduit les intérêts et les dividendes", "On ajoute les investissements", "On prend le résultat net comptable"], b: 0, e: "Les FCF reviennent à tous les financeurs ; la dette nette est retranchée de la valeur de l'entreprise." },
+    { q: "Valeur de l'entreprise 5 000, dette financière nette 1 800. Valeur des capitaux propres ?", r: ["3 200", "6 800", "5 000", "1 800"], b: 0, e: "5 000 − 1 800 = **3 200**." },
+    { q: "FCF attendu l'année suivant le plan : 100 ; CMPC 12 % ; croissance à l'infini 2 %. Valeur terminale ?", r: ["1 000", "833", "5 000", "100"], b: 0, e: "100 / (12 % − 2 %) = 100 / 0,10 = **1 000**." },
+    { q: "Un PER (cours / bénéfice par action) appliqué au résultat net donne directement :", r: ["La valeur des capitaux propres", "La valeur de l'entreprise, dont il faut retrancher la dette", "Le chiffre d'affaires", "L'EBE"], b: 0, e: "Le bénéfice net revient déjà aux actionnaires : on ne retranche pas la dette." },
+    { q: "Pourquoi applique-t-on une décote à une société non cotée évaluée par des comparables cotés ?", r: ["Ses titres sont plus difficiles à revendre (illiquidité)", "Elle paie plus d'impôts", "Elle n'a pas de dettes", "Par obligation légale OHADA"], b: 0, e: "La décote d'illiquidité, souvent 15 à 30 %, reflète la difficulté à céder rapidement les titres." },
+    { q: "Dividende attendu 500 FCFA, rentabilité exigée 12 %, croissance 2 %. Valeur de l'action (Gordon-Shapiro) ?", r: ["5 000 FCFA", "4 167 FCFA", "25 000 FCFA", "3 571 FCFA"], b: 0, e: "500 / (12 % − 2 %) = **5 000 FCFA**." },
+    { q: "Le modèle de Gordon-Shapiro n'est utilisable que si :", r: ["Le taux de croissance g est inférieur à la rentabilité exigée k", "L'entreprise est endettée", "Le dividende est nul", "g est supérieur à k"], b: 0, e: "Si g ≥ k, la formule donne une valeur infinie ou négative : elle n'a plus de sens." },
+  ],
+};
+
+const FE6 = {
+  id: "FE6", titre: "Gérer le risque de change USD/CDF", court: "Risque de change", ico: "arrows-exchange", col: "#C2410C", duree: "35 min",
+  resume: "Position de change, change à terme, options de change : protéger un importateur ou un exportateur contre les variations du dollar.",
+  cas: [14, 15],
+  blocs: [
+    { type: "essentiel", texte: "Une entreprise qui doit payer ou encaisser des devises à une date future court un **risque de change**. L'importateur qui paie en USD avec des recettes en CDF perd si le **dollar monte** ; l'exportateur qui encaisse des USD perd s'il **baisse**. Le **change à terme** fige le cours sans coût apparent ; l'**option** plafonne le coût contre une prime et laisse profiter d'une évolution favorable." },
+    { type: "schema", kind: "tableau", titre: "Qui risque quoi ?", entetes: ["Situation", "Position", "Risque", "Couverture type"], lignes: [
+      ["Importateur : facture en USD à payer, ventes en CDF", "Courte en USD", "Hausse du dollar", "Achat à terme de USD ou call USD"],
+      ["Exportateur : facture en USD à encaisser, charges en CDF", "Longue en USD", "Baisse du dollar", "Vente à terme de USD ou put USD"],
+      ["Recettes et dépenses dans la même devise", "Position couverte", "Faible", "Couverture naturelle, rien à acheter"],
+    ] },
+    { type: "texte", titre: "Le change à terme", p: ["La banque garantit aujourd'hui le cours auquel l'entreprise achètera (ou vendra) ses dollars à une date future. Ce cours découle de l'écart de taux d'intérêt entre les deux monnaies :"], puces: [
+      "**F = S × (1 + i_CDF × j/360) / (1 + i_USD × j/360)**.",
+      "Les taux en CDF étant plus élevés que les taux en USD, le dollar est plus cher à terme qu'au comptant : il cote en **report**.",
+      "Avantage : coût connu à l'avance, sans prime. Inconvénient : on ne profite pas d'une baisse du dollar.",
+    ] },
+    { type: "texte", titre: "L'option de change", puces: [
+      "Un **call USD** donne le droit, pas l'obligation, d'acheter des dollars à un prix d'exercice fixé, contre une **prime** payée d'avance.",
+      "À l'échéance : si le cours dépasse le prix d'exercice, on exerce ; sinon on achète au comptant. Coût par dollar = min(cours, prix d'exercice) + prime.",
+      "L'option est une **assurance** : coût maximum garanti, et gain possible si le dollar baisse.",
+    ] },
+    { type: "pieges", puces: [
+      "Confondre position courte (on doit des devises) et position longue (on va en recevoir).",
+      "Penser que le change à terme est « gratuit » : il fait renoncer à tout gain si le cours évolue favorablement.",
+      "Oublier la prime dans le coût de l'option.",
+      "Négliger la couverture naturelle : facturer ou s'endetter dans la devise de ses recettes réduit le besoin de couverture.",
+    ] },
+  ],
+  narration: [
+    "En République démocratique du Congo, beaucoup d'entreprises achètent en dollars et vendent en francs congolais. Chaque variation du cours peut effacer leur marge. Ce module vous apprend à vous protéger.",
+    "Première étape : identifier sa position. Un importateur qui doit payer son fournisseur en dollars dans trois mois est en position courte : il doit des dollars qu'il n'a pas encore. Si le dollar monte, il lui faudra plus de francs pour payer la même facture. À l'inverse, un exportateur qui attend des dollars est en position longue : il perd si le dollar baisse.",
+    "Prenons Kivu Pharma, qui importe des médicaments. Elle doit payer 250 000 dollars dans 90 jours. Aujourd'hui, le dollar vaut 2 850 francs. Si dans trois mois il vaut 3 150 francs, la facture lui coûtera 75 millions de francs de plus.",
+    "Première solution : le change à terme. La banque fixe dès aujourd'hui le cours auquel Kivu Pharma achètera ses dollars dans 90 jours. Ce cours dépend des taux d'intérêt. Avec 18 pour cent par an en francs et 6 pour cent en dollars, le cours à terme est de 2 934 francs environ. Le dollar est plus cher à terme qu'au comptant, parce qu'on peut placer les francs à un meilleur taux en attendant.",
+    "Avec ce contrat, la facture coûtera environ 733,6 millions de francs, quoi qu'il arrive. Si le dollar monte à 3 150, Kivu Pharma économise près de 54 millions. S'il baisse à 2 750, elle paie 46 millions de plus que sans couverture. Le change à terme supprime le risque, mais aussi la chance.",
+    "Deuxième solution : l'option d'achat de dollars, le call. Kivu Pharma paie aujourd'hui une prime de 45 francs par dollar. En échange, elle a le droit d'acheter ses dollars à 2 950 francs au maximum. Si le dollar monte, elle exerce son option : coût total plafonné à 2 995 francs par dollar. S'il baisse, elle abandonne l'option et achète moins cher sur le marché.",
+    "L'option est donc une assurance. Elle coûte une prime, mais elle garde la possibilité de gagner. Elle est préférable au change à terme si le dollar finit sous 2 889 francs environ, et préférable à l'absence de couverture s'il dépasse 2 995 francs.",
+    "Dernier conseil : la meilleure couverture est parfois naturelle. Une entreprise qui facture une partie de ses ventes en dollars, ou qui paie ses charges dans la même monnaie que ses recettes, réduit son exposition sans rien acheter. Deux cas corrigés vous attendent.",
+  ],
+  qcm: [
+    { q: "Un importateur kinois doit payer 100 000 USD dans 3 mois ; ses ventes sont en CDF. Il est :", r: ["En position courte en USD : il perd si le dollar monte", "En position longue en USD : il perd si le dollar baisse", "Sans risque de change", "En position courte en CDF"], b: 0, e: "Il doit des dollars qu'il n'a pas encore : une hausse du dollar renchérit sa facture en francs." },
+    { q: "Un exportateur de café qui encaissera des USD dans 2 mois craint :", r: ["Une baisse du dollar", "Une hausse du dollar", "Une hausse des taux en USD", "Rien"], b: 0, e: "Il est en position longue : moins de francs pour les mêmes dollars si le dollar baisse." },
+    { q: "Comptant 2 800 CDF/USD, taux CDF 20 % l'an, taux USD 4 % l'an, échéance 180 jours (base 360). Cours à terme ?", r: ["≈ 3 020 CDF", "2 800 CDF", "≈ 2 596 CDF", "≈ 3 360 CDF"], b: 0, e: "2 800 × (1 + 0,20 × 0,5) / (1 + 0,04 × 0,5) = 2 800 × 1,10 / 1,02 ≈ **3 020 CDF**." },
+    { q: "Les taux d'intérêt sont plus élevés en CDF qu'en USD. À terme, le dollar cote :", r: ["En report (plus cher qu'au comptant)", "En déport (moins cher qu'au comptant)", "Au même cours qu'au comptant", "On ne peut pas savoir"], b: 0, e: "La monnaie aux taux les plus bas cote en report." },
+    { q: "Le principal inconvénient du change à terme est :", r: ["Il fait renoncer au gain si le cours évolue favorablement", "Il coûte une prime élevée", "Il n'existe pas pour le dollar", "Il ne couvre que la moitié du montant"], b: 0, e: "Le cours est figé dans les deux sens." },
+    { q: "Avec un call USD de prix d'exercice K et de prime p, le coût maximum d'un dollar est :", r: ["K + p", "K − p", "Le cours au comptant", "p"], b: 0, e: "Au-delà de K, on exerce : on paie K, plus la prime déjà versée." },
+    { q: "Call USD : prix d'exercice 3 000 CDF, prime 50 CDF. Cours à l'échéance : 2 900 CDF. Coût par dollar ?", r: ["2 950 CDF", "3 050 CDF", "2 900 CDF", "3 000 CDF"], b: 0, e: "On n'exerce pas : achat au comptant 2 900 + prime 50 = **2 950 CDF**." },
+    { q: "Même option, cours à l'échéance 3 200 CDF. Coût par dollar ?", r: ["3 050 CDF", "3 250 CDF", "3 200 CDF", "3 000 CDF"], b: 0, e: "On exerce à 3 000, plus la prime de 50 : **3 050 CDF**." },
+    { q: "Quand l'option est-elle plus adaptée que le change à terme ?", r: ["Quand on veut se protéger d'une hausse tout en gardant la chance de profiter d'une baisse", "Quand on veut une couverture sans aucun coût", "Quand on est sûr que le dollar va monter fortement", "Jamais"], b: 0, e: "L'option est une assurance : elle coûte une prime mais laisse le gain possible." },
+    { q: "La « couverture naturelle » consiste à :", r: ["Faire coïncider la devise de ses recettes et celle de ses dépenses", "Acheter une option", "Ne jamais importer", "Placer sa trésorerie en CDF"], b: 0, e: "Des dollars encaissés servent à payer des dollars dus : le risque disparaît sans contrat." },
+  ],
+};
+
+const FE7 = {
+  id: "FE7", titre: "Affecter le résultat d'une société (OHADA)", court: "Affectation du résultat", ico: "coins", col: "#A3122A", duree: "35 min",
+  resume: "Réserve légale, bénéfice distribuable, dividendes et IRM selon l'Acte uniforme OHADA, et écritures SYSCOHADA.",
+  cas: [16],
+  blocs: [
+    { type: "essentiel", texte: "Le bénéfice n'appartient pas librement aux associés. L'**Acte uniforme OHADA sur les sociétés commerciales (AUSCGIE)** impose d'abord d'**apurer les pertes antérieures** et de doter la **réserve légale** (1/10 du bénéfice jusqu'à 1/5 du capital). Le **bénéfice distribuable** qui reste peut aller en réserves, en dividendes ou en report à nouveau, sur décision de l'assemblée générale." },
+    { type: "schema", kind: "flux", titre: "L'ordre d'affectation", etapes: [
+      { op: "", l: "Bénéfice de l'exercice", d: "Compte 131 — Résultat net : bénéfice" },
+      { op: "−", l: "Pertes antérieures", d: "Report à nouveau débiteur (129)" },
+      { op: "−", l: "Réserve légale (art. 346)", d: "10 % du bénéfice diminué des pertes antérieures, jusqu'à 1/5 du capital (111)" },
+      { op: "−", l: "Réserves statutaires", d: "Selon les statuts (112)" },
+      { op: "+", l: "Report à nouveau créditeur antérieur", d: "121" },
+      { op: "=", l: "Bénéfice distribuable (art. 143)", d: "Réserves facultatives (1181), dividendes (465), nouveau report (121)", fort: true },
+    ] },
+    { type: "schema", kind: "tableau", titre: "Les comptes SYSCOHADA de l'affectation", entetes: ["Compte", "Intitulé", "Sens"], lignes: [
+      ["131", "Résultat net : bénéfice", "Débité pour son montant total"],
+      ["129", "Report à nouveau débiteur", "Crédité : apurement des pertes"],
+      ["111", "Réserve légale", "Crédité"],
+      ["112", "Réserves statutaires ou contractuelles", "Crédité"],
+      ["1181", "Réserves facultatives", "Crédité"],
+      ["465", "Associés, dividendes à payer", "Crédité du dividende brut"],
+      ["447", "État, impôts retenus à la source", "Crédité de l'IRM retenu sur les dividendes"],
+      ["121", "Report à nouveau créditeur", "Crédité du solde non affecté"],
+    ] },
+    { type: "texte", titre: "Des dividendes aux associés", puces: [
+      "Le **premier dividende** (ou intérêt statutaire) est un pourcentage du capital libéré prévu par les statuts ; le **superdividende** répartit le solde, souvent arrondi par action.",
+      "La société **retient l'impôt mobilier (IRM)** sur le dividende brut et le reverse à l'administration fiscale : l'associé reçoit le dividende net.",
+      "Un dividende distribué sans bénéfice distribuable suffisant est un **dividende fictif** : il engage la responsabilité des dirigeants.",
+    ] },
+    { type: "pieges", puces: [
+      "Calculer la réserve légale sur le bénéfice brut sans déduire les pertes antérieures.",
+      "Oublier le plafond du 1/5 du capital : une fois atteint, la dotation n'est plus obligatoire.",
+      "Inscrire le dividende net au crédit du 465 : on enregistre le brut, puis la retenue d'IRM au crédit du 447.",
+      "Distribuer le bénéfice de l'exercice sans tenir compte du report à nouveau débiteur.",
+    ] },
+  ],
+  narration: [
+    "Ce dernier module traite d'un moment clé de la vie d'une société : l'assemblée générale qui décide de ce que l'on fait du bénéfice. En zone Ohada, cette décision est encadrée par l'Acte uniforme relatif au droit des sociétés commerciales.",
+    "La règle fondamentale est un ordre de priorité. D'abord, on efface les pertes des années passées, inscrites en report à nouveau débiteur. Ensuite, on dote la réserve légale. Puis les réserves prévues par les statuts. Ce n'est qu'après qu'on obtient le bénéfice distribuable, celui que les associés peuvent se partager.",
+    "La réserve légale, c'est l'article 346 de l'Acte uniforme : au moins un dixième du bénéfice, diminué des pertes antérieures, jusqu'à ce que la réserve atteigne un cinquième du capital. Elle protège les créanciers en gardant une partie des bénéfices dans l'entreprise.",
+    "Prenons Lualaba Industries, une S.A. au capital de 200 millions de francs congolais. Elle a réalisé 90 millions de bénéfice, mais traîne 8 millions de pertes antérieures. Dix pour cent de 82 millions, cela fait 8,2 millions. Mais la réserve légale contient déjà 36 millions et son plafond est de 40 millions. Il ne manque que 4 millions : c'est la dotation retenue.",
+    "Après la réserve statutaire de 4,1 millions, le premier dividende de 6 pour cent du capital, soit 12 millions, et une réserve facultative de 10 millions, il reste 51,9 millions. On les répartit en superdividende, arrondi à 2 500 francs par action, soit 50 millions. Les 1,9 million restants partent en report à nouveau.",
+    "Chaque action reçoit donc 3 100 francs de dividende brut. Mais la société doit retenir l'impôt mobilier, ici 20 pour cent, et le reverser au fisc. L'actionnaire touche 2 480 francs net par action.",
+    "Côté comptabilité Syscohada, on débite le compte 131, résultat net bénéfice, de 90 millions. On crédite le 129 pour effacer les pertes, le 111 pour la réserve légale, le 112 pour la réserve statutaire, le 1181 pour la réserve facultative, le 465 pour les dividendes bruts à payer, et le 121 pour le nouveau report à nouveau. Ensuite, la retenue d'impôt mobilier passe du 465 au 447, État, impôts retenus à la source. Enfin, les paiements se font par la banque.",
+    "Attention : un dividende versé sans bénéfice distribuable suffisant est un dividende fictif. Les dirigeants qui le proposent engagent leur responsabilité. Faites maintenant le cas corrigé et le QCM pour valider ce module.",
+  ],
+  qcm: [
+    { q: "Selon l'AUSCGIE (art. 346), la dotation minimale à la réserve légale est de :", r: ["1/10 du bénéfice diminué des pertes antérieures", "1/5 du bénéfice", "5 % du chiffre d'affaires", "1/10 du capital"], b: 0, e: "Le prélèvement d'un dixième s'impose jusqu'à ce que la réserve atteigne un cinquième du capital." },
+    { q: "La dotation à la réserve légale cesse d'être obligatoire quand la réserve atteint :", r: ["1/5 du capital", "1/10 du capital", "Le montant du capital", "La moitié du capital"], b: 0, e: "Au-delà du cinquième du capital, la dotation devient facultative." },
+    { q: "Capital 100 M FC, réserve légale existante 19 M FC, bénéfice 30 M FC, pas de pertes antérieures. Dotation à la réserve légale ?", r: ["1 M FC", "3 M FC", "20 M FC", "0"], b: 0, e: "10 % × 30 = 3 M, mais le plafond est de 20 M et il ne manque que **1 M FC**." },
+    { q: "Bénéfice 50 M FC, report à nouveau débiteur 10 M FC, réserve légale loin du plafond. Dotation ?", r: ["4 M FC", "5 M FC", "6 M FC", "1 M FC"], b: 0, e: "10 % × (50 − 10) = **4 M FC**." },
+    { q: "Le bénéfice distribuable (AUSCGIE, art. 143) est égal à :", r: ["Bénéfice − pertes antérieures − réserves légales et statutaires + report bénéficiaire", "Bénéfice + réserves facultatives", "Bénéfice − dividendes", "Capital + bénéfice"], b: 0, e: "C'est le plafond de ce que l'assemblée peut distribuer." },
+    { q: "Lors de l'affectation, les dividendes bruts décidés sont crédités au compte :", r: ["465 — Associés, dividendes à payer", "121 — Report à nouveau créditeur", "111 — Réserve légale", "521 — Banque"], b: 0, e: "Le 465 enregistre la dette de la société envers ses associés jusqu'au paiement." },
+    { q: "L'IRM retenu sur les dividendes est crédité au compte :", r: ["447 — État, impôts retenus à la source", "441 — État, impôt sur les bénéfices", "465 — Associés, dividendes à payer", "641 — Impôts et taxes"], b: 0, e: "La société collecte l'impôt pour le compte de l'État : c'est une dette envers lui." },
+    { q: "Un dividende versé alors que le bénéfice distribuable est insuffisant est :", r: ["Un dividende fictif", "Un acompte sur dividende régulier", "Un superdividende", "Un report à nouveau"], b: 0, e: "Il engage la responsabilité des dirigeants qui l'ont proposé." },
+    { q: "L'écriture d'affectation du bénéfice commence par débiter le compte :", r: ["131 — Résultat net : bénéfice", "129 — Report à nouveau débiteur", "465 — Associés, dividendes à payer", "101 — Capital social"], b: 0, e: "Le résultat est soldé et réparti entre les comptes de réserves, de dividendes et de report." },
+    { q: "Dividende brut 1 000 FC par action, IRM 20 %. Dividende net perçu ?", r: ["800 FC", "1 000 FC", "1 200 FC", "200 FC"], b: 0, e: "1 000 − 20 % × 1 000 = **800 FC**." },
+  ],
+};
+
+export const MODULES_FIN = [FE1, FE2, FE3, FE4, FE5, FE6, FE7].map(m => ({ ...m, libre: m.id === "FE1" }));

@@ -20,12 +20,12 @@ const fmt=v=>Math.round(v).toLocaleString("fr-FR").replace(/ | /g," ");
 const fmtFC=v=>`${v<0?"− ":""}${fmt(Math.abs(v))} FC`;
 
 // Texte avec **gras**
-const T=({t})=>{const p=String(t||"").split("**");return <>{p.map((x,i)=>i%2?<b key={i}>{x}</b>:<React.Fragment key={i}>{x}</React.Fragment>)}</>;};
+export const T=({t})=>{const p=String(t||"").split("**");return <>{p.map((x,i)=>i%2?<b key={i}>{x}</b>:<React.Fragment key={i}>{x}</React.Fragment>)}</>;};
 
-function Carte({K,children,sx}){return <div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"16px 18px",marginBottom:14,...sx}}>{children}</div>;}
-function Titre({K,ico,col,children}){return <div style={{display:"flex",alignItems:"center",gap:8,fontWeight:800,fontSize:16,color:K.t1,marginBottom:10,lineHeight:1.3}}>
+export function Carte({K,children,sx}){return <div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"16px 18px",marginBottom:14,...sx}}>{children}</div>;}
+export function Titre({K,ico,col,children}){return <div style={{display:"flex",alignItems:"center",gap:8,fontWeight:800,fontSize:16,color:K.t1,marginBottom:10,lineHeight:1.3}}>
   {ico&&<i className={`ti ti-${ico}`} style={{fontSize:18,color:col||K.in_,flexShrink:0}}/>}<span>{children}</span></div>;}
-function Bouton({K,ch,on,v="p",ico,dis,sx}){
+export function Bouton({K,ch,on,v="p",ico,dis,sx}){
   const st=v==="p"?{background:`linear-gradient(135deg,${K.emD},${K.em})`,color:"#fff",border:"none"}:{background:K.c2,color:K.t1,border:`1px solid ${K.b1}`};
   return <button onClick={on} disabled={dis} className="bt" style={{...st,borderRadius:11,padding:"11px 16px",fontWeight:800,fontSize:14,fontFamily:"'Outfit',sans-serif",cursor:dis?"not-allowed":"pointer",opacity:dis?.55:1,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,minHeight:44,...sx}}>
     {ico&&<i className={`ti ti-${ico}`} style={{fontSize:16}}/>}{ch}</button>;
@@ -206,7 +206,7 @@ function Tva({K,col,defaut={}}){
 const SCHEMAS={flux:Flux,chronologie:Chronologie,arbre:Arbre,tableau:Tableau,bareme:Bareme,chaine:Chaine,cartes:Cartes,paie:Paie,tva:Tva};
 
 // ── Blocs de leçon ──────────────────────────────────────────────────────────────
-function Bloc({K,b,col}){
+export function Bloc({K,b,col}){
   if(b.type==="essentiel")return <div style={{background:`linear-gradient(135deg,${col}18,${col}06)`,border:`1px solid ${col}40`,borderRadius:16,padding:"16px 18px",marginBottom:14}}>
     <Titre K={K} ico="bolt" col={col}>L'essentiel en 30 secondes</Titre>
     <div style={{fontSize:15,color:K.t1,lineHeight:1.7}}><T t={b.texte}/></div></div>;
@@ -246,9 +246,10 @@ function Bloc({K,b,col}){
 }
 
 // ── QCM ─────────────────────────────────────────────────────────────────────────
-function Qcm({K,mod,db,uid,ancien,onFin}){
-  const nouvelle=prec=>{const s=tirerSerie(mod.qcm,prec,{n:NB_Q});ecrireSerie(cleScore(mod.id),s);return s;};
-  const[serie,sSerie]=useState(()=>nouvelle(lireSerie(cleScore(mod.id))));
+// cle : clé du score dans users/{uid}.scores (FISC-… par défaut) ; nbQ : taille d'une série
+export function Qcm({K,mod,db,uid,ancien,onFin,cle=cleScore(mod.id),nbQ=NB_Q}){
+  const nouvelle=prec=>{const s=tirerSerie(mod.qcm,prec,{n:nbQ});ecrireSerie(cle,s);return s;};
+  const[serie,sSerie]=useState(()=>nouvelle(lireSerie(cle)));
   const[i,sI]=useState(0),[choix,sChoix]=useState(null),[bonnes,sBonnes]=useState(0),[fini,sFini]=useState(false),[saveErr,sSaveErr]=useState("");
   const q=serie[i],n=serie.length,col=mod.col;
   const valider=c=>{if(choix!=null)return;sChoix(c);if(c===q.b)sBonnes(x=>x+1);};
@@ -257,7 +258,7 @@ function Qcm({K,mod,db,uid,ancien,onFin}){
     sFini(true);
     const pct=Math.round(bonnes/n*100);
     if(uid&&db&&(!ancien||pct>=(ancien.pct||0))){
-      try{await updateDoc(doc(db,"users",uid),{[`scores.${cleScore(mod.id)}`]:{s:bonnes,t:n,pct,date:new Date().toISOString()}});onFin&&onFin({s:bonnes,t:n,pct});}
+      try{await updateDoc(doc(db,"users",uid),{[`scores.${cle}`]:{s:bonnes,t:n,pct,date:new Date().toISOString()}});onFin&&onFin({s:bonnes,t:n,pct});}
       catch(e){sSaveErr("Score non enregistré (connexion ?). Réessayez plus tard.");}
     }
   };
@@ -266,7 +267,7 @@ function Qcm({K,mod,db,uid,ancien,onFin}){
     <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:26,color:ok?K.em:K.er}}>{bonnes} / {n} · {pct} %</div>
     <div style={{fontSize:14.5,color:K.t2,margin:"6px 0 16px",lineHeight:1.6}}>{pct>=80?"Excellent : vous maîtrisez ce module.":ok?"Module validé. Relisez les points manqués pour consolider.":"Pas encore validé (60 % requis). Relisez la leçon puis retentez."}</div>
     {ancien&&ancien.pct>pct&&<div style={{fontSize:12.5,color:K.t3,marginBottom:10}}>Votre meilleur score ({ancien.pct} %) reste enregistré.</div>}
-    {mod.qcm.length>NB_Q&&<div style={{fontSize:12.5,color:K.t3,marginBottom:12,lineHeight:1.5}}><i className="ti ti-arrows-shuffle" style={{marginRight:4}}/>Chaque nouvelle série renouvelle au moins 30 % des questions ({mod.qcm.length} dans la banque) et mélange l'ordre des réponses.</div>}
+    {mod.qcm.length>nbQ&&<div style={{fontSize:12.5,color:K.t3,marginBottom:12,lineHeight:1.5}}><i className="ti ti-arrows-shuffle" style={{marginRight:4}}/>Chaque nouvelle série renouvelle au moins 30 % des questions ({mod.qcm.length} dans la banque) et mélange l'ordre des réponses.</div>}
     {saveErr&&<div style={{fontSize:12.5,color:K.er,marginBottom:10}}>{saveErr}</div>}
     <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
       <Bouton K={K} v="g" ico="refresh" ch="Nouvelle série" on={()=>{sSerie(nouvelle(serie.map(x=>x.idx)));sI(0);sChoix(null);sBonnes(0);sFini(false);sSaveErr("");}}/>
