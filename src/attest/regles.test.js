@@ -1,17 +1,20 @@
-import { FISC, PARCOURS, SEUIL_ELEMENT, SEUIL_MOYENNE, elementsParcours, evaluer, mention, numeroAttestation, numeroValide } from "./regles";
+import { FISC, FIN, PARCOURS, SEUIL_ELEMENT, SEUIL_MOYENNE, elementsParcours, evaluer, mention, numeroAttestation, numeroValide } from "./regles";
 import { MODULES_FISC } from "../fiscal/modules";
+import { MODULES_FIN } from "../finance/modules";
 
 const mods = [{ id: "m1", titre: "Fondements SYSCOHADA", ordre: 1 }, { id: "m2", titre: "Journal", ordre: 2, evalType: "none" }, { id: "m3", titre: "Brouillon", on: false }];
 
 test("catalogue fiscal aligné sur les modules de l'application", () => {
   expect(FISC.map(([id, t]) => [id, t])).toEqual(MODULES_FISC.map(m => [m.id, m.titre]));
-  expect(PARCOURS.map(p => p.id)).toEqual(["SYS-N1", "FISC", "SYS-N2"]);
+  expect(FIN.map(([id, t]) => [id, t])).toEqual(MODULES_FIN.map(m => [m.id, m.titre]));
+  expect(PARCOURS.map(p => p.id)).toEqual(["SYS-N1", "FISC", "SYS-N2", "FIN"]);
   expect([SEUIL_ELEMENT, SEUIL_MOYENNE]).toEqual([70, 80]);
 });
 
 test("éléments des parcours", () => {
   expect(elementsParcours("SYS-N1", mods).map(e => e.cle)).toEqual(["m1", "m2", "CPT-T"]);
   expect(elementsParcours("FISC", mods)).toHaveLength(12);
+  expect(elementsParcours("FIN", mods).map(e => e.cle)).toEqual(["FIN-FE1", "FIN-FE2", "FIN-FE3", "FIN-FE4", "FIN-FE5", "FIN-FE6", "FIN-FE7"]);
   expect(elementsParcours("SYS-N2", mods).map(e => e.cle)).toEqual(["JRN-ZAO", "CPT-1", "CPT-2", "CPT-3", "CPT-4", "CPT-5", "CPT-6", "CPT-7", "CPT-8", "CPT-9"]);
 });
 
@@ -43,4 +46,10 @@ test("numéro d'attestation", () => {
   expect(numeroValide(n)).toBe(true);
   expect(numeroValide("EC-2026-0O1IL0")).toBe(false);
   expect(numeroValide("x")).toBe(false);
+});
+
+test("finance d'entreprise : réussite avec les 7 QCM ≥ 70 % et une moyenne ≥ 80 %", () => {
+  const scores = Object.fromEntries(["FE1", "FE2", "FE3", "FE4", "FE5", "FE6", "FE7"].map((f, i) => [`FIN-${f}`, { pct: i === 6 ? 75 : 88 }]));
+  expect(evaluer("FIN", mods, { scores })).toMatchObject({ suivi: true, reussite: true, moyenne: 86, heures: 14, nTotal: 7 });
+  expect(evaluer("FIN", mods, { scores: { ...scores, "FIN-FE3": { pct: 60 } } })).toMatchObject({ suivi: true, reussite: false });
 });
