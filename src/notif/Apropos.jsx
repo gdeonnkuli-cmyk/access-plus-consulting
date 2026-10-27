@@ -6,7 +6,7 @@ import LOGO_CLAIR from"../assets/logo-clair.png";
 export const VERSION_APP="1.1.0"; // à garder aligné sur package.json
 // Thème sombre détecté d'après la couleur de fond (logo clair sur fond foncé)
 const estSombre=K=>{const h=String(K.bg||"").replace("#","");if(!/^[0-9a-f]{6}/i.test(h))return false;const[r,g,b]=[0,2,4].map(i=>parseInt(h.slice(i,i+2),16));return r*.299+g*.587+b*.114<128;};
-export default function Apropos({K,mob,onGo}){
+export default function Apropos({K,mob,onGo,services}){
   const sombre=estSombre(K);
   const Bloc=({ico,col,titre,children})=><div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"16px 18px",marginBottom:12}}>
     <div style={{display:"flex",alignItems:"center",gap:8,fontWeight:800,fontSize:16,color:K.t1,marginBottom:8}}><i className={`ti ti-${ico}`} style={{fontSize:19,color:col}}/>{titre}</div>{children}</div>;
@@ -24,7 +24,7 @@ export default function Apropos({K,mob,onGo}){
       <P>Nous privilégions les exemples chiffrés en francs congolais, les cas pratiques tirés de la vie des entreprises congolaises et l'évaluation par QCM corrigés.</P>
     </Bloc>
     <Bloc ico="apps" col="#0D7A6B" titre="Ce que vous trouverez">
-      {[["book-2","Modules de cours SYSCOHADA avec QCM et exercices corrigés"],["receipt-tax","Le Code des impôts expliqué, la TVA en pratique, la paie et l'import-export : 12 modules, schémas, simulateurs et QCM renouvelés"],["report-money","L'atelier États financiers : Bilan, Compte de résultat, TFT, notes annexes et IBP, avec cas pratiques"],["video","Vidéos, cours en direct, présentations et supports PDF"],["briefcase","Stages virtuels, services aux entreprises et attestations de formation"]].map(([ic,t])=>
+      {[["book-2","Modules de cours SYSCOHADA avec QCM et exercices corrigés"],["receipt-tax","Le Code des impôts expliqué, la TVA en pratique, la paie et l'import-export : 12 modules, schémas, simulateurs et QCM renouvelés"],["report-money","L'atelier États financiers : Bilan, Compte de résultat, TFT, notes annexes et IBP, avec cas pratiques"],["chart-pie","La finance d'entreprise : coût du capital, investissement, évaluation, change USD/CDF et affectation du résultat OHADA, avec 16 cas corrigés et des cours audio"],["video","Vidéos, cours en direct, présentations et supports PDF"],["briefcase","Stages virtuels, services aux entreprises et attestations de formation"]].map(([ic,t])=>
         <div key={t} style={{display:"flex",gap:9,fontSize:14.5,color:K.t2,lineHeight:1.55,marginBottom:6}}><i className={`ti ti-${ic}`} style={{color:"#0D7A6B",fontSize:17,marginTop:2,flexShrink:0}}/>{t}</div>)}
     </Bloc>
     <Bloc ico="books" col="#A3122A" titre="Sources de référence">
@@ -32,6 +32,10 @@ export default function Apropos({K,mob,onGo}){
       <P><b>Fiscalité :</b> Code des impôts de la République démocratique du Congo publié par la Direction Générale des Impôts, mis à jour au 31 mars 2021. Les lois de finances postérieures peuvent modifier certains taux : vérifiez toujours les textes en vigueur avant une déclaration.</P>
       <P>Les contenus ont une vocation pédagogique et ne remplacent pas un conseil professionnel.</P>
     </Bloc>
+    {services&&onGo&&<Bloc ico="building" col="#1D4ED8" titre="Services aux entreprises">
+      <P>Access Plus Consulting accompagne aussi les entreprises : assistance comptable, assistance fiscale et formation sur mesure de leurs équipes.</P>
+      <button onClick={()=>onGo("services")} className="bt" style={{display:"inline-flex",alignItems:"center",gap:6,padding:"9px 14px",borderRadius:11,background:K.c2,border:`1px solid ${K.b1}`,color:K.t1,fontWeight:800,fontSize:13.5,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}><i className="ti ti-arrow-right" style={{fontSize:15}}/>Découvrir nos services</button>
+    </Bloc>}
     <Bloc ico="lifebuoy" col="#C98A1B" titre="Contact et aide">
       <P>Une question, un problème ou une idée ? Écrivez-nous depuis la boîte à suggestions, par e-mail ou sur WhatsApp.</P>
       <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:6}}>

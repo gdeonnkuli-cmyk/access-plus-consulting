@@ -25,8 +25,11 @@ import{pVid,estPublie,lienGoogle,apercuValidation}from"./contenu";
 import LecteurAudio from"./audio/LecteurAudio";
 import{texteModuleCours,texteNarration,paragraphesNarration}from"./audio/lecture";
 import EcouterCours from"./audio/EcouterCours";
-import{pctQcm,resumeCpt,fusionScore}from"./ef/syscohada/scores";
+import{pctQcm,resumeCpt,fusionScore,CLES_CPT,moyenne}from"./ef/syscohada/scores";
 import MesAttestations from"./attest/MesAttestations";
+import{GROUPES_APPRENANT,GROUPES_ADMIN,groupeDe,normaliserVue,badgeGroupe,VUES_ADMIN}from"./nav/navigation";
+import{MODULES_FISC}from"./fiscal/modules";
+import{MODULES_FIN}from"./finance/modules";
 import VerifAttestation from"./attest/VerifAttestation";
 import AdminAttestations from"./attest/AdminAttestations";
 import LOGO from"./assets/logo.png";
@@ -114,7 +117,7 @@ const CARD_PALETTES={
     {bg:"#F5F0FF",bd:"#D0C0F0",ac:"#6040A0"},
   ],
 };
-const TILE_COLORS={modules:["#1E4FA3","#4F7FD6"],qcm:["#4F46E5","#8B7CF6"],pres:["#D97706","#F5B342"],stages:["#0D7A6B","#19B39B"],videos:["#C2410C","#F2733F"],ef:["#1D4ED8","#4F8DF7"],fisc:["#A3122A","#E0475F"],jrn:["#0D7A6B","#2BB39B"],cpt:["#7C3AED","#A78BFA"],audio:["#0E7490","#22B8CF"]};
+const TILE_COLORS={modules:["#1E4FA3","#4F7FD6"],qcm:["#4F46E5","#8B7CF6"],pres:["#D97706","#F5B342"],stages:["#0D7A6B","#19B39B"],videos:["#C2410C","#F2733F"],ef:["#1D4ED8","#4F8DF7"],fisc:["#A3122A","#E0475F"],jrn:["#0D7A6B","#2BB39B"],cpt:["#7C3AED","#A78BFA"],audio:["#0E7490","#22B8CF"],parcours:["#0A2A5C","#B7791F"],res:["#B45309","#F2A93B"]};
 const getCardPalette=(tid,idx)=>{const p=CARD_PALETTES[tid]||CARD_PALETTES.dark;return p[idx%p.length];};
 const bK=id=>{const t=TH[id]||TH.eco;const sombre=["dark","blue","green","purple"].includes(id);return{sh:sombre?"0 8px 22px rgba(0,0,0,.28)":"0 1px 2px rgba(10,42,92,.04),0 8px 22px rgba(10,42,92,.07)",bg:t.bg,card:t.ca,c2:t.c2,b0:t.b0,b1:t.b1,t1:t.t1,t2:t.t2,t3:t.t3,...ACC,...(sombre?ACC_SOMBRE:{})};};
 const Ctx=createContext({K:bK("dark"),tid:"dark",setT:()=>{}});
@@ -224,7 +227,7 @@ function useUsers(){
 // activite/{uid} : dernière activité de chaque compte (signal toutes les 90 s quand l'onglet est visible)
 // connexions/{id} : une ligne par ouverture de session (une fois par onglet)
 const ENLIGNE_MS=4*60*1000;
-const VUE_LBL={home:"Accueil",msg:"Messages",pres:"Cours",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
+const VUE_LBL={home:"Accueil",msg:"Messages",pres:"Présentations",jrn:"Monographie ZAO",cpt:"Guide des comptes",audio:"Écouter les cours",fisc:"Code des impôts",fin:"Finance d'entreprise",sugg:"Suggestions",apropos:"À propos",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
 const appareil=()=>{const ua=navigator.userAgent||"";const os=/Android/i.test(ua)?"Android":/iPhone|iPad|iPod/i.test(ua)?"iOS":/Windows/i.test(ua)?"Windows":/Mac OS/i.test(ua)?"Mac":/Linux/i.test(ua)?"Linux":"Autre";
   const nav=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/SamsungBrowser/.test(ua)?"Samsung":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"Navigateur";
   const app=(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||String(document.referrer).startsWith("android-app://")?"Application":"Site web";
@@ -2886,7 +2889,7 @@ function Auth({onL}){
 function UA({uid,onOut}){
   const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
   // Vue initiale : raccourcis de l'application installée (?vue=ef, ?vue=pres…)
-  const[vue,sV]=useState(()=>{try{const v=new URLSearchParams(window.location.search).get("vue");return ["home","msg","pres","stages","videos","ef","jrn","cpt","audio","fisc","fin","psycho","services","prog","res","param","sugg","apropos"].includes(v)?v:"home";}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
+  const[vue,sV]=useState(()=>{try{return normaliserVue(new URLSearchParams(window.location.search).get("vue"));}catch{return"home";}}),[mod,sM]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
   const[uData,sUD]=useState(null),[pdfs,sPdfs]=useState({});
   const[showOnboarding,sShowOnboarding]=useState(false);
   const{mods,loading:mL}=useModules();
@@ -2932,23 +2935,24 @@ function UA({uid,onOut}){
   if(openQuiz)return W(<OpenQuiz mod={openQuiz} uid={uid} uNom={uData.nom} onDone={()=>{sOpenQuiz(null);sM(null);sV("res");}} onBack={()=>sOpenQuiz(null)}/>,true);
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onOpenQ={()=>sOpenQuiz(mod)} onMarkDone={()=>markDoneNoEval(mod.id)} doneNoEval={pr[mod.id]==="done"} openAnswer={myOpenAnswers.find(a=>a.modId===mod.id)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]} uid={uid} uNom={uData.nom}/>,true);
   return W(<>
+    <SousNav groupes={GROUPES_APPRENANT} vue={vue} onGo={sV}/>
     {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={sM} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} onFin={()=>sV("fin")} onJrn={()=>sV("jrn")} onCpt={()=>sV("cpt")} onAudio={()=>sV("audio")} live={live} presCount={allPres.filter(estPublie).length} uid={uid} onGo={sV}/>}
     {vue==="videos"&&<VidsPage ok={ok} onSub={()=>sSub(true)} vids={vids} live={live}/>}
     {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres.filter(estPublie)}/>
     }{vue==="stages"&&<StagePage stages={allStages} plats={allPlats} ok={ok}/>
     }{vue==="services"&&<ServicesPage user={uData}/>}
-    {vue==="prog"&&<Prog pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods}/>}
-    {vue==="res"&&<Res sc={sc} ok={ok} mods={aMods} u={uData} uid={uid} onSub={()=>sSub(true)}/>}
+    {vue==="mods"&&<ModulesCours mods={aMods} pr={pr} sc={sc} ok={ok} vids={vids} onOpen={sM} uid={uid} onSub={()=>sSub(true)}/>}
+    {vue==="res"&&<MesResultats pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} u={uData} uid={uid} onSub={()=>sSub(true)} onGo={sV}/>}
     {vue==="psycho"&&<PsychoPage uid={uid} u={uData}/>}
     {vue==="param"&&<ParametresPage role="apprenant" uid={uid} data={uData} onOut={onOut} onGo={sV}/>}
-    {vue==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)}/>}
-    {vue==="jrn"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)} journal0/>}
-    {vue==="cpt"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)} guide0/>}
+    {vue==="ef"&&<EtatsFinanciers key="ef" sansRaccourcis db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)}/>}
+    {vue==="jrn"&&<EtatsFinanciers key="jrn" db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)} journal0/>}
+    {vue==="cpt"&&<EtatsFinanciers key="cpt" db={db} K={K} mob={mob} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}} ok={ok} onSub={()=>sSub(true)} guide0/>}
     {vue==="audio"&&<EcouterCours K={K} mob={mob} mods={aMods} pres={allPres.filter(estPublie)} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="fisc"&&<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="fin"&&<FinanceEntreprise K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="sugg"&&<Suggestions K={K} mob={mob} db={db} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}}/>}
-    {vue==="apropos"&&<Apropos K={K} mob={mob} onGo={sV}/>}
+    {vue==="apropos"&&<Apropos K={K} mob={mob} onGo={sV} services/>}
     {vue==="msg"&&<MessagerieApprenant uid={uid} uNom={uData.nom}/>}
   </>);
 }
@@ -3404,22 +3408,13 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     {hcErr&&<div style={{color:K.er,fontSize:13,marginBottom:10}}>{hcErr}</div>}
     <Btn ch={hcBusy?"…":"Valider →"} on={submitNavCode} full dis={hcBusy}/>
   </Sheet>;
-  const NAV_ITEMS=[
-    {k:"home",   ico:"home-2",        label:"Accueil"},
-    {k:"msg",    ico:"message-circle",label:"Messages", badgeCount:unreadMsg},
-    {k:"pres",   ico:"presentation",  label:"Cours"},
-    {k:"stages", ico:"briefcase",     label:"Stages"},
-    {k:"videos", ico:"video",         label:"Vidéos", live:true},
-    {k:"ef",     ico:"report-money",  label:"États fin."},
-    {k:"fisc",   ico:"receipt-tax",   label:"Impôts"},
-    {k:"fin",    ico:"chart-pie",     label:"Finance"},
-    {k:"psycho", ico:"brain",         label:"Psycho"},
-    {k:"services",ico:"building",     label:"Services"},
-    {k:"prog",   ico:"chart-line",    label:"Progrès"},
-    {k:"res",    ico:"trophy",        label:"Résultats"},
-    {k:"sugg",   ico:"bulb",          label:"Suggestions"},
-    {k:"apropos",ico:"info-circle",   label:"À propos"},
-  ];
+  // Menu : 6 rubriques (src/nav/navigation.js) ; chaque rubrique rouvre le dernier écran consulté
+  const NAV_ITEMS=GROUPES_APPRENANT.map(g=>({k:g.k,ico:g.ico,label:mob&&g.court?g.court:g.label,badgeCount:g.k==="echanges"?unreadMsg:0,live:g.k==="apprendre"}));
+  const gActif=groupeDe(GROUPES_APPRENANT,vue)?.k;
+  const dernier=useRef({});
+  useEffect(()=>{if(gActif)dernier.current[gActif]=vue;},[vue,gActif]);
+  const allerGroupe=k=>{const g=GROUPES_APPRENANT.find(x=>x.k===k);sV(dernier.current[k]||g.vues[0][0]);};
+  const allerVue=v=>v==="acces"?onSub&&onSub():sV(normaliserVue(v));
   if(mob){
     // ── BOTTOM NAV MOBILE ──
     return <>
@@ -3431,7 +3426,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
             ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"3px 9px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:11,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ Actif":"✓ Actif"}</span></div>
             :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:99,padding:"4px 11px",fontSize:12,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>Accéder</button>
           }
-          <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} mob onGo={v=>v==="acces"?onSub&&onSub():sV(NAV_ITEMS.some(n=>n.k===v)||["param","sugg","apropos","audio","cpt"].includes(v)?v:"home")} taille={28}/>
+          <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} mob onGo={allerVue} taille={28}/>
           <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:28,height:28,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
             <i className="ti ti-key" style={{fontSize:14,color:K.t2}}/>
           </button>
@@ -3440,11 +3435,12 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
       </div>
       {/* Bottom nav : 4 rubriques principales + « Plus » */}
       {(()=>{
-        const MAIN=["home","pres","ef","msg"];
-        const main=NAV_ITEMS.filter(n=>MAIN.includes(n.k)).sort((x,y)=>MAIN.indexOf(x.k)-MAIN.indexOf(y.k));
-        const more=NAV_ITEMS.filter(n=>!MAIN.includes(n.k));
+        const MAIN=["home","apprendre","parcours","resultats"];
+        const main=NAV_ITEMS.filter(n=>MAIN.includes(n.k));
+        // « Plus » : écrans des autres rubriques, puis À propos et services
+        const more=[...GROUPES_APPRENANT.filter(g=>!MAIN.includes(g.k)).flatMap(g=>g.vues.map(([k,ico,label])=>({k,ico,label,badgeCount:k==="msg"?unreadMsg:0}))),{k:"apropos",ico:"info-circle",label:"À propos"},{k:"services",ico:"building",label:"Services"}];
         const moreActive=more.some(n=>n.k===vue);
-        const moreLive=live&&more.some(n=>n.live);
+        const moreLive=false;
         const Item=({ico,label,active,onClick,dot,badge})=><button onClick={onClick} className="bt" style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,padding:"7px 2px 5px",background:"none",border:"none",cursor:"pointer",position:"relative",minHeight:56,fontFamily:"'Outfit',sans-serif"}}>
           <div style={{position:"relative",width:52,height:30,borderRadius:99,display:"flex",alignItems:"center",justifyContent:"center",background:active?K.emBg:"transparent",transition:"background .2s"}}>
             <i className={`ti ti-${ico}`} style={{fontSize:22,color:active?K.em:K.t2,display:"block"}}/>
@@ -3455,17 +3451,17 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
         </button>;
         return <>
           <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:99,background:`${K.card}f7`,backdropFilter:"blur(20px)",borderTop:`1px solid ${K.b0}`,boxShadow:"0 -6px 20px rgba(0,0,0,.06)",display:"flex",alignItems:"stretch",paddingBottom:"max(4px,env(safe-area-inset-bottom))"}}>
-            {main.map(n=><Item key={n.k} ico={n.ico} label={n.label} active={vue===n.k&&!showMore} badge={n.badgeCount} dot={n.live&&live} onClick={()=>{sShowMore(false);sV(n.k);}}/>)}
-            <Item ico={showMore?"x":"layout-grid"} label="Plus" active={showMore||moreActive} dot={moreLive} onClick={()=>sShowMore(v=>!v)}/>
+            {main.map(n=><Item key={n.k} ico={n.ico} label={n.label} active={gActif===n.k&&!showMore} badge={n.badgeCount} dot={n.live&&live} onClick={()=>{sShowMore(false);allerGroupe(n.k);}}/>)}
+            <Item ico={showMore?"x":"layout-grid"} label="Plus" active={showMore||moreActive} dot={moreLive} badge={showMore?0:unreadMsg} onClick={()=>sShowMore(v=>!v)}/>
           </div>
           {showMore&&<div onClick={()=>sShowMore(false)} style={{position:"fixed",inset:0,zIndex:98,background:"rgba(0,0,0,.35)",backdropFilter:"blur(2px)",animation:"fadeIn .2s ease"}}>
             <div onClick={e=>e.stopPropagation()} style={{position:"absolute",left:10,right:10,bottom:"calc(72px + env(safe-area-inset-bottom))",background:K.card,border:`1px solid ${K.b0}`,borderRadius:22,padding:"16px 14px 14px",boxShadow:"0 18px 40px rgba(0,0,0,.25)",animation:"slideUp .25s cubic-bezier(.22,1,.36,1)"}}>
               <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:12,paddingLeft:4}}>Toutes les rubriques</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-                {more.map(n=>{const active=vue===n.k;const c={stages:"#0D7A6B",videos:"#C2410C",psycho:"#7C3AED",services:"#1D4ED8",prog:"#D97706",res:"#B45309"}[n.k]||K.em;return <button key={n.k} onClick={()=>{sShowMore(false);sV(n.k);}} className="bt" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:7,padding:"14px 6px 12px",background:active?K.emBg:K.c2,border:`1px solid ${active?K.emBd:K.b0}`,borderRadius:16,cursor:"pointer",fontFamily:"'Outfit',sans-serif",position:"relative"}}>
+                {more.map(n=>{const active=vue===n.k;const c={stages:"#0D7A6B",psycho:"#7C3AED",services:"#1D4ED8",msg:"#BE123C",sugg:"#C98A1B",apropos:"#475569"}[n.k]||K.em;return <button key={n.k} onClick={()=>{sShowMore(false);sV(n.k);}} className="bt" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:7,padding:"14px 6px 12px",background:active?K.emBg:K.c2,border:`1px solid ${active?K.emBd:K.b0}`,borderRadius:16,cursor:"pointer",fontFamily:"'Outfit',sans-serif",position:"relative"}}>
                   <div style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${c},${c}B0)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 6px 14px ${c}35`}}><i className={`ti ti-${n.ico}`} style={{fontSize:21,color:"#fff"}}/></div>
                   <span style={{fontSize:13,fontWeight:700,color:active?K.em:K.t1}}>{n.label}</span>
-                  {n.live&&live&&<span style={{position:"absolute",top:8,right:8,fontSize:10,fontWeight:800,color:"#fff",background:K.rd,borderRadius:99,padding:"1px 6px"}}>LIVE</span>}
+                  {!!n.badgeCount&&<span style={{position:"absolute",top:8,right:8,fontSize:10,fontWeight:800,color:"#fff",background:K.rd,borderRadius:99,padding:"1px 6px"}}>{n.badgeCount>9?"9+":n.badgeCount}</span>}
                 </button>;})}
               </div>
             </div>
@@ -3481,9 +3477,9 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
     <div style={{width:1,height:22,background:K.b0,margin:"0 6px",flexShrink:0}}/>
     <div className="tn" style={{flex:1,gap:2}}>
       {NAV_ITEMS.map(({k,ico,label,live:isLive,badgeCount})=>{
-        const active=vue===k;
+        const active=gActif===k;
         const hasLive=isLive&&live;
-        return <button key={k} onClick={()=>sV(k)} className="bt" style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",borderRadius:8,border:"none",cursor:"pointer",background:active?K.c2:"transparent",color:active?K.t1:K.t3,fontWeight:active?700:600,fontSize:13,whiteSpace:"nowrap",minHeight:34,fontFamily:"'Outfit',sans-serif",position:"relative",transition:"background .15s,color .15s"}}>
+        return <button key={k} onClick={()=>allerGroupe(k)} className="bt" style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",borderRadius:8,border:"none",cursor:"pointer",background:active?K.c2:"transparent",color:active?K.t1:K.t3,fontWeight:active?700:600,fontSize:13,whiteSpace:"nowrap",minHeight:34,fontFamily:"'Outfit',sans-serif",position:"relative",transition:"background .15s,color .15s"}}>
           <div style={{position:"relative"}}>
             <i className={`ti ti-${ico}`} style={{fontSize:15,color:active?K.em:K.t3}}/>
             {hasLive&&<span style={{position:"absolute",top:-3,right:-4,width:7,height:7,borderRadius:"50%",background:K.rd,border:`1.5px solid ${K.card}`,animation:"blink 1.5s ease-in-out infinite"}}/>}
@@ -3499,7 +3495,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
         ?<div style={{display:"flex",alignItems:"center",gap:5,background:K.emBg,border:`1px solid ${K.emBd}`,borderRadius:99,padding:"4px 11px"}}><span style={{width:6,height:6,borderRadius:"50%",background:K.em,display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/><span style={{fontSize:12,fontWeight:700,color:K.em}}>{u.dureeId==="v"?"∞ À vie":"✓ Actif"}</span></div>
         :<button onClick={onSub} className="bt" style={{background:`linear-gradient(135deg,${K.emD},${K.em})`,border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:800,color:"#FFFFFF",cursor:"pointer"}}>{LIB_ACCES}</button>
       }
-      <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} onGo={v=>v==="acces"?onSub&&onSub():sV(NAV_ITEMS.some(n=>n.k===v)||["param","sugg","apropos","audio","cpt"].includes(v)?v:"home")} taille={32}/>
+      <Cloche K={K} db={db} uid={uid} role="apprenant" user={u} onGo={allerVue} taille={32}/>
       <button onClick={()=>sShowCode(true)} className="bt" title="J'ai un code" style={{width:32,height:32,borderRadius:"50%",background:K.c2,border:`1px solid ${K.b1}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
         <i className="ti ti-key" style={{fontSize:15,color:K.t2}}/>
       </button>
@@ -3516,9 +3512,7 @@ function Nav({u,vue,sV,ok,onSub,onOut,live,uid}){
 function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onEf,onFisc,onFin,onJrn,onCpt,onAudio,live,presCount=0,uid,onGo}){
   const K=useK();const{mob}=useW();const jr=jR(u.dateExpiration);
   const{tid}=useContext(Ctx);
-  const[pdfMod,setPdfMod]=useState(null);
   const mats=[...new Set(mods.map(m=>m.mat||"Général"))];
-  const[fi,sF]=useState("Toutes");
   const[showCode,sShowCode]=useState(false);
   const rHc=useRef();
   const[hcErr,sHcErr]=useState("");
@@ -3526,7 +3520,6 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
   const isSocial=(auth.currentUser?.providerData||[]).some(p=>p.providerId==="google.com"||p.providerId==="facebook.com");
   const annonces=useAnnonces();
   const[dismissed,sDismissed]=useState([]);
-  const[modQ,sModQ]=useState("");
   const activeAnnonces=annonces.filter(a=>a.actif&&(!a.expireAt||new Date(a.expireAt)>=new Date())&&!dismissed.includes(a.id));
   const submitHomeCode=async()=>{
     sHcErr("");sHcBusy(true);
@@ -3536,23 +3529,16 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
       sShowCode(false);window.location.reload();
     }catch(e){sHcBusy(false);sHcErr(e.message);}
   };
-  const filMat=fi==="Toutes"?mods:mods.filter(m=>(m.mat||"Général")===fi);
-  const fil=modQ.trim()?filMat.filter(m=>(m.titre||"").toLowerCase().includes(modQ.toLowerCase())||(m.desc||"").toLowerCase().includes(modQ.toLowerCase())):filMat;
   const recentMods=mods.filter(m=>pr[m.id]==="done").slice(-3).reverse();
   const isLight=['light','sepia'].includes(tid);
 
-  // Feature cards
+  // Raccourcis : le menu donne accès à tout le reste (src/nav/navigation.js)
+  const aller=v=>onGo&&onGo(v);
   const features=[
-    {key:"modules",ico:"book-2",label:"Modules",desc:`${mods.filter(m=>m.on!==false).length} cours disponibles`,action:()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'})},
-    {key:"qcm",ico:"help-circle",label:"QCM",desc:`${Object.keys(sc).length} évaluations passées`,action:()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'})},
-    {key:"pres",ico:"presentation",label:"Présentations",desc:`${presCount||0} support${presCount>1?"s":""} de cours`,action:onPres},
-    {key:"stages",ico:"briefcase",label:"Stages",desc:"Expériences virtuelles",action:onStages},{key:"videos",ico:"video",label:"Vidéos",desc:`${vids.length} vidéos disponibles`,action:onVid},
-    ...(onEf?[{key:"ef",ico:"report-money",label:"États financiers",desc:"Atelier SYSCOHADA : Bilan, CR, TFT, notes",action:onEf}]:[]),
-    ...(onJrn?[{key:"jrn",ico:"notebook",label:"Monographie comptable",desc:"ZAO IMMO 2021 : du journal aux états financiers",action:onJrn}]:[]),
-    ...(onCpt?[{key:"cpt",ico:"books",label:"Guide des comptes",desc:"SYSCOHADA révisé : fiches, écritures types et exercice « Quel compte ? »",action:onCpt}]:[]),
-    ...(onAudio?[{key:"audio",ico:"headphones",label:"Écouter les cours",desc:"Leçons fiscales, fiches des comptes et modules en audio",action:onAudio}]:[]),
-    ...(onFisc?[{key:"fisc",ico:"receipt-tax",label:"Code des impôts",desc:"12 modules RDC : IBP, IPR, TVA pratique, paie, import-export… avec QCM",action:onFisc}]:[]),
-    ...(onFin?[{key:"fin",ico:"chart-pie",label:"Finance d'entreprise",desc:"Coût du capital, VAN, évaluation, change USD/CDF : 16 cas corrigés et audio",action:onFin}]:[]),
+    {key:"modules",ico:"book-2",label:"Modules de cours",desc:`${mods.length} cours SYSCOHADA avec QCM et exercices corrigés`,action:()=>aller("mods")},
+    {key:"parcours",ico:"route",label:"Parcours métier",desc:"États financiers, Code des impôts et Finance d'entreprise",action:()=>aller("ef")},
+    {key:"audio",ico:"headphones",label:"Écouter les cours",desc:"Leçons en audio, à écouter partout",action:()=>aller("audio")},
+    {key:"res",ico:"trophy",label:"Mes résultats",desc:"Scores de tous vos QCM, badges et attestations",action:()=>aller("res")},
   ];
 
   return <div style={{animation:"up .3s ease"}}>
@@ -3588,7 +3574,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
               <div style={{fontSize:12,color:"rgba(255,255,255,.78)",marginTop:3,display:"flex",alignItems:"center",gap:4}}><i className={`ti ti-${ic}`} style={{fontSize:13}}/>{l}</div>
             </div>)}
           </div>
-          <button onClick={ok?()=>document.getElementById('modules-section')?.scrollIntoView({behavior:'smooth'}):onSub} className="bt" style={{background:"#fff",color:"#0A2A5C",border:"none",borderRadius:12,padding:"12px 20px",fontSize:15,fontWeight:800,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:8,boxShadow:"0 6px 18px rgba(0,0,0,.18)"}}>
+          <button onClick={ok?()=>aller("mods"):onSub} className="bt" style={{background:"#fff",color:"#0A2A5C",border:"none",borderRadius:12,padding:"12px 20px",fontSize:15,fontWeight:800,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:8,boxShadow:"0 6px 18px rgba(0,0,0,.18)"}}>
             {ok?(nd===0?"Commencer":"Continuer mes cours"):LIB_ACCES}<i className="ti ti-arrow-right" style={{fontSize:17}}/>
           </button>
         </div>
@@ -3618,58 +3604,6 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
         </div>;})}
       </div>
     </div>
-
-    {/* Modules */}
-    <div id="modules-section">
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:7}}>
-        <div className="h-sec" style={{color:K.t1}}>Mes modules <span style={{color:K.t3,fontWeight:500,fontSize:15,fontFamily:"'Outfit',sans-serif"}}>({fil.length})</span></div>
-        {!ok&&<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="🔒 Abonnement requis"/>}
-      </div>
-      <div style={{position:"relative",marginBottom:11}}>
-        <i className="ti ti-search" style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",fontSize:14,color:K.t3}}/>
-        <input value={modQ} onChange={e=>sModQ(e.target.value)} placeholder="Rechercher un module…"
-          style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"9px 12px 9px 32px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
-        {modQ&&<button onClick={()=>sModQ("")} style={{position:"absolute",right:9,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:K.t3,cursor:"pointer",fontSize:15,padding:2}}>×</button>}
-      </div>
-      {mats.length>1&&<div className="tn" style={{gap:6,marginBottom:11,paddingBottom:3}}>{["Toutes",...mats].map(m=><button key={m} onClick={()=>sF(m)} className="bt" style={{background:fi===m?K.c2:"transparent",border:`1px solid ${fi===m?K.b1:K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:12,fontWeight:600,color:fi===m?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{m}</button>)}</div>}
-      {fil.length===0&&modQ&&<div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"20px",textAlign:"center",fontSize:14,color:K.t3,marginBottom:11}}>Aucun module ne correspond à « {modQ} ».</div>}
-      <div className="gm">
-        {fil.map((m,i)=>{
-          const f=pr[m.id]==="done",s=sc[m.id],lk=!ok;
-          const c=lk?K.t3:(m.col||K.em);
-          return <div key={m.id} onClick={()=>onOpen(m)} className="tile" style={{display:"flex",flexDirection:"column",animation:`slideUp .4s cubic-bezier(.22,1,.36,1) ${i*40}ms both`,opacity:lk?.72:1}}>
-            <div style={{height:6,background:lk?K.b1:`linear-gradient(90deg,${c},${c}88)`}}/>
-            <div style={{padding:"14px 14px 15px",display:"flex",flexDirection:"column",flex:1}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:11}}>
-                <div style={{width:42,height:42,borderRadius:13,background:lk?K.c2:`${c}16`,border:`1px solid ${lk?K.b0:c+"30"}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  {lk?<i className="ti ti-lock" style={{fontSize:18,color:K.t3}}/>:icoEl(m.ico,c,20)}
-                </div>
-                {f&&s?<Tg c={s.pct>=60?K.em:K.er} bg={s.pct>=60?K.emBg:K.erBg} bd={s.pct>=60?K.emBd:K.erBd} ch={`${s.pct}%`}/>:f?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="✓"/>:null}
-              </div>
-              {m.mat&&<div style={{fontSize:11,color:c,marginBottom:4,fontWeight:800,textTransform:"uppercase",letterSpacing:.5}}>{m.mat}</div>}
-              <div style={{fontWeight:800,fontSize:15,color:lk?K.t2:K.t1,marginBottom:6,lineHeight:1.3,flex:1}}>{m.titre}</div>
-              <div style={{fontSize:12,color:K.t3,marginBottom:10,display:"flex",alignItems:"center",gap:10}}>
-                <span style={{display:"inline-flex",alignItems:"center",gap:3}}><i className="ti ti-help-circle" style={{fontSize:13}}/>{m.q?.length||0} question{(m.q?.length||0)>1?"s":""}</span>
-                {vids.some(v=>v.mid===m.id)&&<span style={{display:"inline-flex",alignItems:"center",gap:3}}><i className="ti ti-video" style={{fontSize:13}}/>Vidéo</span>}
-              </div>
-              <Bar p={lk?0:f?100:0} col={c} h={5}/>
-              <div style={{marginTop:10,fontSize:13,fontWeight:700,color:lk?K.t3:c,display:"flex",alignItems:"center",gap:4}}>
-                {lk?<><i className="ti ti-lock" style={{fontSize:13}}/><span>Verrouillé</span></>:f?<><i className="ti ti-circle-check" style={{fontSize:14}}/><span>Complété</span></>:<><span>Commencer</span><i className="ti ti-arrow-right" style={{fontSize:14}}/></>}
-              </div>
-              {m.slideUrl&&!lk&&miniatureLien(m.slideUrl)&&<div onClick={e=>{e.stopPropagation();setPdfMod(m);}} style={{marginTop:10,cursor:"pointer"}}><Miniature url={m.slideUrl} w="100%" h={110} r={9} K={K} alt={`Slides — ${m.titre}`}/></div>}
-              {m.slideUrl&&!lk&&<button onClick={e=>{e.stopPropagation();setPdfMod(m);}} className="bt"
-                style={{marginTop:10,width:"100%",background:"#F59E0B14",border:"1px solid #F59E0B30",borderRadius:9,padding:"7px 8px",color:"#D97706",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
-                <i className="ti ti-file-text" style={{fontSize:13}}/>Slides PDF
-              </button>}
-            </div>
-          </div>;
-        })}
-      </div>
-    </div>
-
-    {/* Badges */}
-    <BadgesPanel nd={nd} total={mods.length} sc={sc}/>
-    {pdfMod&&<PdfV url={pdfMod.slideUrl} name={pdfMod.titre} onClose={()=>setPdfMod(null)} modId={pdfMod.id} uid={uid} showRating={true}/>}
 
     {/* Récents */}
     {recentMods.length>0&&<div style={{marginTop:24}}>
@@ -3872,99 +3806,132 @@ function QZ({mod,onDone,onBack}){
   </div>;
 }
 
-function Prog({pr,sc,gp,nd,ok,mods}){
-  const K=useK();const{mob}=useW();
-  const total=mods.length;
-  const avgScore=Object.values(sc||{}).length?Math.round(Object.values(sc||{}).reduce((a,s)=>a+(s?.pct||0),0)/Object.values(sc||{}).length):0;
-  const bestScore=Object.values(sc||{}).length?Math.max(...Object.values(sc||{}).map(s=>s?.pct||0)):0;
-  // Progress rings section
-  const rings=[
-    {label:"Progression",pct:gp,col:K.em},
-    {label:"Score moyen",pct:avgScore,col:"#3B82F6"},
-    {label:"Meilleur score",pct:bestScore,col:"#F59E0B"},
-  ];const{tid}=useContext(Ctx);
-  const isLight=['light','sepia'].includes(tid);
-  const done=mods.filter(m=>pr[m.id]==="done");
-  const todo=mods.filter(m=>pr[m.id]!=="done");
-  if(!ok)return <EmptyState ico="lock" title="Accès requis" desc="Abonnez-vous pour suivre votre progression et accéder à tous les modules."/>;
-  return <div style={{maxWidth:700,margin:"0 auto",animation:"fadeIn .35s ease"}}>
-    {/* Rings de progression */}
-    <div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"20px",marginBottom:16,display:"flex",justifyContent:"space-around",alignItems:"center",flexWrap:"wrap",gap:16}}>
-      {rings.map(({label,pct,col})=><div key={label} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
-        <ProgressRing pct={pct} size={72} stroke={6} col={col}/>
-        <div style={{fontSize:12,color:K.t2,fontWeight:600,textAlign:"center"}}>{label}</div>
-      </div>)}
-    </div>
-    {/* Badges */}
-    <BadgesPanel nd={nd} total={total} sc={sc}/>
-    <div style={{marginTop:20}}>
-    {/* Header bannière */}
-    <div style={{background:`linear-gradient(135deg,${K.in_}18,${K.em}10)`,border:`1px solid ${K.inBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
-      <div style={{fontSize:13,color:K.in_,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-chart-line" style={{fontSize:14}}/> Progression globale</div>
-      <div style={{fontSize:mob?20:26,fontWeight:900,color:K.t1,marginBottom:4}}>{gp}% accompli</div>
-      <div style={{fontSize:14,color:K.t2,marginBottom:14}}>{nd} module{nd>1?"s":""} terminé{nd>1?"s":""} sur {mods.length}</div>
-      <Bar p={gp} col={K.in_} h={6}/>
-      <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
-        {[[`${nd}`,"Complétés",K.em],[`${mods.length-nd}`,"Restants",K.t3],[`${mods.filter(m=>sc[m.id]?.pct>=60).length}`,"Réussis",K.in_]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}
+// ── SOUS-RUBRIQUES ───────────────────────────────────────────────────────────
+// Écrans de la rubrique en cours (src/nav/navigation.js), sous le menu principal ; rien si la rubrique n'en a qu'un
+function SousNav({groupes,vue,onGo,badges={},c1,c2}){
+  const K=useK();const g=groupeDe(groupes,vue);
+  if(!g||g.vues.length<2)return null;
+  const a1=c1||K.emD,a2=c2||K.em;
+  return <div className="tn" style={{gap:6,marginBottom:14,paddingBottom:3,alignItems:"center"}}>
+    <span style={{fontSize:11.5,fontWeight:800,color:K.t3,textTransform:"uppercase",letterSpacing:.6,marginRight:2,whiteSpace:"nowrap",flexShrink:0}}>{g.label}</span>
+    {g.vues.map(([k,ico,label])=>{const a=vue===k,b=badges[k]||0;return <button key={k} onClick={()=>onGo(k)} className="bt" style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",borderRadius:99,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"'Outfit',sans-serif",fontSize:13,fontWeight:a?800:600,flexShrink:0,
+      background:a?`linear-gradient(135deg,${a1},${a2})`:K.card,color:a?"#fff":K.t2,border:a?"1px solid transparent":`1px solid ${K.b0}`,boxShadow:a?`0 4px 12px ${a2}35`:"none"}}>
+      <i className={`ti ti-${ico}`} style={{fontSize:15,color:a?"#fff":K.t3}}/>{label}
+      {b>0&&<span style={{background:a?"rgba(255,255,255,.25)":K.rd,color:"#fff",borderRadius:99,fontSize:11,fontWeight:800,padding:"0 6px",minWidth:18,textAlign:"center",lineHeight:"17px"}}>{b}</span>}
+    </button>;})}
+  </div>;
+}
+
+// ── MODULES DE COURS (rubrique Apprendre) : catalogue, recherche et filtre par matière ──
+function ModulesCours({mods,pr,sc,ok,vids,onOpen,uid,onSub}){
+  const K=useK();
+  const[pdfMod,setPdfMod]=useState(null),[fi,sF]=useState("Toutes"),[modQ,sModQ]=useState("");
+  const mats=[...new Set(mods.map(m=>m.mat||"Général"))];
+  const filMat=fi==="Toutes"?mods:mods.filter(m=>(m.mat||"Général")===fi);
+  const fil=modQ.trim()?filMat.filter(m=>(m.titre||"").toLowerCase().includes(modQ.toLowerCase())||(m.desc||"").toLowerCase().includes(modQ.toLowerCase())):filMat;
+  return <div style={{animation:"fadeIn .3s ease"}}>
+    {/* Modules */}
+    <div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:7}}>
+        <div className="h-sec" style={{color:K.t1}}>Modules de cours <span style={{color:K.t3,fontWeight:500,fontSize:15,fontFamily:"'Outfit',sans-serif"}}>({fil.length})</span></div>
+        {!ok&&<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="🔒 Abonnement requis"/>}
+      </div>
+      <div style={{position:"relative",marginBottom:11}}>
+        <i className="ti ti-search" style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",fontSize:14,color:K.t3}}/>
+        <input value={modQ} onChange={e=>sModQ(e.target.value)} placeholder="Rechercher un module…"
+          style={{width:"100%",background:K.c2,border:`1px solid ${K.b0}`,borderRadius:10,padding:"9px 12px 9px 32px",color:K.t1,fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+        {modQ&&<button onClick={()=>sModQ("")} style={{position:"absolute",right:9,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:K.t3,cursor:"pointer",fontSize:15,padding:2}}>×</button>}
+      </div>
+      {mats.length>1&&<div className="tn" style={{gap:6,marginBottom:11,paddingBottom:3}}>{["Toutes",...mats].map(m=><button key={m} onClick={()=>sF(m)} className="bt" style={{background:fi===m?K.c2:"transparent",border:`1px solid ${fi===m?K.b1:K.b0}`,borderRadius:99,padding:"4px 12px",fontSize:12,fontWeight:600,color:fi===m?K.t1:K.t3,whiteSpace:"nowrap",cursor:"pointer",minHeight:28}}>{m}</button>)}</div>}
+      {fil.length===0&&modQ&&<div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"20px",textAlign:"center",fontSize:14,color:K.t3,marginBottom:11}}>Aucun module ne correspond à « {modQ} ».</div>}
+      <div className="gm">
+        {fil.map((m,i)=>{
+          const f=pr[m.id]==="done",s=sc[m.id],lk=!ok;
+          const c=lk?K.t3:(m.col||K.em);
+          return <div key={m.id} onClick={()=>onOpen(m)} className="tile" style={{display:"flex",flexDirection:"column",animation:`slideUp .4s cubic-bezier(.22,1,.36,1) ${i*40}ms both`,opacity:lk?.72:1}}>
+            <div style={{height:6,background:lk?K.b1:`linear-gradient(90deg,${c},${c}88)`}}/>
+            <div style={{padding:"14px 14px 15px",display:"flex",flexDirection:"column",flex:1}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:11}}>
+                <div style={{width:42,height:42,borderRadius:13,background:lk?K.c2:`${c}16`,border:`1px solid ${lk?K.b0:c+"30"}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  {lk?<i className="ti ti-lock" style={{fontSize:18,color:K.t3}}/>:icoEl(m.ico,c,20)}
+                </div>
+                {f&&s?<Tg c={s.pct>=60?K.em:K.er} bg={s.pct>=60?K.emBg:K.erBg} bd={s.pct>=60?K.emBd:K.erBd} ch={`${s.pct}%`}/>:f?<Tg c={K.em} bg={K.emBg} bd={K.emBd} ch="✓"/>:null}
+              </div>
+              {m.mat&&<div style={{fontSize:11,color:c,marginBottom:4,fontWeight:800,textTransform:"uppercase",letterSpacing:.5}}>{m.mat}</div>}
+              <div style={{fontWeight:800,fontSize:15,color:lk?K.t2:K.t1,marginBottom:6,lineHeight:1.3,flex:1}}>{m.titre}</div>
+              <div style={{fontSize:12,color:K.t3,marginBottom:10,display:"flex",alignItems:"center",gap:10}}>
+                <span style={{display:"inline-flex",alignItems:"center",gap:3}}><i className="ti ti-help-circle" style={{fontSize:13}}/>{m.q?.length||0} question{(m.q?.length||0)>1?"s":""}</span>
+                {vids.some(v=>v.mid===m.id)&&<span style={{display:"inline-flex",alignItems:"center",gap:3}}><i className="ti ti-video" style={{fontSize:13}}/>Vidéo</span>}
+              </div>
+              <Bar p={lk?0:f?100:0} col={c} h={5}/>
+              <div style={{marginTop:10,fontSize:13,fontWeight:700,color:lk?K.t3:c,display:"flex",alignItems:"center",gap:4}}>
+                {lk?<><i className="ti ti-lock" style={{fontSize:13}}/><span>Verrouillé</span></>:f?<><i className="ti ti-circle-check" style={{fontSize:14}}/><span>Complété</span></>:<><span>Commencer</span><i className="ti ti-arrow-right" style={{fontSize:14}}/></>}
+              </div>
+              {m.slideUrl&&!lk&&miniatureLien(m.slideUrl)&&<div onClick={e=>{e.stopPropagation();setPdfMod(m);}} style={{marginTop:10,cursor:"pointer"}}><Miniature url={m.slideUrl} w="100%" h={110} r={9} K={K} alt={`Slides — ${m.titre}`}/></div>}
+              {m.slideUrl&&!lk&&<button onClick={e=>{e.stopPropagation();setPdfMod(m);}} className="bt"
+                style={{marginTop:10,width:"100%",background:"#F59E0B14",border:"1px solid #F59E0B30",borderRadius:9,padding:"7px 8px",color:"#D97706",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+                <i className="ti ti-file-text" style={{fontSize:13}}/>Slides PDF
+              </button>}
+            </div>
+          </div>;
+        })}
       </div>
     </div>
 
-    {/* Modules complétés */}
-    {done.length>0&&<><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-circle-check" style={{fontSize:16,color:K.em}}/> Complétés ({done.length})</div>
-    <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-      {done.map((m,i)=>{const s=sc[m.id];const cp=getCardPalette(tid,i);return <div key={m.id} style={{background:cp.bg,border:`1px solid ${cp.bd}`,borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,animation:`up .25s ease ${i*15}ms both`}}>
-        <div style={{width:38,height:38,borderRadius:11,background:isLight?"rgba(255,255,255,.8)":K.b1,border:`1px solid ${cp.bd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{icoEl(m.ico,cp.ac,17)}</div>
-        <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:14,color:K.t1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>{m.mat&&<div style={{fontSize:11,color:cp.ac,fontWeight:600,marginTop:1}}>{m.mat}</div>}</div>
-        {s&&<div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:800,fontSize:17,color:s.pct>=60?K.em:K.er}}>{s.pct}%</div><div style={{fontSize:10,color:K.t3}}>Score QCM</div></div>}
-        <i className="ti ti-circle-check" style={{fontSize:18,color:K.em,flexShrink:0}}/>
-      </div>;})}
-    </div></>}
+    {!ok&&onSub&&<div style={{display:"flex",justifyContent:"center",marginTop:16}}><Btn ch={LIB_ACCES} on={onSub}/></div>}
+    {pdfMod&&<PdfV url={pdfMod.slideUrl} name={pdfMod.titre} onClose={()=>setPdfMod(null)} modId={pdfMod.id} uid={uid} showRating={true}/>}
+  </div>;
+}
 
-    {/* Modules à faire */}
-    {todo.length>0&&<><div style={{fontWeight:800,fontSize:14,color:K.t1,marginBottom:10,display:"flex",alignItems:"center",gap:7}}><i className="ti ti-clock" style={{fontSize:16,color:K.t3}}/> À compléter ({todo.length})</div>
-    <div style={{display:"flex",flexDirection:"column",gap:7}}>
-      {todo.map((m,i)=><div key={m.id} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"11px 14px",display:"flex",alignItems:"center",gap:11,opacity:.75,animation:`up .25s ease ${i*12}ms both`}}>
-        <div style={{width:36,height:36,borderRadius:10,background:K.c2,border:`1px solid ${K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{!ok?<i className="ti ti-lock" style={{fontSize:14,color:K.t3}}/>:icoEl(m.ico,K.t3,15)}</div>
-        <div style={{flex:1,minWidth:0}}><div style={{fontWeight:600,fontSize:14,color:K.t2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div>{m.mat&&<div style={{fontSize:11,color:K.t3,marginTop:1}}>{m.mat}</div>}</div>
-        <div style={{fontSize:12,color:K.t3,flexShrink:0}}>{m.q?.length||0} questions</div>
-      </div>)}
-    </div></>}
-  </div></div>;}
-
-function Res({sc,ok,mods,u,uid,onSub}){
+// ── MES RÉSULTATS : progression, scores de tous les QCM, badges et attestations ──
+// QCM : modules de cours (clé = id), Code des impôts (FISC-…), Finance d'entreprise (FIN-…) → moyenne.
+// Exercices pratiques (« Quel compte ? » CPT-…, monographie JRN-ZAO) : suivis à part, hors moyenne (voir ef/syscohada/scores.js).
+function MesResultats({pr,sc,gp,nd,ok,mods,u,uid,onSub,onGo}){
   const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
   const isLight=['light','sepia'].includes(tid);
-  const att=mods.filter(m=>sc[m.id]);
-  const avg=att.length?Math.round(att.reduce((a,m)=>a+sc[m.id].pct,0)/att.length):0;
-  const pass=att.filter(m=>sc[m.id].pct>=60).length;
-  const fail=att.filter(m=>sc[m.id].pct<60).length;
-  return <div style={{maxWidth:700,margin:"0 auto",animation:"up .25s ease"}}>
-    <MesAttestations K={K} mob={mob} db={db} uid={uid} user={u} mods={mods} ok={ok} onSub={onSub}/>
-    {/* Header */}
+  const[onglet,sOnglet]=useState("cours");
+  const aller=v=>onGo&&onGo(v);
+  const L={
+    cours:mods.map(m=>({cle:m.id,titre:m.titre,sous:m.mat||"",s:sc[m.id],fait:pr[m.id]==="done",ico:m.ico,col:m.col,go:"mods"})),
+    fisc:MODULES_FISC.map(m=>({cle:`FISC-${m.id}`,titre:`${m.id} · ${m.titre}`,sous:"Code des impôts",s:sc[`FISC-${m.id}`],col:m.col,go:"fisc"})),
+    fin:MODULES_FIN.map(m=>({cle:`FIN-${m.id}`,titre:`${m.id} · ${m.titre}`,sous:"Finance d'entreprise",s:sc[`FIN-${m.id}`],col:m.col,go:"fin"})),
+    exo:[{cle:"JRN-ZAO",titre:"Monographie ZAO IMMO : du journal aux états financiers",sous:"États financiers",s:sc["JRN-ZAO"],go:"jrn"},
+      ...CLES_CPT.map(c=>({cle:c,titre:c==="CPT-T"?"« Quel compte ? » : toutes les classes":`« Quel compte ? » : classe ${c.slice(4)}`,sous:"Guide des comptes",s:sc[c],go:"cpt"}))],
+  };
+  const qcm=[...L.cours,...L.fisc,...L.fin].filter(x=>x.s&&x.s.pct!=null);
+  const moy=moyenne(qcm.map(x=>x.s.pct)),best=qcm.length?Math.max(...qcm.map(x=>x.s.pct)):null;
+  const reussis=qcm.filter(x=>x.s.pct>=60).length;
+  const ONGLETS=[["cours","book-2","Modules de cours"],["fisc","receipt-tax","Code des impôts"],["fin","chart-pie","Finance d'entreprise"],["exo","pencil","Exercices pratiques"]];
+  const nFaits=k=>L[k].filter(x=>(x.s&&x.s.pct!=null)||x.fait).length;
+  const liste=L[onglet];
+  return <div style={{maxWidth:760,margin:"0 auto",animation:"fadeIn .3s ease"}}>
     <div style={{background:`linear-gradient(135deg,${K.wa}18,${K.em}10)`,border:`1px solid ${K.waBd}`,borderRadius:16,padding:mob?"16px":"20px 24px",marginBottom:16}}>
-      <div style={{fontSize:13,color:K.wa,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-trophy" style={{fontSize:14}}/> Tableau des résultats</div>
-      <div style={{fontSize:mob?20:26,fontWeight:900,color:K.t1,marginBottom:4}}>Moyenne : {avg}%</div>
-      <div style={{fontSize:14,color:K.t2,marginBottom:14}}>{att.length} évaluation{att.length>1?"s":""} passée{att.length>1?"s":""}</div>
+      <div style={{fontSize:13,color:K.wa,fontWeight:700,marginBottom:5,display:"flex",alignItems:"center",gap:5}}><i className="ti ti-trophy" style={{fontSize:14}}/> Mes résultats</div>
+      <div style={{display:"flex",justifyContent:"space-around",alignItems:"center",flexWrap:"wrap",gap:14,margin:"8px 0 14px"}}>
+        {[["Modules de cours terminés",gp,K.em],["Moyenne des QCM",moy||0,"#3B82F6"],["Meilleur score",best||0,"#F59E0B"]].map(([l,pct,col])=><div key={l} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:7}}>
+          <ProgressRing pct={pct} size={72} stroke={6} col={col}/><div style={{fontSize:12,color:K.t2,fontWeight:600,textAlign:"center",maxWidth:110}}>{l}</div></div>)}
+      </div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        {[[`${att.length}`,"Évaluations",K.t2],[`${pass}`,"Réussies",K.em],[`${fail}`,"À retravailler",K.er],[`${avg}%`,"Moyenne",avg>=60?K.em:K.er]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}
+        {[[`${nd}/${mods.length}`,"Modules terminés",K.em],[`${qcm.length}`,"QCM passés",K.t2],[`${reussis}`,"Réussis (≥ 60 %)",K.em],[`${qcm.length-reussis}`,"À retravailler",K.er]].map(([v,l,c])=><div key={l} style={{background:isLight?"rgba(255,255,255,.7)":K.b0,borderRadius:9,padding:"7px 12px",border:`1px solid ${K.b1}`}}><div style={{color:c,fontWeight:800,fontSize:16,lineHeight:1}}>{v}</div><div style={{color:K.t3,fontSize:11,marginTop:2}}>{l}</div></div>)}
       </div>
     </div>
-
-    {!ok||att.length===0?<div style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"44px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:10,animation:"fl 3s ease-in-out infinite"}}>{!ok?"🔒":"📊"}</div><div style={{color:K.t2,fontSize:14,fontWeight:700,marginBottom:4}}>{!ok?"Accès requis":"Aucun résultat"}</div><div style={{color:K.t3,fontSize:13}}>{!ok?"Abonnez-vous.":"Commencez un module !"}</div></div>:
-    <div style={{display:"flex",flexDirection:"column",gap:9}}>
-      {att.map((m,i)=>{const s=sc[m.id];const w=s.pct>=60;const cp=getCardPalette(tid,i);return <div key={m.id} style={{background:w?cp.bg:K.card,border:`1px solid ${w?cp.bd:K.erBd}`,borderRadius:13,padding:"14px 16px",animation:`up .25s ease ${i*22}ms both`}}>
-        <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:10}}>
-          <div style={{width:40,height:40,borderRadius:11,background:isLight?w?"rgba(255,255,255,.8)":K.erBg:K.b1,border:`1px solid ${w?cp.bd:K.erBd}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{icoEl(m.ico,w?cp.ac:K.er,17)}</div>
-          <div style={{flex:1,minWidth:0}}><div style={{color:K.t1,fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.titre}</div><div style={{color:K.t3,fontSize:11,fontFamily:"'JetBrains Mono',monospace",marginTop:1}}>{m.code}{m.mat?` · ${m.mat}`:""}</div></div>
-          <div style={{textAlign:"right",flexShrink:0}}>
-            <div style={{fontWeight:900,fontSize:22,color:w?cp.ac:K.er,letterSpacing:"-.5px"}}>{s.pct}%</div>
-            <div style={{fontSize:11,color:K.t3}}>{s.s}/{s.t} bonnes</div>
-          </div>
-        </div>
-        <Bar p={s.pct} col={w?cp.ac:K.er} h={4}/>
-        <div style={{marginTop:8,display:"flex",alignItems:"center",gap:6}}>{w?<><i className="ti ti-circle-check" style={{fontSize:14,color:K.em}}/><span style={{fontSize:13,color:K.em,fontWeight:600}}>{s.pct>=80?"Excellent !":s.pct>=70?"Très bien":"Bien"}</span></>:<><i className="ti ti-alert-circle" style={{fontSize:14,color:K.er}}/><span style={{fontSize:13,color:K.er,fontWeight:600}}>À retravailler</span></>}</div>
-      </div>;})}
-    </div>}
+    <MesAttestations K={K} mob={mob} db={db} uid={uid} user={u} mods={mods} ok={ok} onSub={onSub}/>
+    <div className="tn" style={{gap:6,margin:"18px 0 12px",paddingBottom:3}}>
+      {ONGLETS.map(([k,ico,l])=>{const a=onglet===k;return <button key={k} onClick={()=>sOnglet(k)} className="bt" style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",borderRadius:99,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"'Outfit',sans-serif",fontSize:13,fontWeight:a?800:600,flexShrink:0,background:a?`linear-gradient(135deg,${K.emD},${K.em})`:K.card,color:a?"#fff":K.t2,border:a?"1px solid transparent":`1px solid ${K.b0}`}}>
+        <i className={`ti ti-${ico}`} style={{fontSize:15,color:a?"#fff":K.t3}}/>{l}<span style={{fontSize:11.5,opacity:.8}}>{nFaits(k)}/{L[k].length}</span></button>;})}
+    </div>
+    {onglet==="exo"&&<div style={{fontSize:12.5,color:K.t3,marginBottom:10,lineHeight:1.5}}><i className="ti ti-info-circle" style={{marginRight:4}}/>Les exercices pratiques sont suivis à part : ils ne comptent pas dans la moyenne des QCM.</div>}
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      {liste.map(x=>{const pct=x.s&&x.s.pct!=null?x.s.pct:null,ok_=pct!=null&&pct>=60,col=pct==null?(x.fait?K.em:K.t3):ok_?K.em:K.er;
+        return <div key={x.cle} onClick={()=>aller(x.go)} className="hv" style={{background:K.card,border:`1px solid ${pct!=null&&!ok_?K.erBd:K.b0}`,boxShadow:K.sh,borderRadius:13,padding:"11px 14px",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+          <div style={{width:36,height:36,borderRadius:10,background:pct!=null||x.fait?`${col}16`:K.c2,border:`1px solid ${pct!=null||x.fait?col+"35":K.b0}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            <i className={`ti ti-${pct!=null?(ok_?"circle-check":"alert-circle"):x.fait?"circle-check":"clock"}`} style={{fontSize:17,color:col}}/></div>
+          <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:14,color:K.t1,lineHeight:1.35}}>{x.titre}</div>{x.sous&&<div style={{fontSize:11.5,color:K.t3,marginTop:1}}>{x.sous}</div>}</div>
+          <div style={{textAlign:"right",flexShrink:0}}>{pct!=null?<><div style={{fontWeight:900,fontSize:18,color:col}}>{pct}%</div><div style={{fontSize:10.5,color:K.t3}}>{x.s.s!=null&&x.s.t?`${x.s.s}/${x.s.t}`:"Meilleur score"}</div></>
+            :<div style={{fontSize:12,color:x.fait?K.em:K.t3,fontWeight:700}}>{x.fait?"Terminé":"À faire"}</div>}</div>
+        </div>;})}
+    </div>
+    <BadgesPanel nd={nd} total={mods.length} sc={sc}/>
   </div>;
 }
 
@@ -4635,33 +4602,11 @@ function AA({onOut}){
     </div>;
   }
     const nAValider=mods.filter(m=>m.status==="pending").length+allPresAdmin.filter(p=>p.status==="pending").length+vids.filter(v=>v.status==="pending").length+pendingDocs.length;
-    const ADMIN_TABS=[
-          {k:"home",ico:"ti-layout-grid",  label:"Accueil"},
-          {k:"val", ico:"ti-checklist",     label:"À valider", badge:nAValider, bc:K.wa},
-          {k:"d",  ico:"ti-clock",         label:`Dem.`,      badge:nD,  bc:K.wa},
-          {k:"a",  ico:"ti-circle-check",  label:"Actifs",    badge:nA,  bc:K.em},
-          {k:"e",  ico:"ti-clock-off",     label:"Expirés",   badge:nE,  bc:K.er},
-          {k:"t",  ico:"ti-users",         label:"Tous",      badge:users.length, bc:K.t2},
-          {k:"s",  ico:"ti-chart-bar",     label:"Stats"},
-          {k:"m",  ico:"ti-book-2",        label:"Cours"},
-          {k:"v",  ico:"ti-video",         label:"Vidéos"},
-          {k:"pr", ico:"ti-presentation",  label:"Présentations"},
-          {k:"st", ico:"ti-briefcase",     label:"Stages"},
-          {k:"dm", ico:"ti-message-circle",label:"Demandes",  badge:allDemandesAdmin.filter(d=>d.statut==="nouveau").length, bc:K.in_},
-          {k:"p",  ico:"ti-file-text",     label:"PDF"},
-          {k:"fo", ico:"ti-school",          label:"Formateurs", badge:users.filter(u=>u.role==="formateur").length, bc:"#8B5CF6"},
-          {k:"an", ico:"ti-speakerphone",    label:"Annonces",   badge:allAnnonces.filter(a=>a.actif).length, bc:K.wa},
-          {k:"au", ico:"ti-shield-check",     label:"Audit",       bc:K.in_},
-          {k:"pl", ico:"ti-calendar-check",   label:"Présentiel",  bc:K.em},
-          {k:"ef", ico:"ti-report-money",     label:"États fin."},
-          {k:"fisc", ico:"ti-receipt-tax",    label:"Impôts"},
-          {k:"fin",  ico:"ti-chart-pie",      label:"Finance"},
-          {k:"ac", ico:"ti-ticket",          label:"Accès"},
-          {k:"att", ico:"ti-certificate",    label:"Attestations"},
-          {k:"nt", ico:"ti-bell",            label:"Notifications"},
-          {k:"sg", ico:"ti-bulb",            label:"Suggestions", badge:nSugg, bc:K.wa},
-          {k:"msg", ico:"ti-message-circle",  label:"Messages",   badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, bc:K.rd},
-    ];
+    // Menu : 10 rubriques (src/nav/navigation.js) ; pastilles = éléments à traiter
+    const badgesAdmin={val:nAValider,d:nD,dm:allDemandesAdmin.filter(d=>d.statut==="nouveau").length,sg:nSugg,msg:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length};
+    const ADMIN_TABS=GROUPES_ADMIN.map(g=>({k:g.k,ico:g.ico,label:g.court||g.label,badge:badgeGroupe(g,badgesAdmin),bc:g.k==="ech"?K.rd:K.wa}));
+    const gAdmin=groupeDe(GROUPES_ADMIN,tab)?.k||"home";
+    const allerGroupeA=k=>sT(GROUPES_ADMIN.find(g=>g.k===k).vues[0][0]);
   // Contenus des formateurs à valider (modules, présentations, vidéos, documents)
   const blocValidation=()=>{
         const pendingMods=mods.filter(m=>m.status==="pending");
@@ -4781,14 +4726,14 @@ function AA({onOut}){
   return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif"}}>
     <style>{mCss(K)}</style>
     <AutoLogoutBanner warning={aaWarn} mob={mob}/>
-    <StaffNav role="admin" nom="Administrateur" onOut={onOut} tabs={ADMIN_TABS} active={tab} onTab={sT} onProfil={()=>sT("param")}
+    <StaffNav role="admin" nom="Administrateur" onOut={onOut} tabs={ADMIN_TABS} active={gAdmin} onTab={allerGroupeA} onProfil={()=>sT("param")}
       extra={<>{!mob&&<div style={{display:"flex",gap:12,alignItems:"center",marginRight:4}}>
-        {[[`${users.length}`,"users",K.t2,"Inscrits"],[`${nD}`,"clock",K.wa,"Demandes"],[`${nA}`,"circle-check",K.em,"Actifs"]].map(([v,ic,c,t])=>(
+        {[[`${users.length}`,"users",K.t2,"Inscrits"],[`${nD}`,"clock",K.wa,"Demandes d'accès"],[`${nA}`,"circle-check",K.em,"Actifs"]].map(([v,ic,c,t])=>(
           <div key={ic} title={t} style={{display:"flex",alignItems:"center",gap:4}}><i className={`ti ti-${ic}`} style={{fontSize:16,color:c}}/><span style={{fontSize:14,fontWeight:800,color:c}}>{v}</span></div>))}
-      </div>}<Cloche K={K} db={db} uid={auth.currentUser?.uid} role="admin" mob={mob} onGo={v=>sT(ADMIN_TABS.some(t=>t.k===v)||v==="param"?v:"home")}/></>}/>
+      </div>}<Cloche K={K} db={db} uid={auth.currentUser?.uid} role="admin" mob={mob} onGo={v=>sT(VUES_ADMIN.includes(v)?v:"home")}/></>}/>
     <div className="mp" style={{maxWidth:1060,margin:"0 auto"}}>
       {msg.m&&<Pop t={msg.t} m={msg.m}/>}
-      {tab!=="home"&&<div className="tn" style={{gap:8,marginBottom:16,paddingBottom:2}}>{[[`${users.length}`,"Inscrits",K.t1,"users","t"],[`${nD}`,"Demandes",K.wa,"clock","d"],[`${nA}`,"Actifs",K.em,"circle-check","a"],[`${nE}`,"Expirés",K.er,"clock-off","e"],[`${mods.filter(m=>m.on!==false).length}`,"Modules",K.in_,"book-2","m"]].map(([v,l,c,ic,k])=><div key={l} onClick={()=>sT(k)} className="bt" style={{display:"flex",alignItems:"center",gap:8,background:K.card,border:`1px solid ${tab===k?c:K.b0}`,boxShadow:K.sh,borderRadius:14,padding:"8px 13px",cursor:"pointer",flexShrink:0}}><i className={`ti ti-${ic}`} style={{fontSize:17,color:c}}/><span style={{color:c,fontWeight:900,fontSize:17}}>{v}</span><span style={{color:K.t2,fontSize:13,fontWeight:600}}>{l}</span></div>)}</div>}
+      {tab!=="home"&&<SousNav groupes={GROUPES_ADMIN} vue={tab} onGo={sT} badges={badgesAdmin} c1={ROLE_COL.admin[0]} c2={ROLE_COL.admin[1]}/>}
       {tab==="home"&&(()=>{
         const dashTiles=[
           {k:"d", ico:"clock",          label:"Demandes",       badge:nD, col:"#D97706"},
@@ -4858,12 +4803,21 @@ function AA({onOut}){
         return <div style={{animation:"fadeIn .35s ease"}}>
           <StaffHero role="admin" label="Administration" title="Tableau de bord"
             sub={`${nD} demande${nD>1?"s":""} d'accès en attente · ${nMsgNonLus} message${nMsgNonLus>1?"s":""} non lu${nMsgNonLus>1?"s":""} · ${modsAttente+presAttente+docsAttente+vidsAttente} contenu${modsAttente+presAttente+docsAttente+vidsAttente>1?"s":""} à valider`}
-            stats={[[`${users.length}`,"Inscrits","users",()=>sT("t")],[`${nD}`,"Demandes","clock",()=>sT("d")],[`${nA}`,"Actifs","circle-check",()=>sT("a")],[`${mods.filter(m=>m.on!==false).length}`,"Modules","book-2",()=>sT("m")]]}/>
+            stats={[[`${users.length}`,"Inscrits","users",()=>sT("t")],[`${nD}`,"Demandes d'accès","clock",()=>sT("d")],[`${nA}`,"Actifs","circle-check",()=>sT("a")],[`${mods.filter(m=>m.on!==false).length}`,"Modules","book-2",()=>sT("m")]]}/>
 
-          <div className="h-sec" style={{color:K.t1,marginBottom:12}}>Accès rapide</div>
-          <div className="gq" style={{marginBottom:26,gridTemplateColumns:mob?"repeat(3,1fr)":"repeat(auto-fill,minmax(180px,1fr))",gap:mob?9:undefined}}>
-            {dashTiles.map(({k,ico,label,badge,col},i)=><ActionTile key={k} ico={ico} col={col} label={label} badge={badge} on={()=>sT(k)} i={i} compact={mob}/>)}
-          </div>
+          {/* Une carte par rubrique du menu : écrans et compteurs (en rouge : à traiter) */}
+          {(()=>{const T_=Object.fromEntries(dashTiles.map(t=>[t.k,t]));return <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(250px,1fr))",gap:10,marginBottom:26}}>
+            {GROUPES_ADMIN.filter(g=>g.k!=="home").map(g=>{const col=T_[g.vues[0][0]]?.col||"#0A2A5C",bg=badgeGroupe(g,badgesAdmin);return <div key={g.k} style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"12px 12px 6px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:6}}>
+                <div style={{width:34,height:34,borderRadius:10,background:`linear-gradient(135deg,${col},${col}B0)`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><i className={`ti ti-${g.ico}`} style={{fontSize:18,color:"#fff"}}/></div>
+                <div style={{fontWeight:800,fontSize:15,color:K.t1,flex:1}}>{g.label}</div>
+                {bg>0&&<span style={{background:K.rd,color:"#fff",borderRadius:99,fontSize:11.5,fontWeight:800,padding:"1px 8px"}}>{bg}</span>}
+              </div>
+              {g.vues.map(([k,ico,label])=>{const n=T_[k]?.badge,urg=badgesAdmin[k]>0;return <button key={k} onClick={()=>sT(k)} className="bt" style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 6px",background:"none",border:"none",borderTop:`1px solid ${K.b0}`,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontSize:13.5,fontWeight:600,color:K.t1,textAlign:"left"}}>
+                <i className={`ti ti-${ico}`} style={{fontSize:16,color:K.t3}}/><span style={{flex:1}}>{label}</span>
+                {n>0&&<span style={{fontSize:12.5,fontWeight:800,color:urg?K.rd:K.t3}}>{n}</span>}<i className="ti ti-chevron-right" style={{fontSize:15,color:K.t3}}/></button>;})}
+            </div>;})}
+          </div>;})()}
 
           <div className="h-sec" style={{color:K.t1,marginBottom:14}}>Indicateurs</div>
 
@@ -4907,7 +4861,7 @@ function AA({onOut}){
           </KpiGroup>
 
           <KpiGroup title="Activité courante" ico="bell">
-            <KpiCard label="Demandes services" val={allDemandesAdmin.filter(d=>d.statut==="nouveau").length} col={K.in_}/>
+            <KpiCard label="Demandes de services" val={allDemandesAdmin.filter(d=>d.statut==="nouveau").length} col={K.in_}/>
             <KpiCard label="Messages non lus" val={nMsgNonLus} col={K.rd}/>
             <KpiCard label="Annonces actives" val={allAnnonces.filter(a=>a.actif).length} col={K.wa}/>
           </KpiGroup>

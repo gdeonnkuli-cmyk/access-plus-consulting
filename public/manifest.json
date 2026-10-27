@@ -17,6 +17,6 @@
   ],
   "shortcuts": [
     { "name": "Atelier États financiers", "short_name": "États fin.", "url": "/?vue=ef", "icons": [{ "src": "/icons/ec-192-v2.png", "sizes": "192x192" }] },
-    { "name": "Mes cours", "short_name": "Cours", "url": "/?vue=pres", "icons": [{ "src": "/icons/ec-192-v2.png", "sizes": "192x192" }] }
+    { "name": "Mes cours", "short_name": "Cours", "url": "/?vue=mods", "icons": [{ "src": "/icons/ec-192-v2.png", "sizes": "192x192" }] }
   ]
 }
