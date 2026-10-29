@@ -40,6 +40,7 @@ export const BANQUE = [
   { id: "a6", cible: "abonnes", type: "defi", titre: "Import-export : testez-vous", texte: "Le module F10 et ses 15 questions : procédures, documents et change.", vue: "fisc" },
   { id: "a7", cible: "abonnes", type: "defi", titre: "Le simulateur de paie vous attend", texte: "Saisissez votre propre bulletin et comparez avec votre fiche de paie : surprises garanties.", vue: "fisc" },
   { id: "a8", cible: "abonnes", type: "nouveaute", titre: "Nouveau : Finance d'entreprise", texte: "7 modules, 16 cas corrigés (VAN, DCF, change USD/CDF, affectation OHADA) et chaque leçon en audio.", vue: "fin" },
+  { id: "a9", cible: "abonnes", type: "nouveaute", titre: "Nouveau : la facture normalisée (F13)", texte: "Obligatoire depuis le 1er décembre 2025 : DEF, e-DEF, mentions, groupes de taxation et contrôle avant de déduire la TVA.", vue: "fisc" },
   // Tout le monde : astuces
   { id: "t1", cible: "tous", type: "astuce", titre: "1 000 000 FC payés en espèces ?", texte: "Entre assujettis, une facture d'au moins 1 000 000 FC réglée en espèces perd son droit à déduction de TVA (art. 59 bis).", vue: "fisc" },
   { id: "t2", cible: "tous", type: "astuce", titre: "Carburant : la moitié seulement", texte: "Hors cas particuliers, la TVA sur le carburant n'est déductible qu'à 50 % (art. 41).", vue: "fisc" },
@@ -64,6 +65,7 @@ export const BANQUE = [
   { id: "t21", cible: "tous", type: "astuce", titre: "Une idée de contenu ?", texte: "Proposez-la dans Suggestions : chaque proposition est lue par l'équipe Éco-Campus.", vue: "sugg" },
   { id: "t22", cible: "tous", type: "astuce", titre: "Ne ratez aucun direct", texte: "Activez les notifications sur votre téléphone dans Paramètres.", vue: "param" },
   { id: "t23", cible: "tous", type: "motivation", titre: "Apprenez à plusieurs", texte: "Partagez Éco-Campus avec un collègue ou un camarade de promotion : on progresse mieux ensemble.", vue: "home" },
+  { id: "t24", cible: "tous", type: "astuce", titre: "Facture « normalisée » ? Scannez le QR code", texte: "Seule une facture émise par un dispositif électronique fiscal (DEF) est normalisée : vérifiez son code QR sur le service de la DGI avant de déduire la TVA.", vue: "fisc" },
 ];
 
 export const accesActif = u => u?.abonnement === "actif" && !!u.dateExpiration && new Date(u.dateExpiration) > new Date();

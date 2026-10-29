@@ -28,8 +28,8 @@ test("découpage en phrases de longueur limitée", () => {
   expect(decouperPhrases(long2, 120).some(p => /[.;:]\s*,|^,/.test(p))).toBe(false);
 });
 
-test("les 12 leçons fiscales produisent un texte lisible, sans balises ni symboles bruts", () => {
-  expect(MODULES_FISC.length).toBe(12);
+test("les 13 leçons fiscales produisent un texte lisible, sans balises ni symboles bruts", () => {
+  expect(MODULES_FISC.length).toBe(13);
   for (const m of MODULES_FISC) {
     const S = texteModuleFiscal(m);
     expect(S.length).toBeGreaterThan(10);
@@ -55,4 +55,8 @@ test("narration d'une présentation", () => {
   expect(paragraphesNarration("Diapositive 1. Bienvenue\n\n\nDiapositive 2.\nLe calendrier  ")).toEqual(["Diapositive 1. Bienvenue", "Diapositive 2. Le calendrier"]);
   expect(texteNarration({ titre: "Clôture", narration: "Diapositive 1. Le compte 585 doit être nul au 31/12\n\nDiapositive 2. Fin" }))
     .toEqual(["Clôture.", "Diapositive 1. Le compte 585 doit être nul au 31/12.", "Diapositive 2. Fin."]);
+});
+
+test("sigles de la facture normalisée épelés", () => {
+  expect(pourLecture("Le DEF ou la plateforme e-DEF, relié par un MCF au SFE")).toBe("Le D E F ou la plateforme e-D E F, relié par un M C F au S F E");
 });
