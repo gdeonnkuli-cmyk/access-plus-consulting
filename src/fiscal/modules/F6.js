@@ -117,7 +117,7 @@ export default {
         "**Paiement bancaire** : pour toute transaction d'**au moins 1 000 000 FC** entre assujettis, paiement par chèque, virement ou carte ; sinon, **perte du droit à déduction** (art. 59 bis et 74 bis).",
         "**Exclusions** (art. 41) : logement, restauration, réception, spectacles ; biens utilisés à plus de 50 % à titre privé ; cadeaux, sauf objets publicitaires de moins de 10 000 FC.",
         "**Produits pétroliers** (art. 41, pt 3 ter, L.F. n° 17/014) : hors cas particuliers des pts 3 et 3 bis (grossistes revendeurs, électricité, combustibles industriels, aéronefs), TVA déductible **à 50 %**.",
-        "**Factures hors DEF** (art. 42-3, L.F. n° 18/025) : la TVA d'une facture émise hors dispositif électronique fiscal par une personne tenue d'en utiliser n'est pas déductible, à la date fixée par arrêté.",
+        "**Factures hors DEF** (art. 42-3, L.F. n° 18/025) : la TVA d'une facture émise hors dispositif électronique fiscal par une personne tenue d'en utiliser n'est pas déductible. La facture normalisée est obligatoire depuis le 1er décembre 2025 (Décret n° 23/010 et communiqué de la DGI) : voir le module F13.",
         "**Véhicules de transport de personnes** (art. 42) : TVA non déductible, sauf véhicules d'au moins 10 places pour le transport du personnel, transport public de voyageurs et loueurs.",
         "**Prorata** (art. 43) : l'assujetti mixte (opérations taxables et exonérées) ne déduit qu'une fraction : recettes ouvrant droit à déduction ÷ recettes totales, **arrondie à l'unité supérieure**.",
         "**Exportations** (art. 39, L.F. n° 20/020) : la déduction n'est acquise que si l'exportation est prouvée par les documents douaniers **et** par ceux du **rapatriement des fonds** (réglementation de change).",
@@ -199,7 +199,7 @@ export default {
         "**Déclaration mensuelle** : en double exemplaire, **au plus tard le 15 du mois qui suit**, accompagnée du paiement ; obligatoire même sans opération (mention « Néant ») (art. 60).",
         "**État détaillé des déductions** joint à la déclaration : fournisseur, Numéro Impôt, facture, montant HT et TVA. À défaut, déductions réintégrées d'office après une mise en demeure restée sans effet 5 jours (art. 56).",
         "**Dispositifs électroniques fiscaux (DEF)** : enregistrement, facture produite par l'appareil à chaque transaction, données transmises en fin de journée (art. 59 ter et quater).",
-        "**Date d'application des DEF** : celle que fixera un arrêté du Ministre des Finances. L'édition 2017 annonçait le 1er janvier 2019 ; le Code au 31 mars 2021 ne reproduit aucun arrêté de fixation.",
+        "**Date d'application des DEF** : le Code au 31 mars 2021 la renvoyait à un arrêté du Ministre des Finances (l'édition 2017 annonçait le 1er janvier 2019). Le Décret n° 23/010 du 3 mars 2023 a réglementé la facture normalisée, et la DGI l'a rendue obligatoire le **1er décembre 2025** : voir le module F13.",
         "**Retenue à la source** : les minières assujetties retiennent la TVA facturée par les **établissements publics** et les entreprises publiques à 100 % (art. 53, L.F. n° 17/014), depuis le 7 octobre 2017.",
         "Défaut de retenue à la source : amende égale au montant de la retenue (art. 74 ter). La date du 7 octobre 2017 résulte de la Circ. M. n° 003 du même jour.",
       ],
@@ -219,7 +219,7 @@ export default {
         ["Non-utilisation du DEF (*)", "Amende de 10 000 000 FC", "art. 74 quater"],
         ["Corruption délibérée du DEF (*)", "Amende de 5 000 000 FC ; triplée en récidive", "art. 74 quinquies (L.F. n° 18/025)"],
       ],
-      note: "(*) Applicables à la date fixée par arrêté du Ministre des Finances, non reproduit dans le Code au 31 mars 2021. S'y ajoutent les pénalités générales de la L. n° 004/2003 (majorations, intérêt de retard de 2 % par mois en cas de redressement, majoration de recouvrement de 2 % par mois en cas de paiement tardif) : voir le module « Sanctions, recouvrement et contentieux ».",
+      note: "(*) Le Code au 31 mars 2021 les rendait applicables à la date fixée par arrêté ; la facture normalisée est obligatoire depuis le 1er décembre 2025 (voir F13) : vérifiez le montant des amendes dans les lois de finances récentes. S'y ajoutent les pénalités générales de la L. n° 004/2003 (majorations, intérêt de retard de 2 % par mois en cas de redressement, majoration de recouvrement de 2 % par mois en cas de paiement tardif) : voir le module « Sanctions, recouvrement et contentieux ».",
     },
     {
       type: "pieges",
@@ -240,7 +240,7 @@ export default {
     {
       type: "maj",
       texte:
-        "**À surveiller** : les DEF (art. 59 ter et quater), l'exclusion des factures émises hors DEF (art. 42-3) et les amendes des art. 74 quater et quinquies ne s'appliquent qu'à partir de la date fixée par un arrêté du Ministre, que le Code au 31 mars 2021 ne reproduit pas. Il en va de même de l'arrêté d'attribution du Numéro TVA et du texte d'application de l'exonération des entreprises nouvelles. Vérifiez ces arrêtés et les lois de finances postérieures à 2021 avant d'appliquer ces règles.",
+        "**À surveiller** : la facture normalisée (DEF, art. 59 ter et quater ; factures hors DEF, art. 42-3) est obligatoire depuis le 1er décembre 2025 (voir F13) ; vérifiez le montant actuel des amendes des art. 74 quater et quinquies. Vérifiez aussi l'arrêté d'attribution du Numéro TVA, le texte d'application de l'exonération des entreprises nouvelles et les lois de finances postérieures à 2021 avant d'appliquer ces règles.",
     },
     {
       type: "articles",
@@ -299,7 +299,7 @@ export default {
       q: "Quelle amende sanctionne la corruption délibérée d'un dispositif électronique fiscal (DEF), en dehors de toute récidive ?",
       r: ["10 000 000 FC", "500 000 FC", "15 000 000 FC", "5 000 000 FC"],
       b: 3,
-      e: "La corruption délibérée du DEF est punie d'une amende de 5 000 000 FC, triplée en récidive ; 10 000 000 FC sanctionne la non-utilisation du DEF. Ces amendes s'appliquent à la date fixée par arrêté du Ministre.",
+      e: "La corruption délibérée du DEF est punie d'une amende de 5 000 000 FC, triplée en récidive ; 10 000 000 FC sanctionne la non-utilisation du DEF. Ce sont les montants du Code au 31 mars 2021 : la facture normalisée est obligatoire depuis le 1er décembre 2025 (F13), vérifiez les lois de finances récentes.",
       art: "art. 74 quinquies O.-L. n° 10/001 (L.F. n° 18/025)",
     },
     {

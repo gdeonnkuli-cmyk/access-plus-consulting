@@ -15,6 +15,9 @@ const ABREVIATIONS = [
   [/\bCA\b/g, "chiffre d'affaires"], [/\bSA\b/g, "S.A."], [/\bHT\b/g, "hors taxes"], [/\bTTC\b/g, "toutes taxes comprises"],
   [/\bIM\b/g, "impôt mobilier"], [/\bAMR\b/g, "avis de mise en recouvrement"], [/\bATD\b/g, "avis à tiers détenteur"],
   [/\bPV\b/g, "procès-verbal"], [/\bETS\b/g, "établissements"], [/\bASBL\b/g, "association sans but lucratif"],
+  // Facture normalisée : sigles épelés (« DEF » serait lu comme un mot)
+  [/\be-DEF\b/g, "e-D E F"], [/\bDEF\b/g, "D E F"], [/\be-MCF\b/g, "e-M C F"], [/\bMCF\b/g, "M C F"], [/\be-UF\b/g, "e-U F"],
+  [/\bSFE\b/g, "S F E"], [/\bRCCM\b/g, "R C C M"],
   [/\bC\.M\.P\.?/g, "coût moyen pondéré"], [/\bP\.E\.P\.S\.?/g, "premier entré, premier sorti"], [/\bG\.I\.E\.?/g, "groupement d'intérêt économique"],
 ];
 const SYMBOLES = [

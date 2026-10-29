@@ -194,7 +194,7 @@ export default {
     {
       type: "maj",
       texte:
-        "**À vérifier** : l'entrée en vigueur des dispositifs électroniques fiscaux (DEF) et de la non-déductibilité des factures émises hors DEF (art. 42-3) dépend d'un arrêté du Ministre des Finances, ainsi que les lois de finances postérieures à 2021. Les intitulés de comptes suivent le plan SYSCOHADA révisé : adaptez-les au plan de comptes de votre entité.",
+        "**Facture normalisée** : depuis le 1er décembre 2025, la TVA déductible se justifie par une facture normalisée émise par un DEF, ou un document admis en tenant lieu (Décret n° 23/010) : voir le module F13. Vérifiez aussi les lois de finances postérieures à 2021. Les intitulés de comptes suivent le plan SYSCOHADA révisé : adaptez-les au plan de comptes de votre entité.",
     },
     {
       type: "articles",

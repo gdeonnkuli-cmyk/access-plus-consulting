@@ -20,6 +20,7 @@ const FISC = [
   ["F7", "Obligations déclaratives et contrôle fiscal"], ["F8", "Sanctions, recouvrement et contentieux"],
   ["F9", "Impôts réels, TSCR et conventions fiscales"], ["F10", "Import-export : procédures, documents et change"],
   ["F11", "La paie en RDC : du brut au net, cotisations et écritures"], ["F12", "La TVA en pratique : déclarer son mois sans erreur"],
+  ["F13", "La facture normalisée : émettre, vérifier, déduire"],
 ];
 
 // Modules de finance d'entreprise (doit rester aligné sur src/finance/modules — vérifié par regles.test.js)
@@ -33,7 +34,7 @@ const PARCOURS = [
   { id: "SYS-N1", titre: "Comptabilité SYSCOHADA révisé — Niveau 1 : fondamentaux", court: "SYSCOHADA · Niveau 1",
     description: "Modules de cours de comptabilité générale et exercice « Quel compte ? » sur l'ensemble du plan." },
   { id: "FISC", titre: "Fiscalité congolaise — Le Code des impôts", court: "Fiscalité RDC",
-    description: "Les 12 modules du Code des impôts : IBP, IPR, IM et IRL, TVA, obligations, contentieux, import-export, paie." },
+    description: "Les 13 modules du Code des impôts : IBP, IPR, IM et IRL, TVA, obligations, contentieux, import-export, paie, facture normalisée." },
   { id: "SYS-N2", titre: "Comptabilité SYSCOHADA révisé — Niveau 2 : pratique", court: "SYSCOHADA · Niveau 2",
     description: "Monographie ZAO IMMO SARL (tenue comptable d'un exercice) et exercice « Quel compte ? » classe par classe." },
   { id: "FIN", titre: "Finance d'entreprise — RDC et espace OHADA", court: "Finance d'entreprise",
