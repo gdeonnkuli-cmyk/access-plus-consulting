@@ -1,0 +1,298 @@
+// Module F14 — L'IRPP : l'impôt sur le revenu des personnes physiques (réforme 2026)
+// Source : « Guide pratique de l'IRPP en RDC » (Éco-Campus, sources consultées le 30 octobre 2026) : loi n° 23/053 du
+// 30 novembre 2023, page IRPP et dépliant IRPP de la DGI (octobre 2025), Ministère des Finances. Complète F2 à F5 et F11.
+export default {
+  id: "F14",
+  titre: "L'IRPP : l'impôt sur le revenu des personnes physiques (réforme 2026)",
+  court: "IRPP",
+  ico: "user-dollar",
+  col: "#6D28D9",
+  duree: "35 min",
+  resume: "En vigueur depuis le 1er janvier 2026 : qui paie l'IRPP, les catégories de revenus, le barème progressif plafonné à 30 %, les retenues, acomptes et forfaits, la déclaration.",
+  blocs: [
+    {
+      type: "essentiel",
+      texte:
+        "L'**IRPP** frappe le **revenu net global annuel** d'une **personne physique** : la somme de ses revenus nets par catégorie (salaires, capitaux mobiliers, plus-values, bénéfices). On lui applique un **barème progressif** (3 %, 15 %, 30 %, 40 %) où chaque taux ne frappe que la fraction comprise dans sa tranche, et l'impôt ne peut dépasser **30 % de la base imposable**. Institué par la **loi n° 23/053**, il est en vigueur depuis le **1er janvier 2026**. Les sociétés relèvent, elles, de l'**impôt sur les sociétés (IS)**.",
+    },
+    {
+      type: "texte",
+      titre: "Définition et réforme de la fiscalité directe",
+      p: [
+        "L'IRPP est l'impôt qui frappe le revenu net global d'une personne physique au cours d'une année d'imposition. La **loi n° 23/053 du 30 novembre 2023** a institué le nouveau cadre de l'impôt sur les sociétés (IS) et de l'IRPP ; selon le Ministère des Finances, la réforme est **entrée en vigueur le 1er janvier 2026**. La loi de finances 2026 et les textes ultérieurs y ont apporté des modifications ou précisions.",
+      ],
+      puces: [
+        "**IRPP** : dû par une **personne physique**.",
+        "**IS** : dû par les **sociétés** et autres personnes morales entrant dans son champ.",
+        "Les **retenues** sur un salaire ou sur certains revenus de placement sont des **modes de collecte** de l'IRPP : elles ne le transforment pas en impôt sur les sociétés.",
+      ],
+    },
+    {
+      type: "schema",
+      kind: "chronologie",
+      titre: "Les repères de la réforme",
+      jalons: [
+        { date: "30 novembre 2023", l: "Loi n° 23/053", d: "Nouveau cadre de l'impôt sur les sociétés (IS) et de l'IRPP." },
+        { date: "Octobre 2025", l: "Dépliant IRPP de la DGI", d: "Notions essentielles : retenues, acomptes, quotités, forfait et déclaration." },
+        { date: "1er janvier 2026", l: "Entrée en vigueur de la réforme", d: "Selon le Ministère des Finances. La loi de finances 2026 et la loi rectificative 2026 modifient ou précisent certaines règles." },
+        { date: "30 avril de l'année suivante", l: "Déclaration annuelle", d: "Échéance indiquée par le dépliant de la DGI pour les revenus de l'année : à confirmer selon le revenu, le régime et l'exercice." },
+      ],
+    },
+    {
+      type: "texte",
+      titre: "Qui est concerné ?",
+      p: ["Selon la présentation de la DGI, peuvent être soumis à l'IRPP :"],
+      puces: [
+        "la personne physique **résidant en RDC**, quelle que soit sa nationalité et quelle que soit la source de ses revenus ;",
+        "la personne physique **non résidente** qui perçoit des **revenus de source congolaise** ;",
+        "le **salarié résidant hors de la RDC** qui y exerce une activité rémunérée, lorsque son **employeur réside ou est établi en RDC**.",
+        "La résidence fiscale, la source du revenu et les **conventions fiscales** (voir F9) peuvent modifier le traitement : une personne ayant des revenus dans plusieurs pays doit vérifier sa situation.",
+      ],
+    },
+    {
+      type: "schema",
+      kind: "cartes",
+      titre: "Les six catégories de revenus",
+      cartes: [
+        { ico: "briefcase", t: "Salaires et assimilés", d: "Salaires, rémunérations et avantages imposables : l'employeur calcule et reverse une retenue." },
+        { ico: "coins", t: "Capitaux mobiliers", d: "Dividendes et autres revenus de placement : retenue à la source de 20 % pour les revenus visés." },
+        { ico: "trending-up", t: "Plus-values", d: "Gain sur la cession d'un bien ou d'un droit taxable : le gain, pas le prix de vente." },
+        { ico: "building-store", t: "Bénéfices commerciaux, industriels, immobiliers et artisanaux", d: "Activité indépendante : régime réel, simplifié ou forfaitaire selon le classement fiscal." },
+        { ico: "stethoscope", t: "Bénéfices non commerciaux", d: "Honoraires d'une activité libérale ou indépendante : distinguer recettes et bénéfice net." },
+        { ico: "plant-2", t: "Bénéfices agricoles", d: "Revenus nets d'une exploitation agricole : règles propres au secteur." },
+      ],
+      note: "Attention aux loyers : le traitement d'un loyer dépend de sa nature, du bailleur, de l'usage du bien et des textes. On n'applique pas automatiquement à tout loyer le calcul des bénéfices d'une activité immobilière.",
+    },
+    {
+      type: "schema",
+      kind: "flux",
+      titre: "Calculer l'IRPP général en 6 étapes",
+      etapes: [
+        { op: "1", l: "Revenus bruts de l'année, par catégorie", d: "Tout ce qui a été perçu ou réalisé pendant l'année d'imposition." },
+        { op: "−", l: "Déductions, charges et abattements de chaque catégorie", d: "On obtient les revenus nets catégoriels : le revenu imposable n'est ni le brut ni le chiffre d'affaires." },
+        { op: "=", l: "Revenu net global", d: "Somme des revenus nets catégoriels, selon les règles de la loi." },
+        { op: "×", l: "Barème progressif", d: "3 %, 15 %, 30 % puis 40 %, tranche par tranche." },
+        { op: "≤", l: "Plafond : 30 % de la base imposable", d: "L'impôt calculé ne peut pas le dépasser." },
+        { op: "−", l: "Retenues et paiements déjà effectués", d: "Retenues à la source, acomptes, quotités ou forfaits : on en déduit le solde à payer ou à régulariser.", fort: true },
+      ],
+    },
+    {
+      type: "schema",
+      kind: "bareme",
+      titre: "Barème progressif de l'IRPP publié par la DGI",
+      tranches: [
+        { de: 0, a: 1944000, taux: 3 },
+        { de: 1944001, a: 21600000, taux: 15 },
+        { de: 21600001, a: 43200000, taux: 30 },
+        { de: 43200001, a: null, taux: 40 },
+      ],
+      note: "Montants en FC de revenu imposable annuel. Impôt cumulé en haut de tranche : 58 320 FC (1re), 3 006 720 FC (2e), 9 486 720 FC (3e). L'impôt total ne peut dépasser 30 % de la base imposable. Bornes reprises de la page IRPP de la DGI : pour une déclaration, utiliser le formulaire et les instructions de l'exercice.",
+    },
+    {
+      type: "exemple",
+      titre: "Exemple : base imposable annuelle de 30 000 000 FC",
+      enonce: "Après application des règles propres à ses revenus, une personne a une base imposable annuelle de 30 000 000 FC. On répartit cette base dans les tranches du barème.",
+      lignes: [
+        ["1re tranche : 1 944 000 × 3 %", 58320],
+        ["2e tranche : (21 600 000 − 1 944 000) × 15 %", 2948400],
+        ["3e tranche : (30 000 000 − 21 600 000) × 30 %", 2520000],
+        ["Impôt selon le barème", 5526720, "total"],
+        ["Plafond : 30 000 000 × 30 %", 9000000],
+        ["IRPP (plafond non atteint)", 5526720, "resultat"],
+      ],
+      conclusion: "Le taux de 40 % ne frappe pas toute la base : il ne s'appliquerait qu'à la partie au-delà de 43 200 000 FC. Le taux moyen est ici de 18,4 %. L'exemple suppose que 30 000 000 FC est déjà la base imposable correcte.",
+    },
+    {
+      type: "schema",
+      kind: "tableau",
+      titre: "Retenues, acomptes, quotités et forfait : qui paie comment ?",
+      entetes: ["Situation", "Principe indiqué par la DGI", "À vérifier"],
+      lignes: [
+        ["Salaires et assimilés", "Retenue à la source par l'employeur, selon le barème progressif", "Base imposable, avantages, exemptions, période de paie, reversement"],
+        ["Capitaux mobiliers", "Retenue à la source de 20 % sur les revenus visés", "Nature du revenu, résidence du bénéficiaire, convention"],
+        ["Plus-values", "Retenue à la source de 20 % sur les plus-values concernées", "Que la plus-value est taxable, et le calcul du gain"],
+        ["Activité au régime réel", "Acomptes provisionnels : trois versements calculés sur l'impôt antérieur", "Régime, base, échéancier et avis DGI de l'exercice"],
+        ["Petite entreprise hors réel", "Quotité sur le chiffre d'affaires : 1 % pour la vente, 2 % pour les services", "Éligibilité, activité principale, seuil, formulaires"],
+        ["Micro-entreprise", "Forfait annuel équivalant à 30 USD, payable en francs congolais", "Classement en micro-entreprise, texte fixant montant et échéance"],
+      ],
+      note: "Selon le dépliant IRPP de la DGI (octobre 2025) : à vérifier avec les règles 2026, les textes modificatifs et les communiqués de la DGI.",
+    },
+    {
+      type: "exemple",
+      titre: "Exemple A : retenue sur un dividende",
+      enonce: "Une personne reçoit un dividende de 1 000 000 FC qui relève intégralement de la retenue à la source de 20 %. La société qui verse le dividende retient l'impôt et le reverse.",
+      lignes: [
+        ["Dividende brut", 1000000],
+        ["Retenue à la source : 1 000 000 × 20 %", -200000],
+        ["Montant versé au bénéficiaire", 800000, "resultat"],
+      ],
+      conclusion: "Avant de conclure que la retenue règle définitivement l'impôt, vérifier le traitement de la catégorie dans le texte et le formulaire applicable.",
+    },
+    {
+      type: "exemple",
+      titre: "Exemple B : petite activité de services",
+      enonce: "Une petite entreprise classée dans le régime simplifié, sans option pour le réel, réalise des prestations de services pour un chiffre d'affaires annuel de 50 000 000 FC.",
+      lignes: [
+        ["Chiffre d'affaires annuel", 50000000],
+        ["Quotité de 2 % (services)", 1000000, "resultat"],
+      ],
+      conclusion: "Valable seulement si l'entreprise est éligible au régime et si le taux reste celui de l'exercice. Ici, la base est le chiffre d'affaires, pas le bénéfice : ne pas confondre avec le régime général.",
+    },
+    {
+      type: "texte",
+      titre: "Exemple C : le salaire, retenu à la source",
+      p: [
+        "L'employeur identifie la rémunération imposable, applique les règles de la catégorie salariale, retient l'impôt et le reverse à la DGI dans les délais. Le salarié contrôle ses bulletins et conserve ses bulletins de paie et ses attestations de retenue.",
+        "Le montant ne se calcule **pas** en multipliant le salaire brut par un taux unique : le barème est progressif et la base salariale dépend des règles applicables (calcul détaillé de la paie : modules F3 et F11, à rapprocher des règles 2026).",
+      ],
+    },
+    {
+      type: "texte",
+      titre: "Déclaration, paiement et pièces à conserver",
+      p: [
+        "Le dépliant de la DGI (octobre 2025) indique une **déclaration annuelle au plus tard le 30 avril** de l'année qui suit celle des revenus, sur formulaire signé, avec un paiement accompagné d'une attestation bancaire. La DGI publie des avis à jour et un espace de déclarations sécurisées : confirmez toujours l'échéance propre au revenu, au régime et à l'exercice.",
+      ],
+      puces: [
+        "Bulletins de paie et attestations de retenues sur salaires.",
+        "Attestations de dividendes, d'intérêts et de retenues sur revenus de capitaux mobiliers.",
+        "Pièces du coût d'acquisition et du prix de cession pour une plus-value.",
+        "Factures, livres, relevés bancaires, états de recettes et dépenses, contrats, justificatifs de charges professionnelles.",
+        "Preuves de versement des acomptes, quotités ou forfaits déjà payés.",
+        "Éléments établissant la résidence fiscale, la source du revenu et, si nécessaire, l'application d'une convention fiscale.",
+      ],
+    },
+    {
+      type: "texte",
+      titre: "Questions fréquentes",
+      puces: [
+        "**L'IRPP est-il un impôt mensuel ?** Il porte sur les revenus d'une **année**, mais certaines retenues et échéances interviennent pendant l'année : distinguer la période de calcul et la période de versement.",
+        "**Le taux le plus élevé frappe-t-il tout mon revenu ?** Non : chaque taux ne frappe que la fraction comprise dans sa tranche.",
+        "**Le salarié verse-t-il lui-même ses retenues ?** En principe non : l'employeur retient et reverse ; le salarié contrôle et conserve ses attestations.",
+        "**Le chiffre d'affaires est-il toujours la base ?** Non : le régime général part des revenus nets ; seuls certains régimes de petites et micro-entreprises utilisent une quotité ou un forfait.",
+        "**Une retenue à la source dispense-t-elle de déclarer ?** Ne pas le présumer : cela dépend des revenus, du régime et des textes.",
+      ],
+    },
+    {
+      type: "pieges",
+      puces: [
+        "Appliquer le taux le plus élevé (40 %) à tout le revenu au lieu de raisonner tranche par tranche.",
+        "Oublier de comparer l'impôt du barème au plafond de 30 % de la base imposable.",
+        "Confondre l'IRPP (personnes physiques) et l'IS (sociétés et personnes morales).",
+        "Prendre le revenu brut ou le chiffre d'affaires pour la base imposable du régime général.",
+        "Calculer une plus-value sur le prix de vente total au lieu du gain.",
+        "Traiter tout loyer comme un bénéfice d'activité immobilière.",
+        "Présumer qu'une retenue à la source dispense toujours de déclaration.",
+        "Utiliser le formulaire ou l'échéance d'un autre exercice, sans vérifier les avis récents de la DGI.",
+      ],
+    },
+    {
+      type: "maj",
+      texte:
+        "Les modules F2 à F5 et F11 décrivent l'IBP, l'IPR, l'impôt mobilier et le régime des petites entreprises selon le **Code des impôts mis à jour au 31 mars 2021**. La **loi n° 23/053 du 30 novembre 2023**, entrée en vigueur le **1er janvier 2026**, a institué l'**IRPP** et l'**IS**, et la loi de finances 2026 l'a modifiée. Situation au 30 octobre 2026 : rapprochez toujours les montants et exemples des textes, formulaires et avis récents de la DGI.",
+    },
+    {
+      type: "articles",
+      refs: [
+        "**Loi n° 23/053 du 30 novembre 2023** relative à l'impôt sur les sociétés et à l'impôt sur le revenu des personnes physiques, modifiée par la loi de finances 2026",
+        "**DGI, page « Impôt sur le revenu des personnes physiques (IRPP) »** : champ, revenus catégoriels, barème et plafond de 30 % (dgi.gouv.cd)",
+        "**DGI, « La réforme de la fiscalité directe »** : personnes concernées et définition de l'IRPP",
+        "**Ministère des Finances, « Réforme de la fiscalité directe IS et IRPP »** : entrée en vigueur le 1er janvier 2026",
+        "**DGI, dépliant IRPP « Notions essentielles à retenir »** (octobre 2025) : retenues, acomptes, quotités, forfait et déclaration",
+        "**DGI, déclarations sécurisées** (desec.dgi.gouv.cd) : formulaires IRPP de retenue et d'acomptes ; **communiqués officiels** de la DGI",
+        "**Ministère du Budget, Budget 2026** : loi de finances 2026 et loi rectificative 2026",
+      ],
+    },
+  ],
+  qcm: [
+    {
+      q: "Sur quoi porte l'IRPP ?",
+      r: ["Le revenu net global annuel d'une personne physique", "Le chiffre d'affaires des sociétés", "Le bénéfice des sociétés anonymes", "La valeur des biens immobiliers"],
+      b: 0,
+      e: "L'IRPP frappe le revenu net global d'une personne physique, somme de ses revenus nets par catégorie, au cours d'une année d'imposition.",
+    },
+    {
+      q: "Quelle loi a institué l'IRPP et l'impôt sur les sociétés (IS) ?",
+      r: ["La loi n° 23/053 du 30 novembre 2023", "Le Décret n° 23/010 du 3 mars 2023", "L'ordonnance-loi n° 10/001", "L'Acte uniforme OHADA sur les sociétés commerciales"],
+      b: 0,
+      e: "La loi n° 23/053 a institué le nouveau cadre de l'IS et de l'IRPP. Le Décret n° 23/010 concerne la facture normalisée (F13).",
+    },
+    {
+      q: "Depuis quand la réforme de la fiscalité directe (IS et IRPP) est-elle en vigueur ?",
+      r: ["1er janvier 2026", "30 novembre 2023", "1er décembre 2025", "1er janvier 2027"],
+      b: 0,
+      e: "Selon le Ministère des Finances, la réforme est entrée en vigueur le 1er janvier 2026 ; la loi de finances 2026 y apporte des modifications.",
+    },
+    {
+      q: "Une SARL de Kinshasa réalise un bénéfice. À quel impôt sur le revenu relève-t-elle ?",
+      r: ["L'impôt sur les sociétés (IS)", "L'IRPP", "La retenue de 20 % sur capitaux mobiliers", "Le forfait de micro-entreprise"],
+      b: 0,
+      e: "L'IRPP vise les personnes physiques ; l'IS vise les sociétés et autres personnes morales entrant dans son champ.",
+    },
+    {
+      q: "Un expatrié réside hors de la RDC mais y travaille pour un employeur établi en RDC. Peut-il être concerné par l'IRPP ?",
+      r: ["Oui, selon la présentation de la DGI", "Non, seuls les Congolais y sont soumis", "Non, seuls les résidents y sont soumis", "Seulement s'il possède un bien immobilier en RDC"],
+      b: 0,
+      e: "La DGI vise notamment le salarié résidant hors de la RDC qui y exerce une activité rémunérée lorsque son employeur réside ou est établi en RDC.",
+    },
+    {
+      q: "Un résident fiscal congolais perçoit des revenus de source étrangère. Sont-ils dans le champ de l'IRPP ?",
+      r: ["Oui, quelle que soit leur source, sous réserve des conventions fiscales", "Non, jamais", "Seulement s'ils sont rapatriés en CDF", "Seulement au-delà de 43 200 000 FC"],
+      b: 0,
+      e: "La personne résidant en RDC est concernée quelle que soit la source de ses revenus ; une convention fiscale peut modifier le traitement.",
+    },
+    {
+      q: "Lequel de ces revenus n'est pas une catégorie de l'IRPP présentée par la DGI ?",
+      r: ["Le bénéfice d'une société anonyme", "Les revenus de capitaux mobiliers", "Les bénéfices agricoles", "Les plus-values des personnes physiques"],
+      b: 0,
+      e: "Le bénéfice d'une société relève de l'IS. Les six catégories de l'IRPP : salaires, capitaux mobiliers, plus-values, bénéfices commerciaux (industriels, immobiliers, artisanaux), non commerciaux et agricoles.",
+    },
+    {
+      q: "Quel est le taux de la première tranche du barème de l'IRPP (de 0 à 1 944 000 FC) ?",
+      r: ["3 %", "15 %", "10 %", "0 %"],
+      b: 0,
+      e: "Le barème compte quatre tranches : 3 %, 15 %, 30 % et 40 % au-delà de 43 200 000 FC.",
+    },
+    {
+      q: "Base imposable annuelle de 30 000 000 FC. IRPP selon le barème ?",
+      r: ["5 526 720 FC", "9 000 000 FC", "12 000 000 FC", "4 500 000 FC"],
+      b: 0,
+      e: "58 320 + 2 948 400 + 2 520 000 = **5 526 720 FC**, sous le plafond de 9 000 000 FC (30 %).",
+    },
+    {
+      q: "Un contribuable a 50 000 000 FC de base imposable. Le taux de 40 % s'applique :",
+      r: ["À la seule fraction au-delà de 43 200 000 FC", "Aux 50 000 000 FC", "Aux 30 000 000 FC les plus élevés", "Jamais, car le plafond est de 30 %"],
+      b: 0,
+      e: "Dans un barème progressif, chaque taux frappe seulement la fraction de revenu comprise dans sa tranche : ici 6 800 000 FC à 40 %.",
+    },
+    {
+      q: "Quel plafond la DGI fixe-t-elle à l'IRPP calculé ?",
+      r: ["30 % de la base imposable", "40 % de la base imposable", "50 % du revenu brut", "Il n'y a pas de plafond"],
+      b: 0,
+      e: "Le montant calculé avec le barème ne peut dépasser 30 % de la base imposable.",
+    },
+    {
+      q: "Dividende de 1 000 000 FC soumis à la retenue à la source. Montant retenu ?",
+      r: ["200 000 FC", "100 000 FC", "300 000 FC", "30 000 FC"],
+      b: 0,
+      e: "1 000 000 × 20 % = **200 000 FC**, retenus et reversés par la société qui verse le dividende.",
+    },
+    {
+      q: "Petite entreprise de services, régime simplifié sans option pour le réel, chiffre d'affaires de 50 000 000 FC. Quotité selon le dépliant DGI ?",
+      r: ["1 000 000 FC", "500 000 FC", "15 000 000 FC", "5 526 720 FC"],
+      b: 0,
+      e: "Quotité de 2 % pour les services : 50 000 000 × 2 % = **1 000 000 FC** (1 % pour la vente), sous réserve de l'éligibilité au régime.",
+    },
+    {
+      q: "Quel forfait annuel le dépliant de la DGI mentionne-t-il pour une micro-entreprise ?",
+      r: ["L'équivalent de 30 USD, payable en francs congolais", "100 USD payables en dollars", "1 % du chiffre d'affaires", "Aucun impôt"],
+      b: 0,
+      e: "Un forfait annuel équivalant à 30 USD, payable en CDF : à vérifier selon la classification et le texte qui fixe montant et échéance.",
+    },
+    {
+      q: "Selon le dépliant de la DGI d'octobre 2025, quelle est l'échéance de la déclaration annuelle de l'IRPP ?",
+      r: ["Le 30 avril de l'année suivant celle des revenus", "Le 15 de chaque mois", "Le 31 décembre de l'année des revenus", "Le 1er janvier de l'année suivante"],
+      b: 0,
+      e: "Au plus tard le 30 avril de l'année qui suit : à confirmer selon le revenu, le régime, l'exercice et les avis récents de la DGI.",
+    },
+  ],
+};

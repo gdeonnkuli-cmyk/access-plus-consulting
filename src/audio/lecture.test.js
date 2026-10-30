@@ -28,8 +28,8 @@ test("découpage en phrases de longueur limitée", () => {
   expect(decouperPhrases(long2, 120).some(p => /[.;:]\s*,|^,/.test(p))).toBe(false);
 });
 
-test("les 13 leçons fiscales produisent un texte lisible, sans balises ni symboles bruts", () => {
-  expect(MODULES_FISC.length).toBe(13);
+test("les 14 leçons fiscales produisent un texte lisible, sans balises ni symboles bruts", () => {
+  expect(MODULES_FISC.length).toBe(14);
   for (const m of MODULES_FISC) {
     const S = texteModuleFiscal(m);
     expect(S.length).toBeGreaterThan(10);
@@ -59,4 +59,8 @@ test("narration d'une présentation", () => {
 
 test("sigles de la facture normalisée épelés", () => {
   expect(pourLecture("Le DEF ou la plateforme e-DEF, relié par un MCF au SFE")).toBe("Le D E F ou la plateforme e-D E F, relié par un M C F au S F E");
+});
+
+test("sigles de la réforme de la fiscalité directe épelés", () => {
+  expect(pourLecture("L'IRPP et l'IS")).toBe("L'I R P P et l'I S");
 });
