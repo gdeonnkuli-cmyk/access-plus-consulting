@@ -144,6 +144,11 @@ export default {
         "Ce module suit le **Code des impôts mis à jour au 31 mars 2021**. Changements depuis l'édition 2017 : forfait de la micro-entreprise ramené de **50 000 FC à 30 000 FC** (A.M. n° 014 du 26 juin 2020, pris sur la base de l'art. 14) ; calendrier de la petite entreprise inversé par la **L.F. n° 19/005** (déclaration et acompte de 60 % au 31 janvier N+1, solde de 40 % par bordereau au 30 avril) ; **amende spécifique de 25 % supprimée** du texte ; art. 44 du D. n° 011/42 sur les professions libérales déclaré **désuet** (L.F. n° 15/021), qui les ramène au seuil TVA de 80 000 000 FC. Sont inchangés : les seuils de 10 000 000 FC et 80 000 000 FC, les taux de 1 % et 2 %, l'option avant le 1er février. Le ministre des Finances peut réajuster seuils et forfait par arrêté (art. 14) : vérifie les arrêtés et les lois de finances postérieures à 2021.",
     },
     {
+      type: "maj",
+      texte:
+        "**Réforme 2026** : la loi n° 23/053 du 30 novembre 2023, en vigueur depuis le 1er janvier 2026, a institué l'IRPP et l'IS. Conséquence : le dépliant IRPP de la DGI présente pour les petites entreprises hors régime réel des quotités de 1 % (vente) et 2 % (services) du chiffre d'affaires, et pour les micro-entreprises un forfait annuel équivalant à 30 USD : voir F14. Vérifiez l'éligibilité et les textes 2026 avant d'appliquer ce module.",
+    },
+    {
       type: "articles",
       refs: [
         "Art. 1er et 2 — O.-L. n° 13/006 : champ du régime et définitions (EPT, micro, petite entreprise)",

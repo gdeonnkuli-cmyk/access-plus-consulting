@@ -241,6 +241,11 @@ export default {
         "Une **cotisation santé** (2 % employeur, 0,5 % salarié) a été annoncée mais n'était pas publiée au Journal officiel lors de la rédaction de ce module : elle n'est pas appliquée ici. Les taux INPP et ONEM proviennent d'avis publiés par des éditeurs de paie : confirmez-les avec les textes officiels avant toute déclaration.",
     },
     {
+      type: "maj",
+      texte:
+        "**Réforme 2026** : la loi n° 23/053 du 30 novembre 2023, en vigueur depuis le 1er janvier 2026, a institué l'IRPP et l'IS. Conséquence : la retenue sur salaires est désormais une retenue d'IRPP, selon le barème progressif publié par la DGI : voir F14. Les cotisations sociales de ce module ne sont pas concernées par cette réforme fiscale ; vérifiez les règles 2026 de la retenue avant de calculer une paie.",
+    },
+    {
       type: "articles",
       refs: [
         "Art. 47 et 48 — O.-L. n° 69/009 : rémunérations imposables et immunités (logement ≤ 30 %, transport, allocations familiales)",

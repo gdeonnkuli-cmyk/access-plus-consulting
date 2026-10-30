@@ -18,6 +18,8 @@ const ABREVIATIONS = [
   // Facture normalisée : sigles épelés (« DEF » serait lu comme un mot)
   [/\be-DEF\b/g, "e-D E F"], [/\bDEF\b/g, "D E F"], [/\be-MCF\b/g, "e-M C F"], [/\bMCF\b/g, "M C F"], [/\be-UF\b/g, "e-U F"],
   [/\bSFE\b/g, "S F E"], [/\bRCCM\b/g, "R C C M"],
+  // Réforme de la fiscalité directe : « IS » serait lu comme un mot
+  [/\bIRPP\b/g, "I R P P"], [/\bIS\b/g, "I S"],
   [/\bC\.M\.P\.?/g, "coût moyen pondéré"], [/\bP\.E\.P\.S\.?/g, "premier entré, premier sorti"], [/\bG\.I\.E\.?/g, "groupement d'intérêt économique"],
 ];
 const SYMBOLES = [

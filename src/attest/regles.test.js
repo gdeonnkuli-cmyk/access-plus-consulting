@@ -13,7 +13,7 @@ test("catalogue fiscal aligné sur les modules de l'application", () => {
 
 test("éléments des parcours", () => {
   expect(elementsParcours("SYS-N1", mods).map(e => e.cle)).toEqual(["m1", "m2", "CPT-T"]);
-  expect(elementsParcours("FISC", mods)).toHaveLength(13);
+  expect(elementsParcours("FISC", mods)).toHaveLength(14);
   expect(elementsParcours("FIN", mods).map(e => e.cle)).toEqual(["FIN-FE1", "FIN-FE2", "FIN-FE3", "FIN-FE4", "FIN-FE5", "FIN-FE6", "FIN-FE7"]);
   expect(elementsParcours("SYS-N2", mods).map(e => e.cle)).toEqual(["JRN-ZAO", "CPT-1", "CPT-2", "CPT-3", "CPT-4", "CPT-5", "CPT-6", "CPT-7", "CPT-8", "CPT-9"]);
 });
@@ -36,8 +36,8 @@ test("réussite : chaque élément ≥ 70 % et moyenne ≥ 80 %, avec mention", 
 
 test("parcours incomplet : ni suivi ni réussite", () => {
   const r = evaluer("FISC", mods, { scores: { "FISC-F1": { pct: 100 } } });
-  expect(r).toMatchObject({ suivi: false, reussite: false, nFaits: 1, nTotal: 13 });
-  expect(r.aFaire).toHaveLength(12);
+  expect(r).toMatchObject({ suivi: false, reussite: false, nFaits: 1, nTotal: 14 });
+  expect(r.aFaire).toHaveLength(13);
 });
 
 test("numéro d'attestation", () => {

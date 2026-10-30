@@ -2,8 +2,8 @@ import { MODULES_FISC } from "./modules";
 
 const KINDS = ["flux", "chronologie", "arbre", "tableau", "bareme", "chaine", "cartes", "paie", "tva"];
 
-test("les 13 modules (Code des impôts, TVA pratique, import-export, paie et facture normalisée) sont complets et leurs QCM cohérents", () => {
-  expect(MODULES_FISC.map(m => m.id)).toEqual(["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13"]);
+test("les 14 modules (Code des impôts, TVA pratique, import-export, paie, facture normalisée et IRPP) sont complets et leurs QCM cohérents", () => {
+  expect(MODULES_FISC.map(m => m.id)).toEqual(["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14"]);
   expect(MODULES_FISC.filter(m => m.libre).map(m => m.id)).toEqual(["F1"]);
   for (const m of MODULES_FISC) {
     const types = m.blocs.map(b => b.type);

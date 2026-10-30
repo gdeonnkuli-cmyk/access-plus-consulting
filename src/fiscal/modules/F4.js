@@ -180,6 +180,11 @@ export default {
         "Ce module suit le **Code des impôts mis à jour au 31 mars 2021**. Par rapport à l'édition 2017, les taux sont **inchangés** : IM 20 %, IRL 22 %, retenue locative 20 %, forfaits IM de 40 %, 50 % et 10 %, charges forfaitaires de 30 % sur les redevances. Les délais de déclaration (15 jours après le mois du paiement pour l'IM, 1er février N+1 pour l'IRL, 31 mars N+1 pour les sociétés étrangères) n'ont pas changé. Nouveauté rédactionnelle : la note sous l'art. 4 L. n° 83/004 précise que l'IRL est un impôt provincial et que la fixation des tarifs minima revient aux provinces (art. 9, al. 5, L. n° 11/011). Les anciens tarifs nationaux par m² n'existent donc plus. Vérifie l'édit provincial applicable et les lois de finances postérieures à 2021.",
     },
     {
+      type: "maj",
+      texte:
+        "**Réforme 2026** : la loi n° 23/053 du 30 novembre 2023, en vigueur depuis le 1er janvier 2026, a institué l'IRPP et l'IS. Conséquence : pour les personnes physiques, les revenus de capitaux mobiliers relèvent de l'IRPP, avec une retenue à la source de 20 % sur les revenus visés : voir F14. Vérifiez le traitement 2026 des loyers et des autres revenus présentés ici.",
+    },
+    {
       type: "articles",
       refs: [
         "Art. 4 et 4 bis — O.-L. n° 69/009 : loyers imposables et mise à disposition gratuite",

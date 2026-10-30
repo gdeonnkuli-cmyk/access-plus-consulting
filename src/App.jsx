@@ -1795,7 +1795,7 @@ function FA({uid,onOut}){
         {ico:"checkbox",col:"#DC2626",label:"Corrections",desc:nUngraded?`${nUngraded} copie${nUngraded>1?"s":""} à corriger`:"Aucune copie en attente",badge:nUngraded,on:()=>sV("corr")},
         {ico:"message-circle",col:"#0D7A6B",label:"Messages",desc:unreadMsgFA?`${unreadMsgFA} non lu${unreadMsgFA>1?"s":""}`:"Échanges avec vos apprenants",badge:unreadMsgFA,on:()=>sV("fmsg")},
         {ico:"report-money",col:"#1D4ED8",label:"États financiers",desc:"Atelier SYSCOHADA et suivi des dossiers",on:()=>sV("ef")},
-        {ico:"receipt-tax",col:"#A3122A",label:"Code des impôts",desc:"13 modules : fiscalité, TVA, paie, import-export et facture normalisée",on:()=>sV("fisc")},
+        {ico:"receipt-tax",col:"#A3122A",label:"Code des impôts",desc:"14 modules : fiscalité, TVA, paie, facture normalisée et IRPP 2026",on:()=>sV("fisc")},
         {ico:"chart-pie",col:"#B7791F",label:"Finance d'entreprise",desc:"7 modules, 16 cas corrigés et cours audio",on:()=>sV("fin")},
       ].map((t,i)=><ActionTile key={t.label} {...t} i={i}/>)}
     </div>

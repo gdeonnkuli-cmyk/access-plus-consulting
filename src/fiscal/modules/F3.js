@@ -221,6 +221,11 @@ export default {
         "Barème annuel ou mensuel ? L'art. 84 ne dit pas expressément si les tranches sont annuelles ou mensuelles. L'art. 80 vise les revenus annuels et l'A.M. n° 020/2017 fixe des forfaits annuels, mais le minimum de l'art. 84 par. 4 est exprimé par mois. Ce module applique le barème au revenu imposable **annuel**. La conversion mensuelle (162 000 / 1 800 000 / 3 600 000 FC par mois) est un calcul, pas une donnée du texte : vérifiez la pratique de l'Administration avant de calculer une retenue mensuelle.",
     },
     {
+      type: "maj",
+      texte:
+        "**Réforme 2026** : la loi n° 23/053 du 30 novembre 2023, en vigueur depuis le 1er janvier 2026, a institué l'IRPP et l'IS. Conséquence : les salaires relèvent désormais de l'IRPP, retenu à la source par l'employeur selon le même barème progressif (3 %, 15 %, 30 %, 40 %) et le même plafond de 30 % publiés par la DGI : voir F14. Vérifiez les règles 2026 (base salariale, réductions, formulaires) avant d'appliquer ce module.",
+    },
+    {
       type: "articles",
       refs: [
         "Art. 27-2° et 47 — O.-L. n° 69/009 : rémunérations imposables",
