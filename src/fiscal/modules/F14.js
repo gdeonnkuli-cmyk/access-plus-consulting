@@ -1,6 +1,7 @@
 // Module F14 — L'IRPP : l'impôt sur le revenu des personnes physiques (réforme 2026)
 // Source : « Guide pratique de l'IRPP en RDC » (Éco-Campus, sources consultées le 30 octobre 2026) : loi n° 23/053 du
-// 30 novembre 2023, page IRPP et dépliant IRPP de la DGI (octobre 2025), Ministère des Finances. Complète F2 à F5 et F11.
+// 30 novembre 2023, page IRPP et dépliant IRPP de la DGI (octobre 2025), Ministère des Finances ; complété le 31 octobre 2026 par
+// le texte de la loi n° 23/053 et de la loi n° 23/052 (JO du 29 décembre 2023). Complète F2 à F5 et F11.
 export default {
   id: "F14",
   titre: "L'IRPP : l'impôt sur le revenu des personnes physiques (réforme 2026)",
@@ -8,7 +9,7 @@ export default {
   ico: "user-dollar",
   col: "#6D28D9",
   duree: "35 min",
-  resume: "En vigueur depuis le 1er janvier 2026 : qui paie l'IRPP, les catégories de revenus, le barème progressif plafonné à 30 %, les retenues, acomptes et forfaits, la déclaration.",
+  resume: "En vigueur depuis le 1er janvier 2026 : qui paie l'IRPP, les catégories de revenus, le barème plafonné à 30 %, les charges de famille, l'impôt minimum, les retenues, acomptes et quotités, la déclaration.",
   blocs: [
     {
       type: "essentiel",
@@ -35,7 +36,8 @@ export default {
         { date: "30 novembre 2023", l: "Loi n° 23/053", d: "Nouveau cadre de l'impôt sur les sociétés (IS) et de l'IRPP." },
         { date: "Octobre 2025", l: "Dépliant IRPP de la DGI", d: "Notions essentielles : retenues, acomptes, quotités, forfait et déclaration." },
         { date: "1er janvier 2026", l: "Entrée en vigueur de la réforme", d: "Selon le Ministère des Finances. La loi de finances 2026 et la loi rectificative 2026 modifient ou précisent certaines règles." },
-        { date: "30 avril de l'année suivante", l: "Déclaration annuelle", d: "Échéance indiquée par le dépliant de la DGI pour les revenus de l'année : à confirmer selon le revenu, le régime et l'exercice." },
+        { date: "31 janvier de l'année suivante", l: "Petites entreprises : déclaration et 1re quotité", d: "Déclaration auto-liquidative et paiement de 60 % de l'impôt (loi n° 004/2003 modifiée, art. 57 quater)." },
+        { date: "30 avril de l'année suivante", l: "Déclaration annuelle", d: "Au service des impôts du lieu de résidence (art. 17 modifié). Petites entreprises : 2e quotité de 40 %. Les salariés sans autre revenu, dont l'impôt a été retenu, sont dispensés de déclaration." },
       ],
     },
     {
@@ -46,7 +48,9 @@ export default {
         "la personne physique **résidant en RDC**, quelle que soit sa nationalité et quelle que soit la source de ses revenus ;",
         "la personne physique **non résidente** qui perçoit des **revenus de source congolaise** ;",
         "le **salarié résidant hors de la RDC** qui y exerce une activité rémunérée, lorsque son **employeur réside ou est établi en RDC**.",
-        "La résidence fiscale, la source du revenu et les **conventions fiscales** (voir F9) peuvent modifier le traitement : une personne ayant des revenus dans plusieurs pays doit vérifier sa situation.",
+        "**Résidence habituelle** (art. 60) : foyer d'habitation permanent ou lieu de séjour principal en RDC, activité professionnelle principale en RDC, ou séjour d'au moins **183 jours** sur douze mois. Les fonctionnaires de l'État en poste à l'étranger restent résidents s'ils n'y sont pas imposés.",
+        "**Exemptés** (art. 64) : fonctionnaires des organisations internationales pour les rémunérations qu'elles versent ; diplomates et agents consulaires accrédités, sous réserve de réciprocité ; petits commerçants dispensés de la patente.",
+        "La source du revenu et les **conventions fiscales** (voir F9) peuvent modifier le traitement : une personne ayant des revenus dans plusieurs pays doit vérifier sa situation.",
       ],
     },
     {
@@ -61,7 +65,7 @@ export default {
         { ico: "stethoscope", t: "Bénéfices non commerciaux", d: "Honoraires d'une activité libérale ou indépendante : distinguer recettes et bénéfice net." },
         { ico: "plant-2", t: "Bénéfices agricoles", d: "Revenus nets d'une exploitation agricole : règles propres au secteur." },
       ],
-      note: "Attention aux loyers : le traitement d'un loyer dépend de sa nature, du bailleur, de l'usage du bien et des textes. On n'applique pas automatiquement à tout loyer le calcul des bénéfices d'une activité immobilière.",
+      note: "Attention aux loyers : les revenus locatifs ne font pas partie des revenus de l'IRPP, car leur impôt relève de la compétence exclusive des provinces (exposé des motifs de la loi n° 23/053, art. 204-16 de la Constitution). Ne pas les confondre avec les bénéfices d'une activité immobilière exercée à titre professionnel.",
     },
     {
       type: "schema",
@@ -70,9 +74,11 @@ export default {
       etapes: [
         { op: "1", l: "Revenus bruts de l'année, par catégorie", d: "Tout ce qui a été perçu ou réalisé pendant l'année d'imposition." },
         { op: "−", l: "Déductions, charges et abattements de chaque catégorie", d: "On obtient les revenus nets catégoriels : le revenu imposable n'est ni le brut ni le chiffre d'affaires." },
-        { op: "=", l: "Revenu net global", d: "Somme des revenus nets catégoriels, selon les règles de la loi." },
-        { op: "×", l: "Barème progressif", d: "3 %, 15 %, 30 % puis 40 %, tranche par tranche." },
-        { op: "≤", l: "Plafond : 30 % de la base imposable", d: "L'impôt calculé ne peut pas le dépasser." },
+        { op: "=", l: "Revenu net global", d: "Somme des revenus nets catégoriels, après les déductions de l'art. 116 ; arrondi au millier de francs inférieur (art. 118)." },
+        { op: "×", l: "Barème progressif", d: "3 %, 15 %, 30 % puis 40 %, tranche par tranche (art. 118)." },
+        { op: "≤", l: "Plafond : 30 % du revenu imposable", d: "L'impôt calculé ne peut pas le dépasser (art. 118)." },
+        { op: "−", l: "Réduction pour charges de famille", d: "2 % par personne à charge, 9 au plus (art. 123)." },
+        { op: "≥", l: "Impôt minimum : 1 % du chiffre d'affaires", d: "Si le revenu comprend des bénéfices d'activité (art. 122), sauf micro-entreprises." },
         { op: "−", l: "Retenues et paiements déjà effectués", d: "Retenues à la source, acomptes, quotités ou forfaits : on en déduit le solde à payer ou à régulariser.", fort: true },
       ],
     },
@@ -103,19 +109,65 @@ export default {
       conclusion: "Le taux de 40 % ne frappe pas toute la base : il ne s'appliquerait qu'à la partie au-delà de 43 200 000 FC. Le taux moyen est ici de 18,4 %. L'exemple suppose que 30 000 000 FC est déjà la base imposable correcte.",
     },
     {
+      type: "texte",
+      titre: "Ce que l'on déduit du revenu global (art. 116)",
+      puces: [
+        "Les arrérages de **rentes** payés à titre obligatoire et gratuit et les **primes d'assurance-vie**, dans la limite de **5 %** du revenu brut imposable.",
+        "Les **pensions alimentaires** versées en application d'une décision de justice.",
+        "Les versements volontaires pour constituer une **retraite**, dans la limite de **10 %** du revenu brut imposable.",
+        "Les cotisations versées à la **caisse de sécurité sociale** pour les employés de maison.",
+        "En revanche, les **déficits fonciers** (charges d'un bien loué supérieures aux loyers encaissés) ne sont pas déductibles.",
+      ],
+    },
+    {
+      type: "texte",
+      titre: "Charges de famille et impôt minimum (art. 122 à 125)",
+      puces: [
+        "**Réduction de 2 % de l'impôt par personne à charge**, avec un maximum de **9 personnes**, soit 18 % (art. 123).",
+        "**Aucune réduction** sur la part de l'impôt qui se rapporte au revenu au-delà de la **3e tranche** (43 200 000 FC).",
+        "**Personnes à charge** (art. 124) : le conjoint ; les enfants célibataires, y compris adoptés ou sous tutelle ; les ascendants des deux conjoints qui font partie du ménage. Enfants et ascendants ne comptent que si leurs ressources nettes de l'année précédente n'ont pas dépassé la **1re tranche** du barème (1 944 000 FC).",
+        "La situation de famille retenue est celle du **1er janvier** de l'année des revenus (art. 125).",
+        "**Impôt minimum** (art. 122) : l'IRPP ne peut être inférieur à **1 % du chiffre d'affaires** de l'exercice lorsque le revenu comprend des bénéfices industriels, commerciaux, immobiliers, artisanaux, non commerciaux ou agricoles. Les **micro-entreprises** n'en sont pas redevables.",
+      ],
+    },
+    {
+      type: "exemple",
+      titre: "Exemple : trois personnes à charge",
+      enonce: "Reprenons la base imposable de 30 000 000 FC. Le contribuable est marié et a deux enfants à charge au 1er janvier : 3 personnes à charge. La base reste dans la 3e tranche : la réduction s'applique à tout l'impôt.",
+      lignes: [
+        ["Impôt selon le barème (exemple précédent)", 5526720],
+        ["Réduction : 3 × 2 % = 6 % de 5 526 720", -331603],
+        ["Impôt après réduction", 5195117, "total"],
+        ["IRPP arrondi à la centaine inférieure (art. 150)", 5195100, "resultat"],
+      ],
+      conclusion: "Les deux derniers chiffres (17 FC) étant inférieurs à 50 FC, l'impôt est ramené à la centaine inférieure (art. 150).",
+    },
+    {
+      type: "exemple",
+      titre: "Exemple : l'impôt minimum d'un commerçant",
+      enonce: "Un commerçant individuel au régime réel réalise un chiffre d'affaires de 200 000 000 FC pour un bénéfice net imposable de 4 000 000 FC, sans personne à charge.",
+      lignes: [
+        ["Barème : 58 320 + (4 000 000 − 1 944 000) × 15 %", 366720],
+        ["Impôt minimum : 200 000 000 × 1 %", 2000000],
+        ["IRPP dû (le plus élevé)", 2000000, "resultat"],
+      ],
+      conclusion: "Un faible bénéfice ne supprime pas l'impôt : le minimum de 1 % du chiffre d'affaires s'applique (art. 122).",
+    },
+    {
       type: "schema",
       kind: "tableau",
       titre: "Retenues, acomptes, quotités et forfait : qui paie comment ?",
-      entetes: ["Situation", "Principe indiqué par la DGI", "À vérifier"],
+      entetes: ["Situation", "Règle", "Texte"],
       lignes: [
-        ["Salaires et assimilés", "Retenue à la source par l'employeur, selon le barème progressif", "Base imposable, avantages, exemptions, période de paie, reversement"],
-        ["Capitaux mobiliers", "Retenue à la source de 20 % sur les revenus visés", "Nature du revenu, résidence du bénéficiaire, convention"],
-        ["Plus-values", "Retenue à la source de 20 % sur les plus-values concernées", "Que la plus-value est taxable, et le calcul du gain"],
-        ["Activité au régime réel", "Acomptes provisionnels : trois versements calculés sur l'impôt antérieur", "Régime, base, échéancier et avis DGI de l'exercice"],
-        ["Petite entreprise hors réel", "Quotité sur le chiffre d'affaires : 1 % pour la vente, 2 % pour les services", "Éligibilité, activité principale, seuil, formulaires"],
-        ["Micro-entreprise", "Forfait annuel équivalant à 30 USD, payable en francs congolais", "Classement en micro-entreprise, texte fixant montant et échéance"],
+        ["Salaires et assimilés", "Retenue mensuelle par l'employeur selon le barème, reversée au plus tard le 15 du mois suivant", "Art. 119 ; art. 18 (L. 004/2003 modifiée)"],
+        ["Capitaux mobiliers", "Retenue à la source de 20 % par le débiteur, reversée au plus tard le 15 du mois suivant", "Art. 120 ; art. 18 bis"],
+        ["Plus-values", "Retenue à la source de 20 %, versée dans les 15 jours qui suivent le mois de réalisation", "Art. 120 ; art. 18 ter"],
+        ["Activité au régime réel", "Acomptes de 30 %, 30 % et 20 % de l'impôt de l'année précédente, avant le 1er août, le 1er octobre et le 1er décembre", "Art. 57 bis"],
+        ["Petite entreprise", "1 % du chiffre d'affaires (vente) ou 2 % (services) ; activité mixte : chiffres cumulés imposés selon l'activité principale ; payé en 2 quotités de 60 % et 40 %", "Art. 127 ; art. 57 quater"],
+        ["Micro-entreprise", "Forfait fixé par arrêté du Ministre des Finances (le dépliant DGI d'octobre 2025 indique l'équivalent de 30 USD)", "Art. 128"],
+        ["Personnel domestique, salariés des micro-entreprises", "Taux forfaitaires fixés par arrêté ; la retenue est libératoire si c'est leur seul revenu", "Art. 70 et 121"],
       ],
-      note: "Selon le dépliant IRPP de la DGI (octobre 2025) : à vérifier avec les règles 2026, les textes modificatifs et les communiqués de la DGI.",
+      note: "Les retenues de l'année s'imputent sur l'impôt du barème ; une retenue supérieure à l'impôt dû sert à régler d'autres obligations fiscales (art. 121). Articles de la loi n° 23/053 et de la loi n° 004/2003 modifiée par la loi n° 23/052.",
     },
     {
       type: "exemple",
@@ -150,7 +202,8 @@ export default {
       type: "texte",
       titre: "Déclaration, paiement et pièces à conserver",
       p: [
-        "Le dépliant de la DGI (octobre 2025) indique une **déclaration annuelle au plus tard le 30 avril** de l'année qui suit celle des revenus, sur formulaire signé, avec un paiement accompagné d'une attestation bancaire. La DGI publie des avis à jour et un espace de déclarations sécurisées : confirmez toujours l'échéance propre au revenu, au régime et à l'exercice.",
+        "**Déclaration annuelle au plus tard le 30 avril** de l'année qui suit celle des revenus, au service des impôts du lieu de résidence (art. 17 de la loi n° 004/2003 modifiée). Le contribuable qui n'a **que des revenus salariaux** dont l'impôt a été **retenu à la source** en est **dispensé**. Les petites entreprises déposent une déclaration auto-liquidative et paient 60 % au plus tard le 31 janvier, puis 40 % au plus tard le 30 avril (art. 57 quater).",
+        "L'administration peut mener une **vérification de la situation fiscale personnelle d'ensemble** : elle compare les revenus déclarés au patrimoine, à la trésorerie et au train de vie (art. 28 bis).",
       ],
       puces: [
         "Bulletins de paie et attestations de retenues sur salaires.",
@@ -169,7 +222,7 @@ export default {
         "**Le taux le plus élevé frappe-t-il tout mon revenu ?** Non : chaque taux ne frappe que la fraction comprise dans sa tranche.",
         "**Le salarié verse-t-il lui-même ses retenues ?** En principe non : l'employeur retient et reverse ; le salarié contrôle et conserve ses attestations.",
         "**Le chiffre d'affaires est-il toujours la base ?** Non : le régime général part des revenus nets ; seuls certains régimes de petites et micro-entreprises utilisent une quotité ou un forfait.",
-        "**Une retenue à la source dispense-t-elle de déclarer ?** Ne pas le présumer : cela dépend des revenus, du régime et des textes.",
+        "**Une retenue à la source dispense-t-elle de déclarer ?** Oui pour le salarié qui n'a **que** des revenus salariaux dont l'impôt a été retenu (art. 17) ; dès qu'il a d'autres revenus, il déclare.",
       ],
     },
     {
@@ -180,20 +233,23 @@ export default {
         "Confondre l'IRPP (personnes physiques) et l'IS (sociétés et personnes morales).",
         "Prendre le revenu brut ou le chiffre d'affaires pour la base imposable du régime général.",
         "Calculer une plus-value sur le prix de vente total au lieu du gain.",
-        "Traiter tout loyer comme un bénéfice d'activité immobilière.",
-        "Présumer qu'une retenue à la source dispense toujours de déclaration.",
+        "Inclure les loyers dans l'IRPP : l'impôt sur les revenus locatifs relève des provinces.",
+        "Ne pas déclarer quand on a, en plus de son salaire, des revenus d'une autre catégorie.",
+        "Accorder la réduction pour charges de famille sur la part de l'impôt au-delà de la 3e tranche, ou compter un enfant dont les ressources dépassent 1 944 000 FC.",
+        "Oublier l'impôt minimum de 1 % du chiffre d'affaires d'un commerçant ou d'un professionnel libéral.",
         "Utiliser le formulaire ou l'échéance d'un autre exercice, sans vérifier les avis récents de la DGI.",
       ],
     },
     {
       type: "maj",
       texte:
-        "Les modules F2 à F5 et F11 décrivent l'IBP, l'IPR, l'impôt mobilier et le régime des petites entreprises selon le **Code des impôts mis à jour au 31 mars 2021**. La **loi n° 23/053 du 30 novembre 2023**, entrée en vigueur le **1er janvier 2026**, a institué l'**IRPP** et l'**IS**, et la loi de finances 2026 l'a modifiée. Situation au 30 octobre 2026 : rapprochez toujours les montants et exemples des textes, formulaires et avis récents de la DGI.",
+        "Les modules F2 à F5 et F11 décrivent l'IBP, l'IPR, l'impôt mobilier et le régime des petites entreprises selon le **Code des impôts mis à jour au 31 mars 2021**. La **loi n° 23/053 du 30 novembre 2023** (JO du 29 décembre 2023), entrée en vigueur le **1er janvier 2026**, a institué l'**IRPP** et l'**IS** (voir F15) ; ce module en cite les articles, et la loi de finances 2026 a pu les modifier. Situation au 31 octobre 2026 : rapprochez toujours les montants et exemples des textes, formulaires et avis récents de la DGI.",
     },
     {
       type: "articles",
       refs: [
-        "**Loi n° 23/053 du 30 novembre 2023** relative à l'impôt sur les sociétés et à l'impôt sur le revenu des personnes physiques, modifiée par la loi de finances 2026",
+        "**Loi n° 23/053 du 30 novembre 2023** relative à l'IS et à l'IRPP (JO, numéro spécial du 29 décembre 2023) : art. 58 à 66 (champ, résidence, exemptions), 67 à 71 (salaires), 116 et 117 (revenu global), 118 (barème et plafond), 119 à 121 (retenues), 122 (minimum de 1 %), 123 à 125 (charges de famille), 127 et 128 (petites et micro-entreprises), 150 (arrondis)",
+        "**Loi n° 23/052 du 30 novembre 2023** modifiant la loi n° 004/2003 : art. 17 (déclaration au 30 avril, dispense des salariés), 18 à 18 ter (reversement des retenues), 28 bis (situation fiscale d'ensemble), 57 à 57 quater (acomptes et quotités)",
         "**DGI, page « Impôt sur le revenu des personnes physiques (IRPP) »** : champ, revenus catégoriels, barème et plafond de 30 % (dgi.gouv.cd)",
         "**DGI, « La réforme de la fiscalité directe »** : personnes concernées et définition de l'IRPP",
         "**Ministère des Finances, « Réforme de la fiscalité directe IS et IRPP »** : entrée en vigueur le 1er janvier 2026",
@@ -229,16 +285,18 @@ export default {
       e: "L'IRPP vise les personnes physiques ; l'IS vise les sociétés et autres personnes morales entrant dans son champ.",
     },
     {
-      q: "Un expatrié réside hors de la RDC mais y travaille pour un employeur établi en RDC. Peut-il être concerné par l'IRPP ?",
-      r: ["Oui, selon la présentation de la DGI", "Non, seuls les Congolais y sont soumis", "Non, seuls les résidents y sont soumis", "Seulement s'il possède un bien immobilier en RDC"],
+      q: "Base imposable de 30 000 000 FC, impôt du barème de 5 526 720 FC, 3 personnes à charge. Réduction pour charges de famille ?",
+      r: ["6 %, soit 331 603 FC", "2 %, soit 110 534 FC", "18 %, soit 994 810 FC", "Aucune réduction"],
       b: 0,
-      e: "La DGI vise notamment le salarié résidant hors de la RDC qui y exerce une activité rémunérée lorsque son employeur réside ou est établi en RDC.",
+      e: "2 % par personne à charge, 9 au plus : 3 × 2 % = 6 % × 5 526 720 = **331 603 FC**. La base est dans la 3e tranche, la réduction porte sur tout l'impôt.",
+      art: "Art. 123, loi n° 23/053",
     },
     {
-      q: "Un résident fiscal congolais perçoit des revenus de source étrangère. Sont-ils dans le champ de l'IRPP ?",
-      r: ["Oui, quelle que soit leur source, sous réserve des conventions fiscales", "Non, jamais", "Seulement s'ils sont rapatriés en CDF", "Seulement au-delà de 43 200 000 FC"],
+      q: "Un commerçant au régime réel réalise 200 000 000 FC de chiffre d'affaires pour 4 000 000 FC de bénéfice imposable. Quel IRPP doit-il ?",
+      r: ["2 000 000 FC, l'impôt minimum de 1 % du chiffre d'affaires", "366 720 FC, selon le barème", "1 200 000 FC", "Rien, son bénéfice est faible"],
       b: 0,
-      e: "La personne résidant en RDC est concernée quelle que soit la source de ses revenus ; une convention fiscale peut modifier le traitement.",
+      e: "Le barème donne 366 720 FC, mais l'IRPP ne peut être inférieur à 1 % du chiffre d'affaires quand le revenu comprend des bénéfices d'activité : **2 000 000 FC**.",
+      art: "Art. 122, loi n° 23/053",
     },
     {
       q: "Lequel de ces revenus n'est pas une catégorie de l'IRPP présentée par la DGI ?",
