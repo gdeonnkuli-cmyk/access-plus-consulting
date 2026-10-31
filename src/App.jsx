@@ -335,19 +335,35 @@ const exportUsersCsv=users=>{
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
 };
+// Les claviers de téléphone ajoutent souvent une espace après l'adresse proposée : on la retire avant la création
 const createUserAsAdmin=async({nom,mail,password,role})=>{
+  nom=String(nom||"").trim();mail=String(mail||"").trim().toLowerCase();
   const secApp=initializeApp(FB_CONFIG,"Secondary_"+Date.now());
   const secAuth=getAuth(secApp);
   try{
     const cred=await createUserWithEmailAndPassword(secAuth,mail,password);
     const data={nom,mail,createdAt:new Date().toLocaleDateString("fr-FR"),abonnement:"aucun",activationCode:null,codeValide:false,demandeDate:null,dureeId:null,dateExpiration:null,progress:{},scores:{},consentDate:new Date().toISOString(),consentVersion:PRIVACY_VERSION,lastLogin:null,creePar:"admin"};
     if(role==="formateur"){data.role="formateur";data.formateurCodeValide=true;}
-    await setDoc(doc(db,"users",cred.user.uid),data);
+    try{await setDoc(doc(db,"users",cred.user.uid),data);}
+    catch(e){const x=new Error(e.message);x.code="fiche/"+(e.code||"inconnue");throw x;}
     await signOut(secAuth);
   }finally{
     await deleteApp(secApp);
   }
 };
+// Message d'erreur compréhensible pour la création d'un compte par l'administrateur
+const erreurCreation=e=>({
+  "auth/email-already-in-use":"Cette adresse a déjà un compte : la personne s'est sans doute inscrite elle-même (peut-être avec Google). Retrouvez-la dans Apprenants → Tous les inscrits et donnez-lui l'accès avec le bouton « Accès ».",
+  "auth/invalid-email":"Adresse e-mail invalide : vérifiez l'orthographe (un seul @, aucune espace).",
+  "auth/missing-email":"Indiquez l'adresse e-mail.",
+  "auth/weak-password":"Mot de passe trop faible : 6 caractères au moins.",
+  "auth/password-does-not-meet-requirements":"Le mot de passe ne respecte pas les règles de sécurité du projet Firebase : allongez-le et mélangez lettres, chiffres et symboles.",
+  "auth/network-request-failed":"Pas de connexion internet : vérifiez le réseau puis réessayez.",
+  "auth/operation-not-allowed":"La connexion par e-mail et mot de passe est désactivée dans Firebase (Authentication → Sign-in method → E-mail/Mot de passe).",
+  "auth/too-many-requests":"Trop de tentatives : patientez quelques minutes puis réessayez.",
+})[e&&e.code]||(String(e&&e.code||"").startsWith("fiche/")
+  ?"Le compte de connexion a été créé, mais sa fiche n'a pas pu être enregistrée : la personne verra « Profil introuvable » à la connexion. Supprimez ce compte dans la console Firebase (Authentication → Users), vérifiez votre connexion internet, puis recommencez."
+  :`Création impossible : ${(e&&e.message)||"erreur inconnue"}`);
 const sendMessage=async({apprenantUid,apprenantNom,from,fromNom,fromRole,texte,formateurUid})=>{
   const ref_=doc(collection(db,"messages"));
   await setDoc(ref_,{apprenantUid,apprenantNom,from,fromNom,fromRole,texte,formateurUid:formateurUid||null,ts:Date.now(),luApprenant:fromRole==="apprenant",luAdmin:fromRole!=="apprenant"});
@@ -5418,9 +5434,10 @@ function AA({onOut}){
         try{
           await createUserAsAdmin(newUser);
           sNuBusy(false);sNewUser(null);
+          sMsg({t:"o",m:`✓ Compte créé pour ${newUser.nom.trim()} (${newUser.mail.trim().toLowerCase()}). Pour un apprenant, ouvrez-lui l'accès dans Apprenants → Tous les inscrits → « Accès ».`});setTimeout(()=>sMsg({t:"",m:""}),9000);
         }catch(e){
           sNuBusy(false);
-          sNuErr(e.code==="auth/email-already-in-use"?"Cet email est déjà utilisé.":e.message);
+          sNuErr(erreurCreation(e));
         }
       }} full/>
     </Sheet>}
