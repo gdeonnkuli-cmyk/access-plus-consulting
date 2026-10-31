@@ -13,7 +13,7 @@ export default {
     {
       type: "essentiel",
       texte:
-        "L'**IRPP** frappe le **revenu net global annuel** d'une **personne physique** : la somme de ses revenus nets par catégorie (salaires, capitaux mobiliers, plus-values, bénéfices). On lui applique un **barème progressif** (3 %, 15 %, 30 %, 40 %) où chaque taux ne frappe que la fraction comprise dans sa tranche, et l'impôt ne peut dépasser **30 % de la base imposable**. Institué par la **loi n° 23/053**, il est en vigueur depuis le **1er janvier 2026**. Les sociétés relèvent, elles, de l'**impôt sur les sociétés (IS)**.",
+        "L'**IRPP** frappe le **revenu net global annuel** d'une **personne physique** : la somme de ses revenus nets par catégorie (salaires, capitaux mobiliers, plus-values, bénéfices). On lui applique un **barème progressif** (3 %, 15 %, 30 %, 40 %) où chaque taux ne frappe que la fraction comprise dans sa tranche, et l'impôt ne peut dépasser **30 % de la base imposable**. Institué par la **loi n° 23/053**, il est en vigueur depuis le **1er janvier 2026**. Les sociétés relèvent, elles, de l'**impôt sur les sociétés (IS)** : voir F15.",
     },
     {
       type: "texte",

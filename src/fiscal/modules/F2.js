@@ -246,7 +246,7 @@ export default {
     {
       type: "maj",
       texte:
-        "**Réforme 2026** : la loi n° 23/053 du 30 novembre 2023, en vigueur depuis le 1er janvier 2026, a institué l'IRPP et l'IS. Conséquence : pour les personnes physiques, l'IRPP (voir F14) ; pour les sociétés, l'impôt sur les sociétés (IS). Les règles de l'IBP présentées ici (Code au 31 mars 2021) restent utiles pour les exercices antérieurs à 2026 : vérifiez les textes 2026 avant de les appliquer.",
+        "**Réforme 2026** : la loi n° 23/053 du 30 novembre 2023, en vigueur depuis le 1er janvier 2026, a institué l'IRPP et l'IS. Conséquence : pour les personnes physiques, l'IRPP (voir F14) ; pour les sociétés, l'impôt sur les sociétés (IS) : voir F15. Les règles de l'IBP présentées ici (Code au 31 mars 2021) restent utiles pour les exercices antérieurs à 2026 : vérifiez les textes 2026 avant de les appliquer.",
     },
     {
       type: "articles",

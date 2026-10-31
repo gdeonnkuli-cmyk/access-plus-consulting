@@ -28,8 +28,8 @@ test("découpage en phrases de longueur limitée", () => {
   expect(decouperPhrases(long2, 120).some(p => /[.;:]\s*,|^,/.test(p))).toBe(false);
 });
 
-test("les 14 leçons fiscales produisent un texte lisible, sans balises ni symboles bruts", () => {
-  expect(MODULES_FISC.length).toBe(14);
+test("les 15 leçons fiscales produisent un texte lisible, sans balises ni symboles bruts", () => {
+  expect(MODULES_FISC.length).toBe(15);
   for (const m of MODULES_FISC) {
     const S = texteModuleFiscal(m);
     expect(S.length).toBeGreaterThan(10);

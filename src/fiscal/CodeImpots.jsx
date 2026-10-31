@@ -9,7 +9,7 @@ import{liquidationTVA}from"./tva";
 import{LIB_ACCES}from"../acces/plateforme";
 
 // ══════════════════ CODE DES IMPÔTS RDC EXPLIQUÉ ══════════════════
-// 14 modules (src/fiscal/modules : Code des impôts mis à jour au 31 mars 2021, TVA pratique, import-export, paie, facture normalisée et IRPP) : leçon structurée en blocs,
+// 15 modules (src/fiscal/modules : Code des impôts mis à jour au 31 mars 2021, TVA pratique, import-export, paie, facture normalisée, IRPP et IS) : leçon structurée en blocs,
 // schémas dessinés et QCM (banque de 15 questions, séries de 10).
 // Score enregistré dans users/{uid}.scores["FISC-F2"] = { s, t, pct, date } (meilleur score conservé).
 // QCM : chaque tentative tire 10 questions dans la banque du module (15), dont au moins 30 % de nouvelles
@@ -341,7 +341,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
       <i className="ti ti-receipt-tax" style={{position:"absolute",right:-10,bottom:-22,fontSize:150,opacity:.1}}/>
       <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Fiscalité · République démocratique du Congo</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Le Code des impôts expliqué</div>
-      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>14 modules clairs (fiscalité, TVA pratique, paie, import-export, facture normalisée et IRPP 2026), avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts de la DGI mis à jour au 31 mars 2021, des textes sociaux en vigueur en 2026 pour la paie et, pour la facture normalisée et l'IRPP, du Décret n° 23/010, de la loi n° 23/053 et des publications de la DGI.</div>
+      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>15 modules clairs (fiscalité, TVA pratique, paie, import-export, facture normalisée, IRPP et IS 2026), avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts de la DGI mis à jour au 31 mars 2021, des textes sociaux en vigueur en 2026 pour la paie et, pour la facture normalisée et l'IRPP, du Décret n° 23/010, de la loi n° 23/053 et des publications de la DGI.</div>
       <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
         <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>{valides} / {MODULES_FISC.length} modules validés</span>
         {moy!=null&&<span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>Score moyen : {moy} %</span>}
@@ -349,7 +349,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
     </div>
     {!ok&&<div style={{display:"flex",alignItems:"center",gap:10,background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:14,padding:"11px 14px",marginBottom:14,flexWrap:"wrap"}}>
       <i className="ti ti-lock-open" style={{fontSize:18,color:K.wa}}/>
-      <div style={{flex:1,minWidth:200,fontSize:13.5,color:K.t1,lineHeight:1.5}}>Le module <b>F1</b> est en accès libre. Les modules F2 à F14 sont réservés aux abonnés.</div>
+      <div style={{flex:1,minWidth:200,fontSize:13.5,color:K.t1,lineHeight:1.5}}>Le module <b>F1</b> est en accès libre. Les modules F2 à F15 sont réservés aux abonnés.</div>
       {onSub&&<Bouton K={K} ch={LIB_ACCES} on={onSub} sx={{minHeight:38,padding:"8px 14px",fontSize:13}}/>}
     </div>}
     <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>

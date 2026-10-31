@@ -66,7 +66,7 @@ export const THEMES = {
       ["Dettes financières", f(D) + " USD"],
       ["Coût des capitaux propres (exercice 1)", p(ke)],
       ["Taux d'intérêt moyen des emprunts bancaires", p(kd)],
-      ["Impôt sur les bénéfices et profits (IBP)", p(t, 0)],
+      ["Impôt sur les sociétés (IS)", p(t, 0)],
     ],
     questions: [
       "Calculez le coût de la dette après impôt.",
@@ -74,7 +74,7 @@ export const THEMES = {
       "Un projet de carrière de concassage rapporte " + p(proj, 0) + " par an et présente le même risque que l'activité actuelle. Faut-il l'accepter ?",
     ],
     corrige: [
-      { q: 1, t: [`Les intérêts sont déductibles de l'IBP : chaque dollar d'intérêt réduit l'impôt de ${f(t, 2)} USD. Coût net : k_d × (1 − t) = ${p(kd)} × ${f(1 - t, 2)} = ${p(kdn)}.`] },
+      { q: 1, t: [`Les intérêts sont déductibles de l'IS : chaque dollar d'intérêt réduit l'impôt de ${f(t, 2)} USD. Coût net : k_d × (1 − t) = ${p(kd)} × ${f(1 - t, 2)} = ${p(kdn)}.`] },
       { q: 2, t: [
         `Poids : capitaux propres ${f(CP)} / ${f(CP + D)} = ${p(wcp, 0)} ; dettes ${p(wd, 0)}.`,
         `CMPC = ${p(wcp, 0)} × ${p(ke)} + ${p(wd, 0)} × ${p(kdn)} = ${p(wcp * ke)} + ${p(wd * kdn)} = ${p(cmpc)}.`,
@@ -93,7 +93,7 @@ export const THEMES = {
   CAS.push({
     theme: THEMES.cc, titre: "Bêta d'une société non cotée à partir de comparables",
     enonce: [
-      "La société BÉTON DU FLEUVE SARL n'est pas cotée : on ne peut pas mesurer son bêta directement. Son expert-comptable relève les bêtas de trois entreprises du même secteur, dont les actions sont échangées sur un marché régional. L'IBP est de 30 % pour toutes.",
+      "La société BÉTON DU FLEUVE SARL n'est pas cotée : on ne peut pas mesurer son bêta directement. Son expert-comptable relève les bêtas de trois entreprises du même secteur, dont les actions sont échangées sur un marché régional. L'IS est de 30 % pour toutes.",
       "BÉTON DU FLEUVE vise un ratio dettes / capitaux propres de " + f(cible, 2) + ". Taux sans risque 8 %, prime de marché 7 %, prime pays 4 %.",
     ],
     tableau: { e: ["Société comparable", "Bêta des actions (endetté)", "Dettes / capitaux propres"], l: comp.map(([n, b, d]) => [n, f(b, 2), f(d, 2)]) },
@@ -126,7 +126,7 @@ export const THEMES = {
       ["Résultat d'exploitation", f(RE)],
       ["Capitaux propres", f(CP)],
       ["Dettes financières (taux d'intérêt " + p(i, 0) + ")", f(D)],
-      ["IBP", p(t, 0)],
+      ["IS", p(t, 0)],
     ],
     questions: [
       "Calculez la rentabilité économique après impôt.",
@@ -159,7 +159,7 @@ export const THEMES = {
   CAS.push({
     theme: THEMES.dg, titre: "Création de valeur : l'EVA",
     enonce: ["La brasserie BOMOKO SA (Lubumbashi) présente les données suivantes (en USD) :"],
-    donnees: [["Capitaux investis", f(CI)], ["Résultat d'exploitation", f(RE)], ["IBP", p(t, 0)], ["CMPC", p(c, 0)]],
+    donnees: [["Capitaux investis", f(CI)], ["Résultat d'exploitation", f(RE)], ["IS", p(t, 0)], ["CMPC", p(c, 0)]],
     questions: [
       "Calculez le résultat d'exploitation après impôt (NOPAT), la rentabilité des capitaux investis et l'EVA.",
       `La direction propose une nouvelle ligne d'embouteillage : ${f(dCI)} USD d'investissement pour ${f(dRE)} USD de résultat d'exploitation supplémentaire. Calculez la nouvelle EVA. Faut-il investir ?`,
@@ -202,7 +202,7 @@ export const THEMES = {
       ["Charges fixes décaissées (hors amortissements)", f(cf) + " par an"],
       ["Besoin en fonds de roulement (BFR)", p(b, 0) + " du chiffre d'affaires de l'année, constitué en début d'année, récupéré à la fin du projet"],
       ["Prix de revente du matériel en fin d'année 5", f(vr) + " (matériel totalement amorti)"],
-      ["IBP / taux d'actualisation", p(t, 0) + " / " + p(r, 0)],
+      ["IS / taux d'actualisation", p(t, 0) + " / " + p(r, 0)],
     ],
     questions: [
       "Établissez le tableau des flux nets de trésorerie (FNT).",
@@ -299,7 +299,7 @@ export const THEMES = {
   const kE = tri(fE.map(x => -x)), kC = tri(fC.map(x => -x));
   CAS.push({
     theme: THEMES.fin, titre: "Financer une machine : emprunt bancaire ou crédit-bail ?",
-    enonce: [`La société AGRO-KASAÏ SA doit financer une décortiqueuse de ${f(K)} USD, amortissable en linéaire sur ${n} ans. IBP : ${p(t, 0)}. Deux offres :`],
+    enonce: [`La société AGRO-KASAÏ SA doit financer une décortiqueuse de ${f(K)} USD, amortissable en linéaire sur ${n} ans. IS : ${p(t, 0)}. Deux offres :`],
     donnees: [
       ["Emprunt bancaire", `${f(K)} USD sur ${n} ans, taux ${p(i, 0)}, remboursement par amortissements constants, frais de dossier ${p(fr, 0)} payés à la signature (déductibles l'année 1)`],
       ["Crédit-bail", `${n} loyers annuels de ${f(loyer)} USD payés en fin d'année, option d'achat finale négligeable`],
@@ -363,12 +363,12 @@ export const THEMES = {
   const VE4 = fa.reduce((a, b) => a + b) + fcf[4] * 1.04 / (c - 0.04) / (1 + c) ** 5;
   CAS.push({
     theme: THEMES.ev, titre: "Évaluer une entreprise par l'actualisation des flux de trésorerie (DCF)",
-    enonce: [`La société CONGO PLASTIQUES SA (fabrication d'emballages à Kinshasa) prépare l'entrée d'un partenaire. Son plan d'affaires sur 5 ans (en milliers d'USD) est le suivant. IBP ${p(t, 0)}, CMPC ${p(c, 0)}, croissance à l'infini des flux au-delà de l'année 5 : ${p(g, 0)}. Dette financière nette : ${f(dn)}. Le capital compte ${f(nb)} actions.`],
+    enonce: [`La société CONGO PLASTIQUES SA (fabrication d'emballages à Kinshasa) prépare l'entrée d'un partenaire. Son plan d'affaires sur 5 ans (en milliers d'USD) est le suivant. IS ${p(t, 0)}, CMPC ${p(c, 0)}, croissance à l'infini des flux au-delà de l'année 5 : ${p(g, 0)}. Dette financière nette : ${f(dn)}. Le capital compte ${f(nb)} actions.`],
     tableau: { e: ["Année", "1", "2", "3", "4", "5"], l: [["EBE", ...ebe.map(x => f(x))], ["Dotations aux amortissements", ...dot.map(x => f(x))], ["Investissements", ...capex.map(x => f(x))], ["Augmentation du BFR", ...dbfr.map(x => f(x))]] },
     questions: ["Calculez les flux de trésorerie disponibles (FCF) des années 1 à 5.", "Calculez la valeur terminale et la valeur de l'entreprise.", "Déduisez la valeur des capitaux propres et la valeur d'une action. Quelle est la part de la valeur terminale ?"],
     corrige: [
       { q: 1, t: ["FCF = résultat d'exploitation − impôt théorique sur ce résultat + dotations − investissements − augmentation du BFR. L'impôt est calculé sur le résultat d'exploitation, comme si l'entreprise n'était pas endettée : la dette est traitée à part."],
-        tab: { e: ["Année", "1", "2", "3", "4", "5"], l: [["Résultat d'exploitation (EBE − dotations)", ...re.map(x => f(x))], ["− IBP théorique 30 %", ...is.map(x => f(-x))], ["+ Dotations", ...dot.map(x => f(x))], ["− Investissements", ...capex.map(x => f(-x))], ["− Augmentation du BFR", ...dbfr.map(x => f(-x))], ["= FCF", ...fcf.map(x => f(x))], ["FCF actualisé à 16 %", ...fa.map(x => f(x, 1))]] } },
+        tab: { e: ["Année", "1", "2", "3", "4", "5"], l: [["Résultat d'exploitation (EBE − dotations)", ...re.map(x => f(x))], ["− IS théorique 30 %", ...is.map(x => f(-x))], ["+ Dotations", ...dot.map(x => f(x))], ["− Investissements", ...capex.map(x => f(-x))], ["− Augmentation du BFR", ...dbfr.map(x => f(-x))], ["= FCF", ...fcf.map(x => f(x))], ["FCF actualisé à 16 %", ...fa.map(x => f(x, 1))]] } },
       { q: 2, t: [
         `Valeur terminale en fin d'année 5 (Gordon-Shapiro) = FCF₅ × (1 + g) / (CMPC − g) = ${f(fcf[4])} × 1,05 / (16 % − 5 %) = ${f(vt, 1)} ; actualisée : ${f(vt, 1)} / 1,16⁵ = ${f(vta, 1)}.`,
         `Valeur de l'entreprise = ${f(fa.reduce((a, b) => a + b), 1)} (flux des 5 ans) + ${f(vta, 1)} = ${f(VE, 1)} milliers d'USD.`,
@@ -389,7 +389,7 @@ export const THEMES = {
   const v1 = ebe * me - dn, v2 = rn * mp, v1d = v1 * (1 - dec), v2d = v2 * (1 - dec);
   CAS.push({
     theme: THEMES.ev, titre: "Évaluer par les multiples de sociétés comparables",
-    enonce: [`On reprend CONGO PLASTIQUES SA (exercice 11). Prévisions de l'année 1 : EBE ${f(ebe)}, résultat net (après intérêts et IBP) ${f(rn)} ; dette nette ${f(dn)} (milliers d'USD). Un analyste a relevé les multiples de trois fabricants d'emballages cotés à la BRVM (Abidjan) ou sur d'autres marchés africains :`],
+    enonce: [`On reprend CONGO PLASTIQUES SA (exercice 11). Prévisions de l'année 1 : EBE ${f(ebe)}, résultat net (après intérêts et IS) ${f(rn)} ; dette nette ${f(dn)} (milliers d'USD). Un analyste a relevé les multiples de trois fabricants d'emballages cotés à la BRVM (Abidjan) ou sur d'autres marchés africains :`],
     tableau: { e: ["Société", "Valeur d'entreprise / EBE", "PER (cours / bénéfice)"], l: comp.map(([n, a, b]) => [n, f(a, 1), f(b, 1)]) },
     questions: ["Évaluez les capitaux propres avec le multiple d'EBE moyen, puis avec le PER moyen.", `CONGO PLASTIQUES n'étant pas cotée, on applique une décote d'illiquidité de ${p(dec, 0)}. Donnez la fourchette de valeur et comparez-la au DCF de l'exercice 11 (2 822 milliers d'USD).`],
     corrige: [
@@ -486,9 +486,9 @@ export const THEMES = {
       ["Réserve légale déjà constituée", f(RL) + " FC"],
       ["Report à nouveau débiteur (pertes antérieures)", f(ran) + " FC"],
       ["Bénéfice net de l'exercice N", f(BN) + " FC"],
-      ["Impôt mobilier (IRM) retenu sur les dividendes", p(irm, 0) + " (hypothèse de l'exercice)"],
+      ["Retenue à la source sur les dividendes (IRPP, art. 120 de la loi n° 23/053)", p(irm, 0) + " (actionnaires personnes physiques)"],
     ],
-    questions: ["Calculez la dotation à la réserve légale.", "Calculez le bénéfice distribuable.", "Établissez le tableau d'affectation et le dividende par action.", "Passez les écritures SYSCOHADA de l'affectation, de la retenue de l'IRM et du paiement des dividendes."],
+    questions: ["Calculez la dotation à la réserve légale.", "Calculez le bénéfice distribuable.", "Établissez le tableau d'affectation et le dividende par action.", "Passez les écritures SYSCOHADA de l'affectation, de la retenue à la source et du paiement des dividendes."],
     corrige: [
       { q: 1, t: [
         "Acte uniforme relatif aux sociétés commerciales et au GIE (AUSCGIE), art. 346 : on prélève au moins 1/10 du bénéfice de l'exercice, diminué le cas échéant des pertes antérieures, jusqu'à ce que la réserve légale atteigne 1/5 du capital.",
@@ -498,12 +498,12 @@ export const THEMES = {
       { q: 3, t: [], tab: { e: ["Affectation", "Montant (FC)"], l: [
         ["Bénéfice de l'exercice", f(BN)], ["− Apurement du report à nouveau débiteur", f(-ran)], ["− Réserve légale", f(-rl)], ["− Réserve statutaire (5 % × " + f(BN - ran) + ")", f(-rst)],
         ["− Premier dividende (6 % × " + f(cap) + ")", f(-d1)], ["− Réserve facultative", f(-rf_)], [`− Superdividende (${f(solde)} / ${f(nAct)} = ${f(solde / nAct, 2)}, arrondi à ${f(sup)} FC par action)`, f(-supT)], ["= Nouveau report à nouveau créditeur", f(nvran)],
-      ] }, t2: [`Dividende brut par action : ${f(d1 / nAct)} + ${f(sup)} = ${f(divA)} FC, soit ${f(divT)} FC au total. IRM retenu : ${f(ret)} FC ; dividende net versé : ${f(divT - ret)} FC (${f(divA * (1 - irm))} FC par action).`] },
+      ] }, t2: [`Dividende brut par action : ${f(d1 / nAct)} + ${f(sup)} = ${f(divA)} FC, soit ${f(divT)} FC au total. Retenue à la source (IRPP) : ${f(ret)} FC ; dividende net versé : ${f(divT - ret)} FC (${f(divA * (1 - irm))} FC par action).`] },
       { q: 4, t: ["Écritures au journal (montants en FC) :"], tab: { w: [1000, 4638, 2000, 2000], e: ["Compte", "Libellé", "Débit", "Crédit"], l: [
         ["131", "Résultat net : bénéfice", f(BN), ""], ["129", "Report à nouveau débiteur", "", f(ran)], ["111", "Réserve légale", "", f(rl)], ["112", "Réserves statutaires", "", f(rst)], ["1181", "Réserves facultatives", "", f(rf_)], ["465", "Associés, dividendes à payer", "", f(divT)], ["121", "Report à nouveau créditeur", "", f(nvran)],
-        ["", "Retenue de l'IRM sur les dividendes", "", ""], ["465", "Associés, dividendes à payer", f(ret), ""], ["447", "État, impôts retenus à la source", "", f(ret)],
+        ["", "Retenue à la source (IRPP) sur les dividendes", "", ""], ["465", "Associés, dividendes à payer", f(ret), ""], ["447", "État, impôts retenus à la source", "", f(ret)],
         ["", "Paiement des dividendes nets", "", ""], ["465", "Associés, dividendes à payer", f(divT - ret), ""], ["521", "Banque", "", f(divT - ret)],
-        ["", "Reversement de l'IRM à l'administration fiscale", "", ""], ["447", "État, impôts retenus à la source", f(ret), ""], ["521", "Banque", "", f(ret)],
+        ["", "Reversement de la retenue à l'administration fiscale", "", ""], ["447", "État, impôts retenus à la source", f(ret), ""], ["521", "Banque", "", f(ret)],
       ] } },
     ],
     retenir: "Ordre : apurer les pertes antérieures, doter la réserve légale (10 % jusqu'à 1/5 du capital), puis les réserves statutaires ; le reste, augmenté du report bénéficiaire, est distribuable.",

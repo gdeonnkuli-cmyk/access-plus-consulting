@@ -42,6 +42,7 @@ export const BANQUE = [
   { id: "a8", cible: "abonnes", type: "nouveaute", titre: "Nouveau : Finance d'entreprise", texte: "7 modules, 16 cas corrigés (VAN, DCF, change USD/CDF, affectation OHADA) et chaque leçon en audio.", vue: "fin" },
   { id: "a9", cible: "abonnes", type: "nouveaute", titre: "Nouveau : la facture normalisée (F13)", texte: "Obligatoire depuis le 1er décembre 2025 : DEF, e-DEF, mentions, groupes de taxation et contrôle avant de déduire la TVA.", vue: "fisc" },
   { id: "a10", cible: "abonnes", type: "nouveaute", titre: "Nouveau : l'IRPP, réforme 2026 (F14)", texte: "Catégories de revenus, barème progressif plafonné à 30 %, retenues, quotités et forfait, déclaration au 30 avril.", vue: "fisc" },
+  { id: "a11", cible: "abonnes", type: "nouveaute", titre: "Nouveau : l'impôt sur les sociétés (F15)", texte: "Taux de 30 %, minimum de 1 % du chiffre d'affaires, charges déductibles et leurs limites, déficits, acomptes : la loi n° 23/053 expliquée.", vue: "fisc" },
   // Tout le monde : astuces
   { id: "t1", cible: "tous", type: "astuce", titre: "1 000 000 FC payés en espèces ?", texte: "Entre assujettis, une facture d'au moins 1 000 000 FC réglée en espèces perd son droit à déduction de TVA (art. 59 bis).", vue: "fisc" },
   { id: "t2", cible: "tous", type: "astuce", titre: "Carburant : la moitié seulement", texte: "Hors cas particuliers, la TVA sur le carburant n'est déductible qu'à 50 % (art. 41).", vue: "fisc" },
