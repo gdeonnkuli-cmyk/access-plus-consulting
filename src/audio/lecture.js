@@ -25,7 +25,7 @@ const ABREVIATIONS = [
 const SYMBOLES = [
   [/≤/g, " inférieur ou égal à "], [/≥/g, " supérieur ou égal à "], [/→/g, ", "], [/⇒/g, ", donc "],
   [/\s=\s/g, " égale "], [/\s<\s/g, " moins de "], [/\s>\s/g, " plus de "], [/±/g, " plus ou moins "], [/×/g, " fois "],
-  [/(\d)\s*%/g, "$1 pour cent"], [/\bFC\b/g, "francs congolais"], [/\bUSD\b/g, "dollars"], [/\$/g, " dollars"],
+  [/(\d)\s*%/g, "$1 pour cent"], [/(\d)\s*‰/g, "$1 pour mille"], [/\bFC\b/g, "francs congolais"], [/\bUSD\b/g, "dollars"], [/\$/g, " dollars"],
   [/[«»“”"]/g, ""], [/\s\u2212\s/g, " moins "], [/\s[–—-]\s/g, ", "], [/·/g, ", "],
   [/([a-zà-ÿ])\/([a-zà-ÿ])/gi, "$1 ou $2"],
   // Parenthèses et crochets : courte pause, comme à l'oral (la voix les ignore sinon)
