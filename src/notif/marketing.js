@@ -31,6 +31,7 @@ export const BANQUE = [
   { id: "v6", cible: "visiteurs", type: "motivation", titre: "La TVA ne vous fera plus peur", texte: "Tri des factures, prorata, crédit, écritures : le module TVA en pratique vous guide pas à pas.", vue: "acces" },
   { id: "v7", cible: "visiteurs", type: "offre", titre: "Commencez dès {m} $", texte: "Un mois pour tout essayer : modules, QCM, simulateurs et cas pratiques corrigés.", vue: "acces" },
   { id: "v8", cible: "visiteurs", type: "nouveaute", titre: "Finance d'entreprise : le module FE1 est gratuit", texte: "Coût du capital, MEDAF avec prime de risque pays et CMPC, avec trois cas corrigés et le cours en audio.", vue: "fin" },
+  { id: "v9", cible: "visiteurs", type: "nouveaute", titre: "ONG, associations, églises : SB1 est gratuit", texte: "Découvrez le SYCEBNL, le référentiel OHADA des entités à but non lucratif, avec schémas, audio et évaluation.", vue: "syc" },
   // Abonnés : défis et nouveautés
   { id: "a1", cible: "abonnes", type: "defi", titre: "Défi du moment : 80 % au QCM TVA en pratique", texte: "10 questions tirées au hasard : saurez-vous déclarer un mois de TVA sans faute ?", vue: "fisc" },
   { id: "a2", cible: "abonnes", type: "defi", titre: "Refaites un QCM, il a changé", texte: "À chaque essai, au moins 30 % des questions sont nouvelles et les réponses sont mélangées.", vue: "fisc" },
@@ -43,6 +44,7 @@ export const BANQUE = [
   { id: "a9", cible: "abonnes", type: "nouveaute", titre: "Nouveau : la facture normalisée (F13)", texte: "Obligatoire depuis le 1er décembre 2025 : DEF, e-DEF, mentions, groupes de taxation et contrôle avant de déduire la TVA.", vue: "fisc" },
   { id: "a10", cible: "abonnes", type: "nouveaute", titre: "Nouveau : l'IRPP, réforme 2026 (F14)", texte: "Catégories de revenus, barème progressif plafonné à 30 %, retenues, quotités et forfait, déclaration au 30 avril.", vue: "fisc" },
   { id: "a11", cible: "abonnes", type: "nouveaute", titre: "Nouveau : l'impôt sur les sociétés (F15)", texte: "Taux de 30 %, minimum de 1 % du chiffre d'affaires, charges déductibles et leurs limites, déficits, acomptes : la loi n° 23/053 expliquée.", vue: "fisc" },
+  { id: "a12", cible: "abonnes", type: "nouveaute", titre: "Nouveau parcours certifiant : SYCEBNL", texte: "8 modules (dotations, fonds affectés, bailleurs, bénévolat, analyse financière), un examen final de 30 questions et un certificat avec relevé de notes.", vue: "syc" },
   // Tout le monde : astuces
   { id: "t1", cible: "tous", type: "astuce", titre: "1 000 000 FC payés en espèces ?", texte: "Entre assujettis, une facture d'au moins 1 000 000 FC réglée en espèces perd son droit à déduction de TVA (art. 59 bis).", vue: "fisc" },
   { id: "t2", cible: "tous", type: "astuce", titre: "Carburant : la moitié seulement", texte: "Hors cas particuliers, la TVA sur le carburant n'est déductible qu'à 50 % (art. 41).", vue: "fisc" },

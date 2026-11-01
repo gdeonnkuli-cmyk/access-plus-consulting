@@ -246,56 +246,77 @@ export function Bloc({K,b,col}){
 }
 
 // ── QCM ─────────────────────────────────────────────────────────────────────────
-// cle : clé du score dans users/{uid}.scores (FISC-… par défaut) ; nbQ : taille d'une série
-export function Qcm({K,mod,db,uid,ancien,onFin,cle=cleScore(mod.id),nbQ=NB_Q}){
+// cle : clé du score dans users/{uid}.scores (FISC-… par défaut) ; nbQ : taille d'une série ; seuil : % pour valider.
+// examen : pas de correction question par question ; corrigé complet affiché à la fin (examen final SYCEBNL).
+export function Qcm({K,mod,db,uid,ancien,onFin,cle=cleScore(mod.id),nbQ=NB_Q,seuil=60,examen=false,libRetour="Retour à la leçon"}){
   const nouvelle=prec=>{const s=tirerSerie(mod.qcm,prec,{n:nbQ});ecrireSerie(cle,s);return s;};
   const[serie,sSerie]=useState(()=>nouvelle(lireSerie(cle)));
-  const[i,sI]=useState(0),[choix,sChoix]=useState(null),[bonnes,sBonnes]=useState(0),[fini,sFini]=useState(false),[saveErr,sSaveErr]=useState("");
-  const q=serie[i],n=serie.length,col=mod.col;
-  const valider=c=>{if(choix!=null)return;sChoix(c);if(c===q.b)sBonnes(x=>x+1);};
+  const[i,sI]=useState(0),[choix,sChoix]=useState(null),[bonnes,sBonnes]=useState(0),[fini,sFini]=useState(false),[saveErr,sSaveErr]=useState(""),[rep,sRep]=useState([]);
+  const q=serie[i],n=serie.length,col=mod.col,montrer=choix!=null&&!examen;
+  const valider=c=>{if(examen){sChoix(c);return;}if(choix!=null)return;sChoix(c);if(c===q.b)sBonnes(x=>x+1);};
   const suivant=async()=>{
+    const reps=[...rep,choix];sRep(reps);
     if(i<n-1){sI(i+1);sChoix(null);return;}
-    sFini(true);
-    const pct=Math.round(bonnes/n*100);
+    const nb=examen?reps.filter((c,k)=>c===serie[k].b).length:bonnes;
+    sBonnes(nb);sFini(true);
+    const pct=Math.round(nb/n*100);
     if(uid&&db&&(!ancien||pct>=(ancien.pct||0))){
-      try{await updateDoc(doc(db,"users",uid),{[`scores.${cle}`]:{s:bonnes,t:n,pct,date:new Date().toISOString()}});onFin&&onFin({s:bonnes,t:n,pct});}
+      try{await updateDoc(doc(db,"users",uid),{[`scores.${cle}`]:{s:nb,t:n,pct,date:new Date().toISOString()}});onFin&&onFin({s:nb,t:n,pct});}
       catch(e){sSaveErr("Score non enregistré (connexion ?). Réessayez plus tard.");}
     }
   };
-  if(fini){const pct=Math.round(bonnes/n*100),ok=pct>=60;return <Carte K={K} sx={{textAlign:"center",padding:"26px 18px"}}>
-    <div style={{fontSize:44,marginBottom:6}}>{pct>=80?"🏆":ok?"✅":"📚"}</div>
-    <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:26,color:ok?K.em:K.er}}>{bonnes} / {n} · {pct} %</div>
-    <div style={{fontSize:14.5,color:K.t2,margin:"6px 0 16px",lineHeight:1.6}}>{pct>=80?"Excellent : vous maîtrisez ce module.":ok?"Module validé. Relisez les points manqués pour consolider.":"Pas encore validé (60 % requis). Relisez la leçon puis retentez."}</div>
-    {ancien&&ancien.pct>pct&&<div style={{fontSize:12.5,color:K.t3,marginBottom:10}}>Votre meilleur score ({ancien.pct} %) reste enregistré.</div>}
-    {mod.qcm.length>nbQ&&<div style={{fontSize:12.5,color:K.t3,marginBottom:12,lineHeight:1.5}}><i className="ti ti-arrows-shuffle" style={{marginRight:4}}/>Chaque nouvelle série renouvelle au moins 30 % des questions ({mod.qcm.length} dans la banque) et mélange l'ordre des réponses.</div>}
-    {saveErr&&<div style={{fontSize:12.5,color:K.er,marginBottom:10}}>{saveErr}</div>}
-    <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
-      <Bouton K={K} v="g" ico="refresh" ch="Nouvelle série" on={()=>{sSerie(nouvelle(serie.map(x=>x.idx)));sI(0);sChoix(null);sBonnes(0);sFini(false);sSaveErr("");}}/>
-      <Bouton K={K} ico="book-2" ch="Retour à la leçon" on={()=>onFin&&onFin(null,true)}/>
-    </div></Carte>;}
+  const recommencer=()=>{sSerie(nouvelle(serie.map(x=>x.idx)));sI(0);sChoix(null);sBonnes(0);sFini(false);sSaveErr("");sRep([]);};
+  if(fini){const pct=Math.round(bonnes/n*100),ok=pct>=seuil;return <>
+    <Carte K={K} sx={{textAlign:"center",padding:"26px 18px"}}>
+      <div style={{fontSize:44,marginBottom:6}}>{pct>=80?"🏆":ok?"✅":"📚"}</div>
+      <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:26,color:ok?K.em:K.er}}>{bonnes} / {n} · {pct} %</div>
+      <div style={{fontSize:14.5,color:K.t2,margin:"6px 0 16px",lineHeight:1.6}}>{pct>=80?(examen?"Excellent : examen réussi.":"Excellent : vous maîtrisez ce module."):ok?(examen?"Examen réussi. Consultez le corrigé ci-dessous pour consolider.":"Module validé. Relisez les points manqués pour consolider."):`Pas encore validé (${seuil} % requis). ${examen?"Revoyez les modules indiqués dans le corrigé puis retentez.":"Relisez la leçon puis retentez."}`}</div>
+      {ancien&&ancien.pct>pct&&<div style={{fontSize:12.5,color:K.t3,marginBottom:10}}>Votre meilleur score ({ancien.pct} %) reste enregistré.</div>}
+      {mod.qcm.length>nbQ&&<div style={{fontSize:12.5,color:K.t3,marginBottom:12,lineHeight:1.5}}><i className="ti ti-arrows-shuffle" style={{marginRight:4}}/>Chaque nouvelle série renouvelle au moins 30 % des questions ({mod.qcm.length} dans la banque) et mélange l'ordre des réponses.</div>}
+      {saveErr&&<div style={{fontSize:12.5,color:K.er,marginBottom:10}}>{saveErr}</div>}
+      <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+        <Bouton K={K} v="g" ico="refresh" ch="Nouvelle série" on={recommencer}/>
+        <Bouton K={K} ico="book-2" ch={libRetour} on={()=>onFin&&onFin(null,true)}/>
+      </div>
+    </Carte>
+    {examen&&<Carte K={K}>
+      <Titre K={K} ico="list-check" col={col}>Corrigé détaillé</Titre>
+      {serie.map((x,k)=>{const bon=rep[k]===x.b;return <div key={k} style={{padding:"10px 0",borderTop:k?`1px solid ${K.b0}`:"none"}}>
+        <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+          <i className={`ti ti-${bon?"circle-check":"circle-x"}`} style={{fontSize:18,color:bon?K.em:K.er,flexShrink:0,marginTop:1}}/>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:800,fontSize:14,color:K.t1,lineHeight:1.45}}>{k+1}. <T t={x.q}/>{x.m&&<span style={{marginLeft:6,fontSize:11,fontWeight:800,color:col,background:`${col}14`,borderRadius:99,padding:"1px 7px"}}>{x.m}</span>}</div>
+            {!bon&&<div style={{fontSize:13,color:K.er,marginTop:3}}>Votre réponse : {rep[k]!=null?<T t={x.r[rep[k]]}/>:"aucune"}</div>}
+            <div style={{fontSize:13,color:K.em,marginTop:2,fontWeight:700}}>Bonne réponse : <T t={x.r[x.b]}/></div>
+            <div style={{fontSize:13,color:K.t2,marginTop:3,lineHeight:1.55}}><T t={x.e}/></div>
+          </div>
+        </div>
+      </div>;})}
+    </Carte>}
+  </>;}
   return <Carte K={K}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
       <div style={{fontSize:12.5,fontWeight:800,color:col}}>Question {i+1} / {n}</div>
-      <div style={{fontSize:12.5,color:K.t3}}>{bonnes} bonne{bonnes>1?"s":""} réponse{bonnes>1?"s":""}</div>
+      {!examen&&<div style={{fontSize:12.5,color:K.t3}}>{bonnes} bonne{bonnes>1?"s":""} réponse{bonnes>1?"s":""}</div>}
+      {examen&&<div style={{fontSize:12.5,color:K.t3}}><i className="ti ti-lock" style={{marginRight:3}}/>Corrigé à la fin</div>}
     </div>
     <div style={{height:6,background:K.c2,borderRadius:99,overflow:"hidden",marginBottom:14}}><div style={{width:`${(i+(choix!=null?1:0))/n*100}%`,height:"100%",background:col,transition:"width .3s"}}/></div>
     <div style={{fontWeight:800,fontSize:16,color:K.t1,lineHeight:1.45,marginBottom:12}}><T t={q.q}/></div>
     <div style={{display:"flex",flexDirection:"column",gap:7}}>
-      {q.r.map((r,j)=>{const bon=choix!=null&&j===q.b,faux=choix===j&&j!==q.b;
-        return <button key={j} onClick={()=>valider(j)} disabled={choix!=null} className="bt" style={{textAlign:"left",display:"flex",gap:10,alignItems:"flex-start",padding:"11px 12px",borderRadius:12,cursor:choix!=null?"default":"pointer",fontFamily:"'Outfit',sans-serif",fontSize:14.5,lineHeight:1.45,
-          background:bon?K.emBg:faux?K.erBg:K.c2,border:`1.5px solid ${bon?K.em:faux?K.er:K.b0}`,color:K.t1}}>
-          <span style={{width:24,height:24,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:12,background:bon?K.em:faux?K.er:K.card,color:bon||faux?"#fff":K.t2,border:`1px solid ${K.b1}`}}>{bon?"✓":faux?"✕":"ABCD"[j]}</span>
+      {q.r.map((r,j)=>{const bon=montrer&&j===q.b,faux=montrer&&choix===j&&j!==q.b,sel=examen&&choix===j;
+        return <button key={j} onClick={()=>valider(j)} disabled={montrer} className="bt" style={{textAlign:"left",display:"flex",gap:10,alignItems:"flex-start",padding:"11px 12px",borderRadius:12,cursor:montrer?"default":"pointer",fontFamily:"'Outfit',sans-serif",fontSize:14.5,lineHeight:1.45,
+          background:bon?K.emBg:faux?K.erBg:sel?`${col}14`:K.c2,border:`1.5px solid ${bon?K.em:faux?K.er:sel?col:K.b0}`,color:K.t1}}>
+          <span style={{width:24,height:24,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:12,background:bon?K.em:faux?K.er:sel?col:K.card,color:bon||faux||sel?"#fff":K.t2,border:`1px solid ${K.b1}`}}>{bon?"✓":faux?"✕":"ABCD"[j]}</span>
           <span><T t={r}/></span></button>;})}
     </div>
-    {choix!=null&&<div style={{marginTop:12,background:choix===q.b?K.emBg:K.waBg,border:`1px solid ${choix===q.b?K.emBd:K.waBd}`,borderRadius:12,padding:"11px 13px"}}>
+    {montrer&&<div style={{marginTop:12,background:choix===q.b?K.emBg:K.waBg,border:`1px solid ${choix===q.b?K.emBd:K.waBd}`,borderRadius:12,padding:"11px 13px"}}>
       <div style={{fontWeight:900,fontSize:14,color:choix===q.b?K.em:K.wa,marginBottom:3}}>{choix===q.b?"Bonne réponse":"Réponse attendue : "+"ABCD"[q.b]}</div>
       <div style={{fontSize:14,color:K.t1,lineHeight:1.6}}><T t={q.e}/></div>
       {q.art&&<div style={{fontSize:12.5,color:K.t3,marginTop:4}}><i className="ti ti-book" style={{marginRight:4}}/>{q.art}</div>}
     </div>}
-    {choix!=null&&<div style={{display:"flex",justifyContent:"flex-end",marginTop:12}}><Bouton K={K} ico={i<n-1?"arrow-right":"flag"} ch={i<n-1?"Question suivante":"Voir mon score"} on={suivant}/></div>}
+    {choix!=null&&<div style={{display:"flex",justifyContent:"flex-end",marginTop:12}}><Bouton K={K} ico={i<n-1?"arrow-right":"flag"} ch={i<n-1?"Question suivante":examen?"Terminer l'examen":"Voir mon score"} on={suivant}/></div>}
   </Carte>;
 }
-
 // ── Écran principal ─────────────────────────────────────────────────────────────
 export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
   const[open,sOpen]=useState(null),[mode,sMode]=useState("lecon"),[loc,sLoc]=useState({});

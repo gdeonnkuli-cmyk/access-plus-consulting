@@ -69,7 +69,8 @@ module.exports = async (req, res) => {
   const donnees = {
     uid: jeton.uid, nom, parcours: parcours.id, parcoursTitre: parcours.titre, type,
     moyenne: ev.moyenne, mention: type === "reussite" ? ev.mention : null,
-    elements: ev.elements.map(e => ({ titre: e.titre, pct: e.pct, evalue: e.evalue })),
+    elements: ev.elements.map(e => ({ titre: e.titre, pct: e.pct, evalue: e.evalue, coef: e.coef || 1 })),
+    certificat: !!parcours.certificat,
     heures: ev.heures, debut: versIso(u.createdAt) || maintenant, fin: maintenant, date: maintenant,
     seuils: { element: R.SEUIL_ELEMENT, moyenne: R.SEUIL_MOYENNE },
     signataire: R.SIGNATAIRE, organisme: R.ORGANISME, statut: "valide",

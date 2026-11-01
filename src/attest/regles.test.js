@@ -1,13 +1,15 @@
-import { FISC, FIN, PARCOURS, SEUIL_ELEMENT, SEUIL_MOYENNE, elementsParcours, evaluer, mention, numeroAttestation, numeroValide } from "./regles";
+import { FISC, FIN, SYC, etatSyc, PARCOURS, SEUIL_ELEMENT, SEUIL_MOYENNE, elementsParcours, evaluer, mention, numeroAttestation, numeroValide } from "./regles";
 import { MODULES_FISC } from "../fiscal/modules";
 import { MODULES_FIN } from "../finance/modules";
+import { MODULES_SYC } from "../sycebnl/modules";
 
 const mods = [{ id: "m1", titre: "Fondements SYSCOHADA", ordre: 1 }, { id: "m2", titre: "Journal", ordre: 2, evalType: "none" }, { id: "m3", titre: "Brouillon", on: false }];
 
 test("catalogue fiscal aligné sur les modules de l'application", () => {
   expect(FISC.map(([id, t]) => [id, t])).toEqual(MODULES_FISC.map(m => [m.id, m.titre]));
   expect(FIN.map(([id, t]) => [id, t])).toEqual(MODULES_FIN.map(m => [m.id, m.titre]));
-  expect(PARCOURS.map(p => p.id)).toEqual(["SYS-N1", "FISC", "SYS-N2", "FIN"]);
+  expect(SYC.map(([id, t]) => [id, t])).toEqual(MODULES_SYC.map(m => [m.id, m.titre]));
+  expect(PARCOURS.map(p => p.id)).toEqual(["SYS-N1", "FISC", "SYS-N2", "FIN", "SYCEBNL"]);
   expect([SEUIL_ELEMENT, SEUIL_MOYENNE]).toEqual([70, 80]);
 });
 
@@ -52,4 +54,30 @@ test("finance d'entreprise : réussite avec les 7 QCM ≥ 70 % et une moyenne �
   const scores = Object.fromEntries(["FE1", "FE2", "FE3", "FE4", "FE5", "FE6", "FE7"].map((f, i) => [`FIN-${f}`, { pct: i === 6 ? 75 : 88 }]));
   expect(evaluer("FIN", mods, { scores })).toMatchObject({ suivi: true, reussite: true, moyenne: 86, heures: 14, nTotal: 7 });
   expect(evaluer("FIN", mods, { scores: { ...scores, "FIN-FE3": { pct: 60 } } })).toMatchObject({ suivi: true, reussite: false });
+});
+
+test("SYCEBNL : 8 modules et l'examen final coefficient 2, moyenne pondérée", () => {
+  const el = elementsParcours("SYCEBNL", mods);
+  expect(el.map(e => e.cle)).toEqual(["SYC-SB1", "SYC-SB2", "SYC-SB3", "SYC-SB4", "SYC-SB5", "SYC-SB6", "SYC-SB7", "SYC-SB8", "SYC-FINAL"]);
+  expect(el[8].coef).toBe(2);
+  const scores = Object.fromEntries(["SB1", "SB2", "SB3", "SB4", "SB5", "SB6", "SB7", "SB8"].map(f => [`SYC-${f}`, { pct: 80 }]));
+  // (8 × 80 + 2 × 95) / 10 = 83
+  expect(evaluer("SYCEBNL", mods, { scores: { ...scores, "SYC-FINAL": { pct: 95 } } })).toMatchObject({ suivi: true, reussite: true, moyenne: 83, mention: "Bien", heures: 13 });
+  // examen sous 70 % : pas de certificat
+  expect(evaluer("SYCEBNL", mods, { scores: { ...scores, "SYC-FINAL": { pct: 65 } } }).reussite).toBe(false);
+  // examen non passé : parcours incomplet
+  expect(evaluer("SYCEBNL", mods, { scores })).toMatchObject({ suivi: false, aFaire: ["Examen final (30 questions)"] });
+  expect(PARCOURS.find(p => p.id === "SYCEBNL").certificat).toBe(true);
+});
+
+test("SYCEBNL : ouverture progressive des modules et de l'examen final", () => {
+  const e0 = etatSyc({});
+  expect(e0.modules.map(m => m.ouvert)).toEqual([true, false, false, false, false, false, false, false]);
+  expect(e0.finalOuvert).toBe(false);
+  const e1 = etatSyc({ "SYC-SB1": { pct: 70 }, "SYC-SB2": { pct: 60 } });
+  expect(e1.modules.slice(0, 4).map(m => m.ouvert)).toEqual([true, true, false, false]);
+  const tous = p => Object.fromEntries(["SB1", "SB2", "SB3", "SB4", "SB5", "SB6", "SB7", "SB8"].map(f => [`SYC-${f}`, { pct: p }]));
+  expect(etatSyc(tous(75))).toMatchObject({ tousReussis: true, moyenneModules: 75, finalOuvert: false });
+  expect(etatSyc(tous(80))).toMatchObject({ tousReussis: true, moyenneModules: 80, finalOuvert: true });
+  expect(etatSyc({ ...tous(100), "SYC-SB5": { pct: 60 } }).finalOuvert).toBe(false);
 });

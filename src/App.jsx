@@ -6,6 +6,7 @@ import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/stor
 import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
 import CodeImpots from"./fiscal/CodeImpots";
 import FinanceEntreprise from"./finance/FinanceEntreprise";
+import Sycebnl from"./sycebnl/Sycebnl";
 import{initNotif,notifier}from"./notif/notif";
 import Cloche from"./notif/Cloche";
 import AdminNotif from"./notif/AdminNotif";
@@ -30,6 +31,7 @@ import MesAttestations from"./attest/MesAttestations";
 import{GROUPES_APPRENANT,GROUPES_ADMIN,groupeDe,normaliserVue,badgeGroupe,VUES_ADMIN}from"./nav/navigation";
 import{MODULES_FISC}from"./fiscal/modules";
 import{MODULES_FIN}from"./finance/modules";
+import{MODULES_SYC}from"./sycebnl/modules";
 import VerifAttestation from"./attest/VerifAttestation";
 import AdminAttestations from"./attest/AdminAttestations";
 import LOGO from"./assets/logo.png";
@@ -227,7 +229,7 @@ function useUsers(){
 // activite/{uid} : dernière activité de chaque compte (signal toutes les 90 s quand l'onglet est visible)
 // connexions/{id} : une ligne par ouverture de session (une fois par onglet)
 const ENLIGNE_MS=4*60*1000;
-const VUE_LBL={home:"Accueil",msg:"Messages",pres:"Présentations",jrn:"Monographie ZAO",cpt:"Guide des comptes",audio:"Écouter les cours",fisc:"Code des impôts",fin:"Finance d'entreprise",sugg:"Suggestions",apropos:"À propos",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
+const VUE_LBL={home:"Accueil",msg:"Messages",pres:"Présentations",jrn:"Monographie ZAO",cpt:"Guide des comptes",audio:"Écouter les cours",fisc:"Code des impôts",fin:"Finance d'entreprise",syc:"SYCEBNL",sugg:"Suggestions",apropos:"À propos",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
 const appareil=()=>{const ua=navigator.userAgent||"";const os=/Android/i.test(ua)?"Android":/iPhone|iPad|iPod/i.test(ua)?"iOS":/Windows/i.test(ua)?"Windows":/Mac OS/i.test(ua)?"Mac":/Linux/i.test(ua)?"Linux":"Autre";
   const nav=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/SamsungBrowser/.test(ua)?"Samsung":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"Navigateur";
   const app=(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||String(document.referrer).startsWith("android-app://")?"Application":"Site web";
@@ -1780,6 +1782,7 @@ function FA({uid,onOut}){
     {k:"ef",ico:"report-money",label:"États financiers"},
     {k:"fisc",ico:"receipt-tax",label:"Code des impôts"},
     {k:"fin",ico:"chart-pie",label:"Finance"},
+    {k:"syc",ico:"building-community",label:"SYCEBNL"},
     {k:"sugg",ico:"bulb",label:"Suggestions"},
     {k:"apropos",ico:"info-circle",label:"À propos"},
   ];
@@ -1813,6 +1816,7 @@ function FA({uid,onOut}){
         {ico:"report-money",col:"#1D4ED8",label:"États financiers",desc:"Atelier SYSCOHADA et suivi des dossiers",on:()=>sV("ef")},
         {ico:"receipt-tax",col:"#A3122A",label:"Code des impôts",desc:"15 modules : fiscalité, TVA, paie, facture normalisée, IRPP et IS 2026",on:()=>sV("fisc")},
         {ico:"chart-pie",col:"#B7791F",label:"Finance d'entreprise",desc:"7 modules, 16 cas corrigés et cours audio",on:()=>sV("fin")},
+        {ico:"building-community",col:"#0F766E",label:"SYCEBNL",desc:"8 modules EBNL, examen final et certificat",on:()=>sV("syc")},
       ].map((t,i)=><ActionTile key={t.label} {...t} i={i}/>)}
     </div>
 
@@ -1865,6 +1869,7 @@ function FA({uid,onOut}){
   if(vue==="ef")return W(<EtatsFinanciers db={db} K={K} mob={mob} me={{uid,nom:fData.nom,mail:fData.mail,role:"formateur"}}/>);
   if(vue==="fisc")return W(<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={fData.scores||{}} ok/>);
   if(vue==="fin")return W(<FinanceEntreprise K={K} mob={mob} db={db} uid={uid} scores={fData.scores||{}} ok/>);
+  if(vue==="syc")return W(<Sycebnl K={K} mob={mob} apercu/>);
   if(vue==="sugg")return W(<Suggestions K={K} mob={mob} db={db} me={{uid,nom:fData.nom,mail:fData.mail,role:"formateur"}}/>);
   if(vue==="apropos")return W(<Apropos K={K} mob={mob} onGo={sV}/>);
 
@@ -2967,6 +2972,7 @@ function UA({uid,onOut}){
     {vue==="audio"&&<EcouterCours K={K} mob={mob} mods={aMods} pres={allPres.filter(estPublie)} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="fisc"&&<CodeImpots K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)}/>}
     {vue==="fin"&&<FinanceEntreprise K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)}/>}
+    {vue==="syc"&&<Sycebnl K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)} onGo={sV}/>}
     {vue==="sugg"&&<Suggestions K={K} mob={mob} db={db} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}}/>}
     {vue==="apropos"&&<Apropos K={K} mob={mob} onGo={sV} services/>}
     {vue==="msg"&&<MessagerieApprenant uid={uid} uNom={uData.nom}/>}
@@ -3552,7 +3558,7 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
   const aller=v=>onGo&&onGo(v);
   const features=[
     {key:"modules",ico:"book-2",label:"Modules de cours",desc:`${mods.length} cours SYSCOHADA avec QCM et exercices corrigés`,action:()=>aller("mods")},
-    {key:"parcours",ico:"route",label:"Parcours métier",desc:"États financiers, Code des impôts et Finance d'entreprise",action:()=>aller("ef")},
+    {key:"parcours",ico:"route",label:"Parcours métier",desc:"États financiers, Code des impôts, Finance d'entreprise et SYCEBNL",action:()=>aller("ef")},
     {key:"audio",ico:"headphones",label:"Écouter les cours",desc:"Leçons en audio, à écouter partout",action:()=>aller("audio")},
     {key:"res",ico:"trophy",label:"Mes résultats",desc:"Scores de tous vos QCM, badges et attestations",action:()=>aller("res")},
   ];
@@ -3900,7 +3906,7 @@ function ModulesCours({mods,pr,sc,ok,vids,onOpen,uid,onSub}){
 }
 
 // ── MES RÉSULTATS : progression, scores de tous les QCM, badges et attestations ──
-// QCM : modules de cours (clé = id), Code des impôts (FISC-…), Finance d'entreprise (FIN-…) → moyenne.
+// QCM : modules de cours (clé = id), Code des impôts (FISC-…), Finance d'entreprise (FIN-…), SYCEBNL (SYC-…) → moyenne.
 // Exercices pratiques (« Quel compte ? » CPT-…, monographie JRN-ZAO) : suivis à part, hors moyenne (voir ef/syscohada/scores.js).
 function MesResultats({pr,sc,gp,nd,ok,mods,u,uid,onSub,onGo}){
   const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
@@ -3911,13 +3917,15 @@ function MesResultats({pr,sc,gp,nd,ok,mods,u,uid,onSub,onGo}){
     cours:mods.map(m=>({cle:m.id,titre:m.titre,sous:m.mat||"",s:sc[m.id],fait:pr[m.id]==="done",ico:m.ico,col:m.col,go:"mods"})),
     fisc:MODULES_FISC.map(m=>({cle:`FISC-${m.id}`,titre:`${m.id} · ${m.titre}`,sous:"Code des impôts",s:sc[`FISC-${m.id}`],col:m.col,go:"fisc"})),
     fin:MODULES_FIN.map(m=>({cle:`FIN-${m.id}`,titre:`${m.id} · ${m.titre}`,sous:"Finance d'entreprise",s:sc[`FIN-${m.id}`],col:m.col,go:"fin"})),
+    syc:[...MODULES_SYC.map(m=>({cle:`SYC-${m.id}`,titre:`${m.id} · ${m.titre}`,sous:"SYCEBNL",s:sc[`SYC-${m.id}`],col:m.col,go:"syc"})),
+      {cle:"SYC-FINAL",titre:"Examen final SYCEBNL (30 questions, coefficient 2)",sous:"SYCEBNL · certificat",s:sc["SYC-FINAL"],go:"syc"}],
     exo:[{cle:"JRN-ZAO",titre:"Monographie ZAO IMMO : du journal aux états financiers",sous:"États financiers",s:sc["JRN-ZAO"],go:"jrn"},
       ...CLES_CPT.map(c=>({cle:c,titre:c==="CPT-T"?"« Quel compte ? » : toutes les classes":`« Quel compte ? » : classe ${c.slice(4)}`,sous:"Guide des comptes",s:sc[c],go:"cpt"}))],
   };
-  const qcm=[...L.cours,...L.fisc,...L.fin].filter(x=>x.s&&x.s.pct!=null);
+  const qcm=[...L.cours,...L.fisc,...L.fin,...L.syc].filter(x=>x.s&&x.s.pct!=null);
   const moy=moyenne(qcm.map(x=>x.s.pct)),best=qcm.length?Math.max(...qcm.map(x=>x.s.pct)):null;
   const reussis=qcm.filter(x=>x.s.pct>=60).length;
-  const ONGLETS=[["cours","book-2","Modules de cours"],["fisc","receipt-tax","Code des impôts"],["fin","chart-pie","Finance d'entreprise"],["exo","pencil","Exercices pratiques"]];
+  const ONGLETS=[["cours","book-2","Modules de cours"],["fisc","receipt-tax","Code des impôts"],["fin","chart-pie","Finance d'entreprise"],["syc","building-community","SYCEBNL"],["exo","pencil","Exercices pratiques"]];
   const nFaits=k=>L[k].filter(x=>(x.s&&x.s.pct!=null)||x.fait).length;
   const liste=L[onglet];
   return <div style={{maxWidth:760,margin:"0 auto",animation:"fadeIn .3s ease"}}>
@@ -4771,6 +4779,7 @@ function AA({onOut}){
           {k:"ef",ico:"report-money",   label:"États financiers",col:"#1D4ED8"},
           {k:"fisc",ico:"receipt-tax",  label:"Code des impôts",col:"#A3122A"},
           {k:"fin",ico:"chart-pie",     label:"Finance d'entreprise",col:"#B7791F"},
+          {k:"syc",ico:"building-community",label:"SYCEBNL",     col:"#0F766E"},
           {k:"ac",ico:"ticket",         label:"Tarifs et codes offerts",col:"#0D7A6B"},
           {k:"att",ico:"certificate",   label:"Attestations",   col:"#B7791F"},
           {k:"nt",ico:"bell",           label:"Notifications",col:"#1E4FA3"},
@@ -5444,6 +5453,7 @@ function AA({onOut}){
     {tab==="ef"&&<EtatsFinanciers db={db} K={K} mob={mob} me={{uid:auth.currentUser?.uid,nom:"Administrateur",mail:ADM_EMAIL,role:"admin"}}/>}
     {tab==="fisc"&&<CodeImpots K={K} mob={mob} db={db} ok/>}
     {tab==="fin"&&<FinanceEntreprise K={K} mob={mob} db={db} ok/>}
+    {tab==="syc"&&<Sycebnl K={K} mob={mob} apercu/>}
     {tab==="pl"&&(()=>{
       const apprs=users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL);
       const day=plAll.find(p=>p.id===plDate);
