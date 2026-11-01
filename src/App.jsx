@@ -30,6 +30,7 @@ import{pctQcm,resumeCpt,fusionScore,CLES_CPT,moyenne}from"./ef/syscohada/scores"
 import MesAttestations from"./attest/MesAttestations";
 import{SEUIL_ELEMENT,EXAMENS,etatParcours}from"./attest/regles";
 import{CarteExamenFinal,ExamenFinal}from"./parcours/ExamenFinal";
+import MesFormations from"./parcours/MesFormations";
 import{GROUPES_APPRENANT,GROUPES_ADMIN,groupeDe,normaliserVue,badgeGroupe,VUES_ADMIN}from"./nav/navigation";
 import{MODULES_FISC}from"./fiscal/modules";
 import{MODULES_FIN}from"./finance/modules";
@@ -231,7 +232,7 @@ function useUsers(){
 // activite/{uid} : dernière activité de chaque compte (signal toutes les 90 s quand l'onglet est visible)
 // connexions/{id} : une ligne par ouverture de session (une fois par onglet)
 const ENLIGNE_MS=4*60*1000;
-const VUE_LBL={home:"Accueil",msg:"Messages",pres:"Présentations",jrn:"Monographie ZAO",cpt:"Guide des comptes",audio:"Écouter les cours",fisc:"Code des impôts",fin:"Finance d'entreprise",syc:"SYCEBNL",sugg:"Suggestions",apropos:"À propos",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
+const VUE_LBL={home:"Accueil",form:"Mes formations",msg:"Messages",pres:"Présentations",jrn:"Monographie ZAO",cpt:"Guide des comptes",audio:"Écouter les cours",fisc:"Code des impôts",fin:"Finance d'entreprise",syc:"SYCEBNL",sugg:"Suggestions",apropos:"À propos",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
 const appareil=()=>{const ua=navigator.userAgent||"";const os=/Android/i.test(ua)?"Android":/iPhone|iPad|iPod/i.test(ua)?"iOS":/Windows/i.test(ua)?"Windows":/Mac OS/i.test(ua)?"Mac":/Linux/i.test(ua)?"Linux":"Autre";
   const nav=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/SamsungBrowser/.test(ua)?"Samsung":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"Navigateur";
   const app=(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||String(document.referrer).startsWith("android-app://")?"Application":"Site web";
@@ -2968,6 +2969,7 @@ function UA({uid,onOut}){
     {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres.filter(estPublie)}/>
     }{vue==="stages"&&<StagePage stages={allStages} plats={allPlats} ok={ok}/>
     }{vue==="services"&&<ServicesPage user={uData}/>}
+    {vue==="form"&&<MesFormations K={K} mob={mob} user={uData} mods={aMods} ok={ok} onGo={sV} onExam={sExam} onSub={()=>sSub(true)}/>}
     {vue==="mods"&&<ModulesCours mods={aMods} pr={pr} sc={sc} ok={ok} vids={vids} onOpen={ouvrirModule} uid={uid} onSub={()=>sSub(true)} etat={etatN1} onExam={()=>sExam("SYS-N1")} onGo={sV}/>}
     {vue==="res"&&<MesResultats pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} u={uData} uid={uid} onSub={()=>sSub(true)} onGo={sV}/>}
     {vue==="psycho"&&<PsychoPage uid={uid} u={uData}/>}
@@ -3564,8 +3566,8 @@ function Home({u,pr,sc,gp,nd,ok,mods,vids,onOpen,onSub,onVid,onPres,onStages,onE
   // Raccourcis : le menu donne accès à tout le reste (src/nav/navigation.js)
   const aller=v=>onGo&&onGo(v);
   const features=[
-    {key:"modules",ico:"book-2",label:"Modules de cours",desc:`${mods.length} cours SYSCOHADA avec QCM et exercices corrigés`,action:()=>aller("mods")},
-    {key:"parcours",ico:"route",label:"Parcours métier",desc:"États financiers, Code des impôts, Finance d'entreprise et SYCEBNL",action:()=>aller("ef")},
+    {key:"parcours",ico:"certificate",label:"Mes formations",desc:"5 parcours certifiants : SYSCOHADA N1 et N2, Fiscalité, Finance, SYCEBNL",action:()=>aller("form")},
+    {key:"modules",ico:"tools",label:"Outils pratiques",desc:"Atelier États financiers et Guide des comptes SYSCOHADA",action:()=>aller("ef")},
     {key:"audio",ico:"headphones",label:"Écouter les cours",desc:"Leçons en audio, à écouter partout",action:()=>aller("audio")},
     {key:"res",ico:"trophy",label:"Mes résultats",desc:"Scores de tous vos QCM, badges et attestations",action:()=>aller("res")},
   ];
@@ -3862,7 +3864,7 @@ function ModulesCours({mods,pr,sc,ok,vids,onOpen,uid,onSub,etat,onExam,onGo}){
     {/* Modules */}
     <div>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:7}}>
-        <div className="h-sec" style={{color:K.t1}}>Modules de cours <span style={{color:K.t3,fontWeight:500,fontSize:15,fontFamily:"'Outfit',sans-serif"}}>({fil.length})</span></div>
+        <div className="h-sec" style={{color:K.t1}}>SYSCOHADA · Niveau 1 : modules de cours <span style={{color:K.t3,fontWeight:500,fontSize:15,fontFamily:"'Outfit',sans-serif"}}>({fil.length})</span></div>
         {!ok&&<Tg c={K.wa} bg={K.waBg} bd={K.waBd} ch="🔒 Abonnement requis"/>}
       </div>
       <div style={{position:"relative",marginBottom:11}}>
@@ -3928,8 +3930,8 @@ function MesResultats({pr,sc,gp,nd,ok,mods,u,uid,onSub,onGo}){
   const L={
     cours:[...mods.map(m=>({cle:m.id,titre:m.titre,sous:m.mat||"",s:sc[m.id],fait:pr[m.id]==="done",ico:m.ico,col:m.col,go:"mods"})),
       {cle:"SYS1-FINAL",titre:"Examen final SYSCOHADA Niveau 1 (30 questions, coefficient 2)",sous:"SYSCOHADA · certificat",s:sc["SYS1-FINAL"],go:"mods"}],
-    fisc:[...MODULES_FISC.map(m=>({cle:`FISC-${m.id}`,titre:`${m.id} · ${m.titre}`,sous:"Code des impôts",s:sc[`FISC-${m.id}`],col:m.col,go:"fisc"})),
-      {cle:"FISC-FINAL",titre:"Examen final Fiscalité (40 questions, coefficient 2)",sous:"Code des impôts · certificat",s:sc["FISC-FINAL"],go:"fisc"}],
+    fisc:[...MODULES_FISC.map(m=>({cle:`FISC-${m.id}`,titre:`${m.id} · ${m.titre}`,sous:"Fiscalité RDC",s:sc[`FISC-${m.id}`],col:m.col,go:"fisc"})),
+      {cle:"FISC-FINAL",titre:"Examen final Fiscalité (40 questions, coefficient 2)",sous:"Fiscalité RDC · certificat",s:sc["FISC-FINAL"],go:"fisc"}],
     fin:[...MODULES_FIN.map(m=>({cle:`FIN-${m.id}`,titre:`${m.id} · ${m.titre}`,sous:"Finance d'entreprise",s:sc[`FIN-${m.id}`],col:m.col,go:"fin"})),
       {cle:"FIN-FINAL",titre:"Examen final Finance d'entreprise (30 questions, coefficient 2)",sous:"Finance d'entreprise · certificat",s:sc["FIN-FINAL"],go:"fin"}],
     syc:[...MODULES_SYC.map(m=>({cle:`SYC-${m.id}`,titre:`${m.id} · ${m.titre}`,sous:"SYCEBNL",s:sc[`SYC-${m.id}`],col:m.col,go:"syc"})),
@@ -3941,7 +3943,7 @@ function MesResultats({pr,sc,gp,nd,ok,mods,u,uid,onSub,onGo}){
   const qcm=[...L.cours,...L.fisc,...L.fin,...L.syc].filter(x=>x.s&&x.s.pct!=null);
   const moy=moyenne(qcm.map(x=>x.s.pct)),best=qcm.length?Math.max(...qcm.map(x=>x.s.pct)):null;
   const reussis=qcm.filter(x=>x.s.pct>=SEUIL_ELEMENT).length;
-  const ONGLETS=[["cours","book-2","Modules de cours"],["fisc","receipt-tax","Code des impôts"],["fin","chart-pie","Finance d'entreprise"],["syc","building-community","SYCEBNL"],["exo","pencil","Exercices pratiques"]];
+  const ONGLETS=[["cours","book-2","SYSCOHADA N1"],["exo","notebook","SYSCOHADA N2 et exercices"],["fisc","receipt-tax","Fiscalité RDC"],["fin","chart-pie","Finance d'entreprise"],["syc","building-community","SYCEBNL"]];
   const nFaits=k=>L[k].filter(x=>(x.s&&x.s.pct!=null)||x.fait).length;
   const liste=L[onglet];
   return <div style={{maxWidth:760,margin:"0 auto",animation:"fadeIn .3s ease"}}>
