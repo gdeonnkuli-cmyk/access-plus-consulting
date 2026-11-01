@@ -7,7 +7,7 @@ const ABREVIATIONS = [
   [/\bO\.-L\./g, "ordonnance-loi"], [/\bA\.M\./g, "arrêté ministériel"],
   [/\bT\.V\.A\./g, "TVA"], [/\bArt\.\s*/g, "Article "], [/\bart\.\s*/g, "article "], [/\bn°\s*/gi, "numéro "],
   [/\bal\.\s*/g, "alinéa "], [/\bcf\.\s*/gi, "voir "], [/\bex\.\s*/g, "par exemple "], [/\betc\./g, "et cetera"],
-  [/\bSYCEBNL\b/g, "S Y C E B N L"], [/\bEBNL\b/g, "E B N L"],
+  [/\bSYCEBNL\b/g, "S Y C E B N L"], [/\bGCEC\b/g, "G C E C"], [/\bBCC\b/g, "B C C"], [/\bPNB\b/g, "P N B"], [/\bCDF\b/g, "francs congolais"], [/\bEBNL\b/g, "E B N L"],
   [/\bSYSCOHADA\b/g, "Syscohada"], [/\bOHADA\b/g, "Ohada"], [/\bAUDCIF\b/g, "acte uniforme comptable"],
   [/\bN\s*\+\s*1\b/g, "N plus 1"], [/\bN\s*-\s*1\b/g, "N moins 1"],
   // Sigles mal prononcés par la voix de synthèse (« RDC » lu « rez-de-chaussée », « CA » lu « ça »…)
@@ -149,4 +149,9 @@ export function texteModuleFinance(mod) {
 // ── Module SYCEBNL (src/sycebnl/modules.js) : narration écrite pour l'oral
 export function texteModuleSycebnl(mod) {
   return segments([point(`Comptabilité des entités à but non lucratif, module ${String(mod.id).replace(/^SB/, "")}. ${mod.titre}`), ...(mod.narration || []).map(point)]);
+}
+
+// ── Module de comptabilité bancaire (src/banque/modules.js) : narration écrite pour l'oral
+export function texteModuleBanque(mod) {
+  return segments([point(`Comptabilité bancaire, module ${String(mod.id).replace(/^B/, "")}. ${mod.titre}`), ...(mod.narration || []).map(point)]);
 }

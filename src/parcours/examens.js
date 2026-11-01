@@ -7,6 +7,7 @@
 import { MODULES_FISC } from "../fiscal/modules";
 import { MODULES_FIN } from "../finance/modules";
 import { EXAMEN_SYC } from "../sycebnl/examen";
+import { BANQUE_BQ } from "../banque/examen";
 import { enonce } from "../ef/syscohada/exercice";
 
 const avecModule = mods => mods.flatMap(m => m.qcm.map(q => ({ ...q, m: m.id })));
@@ -97,5 +98,6 @@ export const EXAMENS_FINAUX = {
   FISC: { titre: "Examen final — Fiscalité congolaise", col: "#A3122A", charger: () => avecModule(MODULES_FISC) },
   "SYS-N2": { titre: "Examen final SYSCOHADA — Niveau 2 : passer les écritures", col: "#1D4ED8", charger: chargerBanqueSys2 },
   FIN: { titre: "Examen final — Finance d'entreprise", col: "#B7791F", charger: () => avecModule(MODULES_FIN) },
+  BANQUE: { titre: "Examen final — Comptabilité bancaire (GCEC)", col: "#0A2A5C", charger: () => BANQUE_BQ },
   SYCEBNL: { titre: EXAMEN_SYC.titre, col: EXAMEN_SYC.col, charger: () => EXAMEN_SYC.qcm },
 };

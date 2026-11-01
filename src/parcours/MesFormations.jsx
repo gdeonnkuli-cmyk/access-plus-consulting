@@ -17,6 +17,8 @@ export const FORMATIONS = [
     resume: "IBP, IPR, TVA, impôts réels, contentieux, import-export, paie, facture normalisée, IRPP et IS 2026." },
   { id: "FIN", ico: "chart-pie", col: "#B7791F", niveau: "Avancé", libre: "FE1",
     resume: "Coût du capital, investissement, financement, évaluation, change USD/CDF et affectation du résultat OHADA." },
+  { id: "BANQUE", ico: "building-bank", col: "#0F766E", niveau: "Spécialisation", libre: "B1",
+    resume: "Le Guide comptable des établissements de crédit de la BCC : dépôts et crédits, compensation, trésorerie, devises, hors-bilan, créances en souffrance et PNB." },
   { id: "SYCEBNL", ico: "building-community", col: "#0F766E", niveau: "Spécialisation", libre: "SB1",
     resume: "Associations, ONG, fondations, églises : dotations, fonds affectés, bailleurs, bénévolat et analyse financière." },
 ];
@@ -57,7 +59,7 @@ export default function MesFormations({ K, mob, user, mods, ok, onGo, onExam, on
       <i className="ti ti-certificate" style={{ position: "absolute", right: -10, bottom: -22, fontSize: 150, opacity: .1 }} />
       <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1.2, textTransform: "uppercase", opacity: .85 }}>Parcours métier</div>
       <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: mob ? 24 : 31, lineHeight: 1.15, margin: "6px 0 8px" }}>Mes formations certifiantes</div>
-      <div style={{ fontSize: 14.5, opacity: .92, lineHeight: 1.55, maxWidth: 620 }}>5 parcours construits de la même façon : les modules s'ouvrent dans l'ordre (le suivant quand le précédent est réussi à {SEUIL_ELEMENT} %), puis un examen final, coefficient 2, ouvert à {SEUIL_MOYENNE} % de moyenne, mène au <b>certificat</b> et à son <b>relevé de notes</b>.</div>
+      <div style={{ fontSize: 14.5, opacity: .92, lineHeight: 1.55, maxWidth: 620 }}>{lignes.length} parcours construits de la même façon : les modules s'ouvrent dans l'ordre (le suivant quand le précédent est réussi à {SEUIL_ELEMENT} %), puis un examen final, coefficient 2, ouvert à {SEUIL_MOYENNE} % de moyenne, mène au <b>certificat</b> et à son <b>relevé de notes</b>.</div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12, fontSize: 12.5, fontWeight: 700, alignItems: "center" }}>
         <span style={{ opacity: .8 }}>Ordre conseillé :</span>
         {lignes.map(({ p }, i) => <React.Fragment key={p.id}><span style={{ background: "rgba(255,255,255,.16)", borderRadius: 99, padding: "4px 10px" }}>{p.court}</span>{i < lignes.length - 1 && <i className="ti ti-chevron-right" style={{ opacity: .6 }} />}</React.Fragment>)}
@@ -66,7 +68,7 @@ export default function MesFormations({ K, mob, user, mods, ok, onGo, onExam, on
 
     {!ok && <div style={{ display: "flex", alignItems: "center", gap: 10, background: K.waBg, border: `1px solid ${K.waBd}`, borderRadius: 14, padding: "11px 14px", marginBottom: 14, flexWrap: "wrap" }}>
       <i className="ti ti-lock-open" style={{ fontSize: 18, color: K.wa }} />
-      <div style={{ flex: 1, minWidth: 200, fontSize: 13.5, color: K.t1, lineHeight: 1.5 }}>Le premier module de la Fiscalité, de la Finance d'entreprise et du SYCEBNL est gratuit. Les parcours complets, les examens et les certificats sont réservés aux abonnés.</div>
+      <div style={{ flex: 1, minWidth: 200, fontSize: 13.5, color: K.t1, lineHeight: 1.5 }}>Le premier module de la Fiscalité, de la Finance d'entreprise, de la Comptabilité bancaire et du SYCEBNL est gratuit. Les parcours complets, les examens et les certificats sont réservés aux abonnés.</div>
       {onSub && <button onClick={onSub} className="bt" style={{ background: `linear-gradient(135deg,${K.emD},${K.em})`, color: "#fff", border: "none", borderRadius: 11, padding: "9px 14px", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{LIB_ACCES}</button>}
     </div>}
 
