@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { PARCOURS, SEUIL_ELEMENT, SEUIL_MOYENNE, evaluer } from "./regles";
+import { EXAMENS, PARCOURS, SEUIL_ELEMENT, SEUIL_MOYENNE, etatParcours, evaluer } from "./regles";
 import { lienVerification, telechargerAttestation } from "./pdf";
 import { LIB_ACCES } from "../acces/plateforme";
 
@@ -13,7 +13,7 @@ const carte = K => ({ background: K.card, border: `1px solid ${K.b0}`, borderRad
 const btn = (K, v) => ({ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 9, fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", minHeight: 36,
   ...(v === "p" ? { background: `linear-gradient(135deg,${K.emD},${K.em})`, color: "#fff", border: "none" } : { background: "transparent", color: K.t2, border: `1px solid ${K.b1}` }) });
 
-export default function MesAttestations({ K, mob, db, uid, user, mods, ok, onSub }) {
+export default function MesAttestations({ K, mob, db, uid, user, mods, ok, onSub, onGo }) {
   const [delivrees, sDelivrees] = useState([]);
   const [ouvert, sOuvert] = useState(null);
   const [encours, sEncours] = useState(null);
@@ -23,7 +23,7 @@ export default function MesAttestations({ K, mob, db, uid, user, mods, ok, onSub
     if (!db || !uid) return;
     return onSnapshot(query(collection(db, "attestations"), where("uid", "==", uid)), s => sDelivrees(s.docs.map(d => d.data())), () => sDelivrees([]));
   }, [db, uid]);
-  const evals = useMemo(() => PARCOURS.map(p => ({ p, ev: evaluer(p.id, mods, user) })), [mods, user]);
+  const evals = useMemo(() => PARCOURS.map(p => ({ p, ev: evaluer(p.id, mods, user), et: etatParcours(p.id, mods, user) })), [mods, user]);
   const trouve = (p, type) => delivrees.find(a => a.parcours === p && a.type === type && a.statut === "valide");
 
   const obtenir = async (p, type) => {
@@ -55,10 +55,10 @@ export default function MesAttestations({ K, mob, db, uid, user, mods, ok, onSub
 
   return <div style={{ marginBottom: 16 }}>
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}><i className="ti ti-certificate" style={{ fontSize: 20, color: K.em }} /><span style={{ fontWeight: 800, fontSize: 16, color: K.t1 }}>Mes attestations</span></div>
-    <div style={{ fontSize: 12.5, color: K.t3, lineHeight: 1.5, marginBottom: 10 }}>Attestation de <b>suivi</b> : tous les éléments du parcours faits. Attestation de <b>réussite</b> : chaque élément à {SEUIL_ELEMENT} % au moins et une moyenne d'au moins {SEUIL_MOYENNE} % (meilleur score retenu). Chaque attestation porte un numéro, un QR code vérifiables et un relevé de notes. Le parcours SYCEBNL délivre un <b>certificat</b> après l'examen final.</div>
+    <div style={{ fontSize: 12.5, color: K.t3, lineHeight: 1.5, marginBottom: 10 }}>Attestation de <b>suivi</b> : tous les éléments du parcours faits. Attestation de <b>réussite</b> : chaque élément à {SEUIL_ELEMENT} % au moins et une moyenne d'au moins {SEUIL_MOYENNE} % (meilleur score retenu). Chaque attestation porte un numéro, un QR code vérifiables et un relevé de notes. Chaque parcours se termine par un examen final (coefficient 2) qui ouvre droit au <b>certificat</b>.</div>
     {msg && <div style={{ background: msg.t === "e" ? K.erBg : K.emBg, border: `1px solid ${msg.t === "e" ? K.erBd : K.emBd}`, color: msg.t === "e" ? K.er : K.em, borderRadius: 10, padding: "9px 12px", fontSize: 12.5, fontWeight: 600, lineHeight: 1.5, marginBottom: 10 }}>{msg.m}</div>}
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {evals.map(({ p, ev }) => {
+      {evals.map(({ p, ev, et }) => {
         const as = trouve(p.id, "suivi"), ar = trouve(p.id, "reussite"), pct = ev.nTotal ? Math.round((ev.nFaits / ev.nTotal) * 100) : 0;
         const action = (type, a, eligible) => a
           ? <span style={{ display: "inline-flex", gap: 6, flexWrap: "wrap" }}>
@@ -77,6 +77,7 @@ export default function MesAttestations({ K, mob, db, uid, user, mods, ok, onSub
           <div style={{ height: 6, background: K.b0, borderRadius: 99, overflow: "hidden", margin: "9px 0" }}><div style={{ width: `${pct}%`, height: "100%", background: K.em }} /></div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             {(as || (!ar && !ev.reussite)) && action("suivi", as, ev.suivi)}{action("reussite", ar, ev.reussite)}
+            {onGo && EXAMENS[p.id] && et.final == null && <button onClick={() => onGo(EXAMENS[p.id].vue)} className="bt" style={btn(K, et.finalOuvert ? "p" : "g")}><i className={`ti ti-${et.finalOuvert ? "player-play" : "route"}`} style={{ fontSize: 14 }} />{et.finalOuvert ? "Passer l'examen final" : "Continuer le parcours"}</button>}
             <button onClick={() => sOuvert(o => (o === p.id ? null : p.id))} className="bt" style={{ ...btn(K), marginLeft: mob ? 0 : "auto" }}><i className={`ti ti-chevron-${ouvert === p.id ? "up" : "down"}`} style={{ fontSize: 14 }} />Détail</button>
           </div>
           {!ar && ev.suivi && !ev.reussite && <div style={{ fontSize: 12, color: K.wa, marginTop: 8, lineHeight: 1.5 }}>Pour la réussite : {ev.aAmeliorer.length ? `améliorez ${ev.aAmeliorer.length} élément${ev.aAmeliorer.length > 1 ? "s" : ""} sous ${SEUIL_ELEMENT} %` : ""}{ev.aAmeliorer.length && ev.moyenne < SEUIL_MOYENNE ? " et " : ""}{ev.moyenne < SEUIL_MOYENNE ? `portez la moyenne à ${SEUIL_MOYENNE} %` : ""}.</div>}

@@ -3,7 +3,8 @@ import LecteurAudio from"../audio/LecteurAudio";
 import{texteModuleSycebnl}from"../audio/lecture";
 import{Bloc,Qcm,Carte,Bouton}from"../fiscal/CodeImpots";
 import{MODULES_SYC}from"./modules";
-import{EXAMEN_SYC,NB_Q_FINAL,DUREE_FINAL}from"./examen";
+import{NB_Q_FINAL}from"./examen";
+import{ExamenFinal}from"../parcours/ExamenFinal";
 import{SEUIL_ELEMENT,SEUIL_MOYENNE,CLE_FINAL_SYC,COEF_FINAL_SYC,cleSyc,etatSyc}from"../attest/regles";
 import{LIB_ACCES}from"../acces/plateforme";
 
@@ -38,27 +39,9 @@ export default function Sycebnl({K,mob,db,uid,scores={},ok,onSub,onGo,apercu=fal
   const retour=<button onClick={()=>{sOpen(null);sMode("lecon");}} className="bt" style={{background:"none",border:"none",color:K.t2,fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:5,marginBottom:10,fontFamily:"'Outfit',sans-serif",padding:0}}>
     <i className="ti ti-arrow-left" style={{fontSize:16}}/>Le parcours SYCEBNL</button>;
 
-  // ── Examen final ─────────────────────────────────────────────────────────────
-  if(open==="FINAL"){
-    const s=tous[CLE_FINAL_SYC];
-    return <div style={{maxWidth:820,margin:"0 auto",animation:"fadeIn .3s ease"}}>
-      {retour}
-      <div style={{background:"linear-gradient(135deg,#001433,#0A2A5C 60%,#B7791F)",borderRadius:18,padding:mob?"18px 16px":"22px 24px",color:"#fff",marginBottom:14,position:"relative",overflow:"hidden"}}>
-        <i className="ti ti-certificate" style={{position:"absolute",right:-8,bottom:-16,fontSize:110,opacity:.12}}/>
-        <div style={{fontSize:12,fontWeight:800,letterSpacing:1,opacity:.85,textTransform:"uppercase"}}>Évaluation finale · {DUREE_FINAL}</div>
-        <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?22:27,lineHeight:1.2,margin:"4px 0 6px"}}>Examen final SYCEBNL</div>
-        <div style={{fontSize:14,opacity:.92,lineHeight:1.55}}>{NB_Q_FINAL} questions tirées au hasard sur les 8 modules. Pas de correction pendant l'épreuve : le corrigé détaillé s'affiche à la fin. Note minimale : {SEUIL_ELEMENT} %. L'examen compte <b>coefficient {COEF_FINAL_SYC}</b> dans la moyenne du certificat.</div>
-        {s&&<div style={{marginTop:10}}><span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>Meilleure note : {s.pct} %</span></div>}
-      </div>
-      {mode!=="qcm"?<Carte K={K}>
-        <div style={{fontWeight:800,fontSize:15,color:K.t1,marginBottom:8}}><i className="ti ti-info-circle" style={{color:K.in_,marginRight:6}}/>Avant de commencer</div>
-        {["Prévoyez une heure au calme, avec une calculatrice : plusieurs questions sont chiffrées.","Vous pouvez changer de réponse tant que vous n'êtes pas passé à la question suivante.","Ne quittez pas la page pendant l'épreuve : la série serait perdue.","Votre meilleure note est conservée ; chaque nouvelle tentative renouvelle au moins 30 % des questions."].map((t,i)=><div key={i} style={{display:"flex",gap:8,fontSize:14,color:K.t2,lineHeight:1.6,marginBottom:5}}><i className="ti ti-check" style={{color:K.em,marginTop:3}}/><span>{t}</span></div>)}
-        <div style={{display:"flex",justifyContent:"center",marginTop:12}}><Bouton K={K} ico="player-play" ch="Commencer l'examen" on={()=>sMode("qcm")} sx={{minWidth:240}}/></div>
-      </Carte>
-      :<Qcm key="final" K={K} mod={EXAMEN_SYC} db={db} uid={uid} ancien={s} cle={CLE_FINAL_SYC} nbQ={NB_Q_FINAL} seuil={SEUIL_ELEMENT} examen libRetour="Retour au parcours"
-        onFin={(r,ret)=>{enregistrer(CLE_FINAL_SYC,r);if(ret){sOpen(null);sMode("lecon");}}}/>}
-    </div>;
-  }
+  // ── Examen final (composant partagé par tous les parcours) ─────────────────────
+  if(open==="FINAL")return <ExamenFinal K={K} mob={mob} db={db} uid={uid} id="SYCEBNL" ancien={tous[CLE_FINAL_SYC]}
+    onRetour={()=>{sOpen(null);sMode("lecon");}} onScore={(cle,r)=>enregistrer(cle,r)}/>;
 
   // ── Module ────────────────────────────────────────────────────────────────────
   if(mod){

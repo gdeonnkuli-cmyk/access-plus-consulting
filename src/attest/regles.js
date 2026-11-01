@@ -42,34 +42,29 @@ const SYC = [
   ["SB7", "Immobilisations, stocks, trésorerie et contributions en nature"], ["SB8", "Clôture, budget et analyse financière"],
 ];
 const CLE_FINAL_SYC = "SYC-FINAL";
-const COEF_FINAL_SYC = 2;
+const COEF_FINAL_SYC = 2; // = COEF_FINAL
 const cleSyc = id => `SYC-${id}`;
 
-// Parcours SYCEBNL progressif : module suivant ouvert à SEUIL_ELEMENT % sur le précédent ;
-// examen final ouvert quand tous les modules sont à SEUIL_ELEMENT % au moins, avec une moyenne d'au moins SEUIL_MOYENNE %.
-function etatSyc(scores) {
-  const S = scores || {};
-  const pct = cle => (S[cle] && S[cle].pct != null ? Math.round(S[cle].pct) : null);
-  const modules = SYC.map(([id, titre], i) => {
-    const p = pct(cleSyc(id)), prec = i ? pct(cleSyc(SYC[i - 1][0])) : null;
-    return { id, titre, cle: cleSyc(id), pct: p, reussi: p != null && p >= SEUIL_ELEMENT, ouvert: i === 0 || (prec != null && prec >= SEUIL_ELEMENT) };
-  });
-  const notes = modules.filter(m => m.pct != null).map(m => m.pct);
-  const moyenneModules = notes.length === modules.length ? Math.round(notes.reduce((a, b) => a + b, 0) / notes.length) : null;
-  const tousReussis = modules.every(m => m.reussi);
-  const finalOuvert = tousReussis && moyenneModules != null && moyenneModules >= SEUIL_MOYENNE;
-  return { modules, moyenneModules, tousReussis, finalOuvert, final: pct(CLE_FINAL_SYC) };
-}
+// Examen final de chaque parcours : clé du score (users.scores), nombre de questions par passage, page qui l'héberge.
+// progressif : les éléments s'ouvrent dans l'ordre (le suivant quand le précédent est réussi à SEUIL_ELEMENT %).
+const COEF_FINAL = 2;
+const EXAMENS = {
+  "SYS-N1": { cle: "SYS1-FINAL", nbQ: 30, heures: 1, vue: "mods", progressif: true },
+  FISC: { cle: "FISC-FINAL", nbQ: 40, heures: 1.5, vue: "fisc", progressif: true },
+  "SYS-N2": { cle: "SYS2-FINAL", nbQ: 30, heures: 1, vue: "jrn", progressif: false },
+  FIN: { cle: "FIN-FINAL", nbQ: 30, heures: 1, vue: "fin", progressif: true },
+  SYCEBNL: { cle: CLE_FINAL_SYC, nbQ: 30, heures: 1, vue: "syc", progressif: true },
+};
 
 const PARCOURS = [
-  { id: "SYS-N1", titre: "Comptabilité SYSCOHADA révisé — Niveau 1 : fondamentaux", court: "SYSCOHADA · Niveau 1",
-    description: "Modules de cours de comptabilité générale et exercice « Quel compte ? » sur l'ensemble du plan." },
-  { id: "FISC", titre: "Fiscalité congolaise — Le Code des impôts", court: "Fiscalité RDC",
-    description: "Les 15 modules du Code des impôts : IBP, IPR, IM et IRL, TVA, obligations, contentieux, import-export, paie, facture normalisée, IRPP et IS." },
-  { id: "SYS-N2", titre: "Comptabilité SYSCOHADA révisé — Niveau 2 : pratique", court: "SYSCOHADA · Niveau 2",
-    description: "Monographie ZAO IMMO SARL (tenue comptable d'un exercice) et exercice « Quel compte ? » classe par classe." },
-  { id: "FIN", titre: "Finance d'entreprise — RDC et espace OHADA", court: "Finance d'entreprise",
-    description: "Les 7 modules de finance d'entreprise : coût du capital, levier et création de valeur, investissement, financement, évaluation, risque de change USD/CDF et affectation du résultat OHADA, avec 16 cas corrigés." },
+  { id: "SYS-N1", titre: "Comptabilité SYSCOHADA révisé — Niveau 1 : fondamentaux", court: "SYSCOHADA · Niveau 1", certificat: true,
+    description: "Modules de cours de comptabilité générale, exercice « Quel compte ? » sur l'ensemble du plan et examen final de 30 questions, coefficient 2." },
+  { id: "FISC", titre: "Fiscalité congolaise — Le Code des impôts", court: "Fiscalité RDC", certificat: true,
+    description: "Les 15 modules du Code des impôts : IBP, IPR, IM et IRL, TVA, obligations, contentieux, import-export, paie, facture normalisée, IRPP et IS, et l'examen final de 40 questions, coefficient 2." },
+  { id: "SYS-N2", titre: "Comptabilité SYSCOHADA révisé — Niveau 2 : pratique", court: "SYSCOHADA · Niveau 2", certificat: true,
+    description: "Monographie ZAO IMMO SARL (tenue comptable d'un exercice) et exercice « Quel compte ? » classe par classe et examen final pratique de 30 écritures, coefficient 2." },
+  { id: "FIN", titre: "Finance d'entreprise — RDC et espace OHADA", court: "Finance d'entreprise", certificat: true,
+    description: "Les 7 modules de finance d'entreprise : coût du capital, levier et création de valeur, investissement, financement, évaluation, risque de change USD/CDF et affectation du résultat OHADA, avec 16 cas corrigés, et l'examen final de 30 questions, coefficient 2." },
   { id: "SYCEBNL", titre: "Comptabilité des entités à but non lucratif — SYCEBNL (OHADA)", court: "SYCEBNL", certificat: true,
     description: "Les 8 modules du SYCEBNL (cadre, bases et contrôle interne, plan de comptes, charges et avances, ressources propres, fonds affectés et projets, actifs et trésorerie, clôture et analyse financière) et l'examen final de 30 questions, coefficient 2." },
 ];
@@ -77,8 +72,8 @@ const PARCOURS = [
 // Modules de cours pris en compte : ceux publiés (on !== false), dans l'ordre du catalogue
 const modulesActifs = modules => (modules || []).filter(m => m && m.on !== false).sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
 
-// Éléments d'un parcours : { cle, titre, heures, evalue } (cle = clé de users.scores / users.progress)
-function elementsParcours(id, modules) {
+// Éléments d'un parcours hors examen final : { cle, titre, heures, evalue } (cle = clé de users.scores / users.progress)
+function elementsBase(id, modules) {
   if (id === "SYS-N1") return [
     ...modulesActifs(modules).map(m => ({ cle: m.id, titre: m.titre, heures: 2, evalue: m.evalType !== "none" })),
     { cle: "CPT-T", titre: "Exercice « Quel compte ? » — toutes classes", heures: 2, evalue: true },
@@ -86,16 +81,46 @@ function elementsParcours(id, modules) {
   if (id === "FISC") return FISC.map(([f, t]) => ({ cle: `FISC-${f}`, titre: `${f} · ${t}`, heures: 1, evalue: true }));
   // 2 h par module : leçon et cas corrigés
   if (id === "FIN") return FIN.map(([f, t]) => ({ cle: `FIN-${f}`, titre: `${f} · ${t}`, heures: 2, evalue: true }));
-  // 1 h 30 par module (leçon, audio, QCM) ; examen final : 1 h, coefficient 2
-  if (id === "SYCEBNL") return [
-    ...SYC.map(([f, t]) => ({ cle: cleSyc(f), titre: `${f} · ${t}`, heures: 1.5, evalue: true })),
-    { cle: CLE_FINAL_SYC, titre: "Examen final (30 questions)", heures: 1, evalue: true, coef: COEF_FINAL_SYC },
-  ];
+  // 1 h 30 par module (leçon, audio, QCM)
+  if (id === "SYCEBNL") return SYC.map(([f, t]) => ({ cle: cleSyc(f), titre: `${f} · ${t}`, heures: 1.5, evalue: true }));
   if (id === "SYS-N2") return [
     { cle: "JRN-ZAO", titre: "Monographie ZAO IMMO SARL — tenue comptable 2021", heures: 10, evalue: true },
     ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => ({ cle: `CPT-${k}`, titre: `Exercice « Quel compte ? » — classe ${k}`, heures: 1, evalue: true })),
   ];
   return [];
+}
+
+// Éléments du parcours, examen final compris (coefficient COEF_FINAL)
+function elementsParcours(id, modules) {
+  const base = elementsBase(id, modules), x = EXAMENS[id];
+  return x ? [...base, { cle: x.cle, titre: `Examen final (${x.nbQ} questions)`, heures: x.heures, evalue: true, coef: COEF_FINAL, final: true }] : base;
+}
+
+// Ouverture progressive et accès à l'examen final ({ scores, progress } de l'apprenant).
+// Un élément s'ouvre si c'est le premier, si le précédent est réussi, ou s'il est déjà commencé (acquis conservés).
+// L'examen s'ouvre quand tous les éléments sont réussis avec une moyenne d'au moins SEUIL_MOYENNE %.
+function etatParcours(id, modules, user) {
+  const scores = (user && user.scores) || {}, progress = (user && user.progress) || {};
+  const x = EXAMENS[id] || {}, pct = cle => (scores[cle] && scores[cle].pct != null ? Math.round(scores[cle].pct) : null);
+  const elements = [];
+  elementsBase(id, modules).forEach((e, i) => {
+    const p = pct(e.cle), fait = e.evalue ? p != null : progress[e.cle] === "done";
+    const reussi = fait && (!e.evalue || p >= SEUIL_ELEMENT), commence = p != null || progress[e.cle] != null;
+    const ouvert = !x.progressif || i === 0 || elements[i - 1].reussi || commence;
+    elements.push({ ...e, pct: p, fait, reussi, ouvert, precedent: i ? elements[i - 1].titre : null });
+  });
+  const notes = elements.filter(e => e.evalue && e.pct != null).map(e => e.pct);
+  const moyenne = notes.length ? Math.round(notes.reduce((a, b) => a + b, 0) / notes.length) : null;
+  const tousReussis = elements.length > 0 && elements.every(e => e.reussi);
+  const finalOuvert = tousReussis && (moyenne == null || moyenne >= SEUIL_MOYENNE);
+  return { id, examen: x, elements, moyenne, tousReussis, finalOuvert, final: x.cle ? pct(x.cle) : null, nReussis: elements.filter(e => e.reussi).length };
+}
+
+// SYCEBNL (page dédiée) : mêmes règles, éléments repérés par l'identifiant du module (SB1…)
+function etatSyc(scores) {
+  const E = etatParcours("SYCEBNL", [], { scores });
+  return { modules: E.elements.map(e => ({ ...e, id: e.cle.replace(/^SYC-/, "") })), moyenneModules: E.elements.every(e => e.pct != null) ? E.moyenne : null,
+    tousReussis: E.tousReussis, finalOuvert: E.finalOuvert, final: E.final };
 }
 
 const mention = moy => (moy == null ? null : moy >= 95 ? "Excellent" : moy >= 90 ? "Très bien" : moy >= SEUIL_MOYENNE ? "Bien" : null);
@@ -133,4 +158,4 @@ function numeroAttestation(alea = Math.random, annee = new Date().getFullYear())
 }
 const numeroValide = n => /^EC-\d{4}-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/.test(String(n || ""));
 
-module.exports = { SEUIL_ELEMENT, SEUIL_MOYENNE, SIGNATAIRE, ORGANISME, FISC, FIN, SYC, CLE_FINAL_SYC, COEF_FINAL_SYC, cleSyc, etatSyc, PARCOURS, elementsParcours, evaluer, mention, numeroAttestation, numeroValide, modulesActifs };
+module.exports = { SEUIL_ELEMENT, SEUIL_MOYENNE, SIGNATAIRE, ORGANISME, FISC, FIN, SYC, CLE_FINAL_SYC, COEF_FINAL_SYC, COEF_FINAL, EXAMENS, cleSyc, etatSyc, etatParcours, PARCOURS, elementsBase, elementsParcours, evaluer, mention, numeroAttestation, numeroValide, modulesActifs };

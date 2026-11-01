@@ -5,6 +5,8 @@ import{Bloc,Qcm,Carte,Bouton}from"../fiscal/CodeImpots";
 import{MODULES_FIN}from"./modules";
 import{casParNum}from"./cas";
 import{LIB_ACCES}from"../acces/plateforme";
+import{SEUIL_ELEMENT,etatParcours}from"../attest/regles";
+import{CarteExamenFinal,ExamenFinal}from"../parcours/ExamenFinal";
 
 // ══════════════════ FINANCE D'ENTREPRISE ══════════════════
 // 7 modules (src/finance/modules.js) : leçon en blocs avec narration audio, cas corrigés (src/finance/cas.js) et QCM.
@@ -53,15 +55,22 @@ function Cas({K,col,c,ouvert,onBascule}){
   </Carte>;
 }
 
-export default function FinanceEntreprise({K,mob,db,uid,scores={},ok,onSub}){
+// Parcours progressif : module suivant ouvert à SEUIL_ELEMENT % (acquis conservés), examen final de 30 questions ensuite.
+export default function FinanceEntreprise({K,mob,db,uid,scores={},ok,onSub,onGo,apercu=false}){
   const[open,sOpen]=useState(null),[mode,sMode]=useState("lecon"),[loc,sLoc]=useState({}),[vus,sVus]=useState({});
-  const sc=id=>loc[id]||scores[cleScoreFin(id)];
+  const tous=useMemo(()=>({...scores,...loc}),[scores,loc]);
+  const sc=id=>tous[cleScoreFin(id)];
+  const etat=useMemo(()=>etatParcours("FIN",[],{scores:tous}),[tous]);
+  const el=id=>etat.elements.find(e=>e.cle===cleScoreFin(id));
   const mod=MODULES_FIN.find(m=>m.id===open);
   const segs=useMemo(()=>mod?texteModuleFinance(mod):[],[mod]);
-  const acces=m=>ok||m.libre;
+  const acces=m=>apercu||ok||m.libre;
+  const ouvertP=m=>apercu||el(m.id).ouvert;
   useEffect(()=>{window.scrollTo({top:0,behavior:"smooth"});},[open,mode]);
-  const valides=MODULES_FIN.filter(m=>(sc(m.id)?.pct||0)>=60).length;
-  const ouvrir=m=>{if(acces(m)){sOpen(m.id);sMode("lecon");}else onSub&&onSub();};
+  const valides=etat.nReussis;
+  const ouvrir=m=>{if(!acces(m)){onSub&&onSub();return;}if(!ouvertP(m))return;sOpen(m.id);sMode("lecon");};
+
+  if(open==="FINAL")return <ExamenFinal K={K} mob={mob} db={db} uid={uid} id="FIN" ancien={tous["FIN-FINAL"]} onRetour={()=>sOpen(null)} onScore={(cle,r)=>sLoc(l=>({...l,[cle]:r}))}/>;
 
   if(mod){
     const idx=MODULES_FIN.indexOf(mod),prev=MODULES_FIN[idx-1],next=MODULES_FIN[idx+1],s=sc(mod.id),cas=mod.cas.map(casParNum);
@@ -92,10 +101,11 @@ export default function FinanceEntreprise({K,mob,db,uid,scores={},ok,onSub}){
         {cas.map(c=><Cas key={c.n} K={K} col={mod.col} c={c} ouvert={!!vus[c.n]} onBascule={()=>sVus(v=>({...v,[c.n]:!v[c.n]}))}/>)}
         <div style={{display:"flex",justifyContent:"center",margin:"6px 0 18px"}}><Bouton K={K} ico="checklist" ch="Passer le QCM du module" on={()=>sMode("qcm")} sx={{minWidth:240}}/></div>
       </>}
-      {mode==="qcm"&&<Qcm key={mod.id} K={K} mod={mod} db={db} uid={uid} ancien={s} cle={cleScoreFin(mod.id)} nbQ={NB_Q} onFin={(r,retour)=>{if(r)sLoc(l=>({...l,[mod.id]:r}));if(retour)sMode("lecon");}}/>}
+      {mode==="qcm"&&<Qcm key={mod.id} K={K} mod={mod} db={db} uid={uid} ancien={s} cle={cleScoreFin(mod.id)} nbQ={NB_Q} seuil={SEUIL_ELEMENT} onFin={(r,retour)=>{if(r)sLoc(l=>({...l,[cleScoreFin(mod.id)]:r}));if(retour)sMode("lecon");}}/>}
+      {mode==="qcm"&&s&&s.pct>=SEUIL_ELEMENT&&next&&<div style={{display:"flex",justifyContent:"center",margin:"0 0 14px"}}><Bouton K={K} ico="lock-open" ch={`Module suivant : ${next.id} · ${next.court}`} on={()=>ouvrir(next)}/></div>}
       <div style={{display:"flex",justifyContent:"space-between",gap:8,marginBottom:20}}>
         {prev?<Bouton K={K} v="g" ico="arrow-left" ch={mob?prev.id:`${prev.id} · ${prev.court}`} on={()=>ouvrir(prev)}/>:<span/>}
-        {next&&<Bouton K={K} v="g" ch={<>{mob?next.id:`${next.id} · ${next.court}`}<i className="ti ti-arrow-right" style={{fontSize:16}}/></>} on={()=>ouvrir(next)}/>}
+        {next&&<Bouton K={K} v="g" dis={acces(next)&&!ouvertP(next)} ch={<>{mob?next.id:`${next.id} · ${next.court}`}<i className={`ti ti-${acces(next)&&!ouvertP(next)?"lock":"arrow-right"}`} style={{fontSize:16}}/></>} on={()=>ouvrir(next)}/>}
       </div>
     </div>;
   }
@@ -105,9 +115,9 @@ export default function FinanceEntreprise({K,mob,db,uid,scores={},ok,onSub}){
       <i className="ti ti-chart-pie" style={{position:"absolute",right:-10,bottom:-22,fontSize:150,opacity:.1}}/>
       <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Finance · RDC et espace OHADA</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Finance d'entreprise</div>
-      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:580}}>7 modules et 16 cas corrigés situés dans des entreprises congolaises : coût du capital, levier et création de valeur, investissement, financement, évaluation, risque de change USD/CDF et affectation du résultat selon l'OHADA. Chaque leçon s'écoute en audio. Réussissez les 7 QCM pour obtenir votre attestation (rubrique « Mes résultats »).</div>
+      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:580}}>7 modules et 16 cas corrigés situés dans des entreprises congolaises : coût du capital, levier et création de valeur, investissement, financement, évaluation, risque de change USD/CDF et affectation du résultat selon l'OHADA. Chaque leçon s'écoute en audio. Chaque module s'ouvre quand le précédent est réussi à {SEUIL_ELEMENT} % ; avec une moyenne d'au moins 80 %, l'examen final (30 questions) mène au certificat et à son relevé de notes.</div>
       <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
-        <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>{valides} / {MODULES_FIN.length} modules validés</span>
+        <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>{valides} / {MODULES_FIN.length} modules réussis</span>
         <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}><i className="ti ti-headphones" style={{marginRight:4}}/>Cours audio</span>
       </div>
     </div>
@@ -117,11 +127,11 @@ export default function FinanceEntreprise({K,mob,db,uid,scores={},ok,onSub}){
       {onSub&&<Bouton K={K} ch={LIB_ACCES} on={onSub} sx={{minHeight:38,padding:"8px 14px",fontSize:13}}/>}
     </div>}
     <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
-      {MODULES_FIN.map(m=>{const s=sc(m.id),lk=!acces(m);return <div key={m.id} onClick={()=>ouvrir(m)} className="hv tile"
-        style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"14px 15px",cursor:"pointer",opacity:lk?.75:1,display:"flex",flexDirection:"column",gap:6}}>
+      {MODULES_FIN.map((m,i)=>{const s=sc(m.id),lkP=acces(m)&&!ouvertP(m),lk=!acces(m)||lkP;return <div key={m.id} onClick={()=>ouvrir(m)} className={lkP?"tile":"hv tile"}
+        style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"14px 15px",cursor:lkP?"not-allowed":"pointer",opacity:lk?.72:1,display:"flex",flexDirection:"column",gap:6}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{width:40,height:40,borderRadius:12,background:`${m.col}16`,border:`1px solid ${m.col}35`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className={`ti ti-${lk?"lock":m.ico}`} style={{fontSize:20,color:m.col}}/></div>
-          {s?<span style={{fontSize:12,fontWeight:800,borderRadius:99,padding:"3px 9px",background:s.pct>=60?K.emBg:K.erBg,color:s.pct>=60?K.em:K.er,border:`1px solid ${s.pct>=60?K.emBd:K.erBd}`}}>{s.pct} %</span>
+          {s?<span style={{fontSize:12,fontWeight:800,borderRadius:99,padding:"3px 9px",background:s.pct>=SEUIL_ELEMENT?K.emBg:K.erBg,color:s.pct>=SEUIL_ELEMENT?K.em:K.er,border:`1px solid ${s.pct>=SEUIL_ELEMENT?K.emBd:K.erBd}`}}>{s.pct} %</span>
             :m.libre?<span style={{fontSize:12,fontWeight:800,borderRadius:99,padding:"3px 9px",background:K.inBg,color:K.in_,border:`1px solid ${K.inBd}`}}>Libre</span>:null}
         </div>
         <div style={{fontSize:11.5,fontWeight:800,color:m.col,letterSpacing:.6,textTransform:"uppercase"}}>{m.id} · {m.court}</div>
@@ -131,9 +141,11 @@ export default function FinanceEntreprise({K,mob,db,uid,scores={},ok,onSub}){
           <span><i className="ti ti-clock" style={{marginRight:3}}/>{m.duree}</span>
           <span><i className="ti ti-calculator" style={{marginRight:3}}/>{m.cas.length} cas</span>
           <span><i className="ti ti-headphones" style={{marginRight:3}}/>Audio</span>
+          {lkP&&<span style={{color:K.wa,fontWeight:700}}><i className="ti ti-lock" style={{marginRight:3}}/>Réussir {MODULES_FIN[i-1].id} à {SEUIL_ELEMENT} %</span>}
         </div>
       </div>;})}
     </div>
+    <CarteExamenFinal K={K} id="FIN" etat={etat} ok={ok} apercu={apercu} onOuvrir={()=>sOpen("FINAL")} onCertificat={onGo&&(()=>onGo("res"))}/>
     <div style={{fontSize:12.5,color:K.t3,lineHeight:1.6,marginTop:16}}>
       Exercices originaux d'Éco-Campus RDC. Pour s'entraîner davantage : <b>Pascale Recroix</b>, <i>DSCG 2 – Finance. 120 exercices corrigés</i>, Gualino (Lextenso), 2020.
     </div>
