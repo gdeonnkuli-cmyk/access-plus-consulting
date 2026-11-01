@@ -7,6 +7,7 @@ import{casParNum}from"./cas";
 import{LIB_ACCES}from"../acces/plateforme";
 import{SEUIL_ELEMENT,etatParcours}from"../attest/regles";
 import{CarteExamenFinal,ExamenFinal}from"../parcours/ExamenFinal";
+import Etape from"../parcours/Etape";
 
 // ══════════════════ FINANCE D'ENTREPRISE ══════════════════
 // 7 modules (src/finance/modules.js) : leçon en blocs avec narration audio, cas corrigés (src/finance/cas.js) et QCM.
@@ -113,7 +114,7 @@ export default function FinanceEntreprise({K,mob,db,uid,scores={},ok,onSub,onGo,
   return <div style={{animation:"fadeIn .3s ease"}}>
     <div style={{background:"linear-gradient(135deg,#001433,#0A2A5C 55%,#B7791F)",borderRadius:20,padding:mob?"20px 18px":"26px 28px",color:"#fff",marginBottom:16,position:"relative",overflow:"hidden"}}>
       <i className="ti ti-chart-pie" style={{position:"absolute",right:-10,bottom:-22,fontSize:150,opacity:.1}}/>
-      <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Finance · RDC et espace OHADA</div>
+      <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Parcours certifiant · Finance d'entreprise</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Finance d'entreprise</div>
       <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:580}}>7 modules et 16 cas corrigés situés dans des entreprises congolaises : coût du capital, levier et création de valeur, investissement, financement, évaluation, risque de change USD/CDF et affectation du résultat selon l'OHADA. Chaque leçon s'écoute en audio. Chaque module s'ouvre quand le précédent est réussi à {SEUIL_ELEMENT} % ; avec une moyenne d'au moins 80 %, l'examen final (30 questions) mène au certificat et à son relevé de notes.</div>
       <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
@@ -126,8 +127,8 @@ export default function FinanceEntreprise({K,mob,db,uid,scores={},ok,onSub,onGo,
       <div style={{flex:1,minWidth:200,fontSize:13.5,color:K.t1,lineHeight:1.5}}>Le module <b>FE1</b> est en accès libre. Les modules FE2 à FE7 sont réservés aux apprenants disposant d'un accès actif.</div>
       {onSub&&<Bouton K={K} ch={LIB_ACCES} on={onSub} sx={{minHeight:38,padding:"8px 14px",fontSize:13}}/>}
     </div>}
-    <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
-      {MODULES_FIN.map((m,i)=>{const s=sc(m.id),lkP=acces(m)&&!ouvertP(m),lk=!acces(m)||lkP;return <div key={m.id} onClick={()=>ouvrir(m)} className={lkP?"tile":"hv tile"}
+    <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(250px,1fr))",gap:mob?0:10}}>
+      {MODULES_FIN.map((m,i)=>{const s=sc(m.id),lkP=acces(m)&&!ouvertP(m),lk=!acces(m)||lkP;return <Etape key={m.id} K={K} mob={mob} col={m.col} etat={lk?"lock":s?(s.pct>=SEUIL_ELEMENT?"ok":"ko"):"todo"}><div onClick={()=>ouvrir(m)} className={lkP?"tile":"hv tile"}
         style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"14px 15px",cursor:lkP?"not-allowed":"pointer",opacity:lk?.72:1,display:"flex",flexDirection:"column",gap:6}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{width:40,height:40,borderRadius:12,background:`${m.col}16`,border:`1px solid ${m.col}35`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className={`ti ti-${lk?"lock":m.ico}`} style={{fontSize:20,color:m.col}}/></div>
@@ -143,7 +144,7 @@ export default function FinanceEntreprise({K,mob,db,uid,scores={},ok,onSub,onGo,
           <span><i className="ti ti-headphones" style={{marginRight:3}}/>Audio</span>
           {lkP&&<span style={{color:K.wa,fontWeight:700}}><i className="ti ti-lock" style={{marginRight:3}}/>Réussir {MODULES_FIN[i-1].id} à {SEUIL_ELEMENT} %</span>}
         </div>
-      </div>;})}
+      </div></Etape>;})}
     </div>
     <CarteExamenFinal K={K} id="FIN" etat={etat} ok={ok} apercu={apercu} onOuvrir={()=>sOpen("FINAL")} onCertificat={onGo&&(()=>onGo("res"))}/>
     <div style={{fontSize:12.5,color:K.t3,lineHeight:1.6,marginTop:16}}>

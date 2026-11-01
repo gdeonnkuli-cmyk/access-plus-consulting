@@ -9,6 +9,7 @@ import{liquidationTVA}from"./tva";
 import{LIB_ACCES}from"../acces/plateforme";
 import{SEUIL_ELEMENT,etatParcours}from"../attest/regles";
 import{CarteExamenFinal,ExamenFinal}from"../parcours/ExamenFinal";
+import Etape from"../parcours/Etape";
 
 // ══════════════════ CODE DES IMPÔTS RDC EXPLIQUÉ ══════════════════
 // 15 modules (src/fiscal/modules : Code des impôts mis à jour au 31 mars 2021, TVA pratique, import-export, paie, facture normalisée, IRPP et IS) : leçon structurée en blocs,
@@ -372,7 +373,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub,onGo,apercu=
   return <div style={{animation:"fadeIn .3s ease"}}>
     <div style={{background:`linear-gradient(135deg,${K.emD},${K.em} 60%,#A3122A)`,borderRadius:20,padding:mob?"20px 18px":"26px 28px",color:"#fff",marginBottom:16,position:"relative",overflow:"hidden"}}>
       <i className="ti ti-receipt-tax" style={{position:"absolute",right:-10,bottom:-22,fontSize:150,opacity:.1}}/>
-      <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Fiscalité · République démocratique du Congo</div>
+      <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Parcours certifiant · Fiscalité RDC</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Le Code des impôts expliqué</div>
       <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>15 modules clairs (fiscalité, TVA pratique, paie, import-export, facture normalisée, IRPP et IS 2026), avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts de la DGI mis à jour au 31 mars 2021, des textes sociaux en vigueur en 2026 pour la paie et, pour la facture normalisée et l'IRPP, du Décret n° 23/010, de la loi n° 23/053 et des publications de la DGI.</div>
       <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
@@ -386,8 +387,8 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub,onGo,apercu=
       <div style={{flex:1,minWidth:200,fontSize:13.5,color:K.t1,lineHeight:1.5}}>Le module <b>F1</b> est en accès libre. Les modules F2 à F15 sont réservés aux abonnés.</div>
       {onSub&&<Bouton K={K} ch={LIB_ACCES} on={onSub} sx={{minHeight:38,padding:"8px 14px",fontSize:13}}/>}
     </div>}
-    <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
-      {MODULES_FISC.map((m,i)=>{const s=sc(m.id),lkP=acces(m)&&!ouvertP(m),lk=!acces(m)||lkP;return <div key={m.id} onClick={()=>aller(m)} className={lkP?"tile":"hv tile"}
+    <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(250px,1fr))",gap:mob?0:10}}>
+      {MODULES_FISC.map((m,i)=>{const s=sc(m.id),lkP=acces(m)&&!ouvertP(m),lk=!acces(m)||lkP;return <Etape key={m.id} K={K} mob={mob} col={m.col} etat={lk?"lock":s?(s.pct>=SEUIL_ELEMENT?"ok":"ko"):"todo"}><div onClick={()=>aller(m)} className={lkP?"tile":"hv tile"}
         style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"14px 15px",cursor:lkP?"not-allowed":"pointer",opacity:lk?.72:1,display:"flex",flexDirection:"column",gap:6}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{width:40,height:40,borderRadius:12,background:`${m.col}16`,border:`1px solid ${m.col}35`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className={`ti ti-${lk?"lock":m.ico}`} style={{fontSize:20,color:m.col}}/></div>
@@ -401,7 +402,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub,onGo,apercu=
           <span><i className="ti ti-clock" style={{marginRight:3}}/>{m.duree}</span><span><i className="ti ti-checklist" style={{marginRight:3}}/>QCM {Math.min(NB_Q,m.qcm.length)} q.</span>
           {lkP&&<span style={{color:K.wa,fontWeight:700}}><i className="ti ti-lock" style={{marginRight:3}}/>Réussir {MODULES_FISC[i-1].id} à {SEUIL_ELEMENT} %</span>}
         </div>
-      </div>;})}
+      </div></Etape>;})}
     </div>
     <CarteExamenFinal K={K} id="FISC" etat={etat} ok={ok} apercu={apercu} onOuvrir={()=>sOpen("FINAL")} onCertificat={onGo&&(()=>onGo("res"))}/>
   </div>;

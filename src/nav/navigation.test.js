@@ -14,7 +14,7 @@ test("aucun écran n'apparaît dans deux rubriques", () => {
 
 test("tous les écrans existants restent accessibles", () => {
   // écrans de l'apprenant avant la réorganisation (prog est fusionné dans res)
-  ["home", "msg", "pres", "stages", "videos", "ef", "jrn", "cpt", "audio", "fisc", "fin", "syc", "psycho", "services", "res", "param", "sugg", "apropos"]
+  ["home", "form", "msg", "pres", "stages", "videos", "ef", "jrn", "cpt", "audio", "fisc", "fin", "syc", "psycho", "services", "res", "param", "sugg", "apropos"]
     .forEach(v => expect(VUES_APPRENANT).toContain(v));
   // les 25 onglets de l'admin
   ["home", "val", "d", "a", "e", "t", "s", "m", "v", "pr", "st", "dm", "p", "fo", "an", "au", "pl", "ef", "fisc", "fin", "syc", "ac", "att", "nt", "sg", "msg"]
@@ -28,7 +28,9 @@ test("adresses : alias, vues inconnues et rubriques", () => {
   expect(normaliserVue("fin")).toBe("fin");
   expect(normaliserVue("n'importe quoi")).toBe("home");
   expect(normaliserVue(null)).toBe("home");
-  expect(groupeDe(GROUPES_APPRENANT, "cpt").k).toBe("parcours");
+  expect(groupeDe(GROUPES_APPRENANT, "cpt").k).toBe("apprendre");
+  expect(groupeDe(GROUPES_APPRENANT, "mods").k).toBe("parcours");
+  expect(GROUPES_APPRENANT.find(g => g.k === "parcours").vues[0][0]).toBe("form");
   expect(groupeDe(GROUPES_ADMIN, "dm").k).toBe("ech");
   expect(groupeDe(GROUPES_APPRENANT, "param")).toBe(null);
   expect(badgeGroupe(groupeDe(GROUPES_ADMIN, "d"), { d: 3, a: 0 })).toBe(3);

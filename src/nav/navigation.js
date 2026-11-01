@@ -5,13 +5,15 @@
 
 export const GROUPES_APPRENANT = [
   { k: "home", ico: "home-2", label: "Accueil", vues: [["home", "home-2", "Accueil"]] },
-  { k: "apprendre", ico: "book-2", label: "Apprendre", vues: [
-    ["mods", "book-2", "Modules de cours"], ["pres", "presentation", "Présentations"],
-    ["videos", "video", "Vidéos"], ["audio", "headphones", "Écouter les cours"],
+  // Les 5 formations certifiantes (mêmes noms courts que sur les certificats, voir src/attest/regles.js) précédées de leur
+  // page d'accueil ; les outils pratiques et les supports sont dans « Ressources ».
+  { k: "parcours", ico: "certificate", label: "Mes formations", court: "Formations", vues: [
+    ["form", "layout-grid", "Vue d'ensemble"], ["mods", "book-2", "SYSCOHADA · Niveau 1"], ["jrn", "notebook", "SYSCOHADA · Niveau 2"],
+    ["fisc", "receipt-tax", "Fiscalité RDC"], ["fin", "chart-pie", "Finance d'entreprise"], ["syc", "building-community", "SYCEBNL"],
   ] },
-  { k: "parcours", ico: "route", label: "Parcours métier", court: "Parcours", vues: [
-    ["ef", "report-money", "États financiers"], ["jrn", "notebook", "Monographie ZAO"], ["cpt", "books", "Guide des comptes"],
-    ["fisc", "receipt-tax", "Code des impôts"], ["fin", "chart-pie", "Finance d'entreprise"], ["syc", "building-community", "SYCEBNL (EBNL)"],
+  { k: "apprendre", ico: "tools", label: "Ressources", vues: [
+    ["ef", "report-money", "Atelier États financiers"], ["cpt", "books", "Guide des comptes"], ["audio", "headphones", "Écouter les cours"],
+    ["pres", "presentation", "Présentations"], ["videos", "video", "Vidéos"],
   ] },
   { k: "resultats", ico: "trophy", label: "Mes résultats", court: "Résultats", vues: [["res", "trophy", "Mes résultats"]] },
   { k: "carriere", ico: "briefcase", label: "Carrière", vues: [["stages", "briefcase", "Stages"], ["psycho", "brain", "Tests psychotechniques"]] },

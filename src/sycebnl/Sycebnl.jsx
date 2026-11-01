@@ -84,7 +84,7 @@ export default function Sycebnl({K,mob,db,uid,scores={},ok,onSub,onGo,apercu=fal
   return <div style={{maxWidth:860,margin:"0 auto",animation:"fadeIn .3s ease"}}>
     <div style={{background:"linear-gradient(135deg,#053B36,#0F766E 55%,#B7791F)",borderRadius:20,padding:mob?"20px 18px":"26px 28px",color:"#fff",marginBottom:16,position:"relative",overflow:"hidden"}}>
       <i className="ti ti-building-community" style={{position:"absolute",right:-10,bottom:-22,fontSize:150,opacity:.1}}/>
-      <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Parcours certifiant · OHADA</div>
+      <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Parcours certifiant · SYCEBNL</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Comptabilité des entités à but non lucratif (SYCEBNL)</div>
       <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:620}}>Associations, ONG, fondations, églises et projets : 8 modules avec schémas, cours audio et évaluation. Chaque module s'ouvre quand le précédent est réussi à {SEUIL_ELEMENT} %. Avec une moyenne d'au moins {SEUIL_MOYENNE} %, vous accédez à l'examen final de {NB_Q_FINAL} questions, puis au <b>certificat</b> et à son <b>relevé de notes</b>.</div>
       <div style={{height:8,background:"rgba(255,255,255,.2)",borderRadius:99,overflow:"hidden",margin:"14px 0 10px",maxWidth:420}}><div style={{width:`${pctParcours}%`,height:"100%",background:"#fff",borderRadius:99}}/></div>
