@@ -520,4 +520,170 @@ const B8 = {
   ],
 };
 
-export const MODULES_BQ = [B1, B2, B3, B4, B5, B6, B7, B8];
+// Cas commun aux modules B9 et B10 : Banque Kivu Crédit SA (fictive), comptes annuels de l'exercice N, en francs congolais.
+const Mn = n => n * 1000000;
+
+const B9 = {
+  id: "B9", titre: "Les états financiers d'une banque", court: "États financiers", ico: "file-spreadsheet", col: "#1E40AF", duree: "50 min",
+  resume: "De la balance GCEC aux comptes annuels publiables : bilan, hors-bilan, compte de résultat, flux de trésorerie, variation des capitaux propres et annexe, sur un cas complet.",
+  blocs: [
+    { type: "essentiel", texte: "Le GCEC impose cinq documents annuels publiables : **bilan et hors-bilan**, **compte de résultat**, **état de variation des capitaux propres**, **tableau des flux de trésorerie** et **annexe**, présentés en **N et N-1** et en **CDF**. Le bilan bancaire se lit **par ordre de liquidité** : en tête, la **caisse, la BCC et les correspondants** ; puis les **crédits à la clientèle** (nets de provisions) ; en bas, les immobilisations. Au passif, les **dettes envers la clientèle** dominent, loin devant les fonds propres. Le **hors-bilan** fait partie intégrante des comptes : une banque peut être très engagée sans que son bilan le montre." },
+    { type: "schema", kind: "tableau", titre: "Du plan GCEC aux postes du bilan publiable", entetes: ["Poste (modèle GCEC)", "Comptes", "Millions FC"], lignes: [
+      ["**Actif** · Caisse, correspondants Nostri, Banque Centrale et CCP", "570, 553, 552, 560", "1 200 + 3 800 + 4 500 + 6 000 = **15 500**"],
+      ["Effets publics admissibles au refinancement de la BCC", "5201 Bons du Trésor", "**2 500**"],
+      ["Crédits à la clientèle (nets)", "322, 310, 300, 33 débiteurs, 3280, 392 moins 382", "18 000 + 14 000 + 6 000 + 2 000 + 500 + 3 000 − 1 800 = **41 700**"],
+      ["Obligations, actions, titres ou participations", "251", "**800**"],
+      ["Immobilisations corporelles (nettes)", "22 moins 28", "5 000 − 1 800 = **3 200**"],
+      ["Comptes de régularisation", "470", "**300**"],
+      ["**Total actif**", "", "**64 000**"],
+      ["**Passif** · Correspondants Lori, Banque Centrale et CCP", "562", "**2 000**"],
+      ["Dettes envers la clientèle", "330/331, 332, 340, 348", "27 000 + 4 000 + 12 000 + 200 = **43 200**"],
+      ["Dettes représentées par un titre", "350 Bons de caisse", "**1 000**"],
+      ["Comptes de régularisation", "471", "**600**"],
+      ["Provisions pour risques, charges et pertes", "180", "**700**"],
+      ["Emprunts à long et moyen terme", "16", "**3 000**"],
+      ["Capital, réserves, report à nouveau, résultat", "100, 111, 120, 13", "9 000 + 1 400 + 300 + 2 800 = **13 500**"],
+      ["**Total passif**", "", "**64 000**"],
+    ], note: "Les créances douteuses (392) figurent dans les crédits à la clientèle pour leur **montant net de provisions** (382) ; le détail est donné dans l'annexe." },
+    { type: "exemple", titre: "Contrôle d'équilibre du bilan", enonce: "Banque Kivu Crédit SA (cas fictif), comptes de l'exercice N, en francs congolais.", lignes: [
+      ["Trésorerie et effets publics (15 500 + 2 500 millions)", Mn(18000)], ["Crédits à la clientèle nets", Mn(41700)], ["Participations, immobilisations nettes, régularisation", Mn(4300)],
+      ["Total actif", Mn(64000), "total"],
+      ["Ressources de la clientèle et des correspondants (2 000 + 43 200 + 1 000)", Mn(46200)], ["Régularisation, provisions, emprunts (600 + 700 + 3 000)", Mn(4300)], ["Capitaux propres, résultat compris", Mn(13500)],
+      ["Total passif", Mn(64000), "resultat"],
+    ], conclusion: "Les dépôts de la clientèle financent 67,5 % du bilan (43 200 / 64 000) : c'est la signature d'une banque de détail. Les capitaux propres en financent 21 %." },
+    { type: "schema", kind: "tableau", titre: "Le hors-bilan publiable", entetes: ["Poste", "Comptes", "Millions FC"], lignes: [
+      ["Engagements de financement donnés (lignes de crédit confirmées non utilisées)", "0001", "5 000"],
+      ["Engagements de garantie donnés (cautions, avals pour les clients)", "0012", "7 500"],
+      ["Engagements de garantie reçus (contre-garanties de banques)", "0111", "3 000"],
+      ["Engagements sur opérations en devises (achats à terme)", "0311", "1 200"],
+    ], note: "Engagements donnés : 12 500 millions, soit près de 20 % du total du bilan. Ce risque ne se voit qu'en hors-bilan." },
+    { type: "exemple", titre: "Compte de résultat selon le modèle publiable du GCEC", enonce: "Mêmes données, en francs congolais. Le modèle publiable place les dotations aux provisions **après** le résultat courant.", lignes: [
+      ["+ Produits − charges sur opérations de trésorerie et interbancaires (700 − 300)", Mn(400)], ["+ Produits − charges sur opérations avec la clientèle (9 800 − 2 100)", Mn(7700)], ["+ Autres produits − autres charges bancaires (3 400 − 400)", Mn(3000)],
+      ["= Produit net bancaire", Mn(11100), "total"],
+      ["+ Produits accessoires − charges générales − personnel − impôts et taxes (200 − 3 000 − 3 300 − 300)", Mn(-6400)], ["= Résultat brut d'exploitation", Mn(4700), "total"],
+      ["− Dotations aux amortissements", Mn(-500)], ["= Résultat courant avant impôt", Mn(4200), "total"],
+      ["− Dotations et pertes sur créances + reprises de provisions (− 900 + 700)", Mn(-200)], ["± Résultat exceptionnel", 0], ["− Impôt sur le résultat (30 %)", Mn(-1200)],
+      ["= Résultat net de l'exercice", Mn(2800), "resultat"],
+    ], conclusion: "Le résultat net de 2 800 millions est celui qui figure au passif du bilan (compte 13). Attention : dans les **soldes de gestion** de la classe 8, les provisions sont déjà déduites dans le résultat courant (83) ; le **modèle publiable** les présente après." },
+    { type: "exemple", titre: "Tableau des flux de trésorerie (résumé)", enonce: "Liquidités et équivalents : caisse, BCC, Nostri (en francs congolais).", lignes: [
+      ["Liquidités en début d'exercice", Mn(13500)], ["+ Flux net des activités d'exploitation (dépôts reçus, crédits accordés, produits encaissés…)", Mn(2600)],
+      ["− Flux net des activités d'investissement (immobilisations, portefeuille d'investissement)", Mn(-900)], ["− Flux net des activités de financement (dividendes versés)", Mn(-200)],
+      ["+ Incidence des variations des taux de change", Mn(500)], ["= Liquidités en fin d'exercice", Mn(15500), "resultat"],
+    ], conclusion: "Dans une banque, l'essentiel des flux est d'**exploitation** : collecter des dépôts et distribuer des crédits sont son activité normale. Dans une économie dollarisée, l'**incidence du change** est une ligne à part entière." },
+    { type: "schema", kind: "cartes", titre: "Ce que l'annexe doit dire", cartes: [
+      { ico: "book", t: "Méthodes comptables", d: "Reconnaissance des produits, évaluation des titres, règles de déclassement et de sortie des prêts irrécouvrables." },
+      { ico: "alert-triangle", t: "Provisions sur prêts", d: "Dotations de l'exercice, montants sortis du bilan, récupérations, provision globale à la clôture, prêts dont les intérêts ne sont plus comptabilisés." },
+      { ico: "currency-dollar", t: "Positions en devises", d: "Montant des positions nettes importantes en monnaies étrangères." },
+      { ico: "users", t: "Parties liées", d: "Politique de prêts, montants des prêts, dépôts et engagements avec les parties liées." },
+      { ico: "map", t: "Concentrations", d: "Par zone géographique, segment de clientèle ou secteur d'activité." },
+      { ico: "lock", t: "Actifs donnés en garantie", d: "Passifs garantis, nature et valeur comptable des actifs affectés." },
+    ] },
+    { type: "pieges", puces: [
+      "Présenter les crédits pour leur montant brut alors que le bilan les présente nets de provisions.",
+      "Oublier le hors-bilan : une banque très engagée par signature peut afficher un bilan modeste.",
+      "Confondre l'ordre du compte de résultat publiable (provisions après le résultat courant) et les soldes de la classe 8.",
+      "Classer les bons de caisse émis avec les dépôts : ce sont des dettes représentées par un titre.",
+      "Oublier les colonnes N-1 ou la date d'arrêté et le numéro d'immatriculation BCC dans l'en-tête.",
+    ] },
+  ],
+  narration: [
+    "Module neuf : les états financiers d'une banque. Nous allons construire les comptes annuels d'une banque fictive, la Banque Kivu Crédit, à partir de sa balance.",
+    "Le guide de la Banque Centrale impose cinq documents : le bilan et le hors-bilan, le compte de résultat, l'état de variation des capitaux propres, le tableau des flux de trésorerie et l'annexe. Tous présentent l'exercice N et l'exercice précédent, en francs congolais.",
+    "Le bilan d'une banque se lit par ordre de liquidité. À l'actif, d'abord la caisse, la Banque Centrale et les correspondants : 15 milliards 500 millions pour notre banque. Puis les bons du Trésor admissibles au refinancement : 2 milliards 500 millions. Puis le gros morceau, les crédits à la clientèle, présentés nets de provisions : 41 milliards 700 millions. Enfin les participations et les immobilisations. Total : 64 milliards.",
+    "Au passif, les dettes envers la clientèle dominent : 43 milliards 200 millions de dépôts, soit plus des deux tiers du bilan. Les bons de caisse, eux, sont des dettes représentées par un titre. Les capitaux propres, résultat compris, représentent 13 milliards 500 millions.",
+    "Le hors-bilan fait partie des comptes. Notre banque a donné 5 milliards de lignes de crédit non encore utilisées et 7 milliards 500 millions de cautions. Ce risque n'apparaît nulle part dans le bilan : sans le hors-bilan, on ne voit pas la banque telle qu'elle est.",
+    "Le compte de résultat publiable part du produit net bancaire : 11 milliards 100 millions. Après les frais généraux, le personnel et les impôts, le résultat brut d'exploitation est de 4 milliards 700 millions. Après les amortissements, le résultat courant avant impôt est de 4 milliards 200 millions. Le modèle publiable déduit ensuite le coût du risque, ici 200 millions, puis l'impôt. Résultat net : 2 milliards 800 millions, exactement le montant du compte 13 au bilan.",
+    "Enfin, le tableau des flux de trésorerie montre que, pour une banque, l'essentiel des flux vient de l'exploitation : collecter des dépôts et prêter. Et l'annexe doit détailler les provisions sur prêts, les positions en devises, les parties liées et les concentrations de risques. Place au QCM.",
+  ],
+  qcm: [
+    { q: "Les comptes annuels publiables d'une banque selon le GCEC comprennent :", r: ["Bilan et hors-bilan, compte de résultat, variation des capitaux propres, flux de trésorerie, annexe", "Bilan et compte de résultat seulement", "La seule situation DEC 9000", "Le bilan et le rapport de gestion"], b: 0, e: "Cinq documents, présentés en N et N-1." },
+    { q: "Le premier poste de l'actif du bilan bancaire publiable est :", r: ["Caisse, correspondants Nostri, Banque Centrale et CCP", "Immobilisations", "Crédits à la clientèle", "Capital souscrit non versé"], b: 0, e: "Présentation par ordre de liquidité décroissante." },
+    { q: "Crédits bruts 43 000 millions dont 3 000 de créances douteuses provisionnées à 1 800 ; créances rattachées 500. Crédits à la clientèle au bilan :", r: ["41 700 millions", "43 500 millions", "40 000 millions", "45 300 millions"], b: 0, e: "43 000 + 500 − 1 800 = **41 700 millions** (nets de provisions)." },
+    { q: "Les bons de caisse émis par la banque figurent au passif en :", r: ["Dettes représentées par un titre", "Dettes envers la clientèle", "Capitaux propres", "Hors-bilan"], b: 0, e: "Le modèle du GCEC les isole parmi les dettes représentées par un titre." },
+    { q: "Les dépôts à vue d'une autre banque chez nous (Lori) figurent au passif en :", r: ["Correspondants Lori, Banque Centrale et CCP", "Dettes envers la clientèle", "Emprunts à long terme", "Comptes de régularisation"], b: 0, e: "Ressource interbancaire, en tête du passif." },
+    { q: "Des lignes de crédit confirmées mais non utilisées par les clients :", r: ["Engagements de financement donnés, au hors-bilan", "Crédits à la clientèle au bilan", "Charges de l'exercice", "Rien n'est à publier"], b: 0, e: "Compte 000 (0001 en faveur de la clientèle)." },
+    { q: "Dans le modèle publiable du GCEC, les dotations aux provisions sur créances sont déduites :", r: ["Après le résultat courant avant impôt", "Avant le produit net bancaire", "Avant le résultat brut d'exploitation", "Dans les produits accessoires"], b: 0, e: "Différence avec les soldes de la classe 8, où elles entrent dans le résultat courant (83)." },
+    { q: "PNB 11 100 ; produits accessoires 200 ; charges générales 3 000 ; personnel 3 300 ; impôts et taxes 300 (millions). Résultat brut d'exploitation :", r: ["4 700 millions", "4 200 millions", "11 300 millions", "6 400 millions"], b: 0, e: "11 100 + 200 − 3 000 − 3 300 − 300 = **4 700**." },
+    { q: "Le résultat net du compte de résultat doit être égal :", r: ["Au résultat (compte 13) porté au passif du bilan", "Au PNB", "À la variation de trésorerie", "Aux dividendes"], b: 0, e: "C'est un contrôle de cohérence élémentaire entre états." },
+    { q: "Pour une banque, l'essentiel des flux de trésorerie relève :", r: ["Des activités d'exploitation (dépôts, crédits)", "Des activités de financement uniquement", "Des activités d'investissement", "De l'incidence du change"], b: 0, e: "Collecter et prêter, c'est son activité normale." },
+    { q: "L'annexe doit notamment présenter :", r: ["Les mouvements des provisions pour pertes sur prêts et les positions nettes en devises", "Le détail des salaires individuels", "La liste nominative des déposants", "Les cours de bourse quotidiens"], b: 0, e: "Ainsi que les parties liées, les concentrations et les actifs donnés en garantie." },
+    { q: "Dépôts clientèle 43 200 sur un total de bilan de 64 000 (millions). Part du bilan financée par les dépôts :", r: ["67,5 %", "32,5 %", "148 %", "43,2 %"], b: 0, e: "43 200 / 64 000 = **67,5 %**." },
+  ],
+};
+
+const B10 = {
+  id: "B10", titre: "Analyser une banque : rentabilité, risque, liquidité, solvabilité", court: "Analyse financière", ico: "chart-dots", col: "#9F1239", duree: "50 min",
+  resume: "Marge d'intérêt, coefficient d'exploitation, coût du risque, ROA, ROE ; créances en souffrance et couverture ; crédits/dépôts, transformation, dollarisation ; fonds propres et solvabilité.",
+  blocs: [
+    { type: "essentiel", texte: "On analyse une banque sur **quatre axes**. **Rentabilité** : d'où vient le PNB (marge d'intérêt, commissions), combien coûtent la structure (**coefficient d'exploitation**) et le risque (**coût du risque**), et ce que rapportent les actifs (**ROA**) et les fonds propres (**ROE**). **Qualité du portefeuille** : **taux de créances en souffrance** et **taux de couverture** par les provisions. **Liquidité** : **crédits/dépôts**, liquidités immédiates, **transformation** et, en RDC, **dollarisation**. **Solvabilité** : fonds propres face aux risques. Les ratios ci-dessous sont des **indicateurs d'analyse** ; les **seuils réglementaires** sont ceux des instructions prudentielles de la BCC." },
+    { type: "schema", kind: "tableau", titre: "1. Rentabilité (Banque Kivu Crédit, millions FC)", entetes: ["Indicateur et formule", "Calcul", "Résultat"], lignes: [
+      ["**Marge d'intérêt clientèle** : Produits − charges sur opérations avec la clientèle", "9 800 − 2 100", "**7 700**"],
+      ["**Poids de la clientèle dans le PNB** : Marge clientèle / PNB", "7 700 / 11 100", "**69,4 %**"],
+      ["**Poids des commissions** : (Autres produits − autres charges bancaires) / PNB", "3 000 / 11 100", "**27,0 %**"],
+      ["**Coefficient d'exploitation** : (Charges générales + personnel + impôts + amortissements) / PNB", "7 100 / 11 100", "**64,0 %**"],
+      ["**Coût du risque** : Dotations et pertes − reprises", "900 − 700", "**200**, soit 0,47 % des encours bruts"],
+      ["**ROA (rentabilité des actifs)** : Résultat net / total du bilan", "2 800 / 64 000", "**4,4 %**"],
+      ["**ROE (rentabilité des fonds propres)** : Résultat net / (capital + réserves + report)", "2 800 / 10 700", "**26,2 %**"],
+    ], note: "Plus le coefficient d'exploitation est bas, plus la banque est efficiente. Un ROE élevé peut venir d'une bonne rentabilité… ou de fonds propres trop faibles : il se lit avec la solvabilité." },
+    { type: "schema", kind: "tableau", titre: "2. Qualité du portefeuille de crédits", entetes: ["Indicateur et formule", "Calcul", "Résultat"], lignes: [
+      ["**Encours bruts de crédits** : Crédits sains + créances en souffrance (hors intérêts rattachés)", "18 000 + 14 000 + 6 000 + 2 000 + 3 000", "**43 000**"],
+      ["**Taux de créances en souffrance** : Créances en souffrance brutes / encours bruts", "3 000 / 43 000", "**7,0 %**"],
+      ["**Taux de couverture** : Provisions sur créances / créances en souffrance", "1 800 / 3 000", "**60 %**"],
+      ["**Concentration (hypothèse)** : Encours des 10 premiers clients / encours bruts", "12 900 / 43 000", "**30 %**"],
+    ], note: "Un taux de couverture faible avec des garanties fragiles annonce des pertes futures ; une forte concentration rend la banque dépendante de quelques débiteurs." },
+    { type: "schema", kind: "tableau", titre: "3. Liquidité, transformation et dollarisation", entetes: ["Indicateur et formule", "Calcul", "Résultat"], lignes: [
+      ["**Crédits / dépôts** : Crédits nets à la clientèle / dettes envers la clientèle", "41 700 / 43 200", "**96,5 %**"],
+      ["**Liquidités immédiates / dépôts à vue** : (Caisse + BCC disponible + Nostri + bons du Trésor) / (dépôts à vue + livrets)", "13 500 / 31 000", "**43,5 %**"],
+      ["**Dollarisation des dépôts (hypothèse)** : Dépôts en devises / dépôts totaux", "36 700 / 43 200", "**85 %**"],
+    ], note: "La réserve obligatoire (552) est exclue des liquidités immédiates : elle n'est pas librement disponible." },
+    { type: "exemple", titre: "La transformation : des ressources courtes financent des emplois longs", enonce: "Comparaison des emplois et ressources à long terme de Banque Kivu Crédit (en francs congolais).", lignes: [
+      ["Emplois longs : crédits à moyen et long terme (14 000 + 6 000), immobilisations nettes 3 200, participations 800", Mn(24000), "total"],
+      ["Ressources stables : capitaux propres 13 500 et emprunts à moyen et long terme 3 000", Mn(-16500)],
+      ["Emplois longs financés par des dépôts à court terme", Mn(7500), "resultat"],
+    ], conclusion: "C'est le cœur du métier bancaire, la **transformation** : utiliser des dépôts à vue pour prêter à long terme. Elle est rentable, mais crée un **risque de liquidité** (retraits massifs) et un **risque de taux** ; d'où l'état DEC 9014 sur la durée restant à courir." },
+    { type: "schema", kind: "cartes", titre: "4. Solvabilité et fonds propres", cartes: [
+      { ico: "shield", t: "Fonds propres comptables", d: "Capital, réserves, report, résultat : 13 500 millions, soit **21,1 %** du bilan (13 500 / 64 000)." },
+      { ico: "stack-2", t: "Effet de levier", d: "Total du bilan / fonds propres : 64 000 / 13 500 ≈ **4,7** : chaque franc de fonds propres porte 4,7 FC d'actifs." },
+      { ico: "scale", t: "Ratio de solvabilité", d: "Fonds propres réglementaires / risques pondérés (crédits, hors-bilan converti…). Définition, pondérations et minimum : **instructions prudentielles de la BCC**." },
+      { ico: "users-group", t: "Division des risques", d: "Les grands risques sur un même bénéficiaire sont plafonnés en proportion des fonds propres, selon la réglementation BCC." },
+    ] },
+    { type: "schema", kind: "arbre", titre: "Diagnostic rapide d'une banque", question: "Que montrent les quatre axes ?", branches: [
+      { si: "ROE élevé, fonds propres faibles", alors: "Rentabilité obtenue par le levier", d: "Fragile au moindre choc de crédit." },
+      { si: "Créances en souffrance en hausse, couverture en baisse", alors: "Risque de crédit sous-provisionné", d: "Le résultat est probablement surestimé." },
+      { si: "Crédits / dépôts au-delà de 100 %", alors: "Dépendance au refinancement", d: "BCC, interbancaire, emprunts : risque de liquidité." },
+      { si: "Coefficient d'exploitation élevé, PNB stable", alors: "Structure trop lourde", d: "Peu de marge pour absorber le coût du risque." },
+    ] },
+    { type: "pieges", puces: [
+      "Juger une banque sur son seul ROE sans regarder ses fonds propres et ses créances en souffrance.",
+      "Compter la réserve obligatoire dans les liquidités immédiatement disponibles.",
+      "Calculer le taux de créances en souffrance sur des encours nets de provisions.",
+      "Ignorer la dollarisation : un choc de change touche à la fois les dépôts, les crédits et les fonds propres.",
+      "Présenter un seuil réglementaire de mémoire : il faut citer l'instruction BCC en vigueur.",
+    ] },
+  ],
+  narration: [
+    "Dernier module de ce parcours : comment analyser une banque. Nous reprenons la Banque Kivu Crédit et nous l'examinons sur quatre axes : rentabilité, qualité du portefeuille, liquidité et solvabilité.",
+    "La rentabilité d'abord. Son produit net bancaire de 11 milliards 100 millions vient pour près de 70 pour cent de la marge sur la clientèle, et pour 27 pour cent des commissions. Son coefficient d'exploitation est de 64 pour cent : elle dépense 64 francs de frais pour 100 francs de PNB. Son coût du risque est de 200 millions. Elle rapporte 4,4 pour cent de ses actifs, c'est le ROA, et 26 pour cent de ses fonds propres, c'est le ROE.",
+    "Mais un ROE élevé ne suffit pas. Il faut regarder la qualité du portefeuille. Sur 43 milliards de crédits bruts, 3 milliards sont en souffrance : 7 pour cent. Ils sont couverts à 60 pour cent par des provisions. Plus ce taux de couverture baisse alors que les créances en souffrance montent, plus le résultat risque d'être surestimé.",
+    "Troisième axe, la liquidité. La banque prête presque autant qu'elle collecte : crédits sur dépôts, 96,5 pour cent. Ses liquidités immédiates couvrent 43,5 pour cent de ses dépôts à vue, sans compter la réserve obligatoire, qui n'est pas disponible. Et en République démocratique du Congo, il faut regarder la dollarisation : ici, 85 pour cent des dépôts sont en devises.",
+    "Le cœur du métier bancaire, c'est la transformation : des dépôts courts financent des crédits longs. Notre banque a 24 milliards d'emplois longs pour seulement 16 milliards 500 millions de ressources stables. Les 7 milliards 500 millions de différence sont financés par des dépôts à court terme. C'est rentable, mais c'est un risque si les déposants retirent en masse.",
+    "Enfin, la solvabilité. Les fonds propres représentent 21 pour cent du bilan, soit un effet de levier d'environ 4,7. Le ratio de solvabilité réglementaire compare les fonds propres aux risques pondérés ; ses règles et son minimum sont fixés par les instructions prudentielles de la Banque Centrale.",
+    "Retenez la méthode : jamais un ratio seul. Un bon diagnostic croise les quatre axes. Après ce QCM, l'examen final vous attend.",
+  ],
+  qcm: [
+    { q: "Coefficient d'exploitation : charges générales, personnel, impôts et amortissements 7 100 ; PNB 11 100 (millions) :", r: ["64,0 %", "156 %", "36,0 %", "71,0 %"], b: 0, e: "7 100 / 11 100 = **64 %** ; plus il est bas, plus la banque est efficiente." },
+    { q: "Résultat net 2 800 ; total du bilan 64 000 (millions). ROA :", r: ["4,4 %", "26,2 %", "2,8 %", "22,9 %"], b: 0, e: "2 800 / 64 000 = **4,4 %**." },
+    { q: "Résultat net 2 800 ; capital + réserves + report 10 700 (millions). ROE :", r: ["26,2 %", "4,4 %", "38,2 %", "10,7 %"], b: 0, e: "2 800 / 10 700 = **26,2 %**." },
+    { q: "Créances en souffrance 3 000 ; encours bruts 43 000 (millions). Taux de créances en souffrance :", r: ["7,0 %", "60 %", "14,3 %", "4,2 %"], b: 0, e: "3 000 / 43 000 = **7,0 %**, calculé sur des encours **bruts**." },
+    { q: "Provisions 1 800 sur créances en souffrance de 3 000 (millions). Taux de couverture :", r: ["60 %", "40 %", "167 %", "18 %"], b: 0, e: "1 800 / 3 000 = **60 %**." },
+    { q: "Crédits nets 41 700 ; dépôts de la clientèle 43 200. Ratio crédits / dépôts :", r: ["96,5 %", "103,6 %", "85,0 %", "41,7 %"], b: 0, e: "41 700 / 43 200 = **96,5 %**." },
+    { q: "Dans les liquidités immédiates de la banque, on n'inclut pas :", r: ["La réserve obligatoire à la BCC (552)", "La caisse (570)", "Le compte BCC disponible (553)", "Les comptes Nostri (560)"], b: 0, e: "La réserve obligatoire n'est pas librement disponible." },
+    { q: "La transformation bancaire consiste à :", r: ["Financer des crédits longs avec des dépôts courts", "Convertir des devises en francs", "Transformer des crédits en titres", "Changer de plan comptable"], b: 0, e: "Elle crée un risque de liquidité et de taux." },
+    { q: "Emplois longs 24 000 ; ressources stables 16 500 (millions). Montant transformé :", r: ["7 500 millions", "40 500 millions", "16 500 millions", "24 000 millions"], b: 0, e: "24 000 − 16 500 = **7 500 millions** financés par des ressources courtes." },
+    { q: "Total du bilan 64 000 ; fonds propres 13 500. Effet de levier :", r: ["≈ 4,7", "≈ 0,21", "≈ 21", "≈ 2,8"], b: 0, e: "64 000 / 13 500 ≈ **4,7**." },
+    { q: "Le minimum du ratio de solvabilité applicable aux banques en RDC est fixé par :", r: ["Les instructions prudentielles de la BCC", "Le GCEC lui-même", "Le Code des impôts", "Chaque banque"], b: 0, e: "Le GCEC traite de la comptabilité ; les normes prudentielles relèvent des instructions de la BCC (états DEC 1400)." },
+    { q: "Une banque affiche un ROE élevé, des fonds propres faibles et des créances en souffrance en hausse. Diagnostic :", r: ["Rentabilité fragile, obtenue par le levier, avec un risque de crédit croissant", "Banque très solide", "Excès de liquidité", "Aucun risque"], b: 0, e: "Un ratio ne se lit jamais seul : on croise rentabilité, risque et solvabilité." },
+  ],
+};
+
+export const MODULES_BQ = [B1, B2, B3, B4, B5, B6, B7, B8, B9, B10];

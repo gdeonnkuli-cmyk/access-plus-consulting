@@ -9,8 +9,8 @@ const KINDS = ["flux", "chronologie", "arbre", "tableau", "cartes"];
 // Numéros de comptes GCEC cités dans un texte : 2 à 4 chiffres précédés d'un repère comptable (D, C, compte, en, /)
 const comptesCites = t => [...String(t).matchAll(/(?:\b[DC] |compte |comptes |\(|\/ ?|en |, )(\d{2,4})\b/g)].map(m => m[1]).filter(n => !/^(19|20)\d\d$/.test(n));
 
-test("8 modules complets, chacun avec schémas, pièges, narration et 12 questions", () => {
-  expect(MODULES_BQ.map(m => m.id)).toEqual(["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"]);
+test("10 modules complets, chacun avec schémas, pièges, narration et 12 questions", () => {
+  expect(MODULES_BQ.map(m => m.id)).toEqual(["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10"]);
   expect(MODULES_BQ.filter(m => m.libre).map(m => m.id)).toEqual(["B1"]);
   for (const m of MODULES_BQ) {
     expect(m.blocs[0].type).toBe("essentiel");
@@ -62,16 +62,31 @@ test("exemples chiffrés justes", () => {
   expect(b8[6] + b8[7]).toBe(b8[8]);
   expect(b8[8] + b8[9]).toBe(b8[10]);
   expect(Math.round(b8[8] * 0.3)).toBe(-b8[9]);
+  // B9 : bilan équilibré, compte de résultat et flux de trésorerie cohérents ; B10 : transformation
+  const bil = ex("B9", "Contrôle");
+  expect(bil[0] + bil[1] + bil[2]).toBe(bil[3]);
+  expect(bil[4] + bil[5] + bil[6]).toBe(bil[7]);
+  expect(bil[3]).toBe(bil[7]);
+  const cr = ex("B9", "Compte de résultat");
+  expect(cr[0] + cr[1] + cr[2]).toBe(cr[3]);
+  expect(cr[3] + cr[4]).toBe(cr[5]);
+  expect(cr[5] + cr[6]).toBe(cr[7]);
+  expect(cr[7] + cr[8] + cr[9] + cr[10]).toBe(cr[11]);
+  expect(cr[11]).toBe(bil[6] - 10700000000); // résultat net = capitaux propres − (capital + réserves + report)
+  const tft = ex("B9", "Tableau des flux");
+  expect(tft.slice(0, 5).reduce((a, b) => a + b, 0)).toBe(tft[5]);
+  const tr = ex("B10", "La transformation");
+  expect(tr[0] + tr[1]).toBe(tr[2]);
 });
 
-test("examen final : 45 questions couvrant les 8 modules ; parcours avec examen coefficient 2", () => {
-  expect(BANQUE_BQ.length).toBeGreaterThanOrEqual(45);
+test("examen final : 45 questions couvrant les 10 modules ; parcours avec examen coefficient 2", () => {
+  expect(BANQUE_BQ.length).toBeGreaterThanOrEqual(55);
   expect(new Set(BANQUE_BQ.map(q => q.q)).size).toBe(BANQUE_BQ.length);
   for (const m of MODULES_BQ) expect(BANQUE_BQ.filter(q => q.m === m.id).length).toBeGreaterThanOrEqual(5);
   BANQUE_BQ.forEach(q => { expect(q.r).toHaveLength(4); expect(new Set(q.r).size).toBe(4); });
   const el = elementsParcours("BANQUE", []);
-  expect(el.map(e => e.cle)).toEqual(["BQ-B1", "BQ-B2", "BQ-B3", "BQ-B4", "BQ-B5", "BQ-B6", "BQ-B7", "BQ-B8", "BQ-FINAL"]);
-  expect(el[8].coef).toBe(2);
+  expect(el.map(e => e.cle)).toEqual(["BQ-B1", "BQ-B2", "BQ-B3", "BQ-B4", "BQ-B5", "BQ-B6", "BQ-B7", "BQ-B8", "BQ-B9", "BQ-B10", "BQ-FINAL"]);
+  expect(el[10].coef).toBe(2);
   expect(etatParcours("BANQUE", [], { scores: { "BQ-B1": { pct: 75 } } }).elements.slice(0, 3).map(e => e.ouvert)).toEqual([true, true, false]);
 });
 
