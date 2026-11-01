@@ -7,6 +7,8 @@ import{tirerSerie,lireSerie,ecrireSerie}from"./tirage";
 import{calculPaie,INPP}from"./paie";
 import{liquidationTVA}from"./tva";
 import{LIB_ACCES}from"../acces/plateforme";
+import{SEUIL_ELEMENT,etatParcours}from"../attest/regles";
+import{CarteExamenFinal,ExamenFinal}from"../parcours/ExamenFinal";
 
 // ══════════════════ CODE DES IMPÔTS RDC EXPLIQUÉ ══════════════════
 // 15 modules (src/fiscal/modules : Code des impôts mis à jour au 31 mars 2021, TVA pratique, import-export, paie, facture normalisée, IRPP et IS) : leçon structurée en blocs,
@@ -318,17 +320,26 @@ export function Qcm({K,mod,db,uid,ancien,onFin,cle=cleScore(mod.id),nbQ=NB_Q,seu
   </Carte>;
 }
 // ── Écran principal ─────────────────────────────────────────────────────────────
-export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
+// Parcours progressif : un module s'ouvre quand le précédent est réussi à SEUIL_ELEMENT % (ou s'il est déjà commencé) ;
+// examen final de 40 questions quand les 15 modules sont réussis avec une moyenne d'au moins 80 %.
+// apercu : administrateur ou formateur, tout est ouvert.
+export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub,onGo,apercu=false}){
   const[open,sOpen]=useState(null),[mode,sMode]=useState("lecon"),[loc,sLoc]=useState({});
-  const sc=id=>loc[id]||scores[cleScore(id)];
+  const tous=useMemo(()=>({...scores,...loc}),[scores,loc]);
+  const sc=id=>tous[cleScore(id)];
+  const etat=useMemo(()=>etatParcours("FISC",[],{scores:tous}),[tous]);
+  const el=id=>etat.elements.find(e=>e.cle===cleScore(id));
   const mod=MODULES_FISC.find(m=>m.id===open);
   const segsLecon=useMemo(()=>mod?texteModuleFiscal(mod):[],[mod]);
-  const acces=m=>ok||m.libre;
+  const acces=m=>apercu||ok||m.libre;
+  const ouvertP=m=>apercu||el(m.id).ouvert;
+  const aller=m=>{if(!acces(m)){onSub&&onSub();return;}if(!ouvertP(m))return;sOpen(m.id);sMode("lecon");};
   useEffect(()=>{window.scrollTo({top:0,behavior:"smooth"});},[open,mode]);
-  const valides=MODULES_FISC.filter(m=>(sc(m.id)?.pct||0)>=60).length;
+  const valides=etat.nReussis;
   const pcts=MODULES_FISC.map(m=>sc(m.id)?.pct).filter(x=>x!=null);
   const moy=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):null;
 
+  if(open==="FINAL")return <ExamenFinal K={K} mob={mob} db={db} uid={uid} id="FISC" ancien={tous["FISC-FINAL"]} onRetour={()=>sOpen(null)} onScore={(cle,r)=>sLoc(l=>({...l,[cle]:r}))}/>;
   if(mod){
     const idx=MODULES_FISC.indexOf(mod),prev=MODULES_FISC[idx-1],next=MODULES_FISC[idx+1],s=sc(mod.id);
     return <div style={{maxWidth:820,margin:"0 auto",animation:"fadeIn .3s ease"}}>
@@ -349,10 +360,11 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
         <div style={{marginBottom:14}}><LecteurAudio K={K} segments={segsLecon} titre="Écouter la leçon"/></div>
         {mod.blocs.map((b,i)=><Bloc key={i} K={K} b={b} col={mod.col}/>)}
         <div style={{display:"flex",justifyContent:"center",margin:"6px 0 18px"}}><Bouton K={K} ico="checklist" ch="Passer le QCM du module" on={()=>sMode("qcm")} sx={{minWidth:240}}/></div>
-      </>:<Qcm key={mod.id} K={K} mod={mod} db={db} uid={uid} ancien={s} onFin={(r,retour)=>{if(r)sLoc(l=>({...l,[mod.id]:r}));if(retour)sMode("lecon");}}/>}
+      </>:<Qcm key={mod.id} K={K} mod={mod} db={db} uid={uid} ancien={s} seuil={SEUIL_ELEMENT} onFin={(r,retour)=>{if(r)sLoc(l=>({...l,[cleScore(mod.id)]:r}));if(retour)sMode("lecon");}}/>}
+      {mode==="qcm"&&s&&s.pct>=SEUIL_ELEMENT&&next&&<div style={{display:"flex",justifyContent:"center",margin:"0 0 14px"}}><Bouton K={K} ico="lock-open" ch={`Module suivant : ${next.id} · ${next.court}`} on={()=>aller(next)}/></div>}
       <div style={{display:"flex",justifyContent:"space-between",gap:8,marginBottom:20}}>
-        {prev?<Bouton K={K} v="g" ico="arrow-left" ch={mob?prev.id:`${prev.id} · ${prev.court}`} on={()=>{if(acces(prev)){sOpen(prev.id);sMode("lecon");}else onSub&&onSub();}}/>:<span/>}
-        {next&&<Bouton K={K} v="g" ch={<>{mob?next.id:`${next.id} · ${next.court}`}<i className="ti ti-arrow-right" style={{fontSize:16}}/></>} on={()=>{if(acces(next)){sOpen(next.id);sMode("lecon");}else onSub&&onSub();}}/>}
+        {prev?<Bouton K={K} v="g" ico="arrow-left" ch={mob?prev.id:`${prev.id} · ${prev.court}`} on={()=>aller(prev)}/>:<span/>}
+        {next&&<Bouton K={K} v="g" dis={acces(next)&&!ouvertP(next)} ch={<>{mob?next.id:`${next.id} · ${next.court}`}<i className={`ti ti-${acces(next)&&!ouvertP(next)?"lock":"arrow-right"}`} style={{fontSize:16}}/></>} on={()=>aller(next)}/>}
       </div>
     </div>;
   }
@@ -364,21 +376,22 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Le Code des impôts expliqué</div>
       <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>15 modules clairs (fiscalité, TVA pratique, paie, import-export, facture normalisée, IRPP et IS 2026), avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts de la DGI mis à jour au 31 mars 2021, des textes sociaux en vigueur en 2026 pour la paie et, pour la facture normalisée et l'IRPP, du Décret n° 23/010, de la loi n° 23/053 et des publications de la DGI.</div>
       <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
-        <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>{valides} / {MODULES_FISC.length} modules validés</span>
+        <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>{valides} / {MODULES_FISC.length} modules réussis (≥ {SEUIL_ELEMENT} %)</span>
         {moy!=null&&<span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>Score moyen : {moy} %</span>}
       </div>
     </div>
+    <div style={{display:"flex",gap:8,alignItems:"flex-start",fontSize:13,color:K.t2,lineHeight:1.55,marginBottom:12}}><i className="ti ti-route" style={{fontSize:17,color:K.em,marginTop:1}}/><span>Parcours certifiant : chaque module s'ouvre quand le précédent est réussi à {SEUIL_ELEMENT} %. Avec une moyenne d'au moins 80 %, passez l'examen final pour obtenir votre <b>certificat</b> et son <b>relevé de notes</b>.</span></div>
     {!ok&&<div style={{display:"flex",alignItems:"center",gap:10,background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:14,padding:"11px 14px",marginBottom:14,flexWrap:"wrap"}}>
       <i className="ti ti-lock-open" style={{fontSize:18,color:K.wa}}/>
       <div style={{flex:1,minWidth:200,fontSize:13.5,color:K.t1,lineHeight:1.5}}>Le module <b>F1</b> est en accès libre. Les modules F2 à F15 sont réservés aux abonnés.</div>
       {onSub&&<Bouton K={K} ch={LIB_ACCES} on={onSub} sx={{minHeight:38,padding:"8px 14px",fontSize:13}}/>}
     </div>}
     <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
-      {MODULES_FISC.map(m=>{const s=sc(m.id),lk=!acces(m);return <div key={m.id} onClick={()=>lk?onSub&&onSub():(sOpen(m.id),sMode("lecon"))} className="hv tile"
-        style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"14px 15px",cursor:"pointer",opacity:lk?.75:1,display:"flex",flexDirection:"column",gap:6}}>
+      {MODULES_FISC.map((m,i)=>{const s=sc(m.id),lkP=acces(m)&&!ouvertP(m),lk=!acces(m)||lkP;return <div key={m.id} onClick={()=>aller(m)} className={lkP?"tile":"hv tile"}
+        style={{background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,padding:"14px 15px",cursor:lkP?"not-allowed":"pointer",opacity:lk?.72:1,display:"flex",flexDirection:"column",gap:6}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{width:40,height:40,borderRadius:12,background:`${m.col}16`,border:`1px solid ${m.col}35`,display:"flex",alignItems:"center",justifyContent:"center"}}><i className={`ti ti-${lk?"lock":m.ico}`} style={{fontSize:20,color:m.col}}/></div>
-          {s?<span style={{fontSize:12,fontWeight:800,borderRadius:99,padding:"3px 9px",background:s.pct>=60?K.emBg:K.erBg,color:s.pct>=60?K.em:K.er,border:`1px solid ${s.pct>=60?K.emBd:K.erBd}`}}>{s.pct} %</span>
+          {s?<span style={{fontSize:12,fontWeight:800,borderRadius:99,padding:"3px 9px",background:s.pct>=SEUIL_ELEMENT?K.emBg:K.erBg,color:s.pct>=SEUIL_ELEMENT?K.em:K.er,border:`1px solid ${s.pct>=SEUIL_ELEMENT?K.emBd:K.erBd}`}}>{s.pct} %</span>
             :m.libre?<span style={{fontSize:12,fontWeight:800,borderRadius:99,padding:"3px 9px",background:K.inBg,color:K.in_,border:`1px solid ${K.inBd}`}}>Libre</span>:null}
         </div>
         <div style={{fontSize:11.5,fontWeight:800,color:m.col,letterSpacing:.6,textTransform:"uppercase"}}>{m.id} · {m.court}</div>
@@ -386,8 +399,10 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub}){
         <div style={{fontSize:13,color:K.t3,lineHeight:1.5,flex:1}}>{m.resume}</div>
         <div style={{display:"flex",gap:12,fontSize:12,color:K.t3,marginTop:2}}>
           <span><i className="ti ti-clock" style={{marginRight:3}}/>{m.duree}</span><span><i className="ti ti-checklist" style={{marginRight:3}}/>QCM {Math.min(NB_Q,m.qcm.length)} q.</span>
+          {lkP&&<span style={{color:K.wa,fontWeight:700}}><i className="ti ti-lock" style={{marginRight:3}}/>Réussir {MODULES_FISC[i-1].id} à {SEUIL_ELEMENT} %</span>}
         </div>
       </div>;})}
     </div>
+    <CarteExamenFinal K={K} id="FISC" etat={etat} ok={ok} apercu={apercu} onOuvrir={()=>sOpen("FINAL")} onCertificat={onGo&&(()=>onGo("res"))}/>
   </div>;
 }
