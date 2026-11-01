@@ -11,7 +11,7 @@ export const GROUPES_APPRENANT = [
   ] },
   { k: "parcours", ico: "route", label: "Parcours métier", court: "Parcours", vues: [
     ["ef", "report-money", "États financiers"], ["jrn", "notebook", "Monographie ZAO"], ["cpt", "books", "Guide des comptes"],
-    ["fisc", "receipt-tax", "Code des impôts"], ["fin", "chart-pie", "Finance d'entreprise"],
+    ["fisc", "receipt-tax", "Code des impôts"], ["fin", "chart-pie", "Finance d'entreprise"], ["syc", "building-community", "SYCEBNL (EBNL)"],
   ] },
   { k: "resultats", ico: "trophy", label: "Mes résultats", court: "Résultats", vues: [["res", "trophy", "Mes résultats"]] },
   { k: "carriere", ico: "briefcase", label: "Carrière", vues: [["stages", "briefcase", "Stages"], ["psycho", "brain", "Tests psychotechniques"]] },
@@ -36,6 +36,7 @@ export const GROUPES_ADMIN = [
   ] },
   { k: "parc", ico: "route", label: "Parcours métier", court: "Parcours", vues: [
     ["ef", "report-money", "États financiers"], ["fisc", "receipt-tax", "Code des impôts"], ["fin", "chart-pie", "Finance d'entreprise"],
+    ["syc", "building-community", "SYCEBNL"],
   ] },
   { k: "ech", ico: "message-circle", label: "Échanges", vues: [
     ["msg", "message-circle", "Messages"], ["sg", "bulb", "Suggestions"], ["dm", "building", "Demandes de services"],

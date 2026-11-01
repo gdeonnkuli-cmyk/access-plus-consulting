@@ -43,7 +43,7 @@ export default function VerifAttestation({ K, db, numero, logo, onFermer }) {
             {ligne("Numéro", <span style={{ fontFamily: "'JetBrains Mono',monospace" }}>{n || "—"}</span>)}
             {a && <>
               {ligne("Titulaire", a.nom)}
-              {ligne("Attestation", a.type === "reussite" ? "de réussite" : "de suivi de formation")}
+              {ligne("Document", a.type === "reussite" ? (a.certificat ? "Certificat de réussite (avec relevé de notes)" : "Attestation de réussite") : "Attestation de suivi de formation")}
               {ligne("Parcours", a.parcoursTitre)}
               {a.type === "reussite" && ligne("Résultat", `Moyenne ${a.moyenne} %${a.mention ? ` — mention ${a.mention}` : ""}`)}
               {ligne("Volume horaire", `${a.heures} h (indicatif)`)}
