@@ -1,7 +1,8 @@
-import { FISC, FIN, SYC, etatSyc, etatParcours, EXAMENS, PARCOURS, SEUIL_ELEMENT, SEUIL_MOYENNE, elementsParcours, evaluer, mention, numeroAttestation, numeroValide } from "./regles";
+import { FISC, FIN, SYC, BQ, etatSyc, etatParcours, EXAMENS, PARCOURS, SEUIL_ELEMENT, SEUIL_MOYENNE, elementsParcours, evaluer, mention, numeroAttestation, numeroValide } from "./regles";
 import { MODULES_FISC } from "../fiscal/modules";
 import { MODULES_FIN } from "../finance/modules";
 import { MODULES_SYC } from "../sycebnl/modules";
+import { MODULES_BQ } from "../banque/modules";
 
 const mods = [{ id: "m1", titre: "Fondements SYSCOHADA", ordre: 1 }, { id: "m2", titre: "Journal", ordre: 2, evalType: "none" }, { id: "m3", titre: "Brouillon", on: false }];
 
@@ -9,7 +10,8 @@ test("catalogue fiscal aligné sur les modules de l'application", () => {
   expect(FISC.map(([id, t]) => [id, t])).toEqual(MODULES_FISC.map(m => [m.id, m.titre]));
   expect(FIN.map(([id, t]) => [id, t])).toEqual(MODULES_FIN.map(m => [m.id, m.titre]));
   expect(SYC.map(([id, t]) => [id, t])).toEqual(MODULES_SYC.map(m => [m.id, m.titre]));
-  expect(PARCOURS.map(p => p.id)).toEqual(["SYS-N1", "FISC", "SYS-N2", "FIN", "SYCEBNL"]);
+  expect(BQ.map(([id, t]) => [id, t])).toEqual(MODULES_BQ.map(m => [m.id, m.titre]));
+  expect(PARCOURS.map(p => p.id)).toEqual(["SYS-N1", "FISC", "SYS-N2", "FIN", "SYCEBNL", "BANQUE"]);
   expect([SEUIL_ELEMENT, SEUIL_MOYENNE]).toEqual([70, 80]);
 });
 

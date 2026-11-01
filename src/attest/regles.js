@@ -41,6 +41,14 @@ const SYC = [
   ["SB5", "Cotisations, dons, legs et dotations"], ["SB6", "Subventions, fonds affectés et projets"],
   ["SB7", "Immobilisations, stocks, trésorerie et contributions en nature"], ["SB8", "Clôture, budget et analyse financière"],
 ];
+// Modules de comptabilité bancaire (GCEC de la BCC ; aligné sur src/banque/modules — vérifié par les tests)
+const BQ = [
+  ["B1", "La banque et son cadre comptable en RDC"], ["B2", "Le plan de comptes du GCEC et les attributs d'identification"],
+  ["B3", "Dépôts et crédits de la clientèle"], ["B4", "Moyens de paiement, compensation et comptes de liaison"],
+  ["B5", "Trésorerie, Banque Centrale et opérations interbancaires"], ["B6", "Titres, devises et engagements hors-bilan"],
+  ["B7", "Créances en souffrance, intérêts réservés et provisions"], ["B8", "Soldes de gestion, états financiers et reporting à la BCC"],
+];
+const cleBq = id => `BQ-${id}`;
 const CLE_FINAL_SYC = "SYC-FINAL";
 const COEF_FINAL_SYC = 2; // = COEF_FINAL
 const cleSyc = id => `SYC-${id}`;
@@ -54,6 +62,7 @@ const EXAMENS = {
   "SYS-N2": { cle: "SYS2-FINAL", nbQ: 30, heures: 1, vue: "jrn", progressif: false },
   FIN: { cle: "FIN-FINAL", nbQ: 30, heures: 1, vue: "fin", progressif: true },
   SYCEBNL: { cle: CLE_FINAL_SYC, nbQ: 30, heures: 1, vue: "syc", progressif: true },
+  BANQUE: { cle: "BQ-FINAL", nbQ: 30, heures: 1, vue: "banq", progressif: true },
 };
 
 const PARCOURS = [
@@ -67,6 +76,8 @@ const PARCOURS = [
     description: "Les 7 modules de finance d'entreprise : coût du capital, levier et création de valeur, investissement, financement, évaluation, risque de change USD/CDF et affectation du résultat OHADA, avec 16 cas corrigés, et l'examen final de 30 questions, coefficient 2." },
   { id: "SYCEBNL", titre: "Comptabilité des entités à but non lucratif — SYCEBNL (OHADA)", court: "SYCEBNL", certificat: true,
     description: "Les 8 modules du SYCEBNL (cadre, bases et contrôle interne, plan de comptes, charges et avances, ressources propres, fonds affectés et projets, actifs et trésorerie, clôture et analyse financière) et l'examen final de 30 questions, coefficient 2." },
+  { id: "BANQUE", titre: "Comptabilité bancaire en RDC — Guide comptable des établissements de crédit (BCC)", court: "Comptabilité bancaire", certificat: true,
+    description: "Les 8 modules de comptabilité bancaire selon le GCEC de la Banque Centrale du Congo (cadre, plan de comptes, clientèle, paiements et compensation, trésorerie et BCC, titres, devises et hors-bilan, créances en souffrance, soldes de gestion et reporting) et l'examen final de 30 questions, coefficient 2." },
 ];
 
 // Modules de cours pris en compte : ceux publiés (on !== false), dans l'ordre du catalogue
@@ -82,6 +93,7 @@ function elementsBase(id, modules) {
   // 2 h par module : leçon et cas corrigés
   if (id === "FIN") return FIN.map(([f, t]) => ({ cle: `FIN-${f}`, titre: `${f} · ${t}`, heures: 2, evalue: true }));
   // 1 h 30 par module (leçon, audio, QCM)
+  if (id === "BANQUE") return BQ.map(([f, t]) => ({ cle: cleBq(f), titre: `${f} · ${t}`, heures: 1.5, evalue: true }));
   if (id === "SYCEBNL") return SYC.map(([f, t]) => ({ cle: cleSyc(f), titre: `${f} · ${t}`, heures: 1.5, evalue: true }));
   if (id === "SYS-N2") return [
     { cle: "JRN-ZAO", titre: "Monographie ZAO IMMO SARL — tenue comptable 2021", heures: 10, evalue: true },
@@ -158,4 +170,4 @@ function numeroAttestation(alea = Math.random, annee = new Date().getFullYear())
 }
 const numeroValide = n => /^EC-\d{4}-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/.test(String(n || ""));
 
-module.exports = { SEUIL_ELEMENT, SEUIL_MOYENNE, SIGNATAIRE, ORGANISME, FISC, FIN, SYC, CLE_FINAL_SYC, COEF_FINAL_SYC, COEF_FINAL, EXAMENS, cleSyc, etatSyc, etatParcours, PARCOURS, elementsBase, elementsParcours, evaluer, mention, numeroAttestation, numeroValide, modulesActifs };
+module.exports = { SEUIL_ELEMENT, SEUIL_MOYENNE, SIGNATAIRE, ORGANISME, FISC, FIN, SYC, BQ, cleBq, CLE_FINAL_SYC, COEF_FINAL_SYC, COEF_FINAL, EXAMENS, cleSyc, etatSyc, etatParcours, PARCOURS, elementsBase, elementsParcours, evaluer, mention, numeroAttestation, numeroValide, modulesActifs };

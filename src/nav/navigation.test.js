@@ -14,10 +14,10 @@ test("aucun écran n'apparaît dans deux rubriques", () => {
 
 test("tous les écrans existants restent accessibles", () => {
   // écrans de l'apprenant avant la réorganisation (prog est fusionné dans res)
-  ["home", "form", "msg", "pres", "stages", "videos", "ef", "jrn", "cpt", "audio", "fisc", "fin", "syc", "psycho", "services", "res", "param", "sugg", "apropos"]
+  ["home", "form", "msg", "pres", "stages", "videos", "ef", "jrn", "cpt", "audio", "fisc", "fin", "syc", "banq", "psycho", "services", "res", "param", "sugg", "apropos"]
     .forEach(v => expect(VUES_APPRENANT).toContain(v));
   // les 25 onglets de l'admin
-  ["home", "val", "d", "a", "e", "t", "s", "m", "v", "pr", "st", "dm", "p", "fo", "an", "au", "pl", "ef", "fisc", "fin", "syc", "ac", "att", "nt", "sg", "msg"]
+  ["home", "val", "d", "a", "e", "t", "s", "m", "v", "pr", "st", "dm", "p", "fo", "an", "au", "pl", "ef", "fisc", "fin", "syc", "banq", "ac", "att", "nt", "sg", "msg"]
     .forEach(t => expect(VUES_ADMIN).toContain(t));
   expect(GROUPES_APPRENANT.length).toBe(6);
   expect(GROUPES_ADMIN.length).toBe(10);

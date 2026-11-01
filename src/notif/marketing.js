@@ -32,6 +32,7 @@ export const BANQUE = [
   { id: "v7", cible: "visiteurs", type: "offre", titre: "Commencez dès {m} $", texte: "Un mois pour tout essayer : modules, QCM, simulateurs et cas pratiques corrigés.", vue: "acces" },
   { id: "v8", cible: "visiteurs", type: "nouveaute", titre: "Finance d'entreprise : le module FE1 est gratuit", texte: "Coût du capital, MEDAF avec prime de risque pays et CMPC, avec trois cas corrigés et le cours en audio.", vue: "fin" },
   { id: "v9", cible: "visiteurs", type: "nouveaute", titre: "ONG, associations, églises : SB1 est gratuit", texte: "Découvrez le SYCEBNL, le référentiel OHADA des entités à but non lucratif, avec schémas, audio et évaluation.", vue: "syc" },
+  { id: "v10", cible: "visiteurs", type: "nouveaute", titre: "Comptabilité bancaire : le module B1 est gratuit", texte: "Le Guide comptable des établissements de crédit de la BCC expliqué : cadre, principes et logique du plan bancaire.", vue: "banq" },
   // Abonnés : défis et nouveautés
   { id: "a1", cible: "abonnes", type: "defi", titre: "Défi du moment : 80 % au QCM TVA en pratique", texte: "10 questions tirées au hasard : saurez-vous déclarer un mois de TVA sans faute ?", vue: "fisc" },
   { id: "a2", cible: "abonnes", type: "defi", titre: "Refaites un QCM, il a changé", texte: "À chaque essai, au moins 30 % des questions sont nouvelles et les réponses sont mélangées.", vue: "fisc" },
@@ -44,6 +45,7 @@ export const BANQUE = [
   { id: "a9", cible: "abonnes", type: "nouveaute", titre: "Nouveau : la facture normalisée (F13)", texte: "Obligatoire depuis le 1er décembre 2025 : DEF, e-DEF, mentions, groupes de taxation et contrôle avant de déduire la TVA.", vue: "fisc" },
   { id: "a10", cible: "abonnes", type: "nouveaute", titre: "Nouveau : l'IRPP, réforme 2026 (F14)", texte: "Catégories de revenus, barème progressif plafonné à 30 %, retenues, quotités et forfait, déclaration au 30 avril.", vue: "fisc" },
   { id: "a11", cible: "abonnes", type: "nouveaute", titre: "Nouveau : l'impôt sur les sociétés (F15)", texte: "Taux de 30 %, minimum de 1 % du chiffre d'affaires, charges déductibles et leurs limites, déficits, acomptes : la loi n° 23/053 expliquée.", vue: "fisc" },
+  { id: "a13", cible: "abonnes", type: "nouveaute", titre: "Nouveau parcours certifiant : comptabilité bancaire", texte: "8 modules sur le GCEC de la BCC (dépôts, crédits, compensation, Nostri et Lori, devises, créances en souffrance, PNB) et un certificat.", vue: "banq" },
   { id: "a12", cible: "abonnes", type: "nouveaute", titre: "Nouveau parcours certifiant : SYCEBNL", texte: "8 modules (dotations, fonds affectés, bailleurs, bénévolat, analyse financière), un examen final de 30 questions et un certificat avec relevé de notes.", vue: "syc" },
   // Tout le monde : astuces
   { id: "t1", cible: "tous", type: "astuce", titre: "1 000 000 FC payés en espèces ?", texte: "Entre assujettis, une facture d'au moins 1 000 000 FC réglée en espèces perd son droit à déduction de TVA (art. 59 bis).", vue: "fisc" },
