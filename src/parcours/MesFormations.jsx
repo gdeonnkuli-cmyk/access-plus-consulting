@@ -18,7 +18,7 @@ export const FORMATIONS = [
   { id: "FIN", ico: "chart-pie", col: "#B7791F", niveau: "Avancé", libre: "FE1",
     resume: "Coût du capital, investissement, financement, évaluation, change USD/CDF et affectation du résultat OHADA." },
   { id: "BANQUE", ico: "building-bank", col: "#0F766E", niveau: "Spécialisation", libre: "B1",
-    resume: "Le Guide comptable des établissements de crédit de la BCC : dépôts et crédits, compensation, trésorerie, devises, hors-bilan, créances en souffrance et PNB." },
+    resume: "Le Guide comptable des établissements de crédit de la BCC : dépôts et crédits, compensation, trésorerie, devises, hors-bilan, créances en souffrance, états financiers et analyse d'une banque." },
   { id: "SYCEBNL", ico: "building-community", col: "#0F766E", niveau: "Spécialisation", libre: "SB1",
     resume: "Associations, ONG, fondations, églises : dotations, fonds affectés, bailleurs, bénévolat et analyse financière." },
 ];

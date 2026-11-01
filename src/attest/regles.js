@@ -47,6 +47,7 @@ const BQ = [
   ["B3", "Dépôts et crédits de la clientèle"], ["B4", "Moyens de paiement, compensation et comptes de liaison"],
   ["B5", "Trésorerie, Banque Centrale et opérations interbancaires"], ["B6", "Titres, devises et engagements hors-bilan"],
   ["B7", "Créances en souffrance, intérêts réservés et provisions"], ["B8", "Soldes de gestion, états financiers et reporting à la BCC"],
+  ["B9", "Les états financiers d'une banque"], ["B10", "Analyser une banque : rentabilité, risque, liquidité, solvabilité"],
 ];
 const cleBq = id => `BQ-${id}`;
 const CLE_FINAL_SYC = "SYC-FINAL";
@@ -77,7 +78,7 @@ const PARCOURS = [
   { id: "SYCEBNL", titre: "Comptabilité des entités à but non lucratif — SYCEBNL (OHADA)", court: "SYCEBNL", certificat: true,
     description: "Les 8 modules du SYCEBNL (cadre, bases et contrôle interne, plan de comptes, charges et avances, ressources propres, fonds affectés et projets, actifs et trésorerie, clôture et analyse financière) et l'examen final de 30 questions, coefficient 2." },
   { id: "BANQUE", titre: "Comptabilité bancaire en RDC — Guide comptable des établissements de crédit (BCC)", court: "Comptabilité bancaire", certificat: true,
-    description: "Les 8 modules de comptabilité bancaire selon le GCEC de la Banque Centrale du Congo (cadre, plan de comptes, clientèle, paiements et compensation, trésorerie et BCC, titres, devises et hors-bilan, créances en souffrance, soldes de gestion et reporting) et l'examen final de 30 questions, coefficient 2." },
+    description: "Les 10 modules de comptabilité bancaire selon le GCEC de la Banque Centrale du Congo (cadre, plan de comptes, clientèle, paiements et compensation, trésorerie et BCC, titres, devises et hors-bilan, créances en souffrance, soldes de gestion et reporting, états financiers, analyse financière) et l'examen final de 30 questions, coefficient 2." },
 ];
 
 // Modules de cours pris en compte : ceux publiés (on !== false), dans l'ordre du catalogue
