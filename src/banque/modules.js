@@ -497,12 +497,12 @@ const B8 = {
     ] },
   ],
   narration: [
-    "Dernier module : le résultat de la banque, ses états financiers et le reporting à la Banque Centrale.",
+    "Module huit : le résultat de la banque, ses états financiers et le reporting à la Banque Centrale.",
     "Le compte de résultat d'une banque se lit en cascade. On part des produits bancaires, les intérêts et commissions reçus, et on retire les charges bancaires, les intérêts et commissions versés. On obtient le produit net bancaire, le PNB, la marge du métier de banquier.",
     "Du PNB, on retire les frais généraux, les charges de personnel et les impôts et taxes, et on ajoute les produits accessoires : c'est le résultat brut d'exploitation. On retire ensuite les amortissements et le coût du risque, c'est-à-dire les provisions et les pertes sur créances, et on ajoute les reprises : c'est le résultat courant. On ajoute le résultat exceptionnel, on retire l'impôt, et l'on obtient le résultat net.",
     "Un exemple. Avec 70 milliards de produits bancaires et 17 milliards de charges bancaires, le PNB est de 53 milliards. Après 34 milliards de frais nets, le résultat brut d'exploitation est de 19 milliards. Après amortissements et provisions, le résultat courant est de 12 milliards. Avec un petit résultat exceptionnel et l'impôt, le résultat net atteint 8 milliards 540 millions.",
     "La banque publie chaque année son bilan et son hors-bilan, son compte de résultat, son tableau des flux de trésorerie, l'état de variation des capitaux propres et l'annexe. L'annexe doit notamment détailler les mouvements des provisions sur prêts et les positions nettes en devises.",
-    "Enfin, elle remet à la Banque Centrale des états périodiques codifiés : le DEC 9000 pour la situation comptable, le DEC 9001 pour le compte de résultat, d'autres pour la ventilation des crédits, des dépôts, des créances en souffrance, et les états prudentiels. Après ce dernier QCM, si vos huit modules sont réussis avec 80 pour cent de moyenne, l'examen final s'ouvre. Bonne chance.",
+    "Enfin, elle remet à la Banque Centrale des états périodiques codifiés : le DEC 9000 pour la situation comptable, le DEC 9001 pour le compte de résultat, d'autres pour la ventilation des crédits, des dépôts, des créances en souffrance, et les états prudentiels. Place au QCM ; ensuite, nous construirons des états financiers complets.",
   ],
   qcm: [
     { q: "Le produit net bancaire (80) est égal à :", r: ["Produits bancaires (70 à 73) − charges bancaires (60 à 63)", "Résultat net + impôt", "Total des produits − total des charges", "Intérêts reçus des clients seulement"], b: 0, e: "Il mesure la marge du métier bancaire." },
@@ -662,13 +662,13 @@ const B10 = {
     ] },
   ],
   narration: [
-    "Dernier module de ce parcours : comment analyser une banque. Nous reprenons la Banque Kivu Crédit et nous l'examinons sur quatre axes : rentabilité, qualité du portefeuille, liquidité et solvabilité.",
+    "Module dix : comment analyser une banque. Nous reprenons la Banque Kivu Crédit et nous l'examinons sur quatre axes : rentabilité, qualité du portefeuille, liquidité et solvabilité.",
     "La rentabilité d'abord. Son produit net bancaire de 11 milliards 100 millions vient pour près de 70 pour cent de la marge sur la clientèle, et pour 27 pour cent des commissions. Son coefficient d'exploitation est de 64 pour cent : elle dépense 64 francs de frais pour 100 francs de PNB. Son coût du risque est de 200 millions. Elle rapporte 4,4 pour cent de ses actifs, c'est le ROA, et 26 pour cent de ses fonds propres, c'est le ROE.",
     "Mais un ROE élevé ne suffit pas. Il faut regarder la qualité du portefeuille. Sur 43 milliards de crédits bruts, 3 milliards sont en souffrance : 7 pour cent. Ils sont couverts à 60 pour cent par des provisions. Plus ce taux de couverture baisse alors que les créances en souffrance montent, plus le résultat risque d'être surestimé.",
     "Troisième axe, la liquidité. La banque prête presque autant qu'elle collecte : crédits sur dépôts, 96,5 pour cent. Ses liquidités immédiates couvrent 43,5 pour cent de ses dépôts à vue, sans compter la réserve obligatoire, qui n'est pas disponible. Et en République démocratique du Congo, il faut regarder la dollarisation : ici, 85 pour cent des dépôts sont en devises.",
     "Le cœur du métier bancaire, c'est la transformation : des dépôts courts financent des crédits longs. Notre banque a 24 milliards d'emplois longs pour seulement 16 milliards 500 millions de ressources stables. Les 7 milliards 500 millions de différence sont financés par des dépôts à court terme. C'est rentable, mais c'est un risque si les déposants retirent en masse.",
     "Enfin, la solvabilité. Les fonds propres représentent 21 pour cent du bilan, soit un effet de levier d'environ 4,7. Le ratio de solvabilité réglementaire compare les fonds propres aux risques pondérés ; ses règles et son minimum sont fixés par les instructions prudentielles de la Banque Centrale.",
-    "Retenez la méthode : jamais un ratio seul. Un bon diagnostic croise les quatre axes. Après ce QCM, l'examen final vous attend.",
+    "Retenez la méthode : jamais un ratio seul. Un bon diagnostic croise les quatre axes. Place au QCM.",
   ],
   qcm: [
     { q: "Coefficient d'exploitation : charges générales, personnel, impôts et amortissements 7 100 ; PNB 11 100 (millions) :", r: ["64,0 %", "156 %", "36,0 %", "71,0 %"], b: 0, e: "7 100 / 11 100 = **64 %** ; plus il est bas, plus la banque est efficiente." },
@@ -686,4 +686,150 @@ const B10 = {
   ],
 };
 
-export const MODULES_BQ = [B1, B2, B3, B4, B5, B6, B7, B8, B9, B10];
+const B11 = {
+  id: "B11", titre: "Agios, escompte et conditions de banque", court: "Agios et escompte", ico: "percentage", col: "#7C2D12", duree: "45 min",
+  resume: "Ce que recouvrent les agios, dates de valeur et échelle d'intérêts, commissions courantes, escompte commercial et effets impayés, taux effectif.",
+  blocs: [
+    { type: "essentiel", texte: "Les **agios** sont l'ensemble de ce que la banque prélève sur une opération de crédit : **intérêts**, **commissions** et **frais** (et les taxes éventuellement applicables). Ils se calculent sur des soldes **en dates de valeur**, souvent par la méthode des **nombres** (solde × jours). L'**escompte** est un crédit à court terme : la banque avance au client le montant d'un effet de commerce non échu, **agios déduits d'avance**. Pour comparer deux crédits, on regarde le **taux effectif global (TEG)**, qui intègre tous les coûts, et pas le seul taux nominal." },
+    { type: "schema", kind: "cartes", titre: "Les composantes des agios et leurs comptes (côté banque)", cartes: [
+      { ico: "percentage", t: "Intérêts débiteurs", d: "Sur découvert : 713 Intérêts sur comptes débiteurs ; sur crédits de trésorerie : 712." },
+      { ico: "arrow-bar-to-up", t: "Commission de plus fort découvert", d: "Calculée sur le solde débiteur le plus élevé de la période ; rémunère la mise à disposition." },
+      { ico: "arrows-exchange", t: "Commission de mouvement", d: "Proportionnelle au total des mouvements débiteurs du compte." },
+      { ico: "notebook", t: "Tenue de compte", d: "720 Commissions de tenue des comptes." },
+      { ico: "file-dollar", t: "Chèques, effets, certification", d: "721 Commissions sur chèques et effets ; 722 Visa et certification de chèques." },
+      { ico: "shield", t: "Engagements par signature", d: "724 Commissions sur cautions, avals, crédits documentaires." },
+    ], note: "Les commissions qui rémunèrent un risque sur des capitaux prêtés sont traitées comme des compléments d'intérêts ; celles qui rémunèrent un service vont dans les opérations diverses (72). Les taux et barèmes sont ceux des conditions affichées de chaque banque." },
+    { type: "texte", titre: "Date d'opération et date de valeur", puces: [
+      "La **date d'opération** est le jour où l'opération est enregistrée ; la **date de valeur** est celle à partir de laquelle elle compte pour le calcul des intérêts.",
+      "Un **versement** est généralement crédité en valeur **postérieure** à la date d'opération, un **retrait** débité en valeur **antérieure ou égale** : ces décalages (jours de valeur) augmentent les agios du client.",
+      "L'**échelle d'intérêts** classe les soldes par date de valeur et calcule, pour chaque période, le solde multiplié par le nombre de jours (les **nombres**). Intérêts = total des nombres × taux / 360.",
+    ] },
+    { type: "exemple", titre: "Agios d'un trimestre de découvert", enonce: "Compte débiteur de 2 000 000 FC pendant 10 jours, puis de 5 000 000 FC pendant 20 jours (dates de valeur). Taux débiteur 18 % l'an, base 360. Commission de plus fort découvert 0,1 % (hypothèse).", lignes: [
+      ["Intérêts période 1 : 2 000 000 × 18 % × 10/360", 10000], ["Intérêts période 2 : 5 000 000 × 18 % × 20/360", 50000],
+      ["Commission de plus fort découvert : 0,1 % × 5 000 000", 5000], ["Total des agios débités au client (D 331 / C 713 et 72)", 65000, "resultat"],
+    ], conclusion: "Méthode des nombres : (2 000 000 × 10) + (5 000 000 × 20) = 120 000 000 ; × 18 % / 360 = **60 000 FC** d'intérêts. Pas de compensation avec les intérêts créditeurs d'un autre compte du même client." },
+    { type: "exemple", titre: "Escompte d'un effet de commerce", enonce: "Un client remet à l'escompte un effet de 5 000 000 FC échéant dans 60 jours. Taux d'escompte 18 % l'an (base 360), commission de service 10 000 FC (hypothèse).", lignes: [
+      ["Valeur nominale de l'effet (D 321 Effets escomptés)", 5000000, "total"],
+      ["− Escompte : 5 000 000 × 18 % × 60/360 (C 712)", -150000], ["− Commission (C 721)", -10000],
+      ["= Valeur nette créditée au client (C 331)", 4840000, "resultat"],
+    ], conclusion: "Les agios d'escompte sont **prélevés d'avance** (exception à la règle des crédits « agios exclus »). À la clôture, la part d'intérêts qui concerne la période suivante est un **produit constaté d'avance** (4711)." },
+    { type: "schema", kind: "flux", titre: "La vie d'un effet escompté", etapes: [
+      { op: "1", l: "Remise à l'escompte", d: "D 321 Effets escomptés / C 331 client (net d'agios), C 712 et 721" },
+      { op: "2", l: "Envoi au recouvrement à l'échéance", d: "Présentation au tiré, directement ou via la compensation (410) ou un correspondant" },
+      { op: "3", l: "Paiement par le tiré", d: "Le crédit 321 est soldé : la banque est remboursée" },
+      { op: "=", l: "Impayé ?", d: "L'effet revient : 3711 Valeurs revenues impayées à débiter au client, éventuel protêt (3710) ; le client remettant est débité", fort: true },
+    ] },
+    { type: "texte", titre: "Taux nominal, taux effectif, intérêts précomptés", puces: [
+      "**Taux nominal** : taux affiché, appliqué au capital. **TEG** : taux qui égalise le capital réellement reçu et tout ce qui est payé (intérêts, commissions, frais, assurances).",
+      "Intérêts **précomptés** (prélevés d'avance, comme l'escompte) : le coût réel est supérieur au taux affiché, car on paie sur un capital qu'on ne reçoit pas entièrement.",
+      "Exemple : 150 000 + 10 000 de coûts pour 4 840 000 reçus pendant 60 jours : coût réel ≈ 160 000 / 4 840 000 × 360/60 ≈ **19,8 %** l'an, contre 18 % affiché.",
+    ] },
+    { type: "pieges", puces: [
+      "Calculer les intérêts sur les dates d'opération au lieu des dates de valeur.",
+      "Comparer deux offres sur le taux nominal sans intégrer commissions et frais (TEG).",
+      "Comptabiliser un effet escompté comme une valeur à l'encaissement (41) : c'est un crédit (321).",
+      "Oublier de régulariser à la clôture la part d'agios d'escompte perçue d'avance.",
+      "Continuer à compter en produits les agios d'un client déclassé en créances en souffrance.",
+    ] },
+  ],
+  narration: [
+    "Module onze : les agios, l'escompte et les conditions de banque. Des mots que tout le monde entend au guichet, et que peu de gens savent calculer.",
+    "Les agios, c'est tout ce que la banque prélève sur une opération de crédit : les intérêts, les commissions et les frais. Sur un découvert, on trouve les intérêts débiteurs, la commission de plus fort découvert, parfois une commission de mouvement, et les frais de tenue de compte.",
+    "Le calcul se fait en dates de valeur. La date de valeur, c'est la date à partir de laquelle une opération compte pour les intérêts. Un versement est souvent crédité un peu plus tard, un retrait débité aussitôt : ces jours de valeur augmentent les agios.",
+    "Exemple : un compte débiteur de 2 millions pendant 10 jours, puis de 5 millions pendant 20 jours, à 18 pour cent. Intérêts : 10 mille francs, puis 50 mille francs. Avec une commission de plus fort découvert de 0,1 pour cent sur 5 millions, soit 5 mille francs, les agios du trimestre atteignent 65 mille francs.",
+    "L'escompte, maintenant. Un client a un effet de commerce de 5 millions payable dans 60 jours. La banque lui avance l'argent tout de suite, en retenant d'avance les intérêts : 150 mille francs à 18 pour cent, plus une commission de 10 mille francs. Le client reçoit 4 millions 840 mille. Si l'effet revient impayé à l'échéance, la banque débite le client.",
+    "Dernier réflexe : comparez les crédits sur le taux effectif global, pas sur le taux nominal. Avec des intérêts prélevés d'avance et des commissions, notre escompte affiché à 18 pour cent coûte en réalité près de 20 pour cent par an. Place au QCM.",
+  ],
+  qcm: [
+    { q: "Les agios comprennent :", r: ["Les intérêts, commissions et frais prélevés sur une opération de crédit", "Uniquement les intérêts", "Uniquement les frais de tenue de compte", "Les dividendes versés aux actionnaires"], b: 0, e: "Intérêts + commissions + frais (et taxes éventuelles)." },
+    { q: "La date de valeur est :", r: ["La date à partir de laquelle l'opération compte pour le calcul des intérêts", "La date de l'impression du relevé", "La date d'ouverture du compte", "La date d'échéance du crédit"], b: 0, e: "D'où l'importance des jours de valeur dans les agios." },
+    { q: "Découvert de 5 000 000 FC pendant 20 jours à 18 % l'an (base 360). Intérêts :", r: ["50 000 FC", "900 000 FC", "5 000 FC", "100 000 FC"], b: 0, e: "5 000 000 × 18 % × 20/360 = **50 000 FC**." },
+    { q: "Méthode des nombres : total des nombres 120 000 000 ; taux 18 % ; base 360. Intérêts :", r: ["60 000 FC", "21 600 000 FC", "6 000 FC", "120 000 FC"], b: 0, e: "120 000 000 × 18 % / 360 = **60 000 FC**." },
+    { q: "Les intérêts d'un découvert sont, pour la banque, un produit du compte :", r: ["713 Intérêts sur comptes débiteurs de la clientèle", "720 Tenue de compte", "610 Intérêts sur dépôts ordinaires", "74 Produits accessoires"], b: 0, e: "713 ; les crédits de trésorerie relèvent de 712." },
+    { q: "Effet de 5 000 000 FC à 60 jours escompté à 18 % (base 360) : montant de l'escompte :", r: ["150 000 FC", "900 000 FC", "75 000 FC", "1 500 000 FC"], b: 0, e: "5 000 000 × 18 % × 60/360 = **150 000 FC**." },
+    { q: "À la remise à l'escompte, la banque débite :", r: ["321 Effets escomptés pour la valeur nominale", "413 Effets à recouvrer", "331 du client pour la valeur nominale", "4711"], b: 0, e: "L'escompte est un crédit à court terme ; le client est crédité du net." },
+    { q: "Un effet escompté revient impayé à l'échéance :", r: ["La banque le reprend en valeurs revenues impayées (3711) et débite le client remettant", "La banque supporte seule la perte", "L'effet est annulé sans écriture", "Le tiré est automatiquement déclaré douteux sans recours"], b: 0, e: "Recours contre le remettant ; éventuel protêt (3710)." },
+    { q: "Pourquoi un escompte affiché à 18 % coûte-t-il plus cher en réalité ?", r: ["Les intérêts sont prélevés d'avance et s'ajoutent aux commissions", "Parce que le taux est mensuel", "Parce que la base est de 365 jours", "Ce n'est pas le cas"], b: 0, e: "Intérêts précomptés et frais : le TEG dépasse le taux nominal." },
+    { q: "Les commissions perçues sur cautions et crédits documentaires vont en :", r: ["724 Commissions sur engagements par signature", "713", "720", "791"], b: 0, e: "Produits sur opérations bancaires diverses (72)." },
+    { q: "À la clôture, la part des agios d'escompte qui concerne l'exercice suivant :", r: ["Est un produit constaté d'avance (4711)", "Reste en produits de l'exercice", "Est une charge à payer", "Est versée au client"], b: 0, e: "Principe d'indépendance des exercices." },
+    { q: "Le TEG sert à :", r: ["Comparer le coût réel de crédits en intégrant tous les frais", "Calculer la réserve obligatoire", "Convertir les devises", "Classer les créances en souffrance"], b: 0, e: "Le taux nominal seul ne dit pas le coût réel." },
+  ],
+};
+
+const B12 = {
+  id: "B12", titre: "Affacturage, crédit-bail, commerce extérieur et garanties", court: "Financements spécialisés", ico: "world", col: "#0369A1", duree: "50 min",
+  resume: "Affacturage, crédit-bail, crédit et remise documentaires, cautions, avals et garanties à première demande, et les obligations de vigilance (KYC, lutte anti-blanchiment).",
+  blocs: [
+    { type: "essentiel", texte: "Au-delà du découvert et du crédit classique, la banque propose des **financements spécialisés**. L'**affacturage** : elle achète les factures d'une entreprise et les recouvre (compte **337**). Le **crédit-bail** : elle achète un bien et le loue avec option d'achat (immobilisations **224/235/244**, loyers **335** et **714**, engagements en **04**). Le **crédit documentaire** : elle garantit le paiement d'une importation contre des documents conformes (provision **333**, engagement en hors-bilan). Les **garanties** (caution, aval, garantie à première demande) sont des **crédits par signature** suivis en **001**. Toutes ces opérations exigent de **connaître le client** (KYC)." },
+    { type: "schema", kind: "cartes", titre: "Les financements spécialisés en un coup d'œil", cartes: [
+      { ico: "file-invoice", t: "Affacturage", d: "Cession des factures clients au factor, qui avance les fonds, recouvre et peut garantir l'impayé. Compte 337." },
+      { ico: "car", t: "Crédit-bail", d: "La banque reste propriétaire du bien loué ; le client paie des loyers et peut l'acheter en fin de contrat." },
+      { ico: "ship", t: "Crédit documentaire", d: "Engagement de payer l'exportateur contre des documents conformes (facture, connaissement, certificat…)." },
+      { ico: "files", t: "Remise documentaire", d: "La banque transmet les documents contre paiement ou acceptation, **sans engagement** de payer." },
+      { ico: "shield-check", t: "Caution et garantie à première demande", d: "Engagement de payer si le client ne le fait pas ; la garantie à première demande se paie sans discuter le fond." },
+      { ico: "signature", t: "Aval", d: "Garantie de paiement donnée sur un effet de commerce." },
+    ] },
+    { type: "exemple", titre: "Affacturage d'un lot de factures", enonce: "Une entreprise cède 10 000 000 FC de factures payables à 45 jours. Commission d'affacturage 2 %, retenue de garantie 10 %, commission de financement 18 % l'an sur le montant avancé (hypothèses).", lignes: [
+      ["Factures cédées", 10000000, "total"], ["− Retenue de garantie 10 % (restituée après encaissement)", -1000000], ["− Commission d'affacturage 2 %", -200000],
+      ["= Montant avancé", 8800000, "total"], ["− Commission de financement : 8 800 000 × 18 % × 45/360", -198000],
+      ["= Montant versé à l'entreprise", 8602000, "resultat"],
+    ], conclusion: "Pour le factor, la créance acquise suit le compte **337 Compte d'affacturage** ; les commissions sont des produits. Pour l'entreprise, l'affacturage transforme des créances en trésorerie et externalise le recouvrement." },
+    { type: "exemple", titre: "Crédit-bail d'un véhicule", enonce: "La banque achète un camion 30 000 000 FC et le donne en crédit-bail sur 36 mois, loyer mensuel 1 100 000 FC, option d'achat finale 600 000 FC (hypothèses).", lignes: [
+      ["Prix d'achat du bien (immobilisation de crédit-bail, 224)", 30000000, "total"], ["Total des loyers : 36 × 1 100 000 (produits 7140, au fil des échéances)", 39600000], ["Option d'achat", 600000],
+      ["Marge brute de l'opération sur la durée", 10200000, "resultat"],
+    ], conclusion: "La banque amortit le bien et encaisse les loyers (en instance : 335). Les loyers restant à courir sont suivis en **hors-bilan** (comptes 041 à 043 pour la banque bailleresse)." },
+    { type: "schema", kind: "flux", titre: "Le crédit documentaire à l'importation", etapes: [
+      { op: "1", l: "L'importateur demande l'ouverture du crédit", d: "Contrat commercial, facture pro forma ; la banque constitue une provision (333) ou une ligne de crédit" },
+      { op: "2", l: "La banque émettrice ouvre le crédit documentaire", d: "Engagement en hors-bilan ; une banque du pays de l'exportateur le notifie, et peut le confirmer" },
+      { op: "3", l: "L'exportateur expédie et remet les documents", d: "Facture, document de transport, certificats d'origine ou de qualité…" },
+      { op: "4", l: "Contrôle de conformité des documents", d: "Paiement seulement si les documents respectent exactement les termes du crédit" },
+      { op: "=", l: "Paiement et dénouement", d: "Règlement via le correspondant (Nostri 560), débit de l'importateur, contre-passation de l'engagement, commission (724)", fort: true },
+    ] },
+    { type: "schema", kind: "tableau", titre: "Garanties bancaires et hors-bilan", entetes: ["Garantie", "Engagement de la banque", "Enregistrement"], lignes: [
+      ["Caution", "Payer si le débiteur principal est défaillant", "001 Engagements de garantie donnés (0012) / 090"],
+      ["Garantie à première demande", "Payer à la première demande conforme, sans discuter le contrat sous-jacent", "001 / 090"],
+      ["Aval", "Garantir le paiement d'un effet de commerce", "001 / 090"],
+      ["Lettre de crédit stand-by", "Payer si le client n'exécute pas, sur simple présentation d'une déclaration", "001 / 090"],
+      ["Contre-garantie reçue d'une banque", "Couvre la banque si elle doit payer", "011 Engagements de garantie reçus / 091"],
+      ["Mise en jeu de la garantie", "La banque paie : l'engagement devient une créance", "395 Créances sur engagements par signature mis en jeu"],
+    ] },
+    { type: "texte", titre: "Connaître son client et lutter contre le blanchiment", puces: [
+      "**KYC (connaissance du client)** : identifier le client et le bénéficiaire effectif, comprendre l'objet de la relation et l'origine des fonds, avant d'ouvrir un compte ou d'accorder un crédit.",
+      "**Vigilance** proportionnée au risque : opérations inhabituelles, montants en espèces élevés, transferts vers des pays à risque.",
+      "**Déclaration de soupçon** à la **CENAREF** (cellule nationale de renseignement financier) lorsque les fonds peuvent provenir d'une infraction, sans en informer le client.",
+      "**Conservation** des documents d'identification et des opérations, selon les durées légales.",
+      "En commerce extérieur : contrôle des documents, des marchandises et des pays concernés ; respect de la réglementation de change de la BCC.",
+    ] },
+    { type: "pieges", puces: [
+      "Confondre remise documentaire (la banque transmet, sans s'engager) et crédit documentaire (la banque s'engage à payer).",
+      "Payer un crédit documentaire sur des documents non conformes.",
+      "Enregistrer le bien en crédit-bail chez le locataire comme une immobilisation de la banque ou l'inverse : c'est la banque bailleresse qui en est propriétaire.",
+      "Oublier qu'une garantie à première demande se paie sans pouvoir opposer les litiges du contrat de base.",
+      "Ouvrir un compte ou accorder un crédit sans avoir identifié le bénéficiaire effectif.",
+    ] },
+  ],
+  narration: [
+    "Module douze : les financements spécialisés, le commerce extérieur et les garanties.",
+    "L'affacturage d'abord. Une entreprise vend ses factures à un factor, qui lui avance l'argent et se charge du recouvrement. Exemple : 10 millions de factures à 45 jours. Le factor retient 10 pour cent en garantie, prend 2 pour cent de commission et des intérêts sur le montant avancé. L'entreprise reçoit tout de suite un peu plus de 8 millions 600 mille francs. Dans le plan bancaire, c'est le compte 337.",
+    "Le crédit-bail, ensuite. La banque achète un bien, par exemple un camion de 30 millions, et le loue à son client pendant trois ans, avec une option d'achat à la fin. La banque reste propriétaire : elle amortit le camion et encaisse les loyers. Les loyers restant à courir sont suivis en hors-bilan.",
+    "Le commerce extérieur repose sur le crédit documentaire. L'importateur demande à sa banque d'ouvrir un crédit en faveur de son fournisseur étranger. La banque s'engage à payer, mais seulement contre des documents parfaitement conformes : facture, document de transport, certificats. Attention à ne pas confondre avec la remise documentaire, où la banque transmet les documents sans aucun engagement de payer.",
+    "Les garanties sont des crédits par signature. Une caution, un aval, une garantie à première demande : la banque promet de payer si son client ne le fait pas. Rien ne sort de la caisse, mais le risque est réel. On l'enregistre en hors-bilan, et si la garantie est mise en jeu, l'engagement devient une créance sur le client.",
+    "Enfin, une obligation qui traverse tout le métier : connaître son client. Identifier le titulaire et le bénéficiaire effectif, comprendre l'origine des fonds, surveiller les opérations inhabituelles, et déclarer les soupçons à la CENAREF. Place au QCM, puis à l'examen final.",
+  ],
+  qcm: [
+    { q: "Dans le plan GCEC, l'affacturage est suivi au compte :", r: ["337 Compte d'affacturage", "321 Effets escomptés", "560 Nostri", "724"], b: 0, e: "Le compte 337 figure parmi les comptes de la clientèle (classe 3)." },
+    { q: "Factures 10 000 000 FC ; retenue de garantie 10 % ; commission 2 %. Montant avancé avant commission de financement :", r: ["8 800 000 FC", "9 000 000 FC", "9 800 000 FC", "10 000 000 FC"], b: 0, e: "10 000 000 − 1 000 000 − 200 000 = **8 800 000 FC**." },
+    { q: "Dans un crédit-bail, le propriétaire du bien pendant le contrat est :", r: ["La banque bailleresse", "Le locataire", "Le fournisseur", "L'État"], b: 0, e: "Le client n'en devient propriétaire qu'en levant l'option d'achat." },
+    { q: "Les loyers de crédit-bail sont pour la banque des produits du compte :", r: ["714 Produits des opérations de crédit-bail (7140 Loyers)", "712 Intérêts sur crédits à court terme", "720 Tenue de compte", "74 Produits accessoires"], b: 0, e: "Les loyers en instance de recouvrement figurent en 335." },
+    { q: "36 loyers de 1 100 000 FC et une option d'achat de 600 000 FC sur un bien acheté 30 000 000 FC. Marge brute :", r: ["10 200 000 FC", "9 600 000 FC", "39 600 000 FC", "40 200 000 FC"], b: 0, e: "39 600 000 + 600 000 − 30 000 000 = **10 200 000 FC**." },
+    { q: "Différence essentielle entre crédit documentaire et remise documentaire :", r: ["Dans le crédit documentaire, la banque s'engage à payer ; dans la remise, elle transmet sans s'engager", "Aucune", "La remise documentaire est réservée aux exportations de minerais", "Le crédit documentaire n'utilise pas de documents"], b: 0, e: "Le crédit documentaire est un engagement de la banque." },
+    { q: "Une banque paie un crédit documentaire lorsque :", r: ["Les documents présentés sont conformes aux termes du crédit", "La marchandise est arrivée à Kinshasa", "L'importateur donne son accord verbal", "Le taux de change baisse"], b: 0, e: "Le crédit documentaire porte sur des documents, pas sur la marchandise elle-même." },
+    { q: "La provision constituée par un client importateur pour son crédit documentaire va en :", r: ["333 Provisions crédocs et transferts à effectuer", "382 Provisions sur créances douteuses", "180", "570"], b: 0, e: "Fonds du client affectés à l'opération." },
+    { q: "Une garantie à première demande :", r: ["Se paie dès une demande conforme, sans discuter le contrat sous-jacent", "Ne se paie qu'après jugement", "Est une simple recommandation", "Est un dépôt à terme"], b: 0, e: "D'où un risque élevé pour la banque garante." },
+    { q: "Une caution donnée est mise en jeu et la banque paie à la place du client :", r: ["L'engagement devient une créance sur le client (395)", "La banque comptabilise un produit", "Rien ne change au hors-bilan", "Le client est crédité"], b: 0, e: "Créances litigieuses sur engagements par signature mis en jeu." },
+    { q: "Une banque congolaise transmet une déclaration de soupçon de blanchiment à :", r: ["La CENAREF", "La DGI", "Le client concerné", "La chambre de compensation"], b: 0, e: "Sans informer le client de la déclaration." },
+    { q: "Le KYC impose notamment :", r: ["D'identifier le client et le bénéficiaire effectif et de comprendre l'origine des fonds", "De publier la liste des clients", "D'accorder un crédit à tout titulaire de compte", "De convertir tous les dépôts en CDF"], b: 0, e: "Connaissance du client avant et pendant la relation." },
+  ],
+};
+
+export const MODULES_BQ = [B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12];
