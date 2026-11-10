@@ -1,5 +1,7 @@
 // Module F8 — Sanctions, recouvrement et contentieux
-// Source : fiche D2-procedures-2021 (L. n° 004/2003, Code des impôts mis à jour au 31 mars 2021).
+// Source : fiche D2-procedures-2021 (L. n° 004/2003, Code des impôts mis à jour au 31 mars 2021) ; échéances et
+// acomptes mis à jour par la loi n° 23/052 du 30 novembre 2023 (JO du 29 décembre 2023), en vigueur depuis le
+// 1er janvier 2026, qui ne modifie pas les articles 83 à 110 (pénalités, recouvrement, contentieux).
 export default {
   id: "F8",
   titre: "Sanctions, recouvrement et contentieux",
@@ -12,7 +14,7 @@ export default {
     {
       type: "essentiel",
       texte:
-        "Un retard ou une erreur coûte cher : les **pénalités d'assiette** (majoration de 20 % à 100 % de l'impôt, plus un **intérêt de retard de 2 % par mois plafonné à 50 %** en cas de redressement ou de taxation d'office) s'ajoutent aux **pénalités de recouvrement**, une **majoration de 2 % par mois** de retard de paiement, sans plafond. Les impôts établis par l'Administration sont réclamés par un **avis de mise en recouvrement (AMR)**, payable dans les 15 jours, puis par des poursuites (commandement, avis à tiers détenteur, saisies, fermeture). Pour contester la base ou le montant de l'impôt, on adresse une **réclamation dans les 3 mois** au Directeur ou au Chef de Centre ; elle ne suspend pas le paiement, sauf **sursis** obtenu en versant **un dixième** du supplément contesté. Le recours devant la **Cour administrative d'appel** se forme ensuite dans les 3 mois, sans paiement préalable du principal.",
+        "Un retard ou une erreur coûte cher : les **pénalités d'assiette** (majoration de 20 % à 100 % de l'impôt, plus un **intérêt de retard de 2 % par mois plafonné à 50 %** en cas de redressement ou de taxation d'office) s'ajoutent aux **pénalités de recouvrement**, une **majoration de 2 % par mois** de retard de paiement, sans plafond. Les impôts établis par l'Administration sont réclamés par un **avis de mise en recouvrement (AMR)**, payable dans les 15 jours, puis par des poursuites (commandement, avis à tiers détenteur, saisies, fermeture). Pour contester la base ou le montant de l'impôt, on adresse une **réclamation dans les 3 mois** au Directeur ou au Chef de Centre ; elle ne suspend pas le paiement, sauf **sursis** obtenu en versant **un dixième** du supplément contesté. Le recours devant la **Cour administrative d'appel** se forme ensuite dans les 3 mois, sans paiement préalable du principal. La réforme de 2026 (loi n° 23/052) **ne change pas ces sanctions** : elle change les **échéances** auxquelles elles s'appliquent (IS et IRPP au 30 avril, retenues au 15, acomptes de 30 %, 30 % et 20 %).",
     },
     {
       type: "texte",
@@ -41,20 +43,20 @@ export default {
         ["Taxation d'office (tous les cas)", "Majoration de 50 % de l'impôt reconstitué", "100 %", "art. 89"],
         ["Redressement ou taxation d'office", "Intérêt de retard de 2 % par mois, plafonné à 50 % de l'impôt", "—", "art. 89"],
         ["Retard de paiement d'un impôt déclaré ou mis en recouvrement", "Majoration de 2 % par mois des droits dus, sans plafond", "—", "art. 91"],
-        ["Acompte IBP non versé ou insuffisant", "50 % de l'acompte non versé", "—", "art. 98 bis"],
-        ["Déclaration hors délai : exonéré ou « Néant » / IBP créditrice après mise en demeure", "200 000 FC / 1 500 000 FC", "—", "art. 93 bis"],
+        ["Acompte provisionnel non versé ou insuffisant", "50 % de l'acompte non versé (texte rédigé pour l'IBP)", "—", "art. 98 bis"],
+        ["Déclaration hors délai : exonéré ou « Néant » / déclaration d'impôt sur les bénéfices créditrice après mise en demeure", "200 000 FC / 1 500 000 FC", "—", "art. 93 bis"],
         ["Frais de poursuites", "Commandement 3 % ; saisie 5 % ; vente 3 %", "—", "art. 100"],
       ],
-      note: "Taux et montants du Code mis à jour au 31 mars 2021. Cumul maximal des pénalités d'assiette : 70 % de l'impôt éludé en redressement (20 % + 50 %), 100 % en taxation d'office (50 % + 50 %), avant majoration de recouvrement. Le Ministre peut modifier les montants des pénalités par arrêté (art. 98 ter).",
+      note: "Taux et montants du Code mis à jour au 31 mars 2021, que la loi n° 23/052 n'a pas modifiés ; certains articles (93, 93 bis, 98 bis) visent encore l'IBP ou l'IPR : voir l'encadré « Mise à jour ». Cumul maximal des pénalités d'assiette : 70 % de l'impôt éludé en redressement (20 % + 50 %), 100 % en taxation d'office (50 % + 50 %), avant majoration de recouvrement. Le Ministre peut modifier les montants des pénalités par arrêté (art. 98 ter).",
     },
     {
       type: "texte",
       titre: "Amendes, astreintes et sanctions pénales",
       puces: [
         "**Astreinte** pour refus de répondre à une demande de renseignements (hors contrôle) : **100 000 FC par jour de retard** (personne morale) ou **25 000 FC** (personne physique) (art. 92).",
-        "**Annexes manquantes** à la déclaration d'IBP : **100 000 FC par annexe**, 200 000 FC en récidive (art. 93, al. 1).",
-        "**Annexes de la déclaration IPR de décembre** (art. 93, al. 2, L.F. n° 19/005) : 1 000 000 FC sans état récapitulatif, 500 000 FC sans relevé nominatif, 25 000 FC par fiche individuelle manquante.",
-        "**Retard de déclaration** (art. 93 bis, L.F. n° 19/005) : 200 000 FC (exonéré, opérations exonérées, « Néant ») ; **1 500 000 FC** pour une déclaration d'IBP **créditrice** régularisée après mise en demeure.",
+        "**Annexes manquantes** à la déclaration annuelle sur les bénéfices (IBP, désormais IS) : **100 000 FC par annexe**, 200 000 FC en récidive (art. 93, al. 1).",
+        "**Annexes de la déclaration de décembre des retenues sur salaires** (IPR, désormais IRPP ; art. 93, al. 2, L.F. n° 19/005) : 1 000 000 FC sans état récapitulatif, 500 000 FC sans relevé nominatif, 25 000 FC par fiche individuelle manquante.",
+        "**Retard de déclaration** (art. 93 bis, L.F. n° 19/005) : 200 000 FC (exonéré, opérations exonérées, « Néant ») ; **1 500 000 FC** pour une déclaration d'impôt sur les bénéfices **créditrice** régularisée après mise en demeure. Depuis 2026, les déclarations de retenue IRPP sur salaires et du prélèvement sur les expatriés sont dues **même sans salaire versé** (art. 18 et 19, L. n° 23/052) : un « Néant » tardif coûte 200 000 FC.",
         "**Prix de transfert** : 500 000 FC par jour de retard dans le dépôt de la déclaration de documentation allégée (art. 93 bis).",
         "**Déclaration qui ne sert pas au calcul de l'impôt** (relevé trimestriel des sommes versées aux tiers) : 500 000 FC (PM) ou 250 000 FC (PP) (art. 94). Défaut de retenue sur loyers : amende égale à la retenue (art. 96).",
         "**Faux renseignements** : 1 500 000 FC (PM) ou 250 000 FC (PP) ; **incomplets** : 750 000 FC ou 125 000 FC (art. 97). Mention omise sur une facture : 750 000 FC (PM) ou 250 000 FC (PP) (art. 97 bis).",
@@ -66,7 +68,7 @@ export default {
       type: "exemple",
       titre: "Exemple 1 — SA KIVU TRANS paie son IBP en retard",
       enonce:
-        "Les quatre acomptes de 2025 ont été versés à temps et il reste un solde d'IBP 2025 de 120 000 000 FC (taux de 30 %), à payer avec la déclaration au plus tard le 30 avril 2026. SA KIVU TRANS ne dépose rien. Elle reçoit une lettre de relance et dépose sa déclaration dans les 5 jours, avant toute mise en demeure, mais ne paie l'impôt que le 30 juin 2026. Ce n'est pas une récidive.",
+        "Exercice 2025, le dernier soumis à l'IBP. Les quatre acomptes de 2025 ont été versés à temps et il reste un solde d'IBP 2025 de 120 000 000 FC (taux de 30 %), à payer avec la déclaration au plus tard le 30 avril 2026. SA KIVU TRANS ne dépose rien. Elle reçoit une lettre de relance et dépose sa déclaration dans les 5 jours, avant toute mise en demeure, mais ne paie l'impôt que le 30 juin 2026. Ce n'est pas une récidive.",
       lignes: [
         ["Solde d'IBP 2025 (principal)", 120000000],
         ["+ Majoration d'assiette : régularisation dans le délai de la relance, 120 000 000 × 25 % (art. 89)", 30000000],
@@ -75,7 +77,7 @@ export default {
         ["= Total à payer", 157200000, "resultat"],
       ],
       conclusion:
-        "Le retard coûte 37 200 000 FC, soit 31 % de l'impôt. La majoration de recouvrement compte avril (mois de l'échéance), mai et juin (mois du paiement) : 3 mois × 2 % = 6 %. Pas d'intérêt de retard : il ne s'applique qu'en cas de redressement ou de taxation d'office. **Base incertaine** : si la majoration de recouvrement porte aussi sur la majoration d'assiette (lecture de l'avant-propos du Code), elle serait de 150 000 000 × 6 % = 9 000 000 FC, soit 159 000 000 FC au total. Sans régularisation, la société aurait été taxée d'office : majoration de 50 % (60 000 000 FC) plus intérêt de retard de 2 % par mois, plafonné à 50 %.",
+        "Le retard coûte 37 200 000 FC, soit 31 % de l'impôt. La majoration de recouvrement compte avril (mois de l'échéance), mai et juin (mois du paiement) : 3 mois × 2 % = 6 %. Pas d'intérêt de retard : il ne s'applique qu'en cas de redressement ou de taxation d'office. **Base incertaine** : si la majoration de recouvrement porte aussi sur la majoration d'assiette (lecture de l'avant-propos du Code), elle serait de 150 000 000 × 6 % = 9 000 000 FC, soit 159 000 000 FC au total. Sans régularisation, la société aurait été taxée d'office : majoration de 50 % (60 000 000 FC) plus intérêt de retard de 2 % par mois, plafonné à 50 %. Le même calcul s'applique au solde de l'IS dès les revenus de 2026 (échéance du 30 avril 2027).",
     },
     {
       type: "exemple",
@@ -103,6 +105,7 @@ export default {
         "**Réponse sous 72 heures** (L.F. n° 20/020) : le tiers informe par écrit le Receveur des fonds qu'il détient ; le Receveur lève l'ATD pour les sommes qui dépassent la créance de l'État (**cantonnement**).",
         "**Saisie-vente** : vente 8 jours au moins après la signification du PV de saisie (art. 68). **Saisie conservatoire** à convertir en saisie-vente dans les **2 mois** (art. 71).",
         "**Garanties** : privilège du Trésor pendant 2 ans et hypothèque légale (art. 75-76). **Prescription** : **15 ans** après le dépôt de la déclaration ou l'AMR, et un nouveau délai à chaque acte interruptif (art. 73).",
+        "**Acomptes trop versés** (art. 57 ter, L. n° 23/052) : si les acomptes dépassent l'impôt dû pour l'année, le crédit constaté au **compte courant fiscal** peut, **à la demande** du contribuable, servir à payer d'autres impôts et droits ; il ne peut pas être **cédé** à un tiers.",
       ],
     },
     {
@@ -192,12 +195,19 @@ export default {
         "Appliquer le plafond de 50 % à la majoration de recouvrement : il ne vise que l'intérêt de retard d'assiette ; la majoration de 2 % par mois n'a pas de plafond.",
         "Penser qu'un petit retard est gratuit : la majoration court dès le mois de l'échéance et tout mois commencé compte ; payer le 2 avril une TVA due le 15 mars coûte déjà 4 %.",
         "Compter sur une transaction pour réduire les pénalités : elle est supprimée ; il ne reste que le recours gracieux (gêne ou indigence) et l'échelonnement de 6 mois.",
+        "Croire que la réforme de 2026 a allégé les sanctions : la loi n° 23/052 ne touche pas aux pénalités ; elle déplace les échéances (acomptes avant les 1er août, 1er octobre et 1er décembre) et multiplie les déclarations « Néant ».",
+        "Céder à une autre société un excédent d'acomptes : le crédit du compte courant fiscal peut payer vos autres impôts, mais il n'est pas cessible (art. 57 ter).",
       ],
     },
     {
       type: "maj",
       texte:
-        "Ce module suit le **Code des impôts mis à jour au 31 mars 2021** (L. n° 004/2003 modifiée notamment par les L.F. n° 17/014, 18/025, 19/005 et 20/020). Ce qui a changé depuis l'édition 2017 : nouvelle typologie des pénalités ; **intérêt de retard** de 2 % par mois plafonné à 50 % en cas de redressement ou de taxation d'office ; majoration de taxation d'office unifiée à 50 % (100 % en récidive) ; **majoration de recouvrement de 2 % par mois** au lieu de l'intérêt moratoire de 4 % ; nouvelles amendes (annexes IPR de décembre, IBP créditrice, prix de transfert) ; ATD avec réponse sous 72 heures et cantonnement ; transaction supprimée ; réclamation, instruction et recours en **3 mois** au lieu de 6 ; recours sans paiement préalable du principal ; sursis contre 1/10 au lieu de 1/5 ; nouveau mode de paiement (D. n° 20/019). Le taux d'IBP des exemples est de 30 % : il est passé de 35 % à 30 % par la L.F. n° 18/025 (art. 83 O.-L. n° 69/009).",
+        "**Réforme 2026 (loi n° 23/052 du 30 novembre 2023)** : en vigueur depuis le **1er janvier 2026**, elle adapte la L. n° 004/2003 à l'IS et à l'IRPP mais **ne modifie pas** les art. 83 à 110 : barème des pénalités, recouvrement, réclamation et recours restent ceux décrits ici. Ce qui change pour ce module : nouvelles échéances (IS et IRPP au 30 avril ; retenues IRPP et prélèvements au 15 du mois suivant ; acomptes de 30 %, 30 % et 20 % avant les 1er août, 1er octobre et 1er décembre ; quotités de 60 % au 31 janvier et 40 % au 30 avril pour les petites entreprises) ; déclarations « Néant » obligatoires pour les retenues sur salaires et le prélèvement sur les expatriés ; excédent d'acomptes imputable sur d'autres impôts, non cessible (art. 57 ter) ; L. n° 006/03 sur les acomptes de l'IBP abrogée. **Point à vérifier** : les art. 93, 93 bis et 98 bis visent toujours l'IBP ou l'IPR ; leur application à l'IS et à l'IRPP suppose une lecture d'équivalence que seule une loi de finances ou une instruction de la DGI peut confirmer.",
+    },
+    {
+      type: "maj",
+      texte:
+        "Avant la réforme, ce module suivait le **Code des impôts mis à jour au 31 mars 2021** (L. n° 004/2003 modifiée notamment par les L.F. n° 17/014, 18/025, 19/005 et 20/020). Ce qui avait changé depuis l'édition 2017 : nouvelle typologie des pénalités ; **intérêt de retard** de 2 % par mois plafonné à 50 % en cas de redressement ou de taxation d'office ; majoration de taxation d'office unifiée à 50 % (100 % en récidive) ; **majoration de recouvrement de 2 % par mois** au lieu de l'intérêt moratoire de 4 % ; nouvelles amendes (annexes IPR de décembre, IBP créditrice, prix de transfert) ; ATD avec réponse sous 72 heures et cantonnement ; transaction supprimée ; réclamation, instruction et recours en **3 mois** au lieu de 6 ; recours sans paiement préalable du principal ; sursis contre 1/10 au lieu de 1/5 ; nouveau mode de paiement (D. n° 20/019). Le taux d'IBP des exemples est de 30 % : il est passé de 35 % à 30 % par la L.F. n° 18/025 (art. 83 O.-L. n° 69/009).",
     },
     {
       type: "maj",
@@ -219,6 +229,7 @@ export default {
         "A.M. n° 011 du 20 mars 2018 : actes de procédure par voie électronique",
         "A.M. n° 020 du 28 juin 2016 : contestations en matière de recouvrement",
         "A.M. n° 013 du 11 mai 2015 : recours gracieux",
+        "**Loi n° 23/052 du 30 novembre 2023** (JO du 29 décembre 2023) : échéances de l'IS, de l'IRPP et des retenues (art. 12 à 22 bis modifiés), acomptes et crédits d'acomptes (art. 57 bis et 57 ter), abrogation de la L. n° 006/03 (art. 5)",
       ],
     },
   ],
@@ -238,17 +249,10 @@ export default {
       art: "art. 89 L. n° 004/2003 (L.F. n° 18/025)",
     },
     {
-      q: "ETS MAMA NZINGA n'a pas déposé sa déclaration malgré la relance et est taxée d'office pour la première fois. Quelle majoration s'applique ?",
-      r: ["20 %", "25 %", "40 %", "50 %"],
-      b: 3,
-      e: "La taxation d'office entraîne, dans tous les cas, une majoration de 50 % de l'impôt reconstitué (100 % en récidive), à laquelle s'ajoute l'intérêt de retard de 2 % par mois plafonné à 50 %.",
-      art: "art. 89 L. n° 004/2003 (L.F. n° 18/025)",
-    },
-    {
-      q: "Une entreprise n'a pas versé un acompte provisionnel d'IBP de 8 000 000 FC. Quelle amende encourt-elle ?",
+      q: "Selon l'art. 98 bis, une entreprise qui n'a pas versé un acompte provisionnel de 8 000 000 FC encourt quelle amende ?",
       r: ["2 000 000 FC", "8 000 000 FC", "4 000 000 FC", "1 600 000 FC"],
       b: 2,
-      e: "Le défaut d'acompte est sanctionné par une amende de 50 % de l'acompte non versé : 8 000 000 × 50 % = 4 000 000 FC.",
+      e: "Le défaut d'acompte est sanctionné par une amende de 50 % de l'acompte non versé : 8 000 000 × 50 % = 4 000 000 FC. Le texte vise encore l'IBP ; son application aux acomptes de l'IS est à confirmer par la DGI.",
       art: "art. 98 bis L. n° 004/2003",
     },
     {
@@ -295,21 +299,14 @@ export default {
       art: "art. 72 L. n° 004/2003 ; A.M. n° 020/2016",
     },
     {
-      q: "Une banque reçoit un avis à tiers détenteur visant son client, la SARL BOMOKO. Dans quel délai maximal doit-elle informer par écrit le Receveur des fonds qu'elle détient ?",
-      r: ["8 jours", "15 jours", "72 heures", "1 mois"],
-      b: 2,
-      e: "Le tiers détenteur informe le Receveur dans un délai maximum de 72 heures ; le Receveur lève alors l'ATD pour les sommes qui dépassent la créance de l'État (cantonnement). Le paiement reste dû dans les 8 jours.",
-      art: "art. 67 L. n° 004/2003 (L.F. n° 20/020)",
-    },
-    {
-      q: "Un supplément d'IBP de 10 000 000 FC est notifié après redressement ; l'intérêt de retard court sur 10 mois. Quel est son montant ?",
+      q: "Un supplément d'impôt de 10 000 000 FC est notifié après redressement ; l'intérêt de retard court sur 10 mois. Quel est son montant ?",
       r: ["2 000 000 FC", "4 000 000 FC", "2 400 000 FC", "5 000 000 FC"],
       b: 0,
       e: "10 000 000 × 2 % × 10 = 2 000 000 FC (20 %, sous le plafond de 50 %). L'intérêt porte sur l'impôt éludé, pas sur la majoration de redressement.",
       art: "art. 85 et 89 L. n° 004/2003",
     },
     {
-      q: "Avec sa déclaration IPR de décembre, SA KIVU TRANS ne joint ni l'état récapitulatif ni 10 fiches individuelles ; le relevé nominatif est fourni. Quelle amende encourt-elle ?",
+      q: "Avec sa déclaration de décembre des retenues sur salaires, SA KIVU TRANS ne joint ni l'état récapitulatif ni 10 fiches individuelles ; le relevé nominatif est fourni. Quelle amende prévoit l'art. 93, al. 2 ?",
       r: ["1 000 000 FC", "1 250 000 FC", "1 750 000 FC", "250 000 FC"],
       b: 1,
       e: "1 000 000 FC pour l'état récapitulatif + 10 × 25 000 FC pour les fiches individuelles = 1 250 000 FC ; un relevé nominatif manquant aurait coûté 500 000 FC de plus.",
@@ -352,6 +349,30 @@ export default {
       b: 2,
       e: "La majoration court du 1er jour du mois de l'échéance (mars) au mois du paiement (avril), tout mois commencé comptant : 10 000 000 × 2 % × 2 mois = 400 000 FC.",
       art: "art. 91 L. n° 004/2003",
+    },
+    {
+      q: "En 2026, les acomptes versés par la SARL BOMOKO dépassent de 6 000 000 FC son impôt dû. Que peut-elle faire de ce crédit ?",
+      r: [
+        "Le céder à une société sœur qui doit de l'IS",
+        "Le perdre : l'excédent d'acomptes reste acquis au Trésor",
+        "Le récupérer uniquement en espèces, à la fin de l'exercice suivant",
+        "Demander qu'il serve à payer d'autres impôts et droits dus",
+      ],
+      b: 3,
+      e: "Les crédits constatés au compte courant fiscal peuvent, à la demande du contribuable, servir au paiement d'autres impôts et droits dus ; ils ne peuvent pas faire l'objet de cession.",
+      art: "art. 57 ter L. n° 004/2003 (L. n° 23/052)",
+    },
+    {
+      q: "ETS MAMA NZINGA n'a versé aucun salaire en juillet 2026. Doit-elle déposer la déclaration de retenue d'IRPP sur salaires au 15 août ?",
+      r: [
+        "Oui, avec la mention « Néant »",
+        "Non, faute de salaire il n'y a rien à déclarer",
+        "Non, la déclaration est seulement annuelle",
+        "Oui, mais seulement si elle emploie des expatriés",
+      ],
+      b: 0,
+      e: "La déclaration accompagnant le versement des retenues doit être souscrite même si les revenus salariaux ne sont pas versés ; elle porte alors la mention « Néant ». Un dépôt tardif expose à l'amende de 200 000 FC de l'art. 93 bis.",
+      art: "art. 18 L. n° 004/2003 (L. n° 23/052) ; art. 93 bis",
     },
   ],
 };

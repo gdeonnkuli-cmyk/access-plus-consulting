@@ -1,19 +1,21 @@
 // Module F2 — Impôt sur les bénéfices et profits (IBP)
 // Source : fiches A2 (O.-L. n° 69/009), B2 (L. n° 006/03, O.-L. n° 13/006, Code minier) et D2 (L. n° 004/2003),
-// Code des impôts, édition mise à jour au 31 mars 2021.
+// Code des impôts, édition mise à jour au 31 mars 2021. Régime applicable jusqu'aux bénéfices de 2025 : depuis le
+// 1er janvier 2026, l'IS (F15) et l'IRPP (F14) le remplacent (L. n° 23/053, art. 152) et la L. n° 006/03 est abrogée
+// (L. n° 23/052, art. 5).
 export default {
   id: "F2",
-  titre: "Impôt sur les bénéfices et profits (IBP)",
-  court: "IBP",
+  titre: "Impôt sur les bénéfices et profits (IBP), jusqu'en 2025",
+  court: "IBP (≤ 2025)",
   ico: "building-bank",
   col: "#1E4FA3",
   duree: "30 min",
-  resume: "Du résultat comptable à l'IBP à payer : réintégrations, déficits, taux de 30 %, impôt minimum de 1 % et quatre acomptes de 20 %.",
+  resume: "Le régime des bénéfices jusqu'en 2025, encore utile pour les contrôles et réclamations : réintégrations, déficits, taux de 30 %, impôt minimum de 1 % et quatre acomptes de 20 %. Depuis 2026 : IS (F15) et IRPP (F14).",
   blocs: [
     {
       type: "essentiel",
       texte:
-        "L'IBP frappe le **bénéfice** des entreprises. On part du **résultat comptable**, on le corrige (on **réintègre** les charges non déductibles, on **déduit** les revenus déjà imposés), puis on impute les **pertes antérieures** et l'**impôt minimum payé en période déficitaire**, dans la limite commune de **60 %** du bénéfice. On applique ensuite le taux de **30 %**. L'impôt ne peut jamais être inférieur à **1 % du chiffre d'affaires** déclaré (art. 92). Les moyennes et grandes entreprises le paient en **quatre acomptes** de 20 % de l'impôt de l'année précédente, avant le 1er juin, le 1er août, le 1er octobre et le 1er décembre, puis un **solde** versé avec la déclaration au plus tard le **30 avril N+1**.",
+        "**Attention : depuis le 1er janvier 2026, l'IBP est remplacé** par l'impôt sur les sociétés (IS, module F15) pour les personnes morales et par l'IRPP (module F14) pour les personnes physiques. Ce module reste utile pour les bénéfices de **2025 et des années antérieures** : déclaration au 30 avril 2026 des revenus de 2025, contrôles et réclamations. L'IBP frappe le **bénéfice** des entreprises. On part du **résultat comptable**, on le corrige (on **réintègre** les charges non déductibles, on **déduit** les revenus déjà imposés), puis on impute les **pertes antérieures** et l'**impôt minimum payé en période déficitaire**, dans la limite commune de **60 %** du bénéfice. On applique ensuite le taux de **30 %**. L'impôt ne peut jamais être inférieur à **1 % du chiffre d'affaires** déclaré (art. 92). Les moyennes et grandes entreprises le paient en **quatre acomptes** de 20 % de l'impôt de l'année précédente, avant le 1er juin, le 1er août, le 1er octobre et le 1er décembre, puis un **solde** versé avec la déclaration au plus tard le **30 avril N+1**.",
     },
     {
       type: "texte",
@@ -210,7 +212,7 @@ export default {
     {
       type: "schema",
       kind: "chronologie",
-      titre: "Le calendrier de l'IBP des bénéfices de l'année N",
+      titre: "Le calendrier de l'IBP des bénéfices de l'année N (jusqu'à N = 2025)",
       jalons: [
         { date: "1er janvier – 31 décembre N", l: "Exercice N", d: "L'entreprise réalise les bénéfices qui seront déclarés en N+1 (art. 74)." },
         { date: "Avant le 1er juin N", l: "1er acompte", d: "20 % de l'impôt déclaré pour N-1, augmenté des suppléments éventuels, contestés ou non (art. 2 L. n° 006/03)." },
@@ -220,7 +222,7 @@ export default {
         { date: "Au plus tard le 30 avril N+1", l: "Déclaration et solde", d: "Dépôt de la déclaration et paiement du solde (art. 12 et 57 L. n° 004/2003)." },
         { date: "Au plus tard le 30 juin N+1", l: "Documentation allégée des prix de transfert", d: "Deux mois après l'échéance de l'IBP, pour les entreprises liées concernées (art. 24 ter L. n° 004/2003)." },
       ],
-      note: "Les acomptes sont dus par les moyennes et grandes entreprises. Acompte non versé ou insuffisant : amende de 50 % du montant non versé (art. 98 bis L. n° 004/2003). Si les acomptes dépassent l'IBP dû, l'excédent devient un crédit au compte courant fiscal, non cessible (art. 10 L. n° 006/03).",
+      note: "Les acomptes sont dus par les moyennes et grandes entreprises. Acompte non versé ou insuffisant : amende de 50 % du montant non versé (art. 98 bis L. n° 004/2003). Si les acomptes dépassent l'IBP dû, l'excédent devient un crédit au compte courant fiscal, non cessible (art. 10 L. n° 006/03). Les acomptes de 2025 sont les derniers versés selon ce calendrier : en 2026, la L. n° 006/03 est abrogée et les acomptes deviennent 30 %, 30 % et 20 % avant les 1er août, 1er octobre et 1er décembre (art. 57 bis L. n° 004/2003, L. n° 23/052).",
     },
     {
       type: "pieges",
@@ -230,7 +232,8 @@ export default {
         "Imputer l'impôt minimum payé une année **bénéficiaire** : seul celui payé en cas de résultats **déficitaires** est imputable (art. 42).",
         "Oublier de comparer avec **1 % du CA** : une entreprise peu rentable paie souvent le minimum, même avec des pertes reportées.",
         "Ne pas déposer la déclaration d'une année de perte : la perte devient **non reportable** (art. 42 par. 3).",
-        "Verser encore deux acomptes de 40 % : depuis la L.F. n° 19/005, ce sont **quatre acomptes de 20 %** de l'impôt déclaré pour l'année précédente.",
+        "Verser encore deux acomptes de 40 % : depuis la L.F. n° 19/005, ce sont **quatre acomptes de 20 %** de l'impôt déclaré pour l'année précédente, jusqu'en 2025.",
+        "Appliquer l'IBP aux bénéfices de 2026 : ils relèvent de l'**IS** ou de l'**IRPP**, avec **trois acomptes** de 30 %, 30 % et 20 % avant les 1er août, 1er octobre et 1er décembre (art. 57 bis L. n° 004/2003).",
       ],
     },
     {
@@ -246,7 +249,7 @@ export default {
     {
       type: "maj",
       texte:
-        "**Réforme 2026** : la loi n° 23/053 du 30 novembre 2023, en vigueur depuis le 1er janvier 2026, a institué l'IRPP et l'IS. Conséquence : pour les personnes physiques, l'IRPP (voir F14) ; pour les sociétés, l'impôt sur les sociétés (IS) : voir F15. Les règles de l'IBP présentées ici (Code au 31 mars 2021) restent utiles pour les exercices antérieurs à 2026 : vérifiez les textes 2026 avant de les appliquer.",
+        "**Réforme 2026** : la **loi n° 23/053** du 30 novembre 2023 (JO du 29 décembre 2023), en vigueur depuis le 1er janvier 2026, a institué l'IS et l'IRPP et abrogé les titres III et IV de l'O.-L. n° 69/009, qui portaient notamment l'IBP, ainsi que l'O.-L. n° 13/006 sur les petites entreprises (art. 152). La **loi n° 23/052** du même jour a abrogé la L. n° 006/03 sur les acomptes de l'IBP (art. 5) et fixé le nouveau calendrier : déclaration de l'IS au 30 avril (art. 12), acomptes de 30 %, 30 % et 20 % avant les 1er août, 1er octobre et 1er décembre (art. 57 bis), excédent d'acomptes imputable sur d'autres impôts (art. 57 ter). Pour les personnes morales : module F15 ; pour les personnes physiques : module F14. Les règles de l'IBP présentées ici (Code au 31 mars 2021) restent applicables aux bénéfices de 2025 et des années antérieures.",
     },
     {
       type: "articles",
@@ -288,10 +291,10 @@ export default {
       art: "art. 42 par. 1 O.-L. n° 69/009 (L.F. n° 18/025)",
     },
     {
-      q: "Une moyenne entreprise a déclaré un IBP de 50 000 000 FC pour N-1. Combien doit-elle verser avant le 1er juin N ?",
+      q: "Sous le régime de l'IBP, une moyenne entreprise a déclaré un IBP de 50 000 000 FC pour 2024. Combien devait-elle verser avant le 1er juin 2025 ?",
       r: ["20 000 000 FC", "10 000 000 FC", "12 500 000 FC", "50 000 000 FC"],
       b: 1,
-      e: "Chaque acompte est égal à 20 % de l'impôt déclaré pour l'exercice précédent : 20 % × 50 000 000 = 10 000 000 FC, avant le 1er juin, puis avant les 1er août, 1er octobre et 1er décembre.",
+      e: "Jusqu'en 2025, chaque acompte est égal à 20 % de l'impôt déclaré pour l'exercice précédent : 20 % × 50 000 000 = 10 000 000 FC, avant le 1er juin, puis avant les 1er août, 1er octobre et 1er décembre. Depuis 2026, le calendrier est de 30 %, 30 % et 20 % (art. 57 bis L. n° 004/2003).",
       art: "art. 2 L. n° 006/03 (L.F. n° 19/005)",
     },
     {
@@ -344,7 +347,7 @@ export default {
       art: "art. 69 O.-L. n° 69/009 (L.F. n° 17/014)",
     },
     {
-      q: "La SARL BOMOKO devait verser un acompte IBP de 10 000 000 FC avant le 1er juin et ne l'a pas payé. Quelle amende encourt-elle ?",
+      q: "La SARL BOMOKO devait verser un acompte IBP de 10 000 000 FC avant le 1er juin 2025 et ne l'a pas payé. Quelle amende encourt-elle ?",
       r: ["5 000 000 FC (50 % de l'acompte non versé)", "2 500 000 FC (25 % de l'acompte non versé)", "200 000 FC (2 % de l'acompte non versé)", "Aucune, si le solde est payé au 30 avril"],
       b: 0,
       e: "Le défaut ou l'insuffisance d'acompte provisionnel est sanctionné par une amende de 50 % du montant non versé : 10 000 000 × 50 % = 5 000 000 FC.",

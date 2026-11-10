@@ -16,7 +16,7 @@ const ORGANISME = "Éco-Campus RDC — Access Plus Consulting";
 
 // Leçons du Code des impôts (doit rester aligné sur src/fiscal/modules — vérifié par regles.test.js)
 const FISC = [
-  ["F1", "Panorama du système fiscal congolais"], ["F2", "Impôt sur les bénéfices et profits (IBP)"],
+  ["F1", "Panorama du système fiscal congolais"], ["F2", "Impôt sur les bénéfices et profits (IBP), jusqu'en 2025"],
   ["F3", "Impôt professionnel sur les rémunérations (IPR)"], ["F4", "Impôt mobilier et impôt sur les revenus locatifs"],
   ["F5", "Le régime des entreprises de petite taille"], ["F6", "Taxe sur la valeur ajoutée (TVA)"],
   ["F7", "Obligations déclaratives et contrôle fiscal"], ["F8", "Sanctions, recouvrement et contentieux"],
@@ -71,7 +71,7 @@ const PARCOURS = [
   { id: "SYS-N1", titre: "Comptabilité SYSCOHADA révisé — Niveau 1 : fondamentaux", court: "SYSCOHADA · Niveau 1", certificat: true,
     description: "Modules de cours de comptabilité générale, exercice « Quel compte ? » sur l'ensemble du plan et examen final de 30 questions, coefficient 2." },
   { id: "FISC", titre: "Fiscalité congolaise — Le Code des impôts", court: "Fiscalité RDC", certificat: true,
-    description: "Les 15 modules du Code des impôts : IBP, IPR, IM et IRL, TVA, obligations, contentieux, import-export, paie, facture normalisée, IRPP et IS, et l'examen final de 40 questions, coefficient 2." },
+    description: "Les 15 modules de la fiscalité congolaise, à jour de la réforme de 2026 : IS et IRPP, TVA, obligations et contrôle, contentieux, import-export, paie, facture normalisée, ainsi que l'IBP, l'IPR, l'IM et l'IRL des exercices antérieurs, et l'examen final de 40 questions, coefficient 2." },
   { id: "SYS-N2", titre: "Comptabilité SYSCOHADA révisé — Niveau 2 : pratique", court: "SYSCOHADA · Niveau 2", certificat: true,
     description: "Monographie ZAO IMMO SARL (tenue comptable d'un exercice) et exercice « Quel compte ? » classe par classe et examen final pratique de 30 écritures, coefficient 2." },
   { id: "FIN", titre: "Finance d'entreprise — RDC et espace OHADA", court: "Finance d'entreprise", certificat: true,
