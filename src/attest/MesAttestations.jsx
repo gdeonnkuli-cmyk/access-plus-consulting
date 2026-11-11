@@ -55,7 +55,7 @@ export default function MesAttestations({ K, mob, db, uid, user, mods, ok, onSub
 
   return <div style={{ marginBottom: 16 }}>
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}><i className="ti ti-certificate" style={{ fontSize: 20, color: K.em }} /><span style={{ fontWeight: 800, fontSize: 16, color: K.t1 }}>Mes attestations</span></div>
-    <div style={{ fontSize: 12.5, color: K.t3, lineHeight: 1.5, marginBottom: 10 }}>Attestation de <b>suivi</b> : tous les éléments du parcours faits. Attestation de <b>réussite</b> : chaque élément à {SEUIL_ELEMENT} % au moins et une moyenne d'au moins {SEUIL_MOYENNE} % (meilleur score retenu). Chaque attestation porte un numéro, un QR code vérifiables et un relevé de notes. Chaque parcours se termine par un examen final (coefficient 2) qui ouvre droit au <b>certificat</b>.</div>
+    <div style={{ fontSize: 12.5, color: K.t3, lineHeight: 1.5, marginBottom: 10 }}>Attestation de <b>suivi</b> dès que tous les éléments d'un parcours sont faits. <b>Certificat</b> quand chaque élément atteint {SEUIL_ELEMENT} %, que la moyenne atteint {SEUIL_MOYENNE} % et que l'examen final (coefficient 2) est réussi. Chaque document porte un numéro, un QR code de vérification et un relevé de notes ; il apparaît ici dès qu'il peut être délivré.</div>
     {msg && <div style={{ background: msg.t === "e" ? K.erBg : K.emBg, border: `1px solid ${msg.t === "e" ? K.erBd : K.emBd}`, color: msg.t === "e" ? K.er : K.em, borderRadius: 10, padding: "9px 12px", fontSize: 12.5, fontWeight: 600, lineHeight: 1.5, marginBottom: 10 }}>{msg.m}</div>}
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {evals.map(({ p, ev, et }) => {
@@ -64,8 +64,9 @@ export default function MesAttestations({ K, mob, db, uid, user, mods, ok, onSub
           ? <span style={{ display: "inline-flex", gap: 6, flexWrap: "wrap" }}>
             <button onClick={() => telechargerAttestation(a).catch(e => sMsg({ t: "e", m: e.message }))} className="bt" style={btn(K, "p")}><i className="ti ti-download" style={{ fontSize: 14 }} />{type === "reussite" ? (p.certificat ? "Certificat" : "Réussite") : "Suivi"} · PDF</button>
             <button onClick={() => partager(a)} className="bt" style={btn(K)}><i className="ti ti-share" style={{ fontSize: 14 }} />Lien</button></span>
-          : <button onClick={() => obtenir(p.id, type)} disabled={!eligible || !!encours} className="bt" style={{ ...btn(K, eligible ? "p" : "g"), opacity: eligible && !encours ? 1 : 0.5, cursor: eligible ? "pointer" : "not-allowed" }}>
-            <i className={`ti ti-${eligible ? "certificate" : "lock"}`} style={{ fontSize: 14 }} />{encours === `${p.id}-${type}` ? "Délivrance…" : type === "reussite" ? (p.certificat ? "Certificat et relevé de notes" : "Attestation de réussite") : "Attestation de suivi"}</button>;
+          : !eligible ? null // pas de bouton grisé : l'attestation apparaît quand elle peut être délivrée
+          : <button onClick={() => obtenir(p.id, type)} disabled={!!encours} className="bt" style={{ ...btn(K, "p"), opacity: encours ? 0.5 : 1 }}>
+            <i className="ti ti-certificate" style={{ fontSize: 14 }} />{encours === `${p.id}-${type}` ? "Délivrance…" : type === "reussite" ? (p.certificat ? "Certificat et relevé de notes" : "Attestation de réussite") : "Attestation de suivi"}</button>;
         return <div key={p.id} style={{ ...carte(K), padding: "13px 15px", borderColor: ar ? K.emBd : K.b0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start", flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 200 }}>

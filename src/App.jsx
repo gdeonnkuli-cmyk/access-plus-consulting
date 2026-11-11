@@ -18,6 +18,7 @@ import Banniere,{ReglageMarketing,AdminMarketing}from"./notif/Banniere";
 import{DUR,OFFRES,INCLUS,offresAvecPrix,parMois,fUSD,numerosRenseignes,usePaiement,utiliserCodeOffert}from"./acces/acces";
 import AdminAcces from"./acces/AdminAcces";
 import{PLAY_STORE,LIB_ACCES}from"./acces/plateforme";
+import Landing from"./accueil/Landing";
 import{pushPossible,pushActif,activerPush,desactiverPush}from"./notif/push";
 import{htmlCodeAcces,htmlNotification}from"./emails";
 import{PROVINCES}from"./ef/rdc";
@@ -1055,233 +1056,8 @@ function ThemePicker({open,onClose}){
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 // ── LANDING PAGE ─────────────────────────────────────────────────────────────
 function LandingPage({onLogin}){
-  const K=useK();const{mob}=useW();
-  const[scrolled,setScrolled]=useState(false);
-  useEffect(()=>{
-    const h=()=>setScrolled(window.scrollY>40);
-    window.addEventListener('scroll',h);return()=>window.removeEventListener('scroll',h);
-  },[]);
-
-  const stats=[
-    {val:"10+",label:"Modules SYSCOHADA",ico:"book-2"},
-    {val:"100%",label:"En ligne, partout",ico:"wifi"},
-    {val:"3",label:"Types de profils",ico:"users"},
-    PLAY_STORE?{val:"1 code",label:"pour tout débloquer",ico:"key"}:{val:"24h",label:"Accès après paiement",ico:"bolt"},
-  ];
-  const publics=[
-    {ico:"building-store",label:"Entrepreneurs",desc:"Services et accompagnement pour structurer votre activité"},
-    {ico:"user-search",label:"Chercheurs d'emploi",desc:"Renforcez vos compétences pour vous démarquer"},
-    {ico:"school",label:"Étudiants",desc:"Tous niveaux, toutes filières"},
-    {ico:"briefcase",label:"Professionnels",desc:"Quel que soit votre secteur d'activité"},
-  ];
-  const features=[
-    {ico:"book-2",     col:"#1E4FA3",label:"Modules structurés",  desc:"Des modules organisés par thème, du fondamental à l'avancé."},
-    {ico:"help-circle",col:"#3B82F6",label:"QCM interactifs",     desc:"Évaluez vos connaissances avec des quiz corrigés et des scores détaillés."},
-    {ico:"file-text",  col:"#F59E0B",label:"PDF d'exercices",     desc:"Téléchargez les supports de cours et exercices pratiques par module."},
-    {ico:"presentation",col:"#8B5CF6",label:"Présentations",      desc:"Slides professionnelles téléchargeables pour chaque thème de formation."},
-    {ico:"video",      col:"#EF4444",label:"Vidéos & Direct",     desc:"Replays de cours et sessions live avec votre formateur en temps réel."},
-    {ico:"briefcase",  col:"#06B6D4",label:"Stages virtuels",     desc:"Accédez aux meilleures plateformes de stages et d'expériences pratiques."},
-  ];
-
-  return <div style={{minHeight:"100vh",background:K.bg,fontFamily:"'Outfit',sans-serif",overflowX:"hidden"}}>
-
-    {/* ── NAVBAR ── */}
-    <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,transition:"all .3s ease",
-      background:scrolled?`${K.card}f0`:"transparent",
-      backdropFilter:scrolled?"blur(20px)":"none",
-      borderBottom:scrolled?`1px solid ${K.b0}`:"none",
-      padding:mob?"10px 16px":"12px 32px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-      <div style={{display:"flex",alignItems:"center",gap:9}}>
-        <Logo h={mob?28:34}/>
-      </div>
-      <button onClick={onLogin} className="bt" style={{
-        background:`linear-gradient(135deg,#0A2A5C,#1E4FA3)`,border:"none",
-        borderRadius:9,padding:mob?"8px 16px":"9px 22px",
-        color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",
-        fontFamily:"'Outfit',sans-serif",boxShadow:"0 4px 14px rgba(30,79,163,.35)"}}>
-        Se connecter →
-      </button>
-    </nav>
-
-    {/* ── HERO ── */}
-    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",
-      justifyContent:"center",padding:mob?"100px 20px 60px":"120px 32px 80px",
-      position:"relative",textAlign:"center",overflow:"hidden"}}>
-
-      {/* Background decorations */}
-      <div style={{position:"absolute",top:"10%",left:"5%",width:300,height:300,borderRadius:"50%",
-        background:`radial-gradient(circle,#1E4FA318,transparent 70%)`,pointerEvents:"none"}}/>
-      <div style={{position:"absolute",bottom:"15%",right:"5%",width:250,height:250,borderRadius:"50%",
-        background:`radial-gradient(circle,#3B82F618,transparent 70%)`,pointerEvents:"none"}}/>
-      <div style={{position:"absolute",top:"40%",right:"15%",width:120,height:120,borderRadius:"50%",
-        background:`radial-gradient(circle,#F59E0B12,transparent 70%)`,pointerEvents:"none"}}/>
-
-      {/* Badge */}
-      <div style={{display:"inline-flex",alignItems:"center",gap:7,background:K.emBg,
-        border:`1px solid ${K.emBd}`,borderRadius:99,padding:"6px 16px",marginBottom:28,animation:"up .5s ease"}}>
-        <span style={{width:7,height:7,borderRadius:"50%",background:"#1E4FA3",display:"inline-block",animation:"gw 2s ease-in-out infinite"}}/>
-        <span style={{fontSize:13,fontWeight:700,color:"#1E4FA3",letterSpacing:.4}}>🇨🇩 Services et formations en RDC</span>
-      </div>
-
-      {/* Logo hero */}
-      <div style={{marginBottom:20,animation:"up .5s ease .05s both",display:"flex",alignItems:"center",justifyContent:"center",gap:12}}>
-        <Logo h={mob?54:76}/>
-      </div>
-
-      {/* Titre */}
-      <h1 style={{margin:"0 0 16px",fontSize:mob?"1.9rem":"3.4rem",fontWeight:900,lineHeight:1.1,
-        color:K.t1,letterSpacing:"-1px",maxWidth:720,animation:"up .6s ease .1s both"}}>
-        La plateforme de{" "}
-        <span style={{background:"linear-gradient(135deg,#1E4FA3,#A3122A)",
-          WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-          services et formations
-        </span>
-        {" "}en République démocratique du Congo
-      </h1>
-
-      {/* Sous-titre */}
-      <p style={{margin:"0 0 12px",fontSize:mob?14:17,color:K.t2,lineHeight:1.7,
-        maxWidth:580,animation:"up .6s ease .2s both"}}>
-        Une référence pour <strong style={{color:K.t1}}>entrepreneurs</strong>, <strong style={{color:K.t1}}>chercheurs d'emploi</strong> et <strong style={{color:K.t1}}>étudiants</strong> :
-        modules structurés, accompagnement professionnel, tests d'auto-évaluation et sessions en direct avec nos experts.
-      </p>
-
-      {/* Preuves sociales */}
-      <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:32,flexWrap:"wrap",justifyContent:"center",animation:"up .6s ease .25s both"}}>
-        {[["🎓","Certifiante"],["📱","100% en ligne"],["🇨🇩","Pensée pour la RDC"]].map(([e,l])=>
-          <div key={l} style={{display:"flex",alignItems:"center",gap:6,fontSize:14,color:K.t2,fontWeight:600}}>
-            <span>{e}</span><span>{l}</span>
-          </div>
-        )}
-      </div>
-
-      {/* CTA buttons */}
-      <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",
-        animation:"up .6s ease .3s both",marginBottom:56}}>
-        <button onClick={onLogin} className="bt" style={{
-          background:`linear-gradient(135deg,#0A2A5C,#1E4FA3)`,border:"none",
-          borderRadius:12,padding:"14px 28px",color:"#fff",fontWeight:800,
-          fontSize:15,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
-          boxShadow:"0 8px 24px rgba(30,79,163,.4)",minHeight:50}}>
-          Commencer maintenant →
-        </button>
-        <button onClick={onLogin} className="bt" style={{
-          background:"transparent",border:`1.5px solid ${K.b1}`,
-          borderRadius:12,padding:"14px 24px",color:K.t2,fontWeight:700,
-          fontSize:15,cursor:"pointer",fontFamily:"'Outfit',sans-serif",minHeight:50}}>
-          Se connecter
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div style={{display:"grid",gridTemplateColumns:mob?"repeat(2,1fr)":"repeat(4,1fr)",
-        gap:12,maxWidth:640,width:"100%",animation:"up .6s ease .4s both"}}>
-        {stats.map(({val,label,ico})=><div key={label} style={{
-          background:K.card,border:`1px solid ${K.b0}`,boxShadow:K.sh,borderRadius:16,
-          padding:"16px 12px",textAlign:"center"}}>
-          <i className={`ti ti-${ico}`} style={{fontSize:20,color:"#1E4FA3",display:"block",marginBottom:6}}/>
-          <div style={{fontWeight:900,fontSize:mob?20:24,color:K.t1,lineHeight:1}}>{val}</div>
-          <div style={{fontSize:12,color:K.t3,marginTop:4,lineHeight:1.3}}>{label}</div>
-        </div>)}
-      </div>
-    </div>
-
-    {/* ── POUR QUI ── */}
-    <div style={{padding:mob?"48px 20px":"64px 32px",maxWidth:900,margin:"0 auto"}}>
-      <div style={{textAlign:"center",marginBottom:40}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#1E4FA3",letterSpacing:2,
-          textTransform:"uppercase",marginBottom:10}}>Audience</div>
-        <h2 style={{margin:0,fontSize:mob?"1.6rem":"2.2rem",fontWeight:900,color:K.t1}}>
-          Conçu pour vous, où que vous soyez
-        </h2>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(2,1fr)",gap:14}}>
-        {publics.map(({ico,label,desc},i)=>{const c=["#0A2A5C","#2563EB","#D97706","#7C3AED"][i];return <div key={label} className="tile" style={{
-          padding:"22px",display:"flex",gap:16,alignItems:"flex-start",cursor:"default"}}>
-          <div style={{width:52,height:52,borderRadius:15,flexShrink:0,
-            background:`linear-gradient(135deg,${c},${c}B0)`,boxShadow:`0 8px 18px ${c}40`,
-            display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <i className={`ti ti-${ico}`} style={{fontSize:25,color:"#fff"}}/>
-          </div>
-          <div>
-            <div style={{fontWeight:800,fontSize:17,color:K.t1,marginBottom:5}}>{label}</div>
-            <div style={{fontSize:14.5,color:K.t2,lineHeight:1.55}}>{desc}</div>
-          </div>
-        </div>;})}
-      </div>
-    </div>
-
-    {/* ── FONCTIONNALITÉS ── */}
-    <div style={{padding:mob?"48px 20px":"64px 32px",
-      background:K.card,borderTop:`1px solid ${K.b0}`,borderBottom:`1px solid ${K.b0}`}}>
-      <div style={{maxWidth:900,margin:"0 auto"}}>
-        <div style={{textAlign:"center",marginBottom:40}}>
-          <div style={{fontSize:13,fontWeight:700,color:"#1E4FA3",letterSpacing:2,
-            textTransform:"uppercase",marginBottom:10}}>Fonctionnalités</div>
-          <h2 style={{margin:0,fontSize:mob?"1.6rem":"2.2rem",fontWeight:900,color:K.t1}}>
-            Tout ce dont vous avez besoin
-          </h2>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:mob?"1fr":"repeat(3,1fr)",gap:14}}>
-          {features.map(({ico,col,label,desc})=><div key={label} className="tile" style={{padding:"24px 22px",cursor:"default"}}>
-            <div style={{position:"absolute",top:-40,right:-40,width:130,height:130,borderRadius:"50%",background:`radial-gradient(circle,${col}20,transparent 70%)`}}/>
-            <div style={{width:54,height:54,borderRadius:16,position:"relative",
-              background:`linear-gradient(135deg,${col},${col}B0)`,boxShadow:`0 8px 18px ${col}40`,
-              display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16}}>
-              <i className={`ti ti-${ico}`} style={{fontSize:26,color:"#fff"}}/>
-            </div>
-            <div style={{fontWeight:800,fontSize:17,color:K.t1,marginBottom:7}}>{label}</div>
-            <div style={{fontSize:14.5,color:K.t2,lineHeight:1.6}}>{desc}</div>
-          </div>)}
-        </div>
-      </div>
-    </div>
-
-    {/* ── CTA FINAL ── */}
-    <div style={{padding:mob?"56px 20px":"80px 32px",textAlign:"center"}}>
-      <div style={{maxWidth:560,margin:"0 auto"}}>
-        <div style={{margin:"0 auto 20px",display:"flex",justifyContent:"center",alignItems:"center",gap:10}}>
-          <Logo h={44}/>
-        </div>
-        <h2 style={{margin:"0 0 14px",fontSize:mob?"1.8rem":"2.4rem",
-          fontWeight:900,color:K.t1,lineHeight:1.2}}>
-          Passez de la théorie à la pratique.
-        </h2>
-        <p style={{margin:"0 auto 32px",fontSize:16,color:K.t2,lineHeight:1.7,maxWidth:560}}>
-          Comptabilité SYSCOHADA, états financiers, fiscalité congolaise et audit : formez-vous sur des cas réels de la RDC, à votre rythme.
-        </p>
-        <button onClick={onLogin} className="bt" style={{
-          background:`linear-gradient(135deg,#0A2A5C,#1E4FA3)`,border:"none",
-          borderRadius:14,padding:mob?"16px 26px":"16px 36px",color:"#fff",fontWeight:900,
-          fontSize:16,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
-          boxShadow:"0 8px 28px rgba(30,79,163,.4)",minHeight:54,whiteSpace:"nowrap",
-          display:"inline-flex",alignItems:"center",justifyContent:"center",gap:10}}>
-          Créer mon compte gratuit
-          <i className="ti ti-arrow-right" style={{fontSize:18}}/>
-        </button>
-        <div style={{marginTop:16,fontSize:13,color:K.t3}}>
-          Déjà inscrit ?{" "}
-          <button onClick={onLogin} className="bt" style={{background:"none",border:"none",
-            color:"#1E4FA3",fontWeight:700,fontSize:13,cursor:"pointer",
-            fontFamily:"'Outfit',sans-serif",padding:0}}>
-            Se connecter →
-          </button>
-        </div>
-      </div>
-    </div>
-
-    {/* ── FOOTER ── */}
-    <div style={{borderTop:`1px solid ${K.b0}`,padding:"20px 32px",
-      display:"flex",alignItems:"center",justifyContent:"space-between",
-      flexWrap:"wrap",gap:10}}>
-      <div style={{fontSize:13,color:K.t3}}>© 2026 Éco-Campus RDC · Tous droits réservés</div>
-      <div style={{fontSize:13,color:K.t3,display:"flex",gap:"6px 16px",flexWrap:"wrap"}}>
-        <span>gnkuli@outlook.fr</span>
-        <a href="https://wa.me/243979075970" target="_blank" rel="noreferrer" style={{color:K.t3,textDecoration:"none"}}>WhatsApp +243 979 075 970</a>
-      </div>
-    </div>
-
-  </div>;
+  const K=useK();const{mob}=useW();const{tid}=useContext(Ctx);
+  return <Landing K={K} mob={mob} onLogin={onLogin} logo={LOGO} logoClair={LOGO_CLAIR} sombre={["dark","blue","green","purple"].includes(tid)}/>;
 }
 
 // ── ONBOARDING ────────────────────────────────────────────────────────────────
@@ -5606,10 +5382,11 @@ export default function App(){
     {verif!=null&&<VerifAttestation K={K} db={db} numero={verif} logo={LOGO_ICONE} onFermer={()=>{try{window.history.replaceState(null,"",window.location.pathname);}catch{}sVerif(null);}}/>}
     {verif==null&&<>
     <ThemePicker open={showTP} onClose={()=>sShowTP(false)}/>
-    <button onClick={()=>sShowTP(true)} className="bt tp-btn" title="Changer de thème"
+{/* Visiteurs uniquement : une fois connecté, le thème se règle dans Paramètres */}
+    {!who&&<button onClick={()=>sShowTP(true)} className="bt tp-btn" title="Changer de thème"
       style={{position:"fixed",bottom:18,right:18,zIndex:998,width:44,height:44,borderRadius:"50%",background:K.card,border:`1px solid ${K.b1}`,color:K.t2,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 16px rgba(0,0,0,.25)"}}>
       {TH[tid]?.i||"🎨"}
-    </button>
+    </button>}
     <InstallPrompt/>
     {loading&&<Spin/>}
     {!loading&&!who&&!showAuth&&<LandingPage onLogin={()=>sShowAuth(true)}/>}
