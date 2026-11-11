@@ -14,11 +14,11 @@ export const FORMATIONS = [
   { id: "SYS-N2", ico: "notebook", col: "#1D4ED8", niveau: "Intermédiaire", libre: false,
     resume: "Tenir la comptabilité d'une société sur un exercice complet (ZAO IMMO SARL) et maîtriser l'imputation classe par classe." },
   { id: "FISC", ico: "receipt-tax", col: "#A3122A", niveau: "Intermédiaire", libre: "F1",
-    resume: "IBP, IPR, TVA, impôts réels, contentieux, import-export, paie, facture normalisée, IRPP et IS 2026." },
+    resume: "IS et IRPP de la réforme 2026, TVA, paie, facture normalisée, contrôle fiscal, contentieux et import-export." },
   { id: "FIN", ico: "chart-pie", col: "#B7791F", niveau: "Avancé", libre: "FE1",
     resume: "Coût du capital, investissement, financement, évaluation, change USD/CDF et affectation du résultat OHADA." },
   { id: "BANQUE", ico: "building-bank", col: "#0F766E", niveau: "Spécialisation", libre: "B1",
-    resume: "Le Guide comptable des établissements de crédit de la BCC : dépôts et crédits, compensation, trésorerie, devises, hors-bilan, créances en souffrance, états financiers, analyse, agios, affacturage, crédit-bail et crédit documentaire." },
+    resume: "Le Guide comptable de la BCC : dépôts, crédits, compensation, devises, créances en souffrance, états financiers et analyse d'une banque." },
   { id: "SYCEBNL", ico: "building-community", col: "#0F766E", niveau: "Spécialisation", libre: "SB1",
     resume: "Associations, ONG, fondations, églises : dotations, fonds affectés, bailleurs, bénévolat et analyse financière." },
 ];
@@ -59,7 +59,7 @@ export default function MesFormations({ K, mob, user, mods, ok, onGo, onExam, on
       <i className="ti ti-certificate" style={{ position: "absolute", right: -10, bottom: -22, fontSize: 150, opacity: .1 }} />
       <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1.2, textTransform: "uppercase", opacity: .85 }}>Parcours métier</div>
       <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: mob ? 24 : 31, lineHeight: 1.15, margin: "6px 0 8px" }}>Mes formations certifiantes</div>
-      <div style={{ fontSize: 14.5, opacity: .92, lineHeight: 1.55, maxWidth: 620 }}>{lignes.length} parcours construits de la même façon : les modules s'ouvrent dans l'ordre (le suivant quand le précédent est réussi à {SEUIL_ELEMENT} %), puis un examen final, coefficient 2, ouvert à {SEUIL_MOYENNE} % de moyenne, mène au <b>certificat</b> et à son <b>relevé de notes</b>.</div>
+      <div style={{ fontSize: 14.5, opacity: .92, lineHeight: 1.55, maxWidth: 620 }}>{lignes.length} parcours, une même règle : chaque module s'ouvre quand le précédent est réussi à {SEUIL_ELEMENT} %, puis l'examen final (ouvert à {SEUIL_MOYENNE} % de moyenne) mène au <b>certificat</b> et à son <b>relevé de notes</b>.</div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12, fontSize: 12.5, fontWeight: 700, alignItems: "center" }}>
         <span style={{ opacity: .8 }}>Ordre conseillé :</span>
         {lignes.map(({ p }, i) => <React.Fragment key={p.id}><span style={{ background: "rgba(255,255,255,.16)", borderRadius: 99, padding: "4px 10px" }}>{p.court}</span>{i < lignes.length - 1 && <i className="ti ti-chevron-right" style={{ opacity: .6 }} />}</React.Fragment>)}

@@ -375,7 +375,7 @@ export default function CodeImpots({K,mob,db,uid,scores={},ok,onSub,onGo,apercu=
       <i className="ti ti-receipt-tax" style={{position:"absolute",right:-10,bottom:-22,fontSize:150,opacity:.1}}/>
       <div style={{fontSize:12,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",opacity:.85}}>Parcours certifiant · Fiscalité RDC</div>
       <div style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:mob?24:31,lineHeight:1.15,margin:"6px 0 8px"}}>Le Code des impôts expliqué</div>
-      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>15 modules clairs (fiscalité, TVA pratique, paie, import-export, facture normalisée, IRPP et IS 2026), avec schémas, exemples chiffrés en francs congolais et QCM corrigés, construits à partir du Code des impôts de la DGI mis à jour au 31 mars 2021, des textes sociaux en vigueur en 2026 pour la paie et, pour la facture normalisée et l'IRPP, du Décret n° 23/010, de la loi n° 23/053 et des publications de la DGI.</div>
+      <div style={{fontSize:14.5,opacity:.92,lineHeight:1.55,maxWidth:560}}>{MODULES_FISC.length} modules à jour de la réforme 2026 (IS, IRPP, TVA, paie, facture normalisée, contrôle et contentieux), avec schémas, exemples en francs congolais et QCM corrigés. Les textes de référence sont cités à la fin de chaque module.</div>
       <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
         <span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>{valides} / {MODULES_FISC.length} modules réussis (≥ {SEUIL_ELEMENT} %)</span>
         {moy!=null&&<span style={{background:"rgba(255,255,255,.16)",borderRadius:99,padding:"6px 12px",fontWeight:800,fontSize:13}}>Score moyen : {moy} %</span>}
