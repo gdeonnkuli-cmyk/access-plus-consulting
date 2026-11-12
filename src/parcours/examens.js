@@ -3,11 +3,13 @@
 // - FISC et FIN : banque formée des QCM de tous les modules (m = module d'origine, affiché dans le corrigé) ;
 // - SYS-N1 : banque dédiée aux fondamentaux du SYSCOHADA révisé (c = comptes cités, vérifiés dans le plan par les tests) ;
 // - SYS-N2 : examen pratique « quelle écriture ? » construit à partir des écritures types du guide des comptes ;
-// - SYCEBNL : banque dédiée (src/sycebnl/examen.js).
+// - SYCEBNL : banque dédiée (src/sycebnl/examen.js) ;
+// - EDUF : banque formée des QCM des 8 modules d'éducation financière.
 import { MODULES_FISC } from "../fiscal/modules";
 import { MODULES_FIN } from "../finance/modules";
 import { EXAMEN_SYC } from "../sycebnl/examen";
 import { BANQUE_BQ } from "../banque/examen";
+import { MODULES_EDUF } from "../eduf/modules";
 import { enonce } from "../ef/syscohada/exercice";
 
 const avecModule = mods => mods.flatMap(m => m.qcm.map(q => ({ ...q, m: m.id })));
@@ -100,4 +102,5 @@ export const EXAMENS_FINAUX = {
   FIN: { titre: "Examen final — Finance d'entreprise", col: "#B7791F", charger: () => avecModule(MODULES_FIN) },
   BANQUE: { titre: "Examen final — Comptabilité bancaire (GCEC)", col: "#0A2A5C", charger: () => BANQUE_BQ },
   SYCEBNL: { titre: EXAMEN_SYC.titre, col: EXAMEN_SYC.col, charger: () => EXAMEN_SYC.qcm },
+  EDUF: { titre: "Examen final — Éducation financière", col: "#15803D", charger: () => avecModule(MODULES_EDUF) },
 };

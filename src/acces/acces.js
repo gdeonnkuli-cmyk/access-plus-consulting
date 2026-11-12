@@ -17,6 +17,7 @@ export const INCLUS = [
   "Tous les modules SYSCOHADA, QCM et exercices corrigés",
   "Le Code des impôts, la TVA, la paie, la facture normalisée, l'IRPP et l'IS : 15 modules avec QCM",
   "L'atelier États financiers et ses cas pratiques",
+  "Les parcours certifiants : finance d'entreprise, comptabilité bancaire, SYCEBNL et éducation financière",
   "Vidéos, cours en direct, présentations et PDF",
   "Les nouveaux contenus, ajoutés régulièrement",
 ];

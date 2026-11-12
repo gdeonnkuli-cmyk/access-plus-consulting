@@ -8,7 +8,7 @@ import{LIB_ACCES}from"../acces/plateforme";
 // ══════════════════ PAGE D'UN PARCOURS À MODULES (SYCEBNL, comptabilité bancaire…) ══════════════════
 // Chemin vertical : modules ouverts dans l'ordre (le suivant à SEUIL_ELEMENT %, acquis conservés), leçon en blocs, schémas,
 // narration audio et évaluation (séries de NB_Q), puis examen final (EXAMENS[id], coefficient 2) et certificat avec relevé.
-// cfg : { id, modules, cle(idModule), audio(mod), nom, hero: { fond, ico, kicker, titre, texte }, libre, source }
+// cfg : { id, modules, cle(idModule), audio(mod), nom, hero: { fond, ico, kicker, titre, texte }, libre, libreTexte?, source }
 // apercu : administrateur ou formateur, tout est ouvert.
 const NB_Q=10;
 
@@ -92,7 +92,7 @@ export default function ParcoursModules({cfg,K,mob,db,uid,scores={},ok,onSub,onG
     </div>
     {!ok&&!apercu&&<div style={{display:"flex",alignItems:"center",gap:10,background:K.waBg,border:`1px solid ${K.waBd}`,borderRadius:14,padding:"11px 14px",marginBottom:14,flexWrap:"wrap"}}>
       <i className="ti ti-lock-open" style={{fontSize:18,color:K.wa}}/>
-      <div style={{flex:1,minWidth:200,fontSize:13.5,color:K.t1,lineHeight:1.5}}>Le module <b>{cfg.libre}</b> est en accès libre. Les autres modules, l'examen final et le certificat sont réservés aux apprenants disposant d'un accès actif.</div>
+      <div style={{flex:1,minWidth:200,fontSize:13.5,color:K.t1,lineHeight:1.5}}>{cfg.libreTexte||<>Le module <b>{cfg.libre}</b> est en accès libre.</>} Les autres modules, l'examen final et le certificat sont réservés aux apprenants disposant d'un accès actif.</div>
       {onSub&&<Bouton K={K} ch={LIB_ACCES} on={onSub} sx={{minHeight:38,padding:"8px 14px",fontSize:13}}/>}
     </div>}
     {apercu&&<div style={{fontSize:12.5,color:K.t3,marginBottom:10}}><i className="ti ti-eye" style={{marginRight:4}}/>Aperçu : tous les modules sont ouverts.</div>}

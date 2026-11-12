@@ -4,8 +4,8 @@ import { PARCOURS, etatParcours, evaluer, FISC } from "../attest/regles";
 const etape = (id, user, mods = []) => prochaineEtape(id, etatParcours(id, mods, user), evaluer(id, mods, user));
 const tous = p => Object.fromEntries(FISC.map(([f]) => [`FISC-${f}`, { pct: p }]));
 
-test("les 6 formations, dans l'ordre conseillé, correspondent aux parcours certifiants", () => {
-  expect(FORMATIONS.map(f => f.id)).toEqual(["SYS-N1", "SYS-N2", "FISC", "FIN", "BANQUE", "SYCEBNL"]);
+test("les 7 formations, dans l'ordre conseillé, correspondent aux parcours certifiants", () => {
+  expect(FORMATIONS.map(f => f.id)).toEqual(["SYS-N1", "SYS-N2", "FISC", "FIN", "BANQUE", "SYCEBNL", "EDUF"]);
   expect(new Set(FORMATIONS.map(f => f.id))).toEqual(new Set(PARCOURS.map(p => p.id)));
 });
 

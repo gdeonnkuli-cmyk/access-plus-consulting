@@ -2,7 +2,7 @@ import React,{useMemo}from"react";
 import{PARCOURS,EXAMENS,SEUIL_ELEMENT,SEUIL_MOYENNE,etatParcours,evaluer}from"../attest/regles";
 import{LIB_ACCES}from"../acces/plateforme";
 
-// ══════════════════ MES FORMATIONS : LES 5 PARCOURS CERTIFIANTS ══════════════════
+// ══════════════════ MES FORMATIONS : LES PARCOURS CERTIFIANTS ══════════════════
 // Une carte par parcours (même présentation pour tous) : niveau, durée, progression et bouton « prochaine étape »
 // (continuer le module en cours, passer l'examen final, améliorer ses notes, obtenir le certificat).
 // En dessous, les outils pratiques (ateliers et référentiels) qui ne délivrent pas de certificat.
@@ -21,6 +21,8 @@ export const FORMATIONS = [
     resume: "Le Guide comptable de la BCC : dépôts, crédits, compensation, devises, créances en souffrance, états financiers et analyse d'une banque." },
   { id: "SYCEBNL", ico: "building-community", col: "#0F766E", niveau: "Spécialisation", libre: "SB1",
     resume: "Associations, ONG, fondations, églises : dotations, fonds affectés, bailleurs, bénévolat et analyse financière." },
+  { id: "EDUF", ico: "pig-money", col: "#15803D", niveau: "Tous publics", libre: "EF1", nLibres: 3,
+    resume: "Pour tous : budget, épargne, Mobile Money, crédit, dollar et inflation, assurances, arnaques et projets d'avenir, avec simulateurs." },
 ];
 export const OUTILS = [
   { vue: "ef", ico: "report-money", titre: "Atelier États financiers", d: "Bilan, compte de résultat, TFT et notes annexes à partir d'une balance." },
@@ -68,7 +70,7 @@ export default function MesFormations({ K, mob, user, mods, ok, onGo, onExam, on
 
     {!ok && <div style={{ display: "flex", alignItems: "center", gap: 10, background: K.waBg, border: `1px solid ${K.waBd}`, borderRadius: 14, padding: "11px 14px", marginBottom: 14, flexWrap: "wrap" }}>
       <i className="ti ti-lock-open" style={{ fontSize: 18, color: K.wa }} />
-      <div style={{ flex: 1, minWidth: 200, fontSize: 13.5, color: K.t1, lineHeight: 1.5 }}>Le premier module de la Fiscalité, de la Finance d'entreprise, de la Comptabilité bancaire et du SYCEBNL est gratuit. Les parcours complets, les examens et les certificats sont réservés aux abonnés.</div>
+      <div style={{ flex: 1, minWidth: 200, fontSize: 13.5, color: K.t1, lineHeight: 1.5 }}>Le premier module de la Fiscalité, de la Finance d'entreprise, de la Comptabilité bancaire et du SYCEBNL est gratuit, ainsi que les trois premiers de l'Éducation financière. Les parcours complets, les examens et les certificats sont réservés aux abonnés.</div>
       {onSub && <button onClick={onSub} className="bt" style={{ background: `linear-gradient(135deg,${K.emD},${K.em})`, color: "#fff", border: "none", borderRadius: 11, padding: "9px 14px", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{LIB_ACCES}</button>}
     </div>}
 
@@ -84,7 +86,7 @@ export default function MesFormations({ K, mob, user, mods, ok, onGo, onExam, on
               <div style={{ fontSize: 12, color: K.t3 }}>{f.niveau} · {ev.heures} h · {n} {f.id === "SYS-N2" ? "exercices" : "modules"} + examen</div>
             </div>
             {ev.reussite ? <span style={{ fontSize: 11.5, fontWeight: 800, color: K.em, background: K.emBg, border: `1px solid ${K.emBd}`, borderRadius: 99, padding: "3px 9px" }}>Réussi{ev.mention ? ` · ${ev.mention}` : ""}</span>
-              : !ok && f.libre ? <span style={{ fontSize: 11.5, fontWeight: 800, color: K.in_, background: K.inBg, border: `1px solid ${K.inBd}`, borderRadius: 99, padding: "3px 9px" }}>{f.libre} gratuit</span> : null}
+              : !ok && f.libre ? <span style={{ fontSize: 11.5, fontWeight: 800, color: K.in_, background: K.inBg, border: `1px solid ${K.inBd}`, borderRadius: 99, padding: "3px 9px" }}>{f.nLibres > 1 ? `${f.nLibres} modules gratuits` : `${f.libre} gratuit`}</span> : null}
           </div>
           <div style={{ fontWeight: 800, fontSize: 15.5, color: K.t1, lineHeight: 1.3 }}>{p.titre}</div>
           <div style={{ fontSize: 13, color: K.t3, lineHeight: 1.5, flex: 1 }}>{f.resume}</div>
