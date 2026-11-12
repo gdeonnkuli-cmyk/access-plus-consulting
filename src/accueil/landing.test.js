@@ -9,5 +9,7 @@ test("la page d'accueil publique présente tous les parcours certifiants, avec d
   expect(cat.find(c => c.id === "BANQUE").contenu).toBe("12 modules");
   // « 50+ modules et exercices » affiché dans l'en-tête
   expect(cat.reduce((a, c) => a + c.n, 0)).toBeGreaterThanOrEqual(50);
-  expect(cat.filter(c => c.libre)).toHaveLength(4);
+  expect(cat.filter(c => c.libre)).toHaveLength(5);
+  // Éducation financière : 8 modules dont 3 gratuits (EF1 à EF3)
+  expect(cat.find(c => c.id === "EDUF")).toMatchObject({ contenu: "8 modules", nLibres: 3 });
 });

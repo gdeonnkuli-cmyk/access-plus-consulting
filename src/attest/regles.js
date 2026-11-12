@@ -51,6 +51,13 @@ const BQ = [
   ["B11", "Agios, escompte et conditions de banque"], ["B12", "Affacturage, crédit-bail, commerce extérieur et garanties"],
 ];
 const cleBq = id => `BQ-${id}`;
+// Modules d'éducation financière (grand public ; aligné sur src/eduf/modules — vérifié par les tests)
+const EF = [
+  ["EF1", "Mon argent, mon budget"], ["EF2", "Épargner, même avec peu"], ["EF3", "Banque et Mobile Money : utiliser les services financiers"],
+  ["EF4", "Emprunter sans se piéger"], ["EF5", "Dollar, franc congolais et inflation"], ["EF6", "Se protéger : assurances, arnaques et recours"],
+  ["EF7", "Faire fructifier son argent"], ["EF8", "Préparer l'avenir"],
+];
+const cleEf = id => `EF-${id}`;
 const CLE_FINAL_SYC = "SYC-FINAL";
 const COEF_FINAL_SYC = 2; // = COEF_FINAL
 const cleSyc = id => `SYC-${id}`;
@@ -65,6 +72,7 @@ const EXAMENS = {
   FIN: { cle: "FIN-FINAL", nbQ: 30, heures: 1, vue: "fin", progressif: true },
   SYCEBNL: { cle: CLE_FINAL_SYC, nbQ: 30, heures: 1, vue: "syc", progressif: true },
   BANQUE: { cle: "BQ-FINAL", nbQ: 30, heures: 1, vue: "banq", progressif: true },
+  EDUF: { cle: "EF-FINAL", nbQ: 30, heures: 1, vue: "eduf", progressif: true },
 };
 
 const PARCOURS = [
@@ -80,6 +88,8 @@ const PARCOURS = [
     description: "Les 8 modules du SYCEBNL (cadre, bases et contrôle interne, plan de comptes, charges et avances, ressources propres, fonds affectés et projets, actifs et trésorerie, clôture et analyse financière) et l'examen final de 30 questions, coefficient 2." },
   { id: "BANQUE", titre: "Comptabilité bancaire en RDC — Guide comptable des établissements de crédit (BCC)", court: "Comptabilité bancaire", certificat: true,
     description: "Les 12 modules de comptabilité bancaire selon le GCEC de la Banque Centrale du Congo (cadre, plan de comptes, clientèle, paiements et compensation, trésorerie et BCC, titres, devises et hors-bilan, créances en souffrance, soldes de gestion et reporting, états financiers, analyse financière, agios et escompte, financements spécialisés et garanties) et l'examen final de 30 questions, coefficient 2." },
+  { id: "EDUF", titre: "Éducation financière — Bien gérer son argent en RDC", court: "Éducation financière", certificat: true,
+    description: "Les 8 modules d'éducation financière (budget, épargne, banque et Mobile Money, crédit, monnaies et inflation, assurances et arnaques, investissement, préparation de l'avenir), avec simulateurs, et l'examen final de 30 questions, coefficient 2." },
 ];
 
 // Modules de cours pris en compte : ceux publiés (on !== false), dans l'ordre du catalogue
@@ -96,6 +106,8 @@ function elementsBase(id, modules) {
   if (id === "FIN") return FIN.map(([f, t]) => ({ cle: `FIN-${f}`, titre: `${f} · ${t}`, heures: 2, evalue: true }));
   // 1 h 30 par module (leçon, audio, QCM)
   if (id === "BANQUE") return BQ.map(([f, t]) => ({ cle: cleBq(f), titre: `${f} · ${t}`, heures: 1.5, evalue: true }));
+  // 1 h par module (leçon, simulateur, audio, QCM)
+  if (id === "EDUF") return EF.map(([f, t]) => ({ cle: cleEf(f), titre: `${f} · ${t}`, heures: 1, evalue: true }));
   if (id === "SYCEBNL") return SYC.map(([f, t]) => ({ cle: cleSyc(f), titre: `${f} · ${t}`, heures: 1.5, evalue: true }));
   if (id === "SYS-N2") return [
     { cle: "JRN-ZAO", titre: "Monographie ZAO IMMO SARL — tenue comptable 2021", heures: 10, evalue: true },
@@ -172,4 +184,4 @@ function numeroAttestation(alea = Math.random, annee = new Date().getFullYear())
 }
 const numeroValide = n => /^EC-\d{4}-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/.test(String(n || ""));
 
-module.exports = { SEUIL_ELEMENT, SEUIL_MOYENNE, SIGNATAIRE, ORGANISME, FISC, FIN, SYC, BQ, cleBq, CLE_FINAL_SYC, COEF_FINAL_SYC, COEF_FINAL, EXAMENS, cleSyc, etatSyc, etatParcours, PARCOURS, elementsBase, elementsParcours, evaluer, mention, numeroAttestation, numeroValide, modulesActifs };
+module.exports = { SEUIL_ELEMENT, SEUIL_MOYENNE, SIGNATAIRE, ORGANISME, FISC, FIN, SYC, BQ, cleBq, EF, cleEf, CLE_FINAL_SYC, COEF_FINAL_SYC, COEF_FINAL, EXAMENS, cleSyc, etatSyc, etatParcours, PARCOURS, elementsBase, elementsParcours, evaluer, mention, numeroAttestation, numeroValide, modulesActifs };

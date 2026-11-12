@@ -21,20 +21,20 @@ export function catalogue(){
 }
 const OUTILS=[
   {ico:"headphones",col:"#0E7490",t:"Cours audio",d:"Chaque leçon s'écoute comme un podcast, dans les transports ou en marchant."},
-  {ico:"calculator",col:ROUGE,t:"Simulateurs de paie et de TVA",d:"Du brut au net avec CNSS et impôt, déclaration de TVA du mois : vous changez les chiffres, le calcul suit."},
+  {ico:"calculator",col:ROUGE,t:"Simulateurs",d:"Paie, TVA, budget du mois, coût d'un crédit, épargne : vous changez les chiffres, le calcul suit."},
   {ico:"report-money",col:BLEU,t:"Atelier États financiers",d:"Bilan, compte de résultat, tableau des flux et notes annexes construits à partir d'une balance."},
   {ico:"books",col:"#7C3AED",t:"Guide des comptes SYSCOHADA",d:"Contenu et fonctionnement de chaque compte, avec l'exercice « Quel compte ? » classe par classe."},
   {ico:"clipboard-check",col:"#B7791F",t:"Cas corrigés",d:"Une monographie comptable complète et des cas de finance chiffrés en francs congolais et en dollars."},
   {ico:"video",col:"#C2410C",t:"Vidéos, présentations et stages",d:"Replays, supports de cours et stages virtuels pour passer de la théorie à la pratique."},
 ];
-const PUBLICS=[["school","Étudiants"],["calculator","Comptables et auditeurs"],["building-store","Entrepreneurs"],["user-search","Chercheurs d'emploi"],["building-community","ONG et associations"]];
+const PUBLICS=[["users","Grand public"],["school","Étudiants"],["calculator","Comptables et auditeurs"],["building-store","Entrepreneurs"],["user-search","Chercheurs d'emploi"],["building-community","ONG et associations"]];
 
 export default function Landing({K,mob,onLogin,logo,logoClair,sombre}){
   const[scrolled,setScrolled]=useState(false);
   useEffect(()=>{const h=()=>setScrolled(window.scrollY>40);window.addEventListener("scroll",h,{passive:true});return()=>window.removeEventListener("scroll",h);},[]);
   const cat=catalogue();
   const fisc=cat.find(c=>c.id==="FISC")||cat[0];
-  const total=cat.reduce((a,c)=>a+c.n,0),libres=cat.filter(c=>c.libre).length;
+  const total=cat.reduce((a,c)=>a+c.n,0),libres=cat.reduce((a,c)=>a+(c.libre?c.nLibres||1:0),0);
   const aller=id=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});};
   const titre={margin:0,fontFamily:SERIF,fontWeight:700,color:K.t1,letterSpacing:"-.4px",lineHeight:1.15};
   const sur={fontSize:12.5,fontWeight:800,color:sombre?"#8FB4FF":BLEU,letterSpacing:1.6,textTransform:"uppercase",marginBottom:10};
@@ -69,7 +69,7 @@ export default function Landing({K,mob,onLogin,logo,logoClair,sombre}){
             Maîtrisez la comptabilité, la fiscalité et la finance <span style={{color:OR}}>telles qu'on les pratique en RDC</span>
           </h1>
           <p style={{margin:"0 0 24px",fontSize:mob?15.5:18,lineHeight:1.65,color:"rgba(255,255,255,.88)",maxWidth:560}}>
-            {cat.length} parcours certifiants : SYSCOHADA révisé, fiscalité à jour de la réforme 2026, comptabilité bancaire, finance d'entreprise et SYCEBNL. Des leçons claires, des exemples en francs congolais, un examen final et un certificat vérifiable.
+            {cat.length} parcours certifiants : SYSCOHADA révisé, fiscalité à jour de la réforme 2026, comptabilité bancaire, finance d'entreprise, SYCEBNL et éducation financière pour tous. Des leçons claires, des exemples en francs congolais, un examen final et un certificat vérifiable.
           </p>
           <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:18}}>
             <button onClick={onLogin} className="bt" style={{...btnP,flex:mob?"1 1 100%":"0 0 auto"}}>Créer mon compte gratuit<i className="ti ti-arrow-right" style={{fontSize:18}}/></button>
@@ -139,7 +139,7 @@ export default function Landing({K,mob,onLogin,logo,logoClair,sombre}){
               <span style={{display:"inline-flex",alignItems:"center",gap:5}}><i className="ti ti-book-2" style={{fontSize:14}}/>{c.contenu}</span>
               <span style={{display:"inline-flex",alignItems:"center",gap:5}}><i className="ti ti-certificate" style={{fontSize:14}}/>Examen de {c.nbQ} questions</span>
             </div>
-            {c.libre&&<span style={{alignSelf:"flex-start",fontSize:12.5,fontWeight:800,color:sombre?"#4FD1B5":"#0D7A6B",background:"rgba(13,122,107,.12)",border:"1px solid rgba(13,122,107,.3)",borderRadius:99,padding:"3px 10px",display:"inline-flex",alignItems:"center",gap:5}}><i className="ti ti-gift" style={{fontSize:14}}/>Premier module gratuit</span>}
+            {c.libre&&<span style={{alignSelf:"flex-start",fontSize:12.5,fontWeight:800,color:sombre?"#4FD1B5":"#0D7A6B",background:"rgba(13,122,107,.12)",border:"1px solid rgba(13,122,107,.3)",borderRadius:99,padding:"3px 10px",display:"inline-flex",alignItems:"center",gap:5}}><i className="ti ti-gift" style={{fontSize:14}}/>{c.nLibres>1?`${c.nLibres} premiers modules gratuits`:"Premier module gratuit"}</span>}
           </button>)}
         </div>
       </div>

@@ -155,3 +155,8 @@ export function texteModuleSycebnl(mod) {
 export function texteModuleBanque(mod) {
   return segments([point(`Comptabilité bancaire, module ${String(mod.id).replace(/^B/, "")}. ${mod.titre}`), ...(mod.narration || []).map(point)]);
 }
+
+// ── Module d'éducation financière (src/eduf/modules.js) : narration écrite pour l'oral
+export function texteModuleEduf(mod) {
+  return segments([point(`Éducation financière, module ${String(mod.id).replace(/^EF/, "")}. ${mod.titre}`), ...(mod.narration || []).map(point)]);
+}
