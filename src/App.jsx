@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect,useCallback,useMemo,createContext,useContext}from"react";
 import{initializeApp,deleteApp}from"firebase/app";
-import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup,updatePassword,reauthenticateWithCredential,EmailAuthProvider}from"firebase/auth";
+import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,GoogleAuthProvider,FacebookAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,updatePassword,reauthenticateWithCredential,EmailAuthProvider}from"firebase/auth";
 import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,getDocs,onSnapshot,deleteDoc,serverTimestamp,query,where,orderBy,limit,deleteField,runTransaction,writeBatch}from"firebase/firestore";
 import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"firebase/storage";
 import EtatsFinanciers,{inscrireAnnuaire}from"./EtatsFinanciers";
@@ -87,6 +87,21 @@ const sendNotifEmail=async({to_email,subject,nom,message})=>{
 initNotif({db,auth,email:sendNotifEmail});
 const googleProvider=new GoogleAuthProvider();
 const facebookProvider=new FacebookAuthProvider();
+// Connexion Google/Facebook. Safari (iPhone) bloque la fenêtre si elle s'ouvre trop longtemps après le clic : au premier clic,
+// Firebase chargeait d'abord son module de connexion. getRedirectResult, lancé au démarrage, précharge ce module (la fenêtre
+// s'ouvre alors immédiatement) et récupère le résultat de la solution de repli par redirection (si la fenêtre est quand même bloquée).
+const CLE_SOCIAL="ec-connexion-sociale"; // sessionStorage : { consent } pendant la redirection
+let redirP=null;
+const resultatRedirection=()=>redirP||(redirP=getRedirectResult(auth).catch(e=>({erreur:e})));
+const lireSocial=()=>{try{return JSON.parse(sessionStorage.getItem(CLE_SOCIAL)||"null");}catch(e){return null;}};
+const effacerSocial=()=>{try{sessionStorage.removeItem(CLE_SOCIAL);}catch(e){}};
+// Module de connexion de Firebase chargé à l'avance (8 s au plus) : les boutons Google et Facebook attendent qu'il soit prêt,
+// pour que la fenêtre s'ouvre dans la foulée du clic, même sur une connexion lente.
+let pretP=null;
+const preparerSocial=()=>pretP||(pretP=Promise.race([
+  Promise.resolve(auth._initializationPromise).then(()=>auth._popupRedirectResolver&&auth._popupRedirectResolver._initialize(auth)).then(()=>true,()=>false),
+  new Promise(r=>setTimeout(()=>r(false),8000)),
+]));
 
 // ── THÈMES ────────────────────────────────────────────────────────────────────
 const TH={
@@ -2520,6 +2535,8 @@ function Auth({onL}){
   const K=useK();const{mob}=useW();
   const[tab,sT]=useState("l"),[err,sE]=useState(""),[ok,sO]=useState(""),[busy,sB]=useState(false),[step,sS]=useState(1);
   const[consent,sConsent]=useState(false),[showPrivacy,sShowPrivacy]=useState(false),[needConsent,sNeedConsent]=useState(false);
+  const[socialPret,sSocialPret]=useState(false);
+  useEffect(()=>{let actif=true;preparerSocial().then(()=>{if(actif)sSocialPret(true);});return()=>{actif=false;};},[]);
   useEffect(()=>{try{if(sessionStorage.getItem(CLE_DECO)){sessionStorage.removeItem(CLE_DECO);sO("Vous avez été déconnecté après une période sans utilisation. Reconnectez-vous pour continuer.");}}catch(e){}},[]);
   const pm=useRef(null),rN=useRef(),rM=useRef(),rP=useRef(),rP2=useRef(),rC=useRef();
   const sw=useCallback(t=>{sT(t);sS(1);sE("");sO("");sConsent(false);sNeedConsent(false);setTimeout(()=>[rN,rM,rP,rP2,rC].forEach(r=>{if(r.current)r.current.value="";}),0);},[]);
@@ -2590,17 +2607,12 @@ function Auth({onL}){
       sO("✓ Accès débloqué !");setTimeout(()=>onL(cred.user.uid,cred.user),700);
     }catch(e){sB(false);sE(e.message);}
   },[onL]);
-  const socialLogin=useCallback(async(provider)=>{
-    sE("");sO("");
-    if(tab==="r"&&!consent){sNeedConsent(true);return sE("Cochez d'abord la politique de confidentialité, puis cliquez à nouveau.");}
-    sB(true);
-    try{
-      const cred=await signInWithPopup(auth,provider);
-      const user=cred.user;
+  // Après connexion Google/Facebook (fenêtre ou redirection) : profil créé à la première connexion, consentement exigé
+  const finaliserSocial=useCallback(async(user,consentOk)=>{
       if(user.email===ADM_EMAIL){onL("__admin__",user);return;}
       const snap=await getDoc(doc(db,"users",user.uid));
       if(!snap.exists()){
-        if(!consent){
+        if(!consentOk){
           await signOut(auth);sB(false);sT("r");sNeedConsent(true);
           return sE("Première connexion avec ce compte : acceptez la politique de confidentialité ci-dessous, puis cliquez à nouveau sur le bouton.");
         }
@@ -2612,7 +2624,8 @@ function Auth({onL}){
         updateDoc(doc(db,"users",user.uid),{lastLogin:Date.now()}).catch(()=>{});
       }
       onL(user.uid,user);
-    }catch(e){
+  },[onL]);
+  const erreurSociale=useCallback(e=>{
       const msg={
         "auth/unauthorized-domain":`Ce site (${window.location.hostname}) n'est pas autorisé dans Firebase. L'administrateur doit l'ajouter dans Authentication > Paramètres > Domaines autorisés.`,
         "auth/operation-not-allowed":"Ce mode de connexion n'est pas activé dans Firebase (Authentication > Méthode de connexion).",
@@ -2622,8 +2635,35 @@ function Auth({onL}){
       }[e.code];
       if(e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request")sE(msg||"Connexion échouée : "+e.message);
       sB(false);
+  },[]);
+  const socialLogin=useCallback(async(provider)=>{
+    sE("");sO("");
+    if(tab==="r"&&!consent){sNeedConsent(true);return sE("Cochez d'abord la politique de confidentialité, puis cliquez à nouveau.");}
+    sB(true);
+    try{
+      const cred=await signInWithPopup(auth,provider);
+      await finaliserSocial(cred.user,consent);
+    }catch(e){
+      // Fenêtre bloquée (navigateur du téléphone, application de messagerie) : connexion par redirection dans le même onglet
+      if(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment"){
+        try{sessionStorage.setItem(CLE_SOCIAL,JSON.stringify({consent}));}catch(x){}
+        try{await signInWithRedirect(auth,provider);return;}catch(e2){effacerSocial();return erreurSociale(e2);}
+      }
+      erreurSociale(e);
     }
-  },[onL,tab,consent]);
+  },[tab,consent,finaliserSocial,erreurSociale]);
+  // Retour de la redirection Google/Facebook
+  useEffect(()=>{
+    const att=lireSocial();if(!att)return;
+    sB(true);
+    resultatRedirection().then(async r=>{
+      effacerSocial();
+      if(r&&r.erreur)return erreurSociale(r.erreur);
+      const user=(r&&r.user)||auth.currentUser;
+      if(user){try{await finaliserSocial(user,!!att.consent);}catch(e){erreurSociale(e);}}
+      else{sB(false);sE("La connexion Google ou Facebook n'a pas abouti sur ce navigateur. Réessayez, connectez-vous avec votre e-mail et votre mot de passe, ou ouvrez le site dans Chrome.");}
+    });
+  },[finaliserSocial,erreurSociale]);
   const go=useCallback(()=>step===2?code():tab==="r"?reg():login(),[step,tab,code,reg,login]);
   const hk=useCallback(e=>{if(e.key==="Enter")go();},[go]);
   return <div style={{minHeight:"100vh",background:K.bg,display:"flex",flexDirection:"column",fontFamily:"'Outfit',sans-serif",position:"relative"}}>
@@ -2676,13 +2716,13 @@ function Auth({onL}){
               <div style={{flex:1,height:1,background:K.b0}}/>
             </div>
             <div style={{display:"flex",gap:8,marginBottom:8}}>
-              <button onClick={()=>socialLogin(googleProvider)} disabled={busy} className="bt"
-                style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:9,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:K.t1,minHeight:44}}>
+              <button onClick={()=>socialLogin(googleProvider)} disabled={busy||!socialPret} className="bt" title={socialPret?"":"Préparation de la connexion…"}
+                style={{opacity:socialPret?1:.55,flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",background:K.c2,border:`1px solid ${K.b1}`,borderRadius:9,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:K.t1,minHeight:44}}>
                 <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.86l6.08-6.08C34.46 3.05 29.5 1 24 1 14.82 1 7.07 6.48 3.64 14.22l7.08 5.5C12.43 13.72 17.76 9.5 24 9.5z"/><path fill="#4285F4" d="M46.14 24.5c0-1.64-.15-3.22-.42-4.75H24v9h12.46c-.54 2.9-2.18 5.36-4.64 7.01l7.14 5.54C43.27 37.22 46.14 31.28 46.14 24.5z"/><path fill="#FBBC05" d="M10.72 28.28A14.5 14.5 0 0 1 9.5 24c0-1.49.26-2.93.72-4.28l-7.08-5.5A23.93 23.93 0 0 0 0 24c0 3.87.93 7.53 2.57 10.75l8.15-6.47z"/><path fill="#34A853" d="M24 47c5.5 0 10.12-1.82 13.49-4.95l-7.14-5.54C28.57 38.3 26.4 39 24 39c-6.24 0-11.57-4.22-13.28-9.93l-8.15 6.47C6.07 43.48 14.54 47 24 47z"/></svg>
                 Google
               </button>
-              <button onClick={()=>socialLogin(facebookProvider)} disabled={busy} className="bt"
-                style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",background:"#1877F2",border:"none",borderRadius:9,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:"#fff",minHeight:44}}>
+              <button onClick={()=>socialLogin(facebookProvider)} disabled={busy||!socialPret} className="bt" title={socialPret?"":"Préparation de la connexion…"}
+                style={{opacity:socialPret?1:.55,flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",background:"#1877F2",border:"none",borderRadius:9,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:"#fff",minHeight:44}}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.514c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
                 Facebook
               </button>
@@ -5372,11 +5412,13 @@ export default function App(){
   const[verif,sVerif]=useState(()=>{try{return new URLSearchParams(window.location.search).get("attestation");}catch{return null;}});
   function setT(id){sTid(id);try{localStorage.setItem("ap_theme",id);}catch{}}
   useEffect(()=>{
+    resultatRedirection().then(()=>{if(lireSocial())sShowAuth(true);});
     const unsub=onAuthStateChanged(auth,async user=>{
       if(user){
-        if(user.email===ADM_EMAIL){sW({role:"admin",user});sL(false);return;}
+        if(user.email===ADM_EMAIL){effacerSocial();sW({role:"admin",user});sL(false);return;}
         const snap=await getDoc(doc(db,"users",user.uid));
         if(snap.exists()){
+          effacerSocial(); // retour de redirection Google/Facebook d'un compte existant : rien d'autre à faire
           const d=snap.data();
           if(d.role==="formateur"){sW({role:"formateur",uid:user.uid,user});}
           else{sW({role:"user",uid:user.uid,user});}
