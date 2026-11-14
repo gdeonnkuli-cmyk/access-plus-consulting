@@ -9,6 +9,8 @@ import FinanceEntreprise from"./finance/FinanceEntreprise";
 import Sycebnl from"./sycebnl/Sycebnl";
 import Banque from"./banque/Banque";
 import Eduf from"./eduf/Eduf";
+import TableauLecture from"./admin/TableauLecture";
+import Observateurs,{useObservateurs}from"./admin/Observateurs";
 import{initNotif,notifier}from"./notif/notif";
 import Cloche from"./notif/Cloche";
 import AdminNotif from"./notif/AdminNotif";
@@ -252,7 +254,7 @@ function useUsers(){
 // activite/{uid} : dernière activité de chaque compte (signal toutes les 90 s quand l'onglet est visible)
 // connexions/{id} : une ligne par ouverture de session (une fois par onglet)
 const ENLIGNE_MS=4*60*1000;
-const VUE_LBL={home:"Accueil",form:"Mes formations",msg:"Messages",pres:"Présentations",jrn:"Monographie ZAO",cpt:"Guide des comptes",audio:"Écouter les cours",fisc:"Code des impôts",fin:"Finance d'entreprise",syc:"SYCEBNL",banq:"Comptabilité bancaire",eduf:"Éducation financière",sugg:"Suggestions",apropos:"À propos",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
+const VUE_LBL={home:"Accueil",form:"Mes formations",msg:"Messages",pres:"Présentations",jrn:"Monographie ZAO",cpt:"Guide des comptes",audio:"Écouter les cours",fisc:"Code des impôts",fin:"Finance d'entreprise",syc:"SYCEBNL",banq:"Comptabilité bancaire",eduf:"Éducation financière",tdb:"Tableau de bord",sugg:"Suggestions",apropos:"À propos",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
 const appareil=()=>{const ua=navigator.userAgent||"";const os=/Android/i.test(ua)?"Android":/iPhone|iPad|iPod/i.test(ua)?"iOS":/Windows/i.test(ua)?"Windows":/Mac OS/i.test(ua)?"Mac":/Linux/i.test(ua)?"Linux":"Autre";
   const nav=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/SamsungBrowser/.test(ua)?"Samsung":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"Navigateur";
   const app=(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||String(document.referrer).startsWith("android-app://")?"Application":"Site web";
@@ -2740,6 +2742,7 @@ function UA({uid,onOut}){
   // Vue initiale : raccourcis de l'application installée (?vue=ef, ?vue=pres…)
   const[vue,sV]=useState(()=>{try{return normaliserVue(new URLSearchParams(window.location.search).get("vue"));}catch{return"home";}}),[mod,sM]=useState(null),[exam,sExam]=useState(null),[quiz,sQ]=useState(null),[openQuiz,sOpenQuiz]=useState(null),[sub,sSub]=useState(false);
   const[uData,sUD]=useState(null),[pdfs,sPdfs]=useState({});
+  const estObs=useObservateurs(db).includes(uid); // accès en lecture au tableau de bord (désigné par l'administrateur)
   const[showOnboarding,sShowOnboarding]=useState(false);
   const{mods,loading:mL}=useModules();
   const allPres=usePresentations();
@@ -2789,6 +2792,9 @@ function UA({uid,onOut}){
   if(mod)return W(<MV mod={mod} sc={sc[mod.id]} ok={ok} onQ={()=>sQ(mod)} onOpenQ={()=>sOpenQuiz(mod)} onMarkDone={()=>markDoneNoEval(mod.id)} doneNoEval={pr[mod.id]==="done"} openAnswer={myOpenAnswers.find(a=>a.modId===mod.id)} onBack={()=>sM(null)} onSub={()=>sSub(true)} vids={vids.filter(v=>v.mid===mod.id)} pdf={pdfs[mod.id]} uid={uid} uNom={uData.nom}/>,true);
   return W(<>
     <SousNav groupes={GROUPES_APPRENANT} vue={vue} onGo={sV}/>
+    {vue==="home"&&estObs&&<button onClick={()=>sV("tdb")} className="bt" style={{width:"100%",display:"flex",alignItems:"center",gap:12,textAlign:"left",background:"linear-gradient(135deg,#011B33,#1E4FA3)",color:"#fff",border:"none",borderRadius:16,padding:"14px 16px",marginBottom:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+      <i className="ti ti-chart-dots" style={{fontSize:26,flexShrink:0}}/><span style={{flex:1}}><span style={{display:"block",fontWeight:800,fontSize:15}}>Tableau de bord Éco-Campus</span><span style={{display:"block",fontSize:13,opacity:.85}}>Accès en lecture seule accordé par l'administration</span></span><i className="ti ti-chevron-right" style={{fontSize:20}}/></button>}
+    {vue==="tdb"&&(estObs?<TableauLecture K={K} mob={mob}/>:<div style={{textAlign:"center",color:K.t3,padding:30}}>Votre compte n'a pas accès au tableau de bord.</div>)}
     {vue==="home"&&<Home u={uData} pr={pr} sc={sc} gp={gp} nd={nd} ok={ok} mods={aMods} vids={vids} onOpen={ouvrirModule} onSub={()=>sSub(true)} onVid={()=>sV("videos")} onPres={()=>sV("pres")} onStages={()=>sV("stages")} onEf={()=>sV("ef")} onFisc={()=>sV("fisc")} onFin={()=>sV("fin")} onJrn={()=>sV("jrn")} onCpt={()=>sV("cpt")} onAudio={()=>sV("audio")} live={live} presCount={allPres.filter(estPublie).length} uid={uid} onGo={sV}/>}
     {vue==="videos"&&<VidsPage ok={ok} onSub={()=>sSub(true)} vids={vids} live={live}/>}
     {vue==="pres"&&<PresPage ok={ok} onSub={()=>sSub(true)} pres={allPres.filter(estPublie)}/>
@@ -4633,6 +4639,7 @@ function AA({onOut}){
           {k:"eduf",ico:"pig-money",    label:"Éducation financière",col:"#15803D"},
           {k:"ac",ico:"ticket",         label:"Tarifs et codes offerts",col:"#0D7A6B"},
           {k:"att",ico:"certificate",   label:"Attestations",   col:"#B7791F"},
+          {k:"obs",ico:"eye",           label:"Accès lecture",  col:"#1E4FA3"},
           {k:"nt",ico:"bell",           label:"Notifications",col:"#1E4FA3"},
           {k:"sg",ico:"bulb",           label:"Suggestions",    badge:nSugg, col:"#C98A1B"},
           {k:"msg",ico:"message-circle",label:"Messages",       badge:allMessages.filter(m=>!m.formateurUid&&m.fromRole==="apprenant"&&!m.luAdmin).length, col:"#BE123C"},
@@ -5307,6 +5314,7 @@ function AA({onOut}){
     {tab==="syc"&&<Sycebnl K={K} mob={mob} apercu/>}
     {tab==="banq"&&<Banque K={K} mob={mob} apercu/>}
     {tab==="eduf"&&<Eduf K={K} mob={mob} apercu/>}
+    {tab==="obs"&&<Observateurs K={K} mob={mob} db={db} users={users}/>}
     {tab==="pl"&&(()=>{
       const apprs=users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL);
       const day=plAll.find(p=>p.id===plDate);
