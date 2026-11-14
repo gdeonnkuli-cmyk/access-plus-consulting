@@ -6,6 +6,7 @@ import{MODULES_FISC}from"./modules";
 import{tirerSerie,lireSerie,ecrireSerie}from"./tirage";
 import{calculPaie,INPP}from"./paie";
 import{SIMULATEURS_EDUF}from"../eduf/Simulateurs";
+import{SCHEMAS_PARCS}from"../parcs/CarteParcs";
 import{liquidationTVA}from"./tva";
 import{LIB_ACCES}from"../acces/plateforme";
 import{SEUIL_ELEMENT,etatParcours}from"../attest/regles";
@@ -207,7 +208,7 @@ function Tva({K,col,defaut={}}){
     </div>
   </div>;
 }
-const SCHEMAS={flux:Flux,chronologie:Chronologie,arbre:Arbre,tableau:Tableau,bareme:Bareme,chaine:Chaine,cartes:Cartes,paie:Paie,tva:Tva,...SIMULATEURS_EDUF};
+const SCHEMAS={flux:Flux,chronologie:Chronologie,arbre:Arbre,tableau:Tableau,bareme:Bareme,chaine:Chaine,cartes:Cartes,paie:Paie,tva:Tva,...SIMULATEURS_EDUF,...SCHEMAS_PARCS};
 
 // ── Blocs de leçon ──────────────────────────────────────────────────────────────
 export function Bloc({K,b,col}){

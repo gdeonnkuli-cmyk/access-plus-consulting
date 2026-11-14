@@ -160,3 +160,8 @@ export function texteModuleBanque(mod) {
 export function texteModuleEduf(mod) {
   return segments([point(`Éducation financière, module ${String(mod.id).replace(/^EF/, "")}. ${mod.titre}`), ...(mod.narration || []).map(point)]);
 }
+
+// ── Module de culture générale « Parcs nationaux et sites protégés de la RDC » (src/parcs/module.js)
+export function texteModuleParcs(mod) {
+  return segments([point(mod.titre), ...(mod.narration || []).map(point)]);
+}
