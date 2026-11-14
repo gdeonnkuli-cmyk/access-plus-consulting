@@ -1,5 +1,6 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
 import{PROVINCES,LARGEUR,HAUTEUR,SOURCE_CARTE}from"./carteRdc";
+import{PointsChefsLieux,ChoixNoms}from"./ChefsLieux";
 import{NIVEAUX_CARTE,bienPlacee,provinceEn,cadre,tirage,scoreCarte,COL,PAR_NOM,CHEMIN,CHEMIN_PAYS,fmtDuree}from"./puzzle";
 
 // ══════════════════ TEST PSYCHOTECHNIQUE : PUZZLE DE LA CARTE DE LA RDC ══════════════════
@@ -17,7 +18,7 @@ function Miniature({nom,col,taille=54}){
 
 export default function PuzzleCarte({K,mob,niveauId,onFin,onQuitter}){
   const niveau=NIVEAUX_CARTE.find(n=>n.id===niveauId)||NIVEAUX_CARTE[0];
-  const[partie,sPartie]=useState(0);
+  const[partie,sPartie]=useState(0),[noms,sNoms]=useState("prov"); // noms sur la carte finale : provinces ou chefs-lieux
   const jeu=useMemo(()=>tirage(niveau),[niveau,partie]);
   const[posees,sPosees]=useState([]),[sel,sSel]=useState(null),[erreurs,sErreurs]=useState(0),[errPiece,sErrPiece]=useState({});
   const[tLeft,sTLeft]=useState(niveau.dur),[fin,sFin]=useState(false),[msg,sMsg]=useState(null),[flash,sFlash]=useState(null),[drag,sDrag]=useState(null);
@@ -87,7 +88,8 @@ export default function PuzzleCarte({K,mob,niveauId,onFin,onQuitter}){
     {PROVINCES.filter(p=>complete||placees.has(p.nom)).map(p=><path key={p.nom} d={CHEMIN[p.nom]} fill={jeu.dejaPosees.includes(p.nom)&&!complete?`${COL[p.nom]}55`:COL[p.nom]} stroke="#fff" strokeWidth={2.2}/>)}
     {!complete&&indice&&<path d={CHEMIN[sel]} fill={`${COL[sel]}66`} stroke={COL[sel]} strokeWidth={4} style={{animation:"pzClig 1s ease-in-out infinite"}}/>}
     <path d={CHEMIN_PAYS} fill="none" stroke="#0A2A5C" strokeWidth={4} strokeLinejoin="round"/>
-    {(complete||!mob)&&PROVINCES.filter(p=>complete||placees.has(p.nom)).map(p=><text key={p.nom} x={p.l[0]} y={p.l[1]} textAnchor="middle" dominantBaseline="middle" fontSize={complete?(mob?24:17):16} fontWeight={700} fill="#fff" stroke="rgba(0,0,0,.45)" strokeWidth={complete?(mob?5:4):4} paintOrder="stroke" style={{pointerEvents:"none",fontFamily:"'Outfit',sans-serif"}}>{p.nom}</text>)}
+    {(complete?noms==="prov":!mob)&&PROVINCES.filter(p=>complete||placees.has(p.nom)).map(p=><text key={p.nom} x={p.l[0]} y={p.l[1]} textAnchor="middle" dominantBaseline="middle" fontSize={complete?(mob?24:17):16} fontWeight={700} fill="#fff" stroke="rgba(0,0,0,.45)" strokeWidth={complete?(mob?5:4):4} paintOrder="stroke" style={{pointerEvents:"none",fontFamily:"'Outfit',sans-serif"}}>{p.nom}</text>)}
+    <PointsChefsLieux mob={mob} noms={PROVINCES.filter(p=>complete||placees.has(p.nom)).map(p=>p.nom)} etiquettes={complete&&noms==="chef"}/>
     {!complete&&flash&&<circle key={flash.k} cx={flash.x} cy={flash.y} r={28} fill="none" stroke={K.er||"#DC2626"} strokeWidth={6} style={{animation:"pzErr .7s ease-out forwards"}}/>}
   </svg>;
 
@@ -106,7 +108,7 @@ export default function PuzzleCarte({K,mob,niveauId,onFin,onQuitter}){
         </div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:mob?"minmax(0,1fr)":"minmax(0,1.3fr) minmax(0,1fr)",gap:14,alignItems:"start"}}>
-        <div style={{...carte,padding:10}}>{dessinCarte(true)}</div>
+        <div style={{...carte,padding:10}}><div style={{display:"flex",justifyContent:"center",marginBottom:8}}><ChoixNoms K={K} valeur={noms} onChange={sNoms}/></div>{dessinCarte(true)}</div>
         <div style={{...carte,padding:"12px 14px"}}>
           <div style={{fontWeight:800,fontSize:14.5,color:K.t1,marginBottom:8}}><i className="ti ti-map-pin" style={{marginRight:6,color:K.in_}}/>Les 26 provinces et leurs chefs-lieux</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"2px 12px"}}>
