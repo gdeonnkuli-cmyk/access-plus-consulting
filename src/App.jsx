@@ -11,6 +11,8 @@ import Banque from"./banque/Banque";
 import Eduf from"./eduf/Eduf";
 import TableauLecture from"./admin/TableauLecture";
 import Observateurs,{useObservateurs}from"./admin/Observateurs";
+import PuzzleCarte from"./psycho/PuzzleCarte";
+import{NIVEAUX_CARTE}from"./psycho/puzzle";
 import{initNotif,notifier}from"./notif/notif";
 import Cloche from"./notif/Cloche";
 import AdminNotif from"./notif/AdminNotif";
@@ -3013,6 +3015,13 @@ function PsychoPage({uid,u}){
   const[hist,setHist]=useState([]);
   const[histLoading,setHistLoading]=useState(true);
   const savedRef=useRef(false);
+  const[carte,sCarte]=useState(null); // puzzle de la carte de la RDC : niveau en cours
+  // Résultat du puzzle : même collection que les QCM (psychoScores), niveau « carte-… »
+  const enregistrerCarte=useCallback(async r=>{
+    if(!uid)return;
+    try{await setDoc(doc(collection(db,"psychoScores")),{uid,nom:u?.nom||"",mail:u?.mail||"",niveau:`carte-${r.niveau}`,niveauLabel:r.niveauLabel,score:r.score,total:r.total,pct:r.pct,erreurs:r.erreurs,dureeUtilisee:r.duree,ts:serverTimestamp()});}
+    catch(e){console.log("psycho carte save error",e);}
+  },[uid,u]);
 
   useEffect(()=>{
     let active=true;
@@ -3028,7 +3037,7 @@ function PsychoPage({uid,u}){
       if(active)setHistLoading(false);
     })();
     return()=>{active=false;};
-  },[uid,phase]);
+  },[uid,phase,carte]);
 
   const finish=useCallback(async(finalAns,finalTLeft)=>{
     if(savedRef.current)return;
@@ -3070,6 +3079,8 @@ function PsychoPage({uid,u}){
   const curLvl=PSY_LEVELS.find(l=>l.id===niv);
   const catInfo=cid=>PSY_CATS.find(c=>c.id===cid)||{label:"—",col:K.em};
 
+  if(carte)return <div style={{padding:mob?"12px":"22px 0"}}><PuzzleCarte K={K} mob={mob} niveauId={carte} onFin={enregistrerCarte} onQuitter={()=>sCarte(null)}/></div>;
+
   // ── ÉCRAN : CHOIX DU NIVEAU (tuiles) ──
   if(phase==="level")return <div style={{padding:mob?"14px":"24px 0",animation:"fadeIn .35s ease"}}>
     <div style={{textAlign:"center",marginBottom:22}}>
@@ -3090,6 +3101,20 @@ function PsychoPage({uid,u}){
         <div style={{fontSize:14,fontWeight:800,color:K.t1,marginBottom:6}}>{l.label}</div>
         <div style={{fontSize:11,color:K.t3,fontWeight:600}}>{Math.round(l.dur/60)} min · {l.n} questions</div>
       </div>)}
+    </div>
+
+    {/* Puzzle de la carte de la RDC */}
+    <div style={{background:"linear-gradient(135deg,#052E16,#0A2A5C 60%,#1E4FA3)",borderRadius:18,padding:mob?"16px 14px":"20px 22px",color:"#fff",marginBottom:26,position:"relative",overflow:"hidden"}}>
+      <i className="ti ti-map-2" style={{position:"absolute",right:-10,bottom:-24,fontSize:140,opacity:.1}}/>
+      <div style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:11.5,fontWeight:800,letterSpacing:.6,textTransform:"uppercase",background:"rgba(255,255,255,.15)",borderRadius:99,padding:"4px 10px"}}><i className="ti ti-puzzle"/>Nouveau · Raisonnement spatial</div>
+      <div style={{fontSize:mob?19:22,fontWeight:900,margin:"8px 0 4px"}}>Puzzle de la carte de la RDC</div>
+      <div style={{fontSize:13.5,opacity:.9,lineHeight:1.55,maxWidth:560,marginBottom:12}}>Replacez les 26 provinces sur la carte, contre la montre. Touchez une pièce, puis son emplacement. À la fin : la carte complète avec les chefs-lieux.</div>
+      <div style={{display:"grid",gridTemplateColumns:mob?"1fr 1fr":"repeat(4,1fr)",gap:8,position:"relative"}}>
+        {NIVEAUX_CARTE.map(n=><button key={n.id} onClick={()=>sCarte(n.id)} className="bt" title={n.d} style={{textAlign:"left",background:"rgba(255,255,255,.12)",border:"1px solid rgba(255,255,255,.25)",borderRadius:12,padding:"10px 11px",color:"#fff",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+          <div style={{display:"flex",alignItems:"center",gap:6,fontWeight:800,fontSize:14}}><i className={`ti ti-${n.ico}`}/>{n.label}</div>
+          <div style={{fontSize:11.5,opacity:.85,marginTop:3}}>{n.n} pièce{n.n>1?"s":""} · {Math.round(n.dur/60)} min{n.cases?"":" · sans repères"}</div>
+        </button>)}
+      </div>
     </div>
 
     {/* Matières couvertes */}
