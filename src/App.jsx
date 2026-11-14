@@ -9,6 +9,9 @@ import FinanceEntreprise from"./finance/FinanceEntreprise";
 import Sycebnl from"./sycebnl/Sycebnl";
 import Banque from"./banque/Banque";
 import Eduf from"./eduf/Eduf";
+import ParcsRdc from"./parcs/ParcsRdc";
+import OuParcs from"./parcs/OuParcs";
+import{NIVEAUX_PARCS}from"./parcs/sites";
 import TableauLecture from"./admin/TableauLecture";
 import Observateurs,{useObservateurs}from"./admin/Observateurs";
 import PuzzleCarte from"./psycho/PuzzleCarte";
@@ -257,7 +260,7 @@ function useUsers(){
 // activite/{uid} : dernière activité de chaque compte (signal toutes les 90 s quand l'onglet est visible)
 // connexions/{id} : une ligne par ouverture de session (une fois par onglet)
 const ENLIGNE_MS=4*60*1000;
-const VUE_LBL={home:"Accueil",form:"Mes formations",msg:"Messages",pres:"Présentations",jrn:"Monographie ZAO",cpt:"Guide des comptes",audio:"Écouter les cours",fisc:"Code des impôts",fin:"Finance d'entreprise",syc:"SYCEBNL",banq:"Comptabilité bancaire",eduf:"Éducation financière",tdb:"Tableau de bord",sugg:"Suggestions",apropos:"À propos",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
+const VUE_LBL={home:"Accueil",form:"Mes formations",msg:"Messages",pres:"Présentations",jrn:"Monographie ZAO",cpt:"Guide des comptes",audio:"Écouter les cours",fisc:"Code des impôts",fin:"Finance d'entreprise",syc:"SYCEBNL",banq:"Comptabilité bancaire",eduf:"Éducation financière",tdb:"Tableau de bord",parcs:"Parcs et sites de la RDC",sugg:"Suggestions",apropos:"À propos",stages:"Stages",videos:"Vidéos",ef:"États financiers",psycho:"Tests psychotechniques",services:"Services",prog:"Progrès",res:"Résultats",mods:"Mes modules",vids:"Mes vidéos",docs:"Documents",corr:"Corrections",fmsg:"Messages",stats:"Statistiques",admin:"Administration",param:"Paramètres"};
 const appareil=()=>{const ua=navigator.userAgent||"";const os=/Android/i.test(ua)?"Android":/iPhone|iPad|iPod/i.test(ua)?"iOS":/Windows/i.test(ua)?"Windows":/Mac OS/i.test(ua)?"Mac":/Linux/i.test(ua)?"Linux":"Autre";
   const nav=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/SamsungBrowser/.test(ua)?"Samsung":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"Navigateur";
   const app=(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||String(document.referrer).startsWith("android-app://")?"Application":"Site web";
@@ -1588,6 +1591,7 @@ function FA({uid,onOut}){
     {k:"syc",ico:"building-community",label:"SYCEBNL"},
     {k:"banq",ico:"building-bank",label:"Banque"},
     {k:"eduf",ico:"pig-money",label:"Éducation financière"},
+    {k:"parcs",ico:"trees",label:"Parcs de la RDC"},
     {k:"sugg",ico:"bulb",label:"Suggestions"},
     {k:"apropos",ico:"info-circle",label:"À propos"},
   ];
@@ -1678,6 +1682,7 @@ function FA({uid,onOut}){
   if(vue==="syc")return W(<Sycebnl K={K} mob={mob} apercu/>);
   if(vue==="banq")return W(<Banque K={K} mob={mob} apercu/>);
   if(vue==="eduf")return W(<Eduf K={K} mob={mob} apercu/>);
+  if(vue==="parcs")return W(<ParcsRdc K={K} mob={mob} apercu/>);
   if(vue==="sugg")return W(<Suggestions K={K} mob={mob} db={db} me={{uid,nom:fData.nom,mail:fData.mail,role:"formateur"}}/>);
   if(vue==="apropos")return W(<Apropos K={K} mob={mob} onGo={sV}/>);
 
@@ -2818,6 +2823,7 @@ function UA({uid,onOut}){
     {vue==="syc"&&<Sycebnl K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)} onGo={sV}/>}
     {vue==="banq"&&<Banque K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)} onGo={sV}/>}
     {vue==="eduf"&&<Eduf K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} ok={ok} onSub={()=>sSub(true)} onGo={sV}/>}
+    {vue==="parcs"&&<ParcsRdc K={K} mob={mob} db={db} uid={uid} scores={uData.scores||{}} onGo={sV}/>}
     {vue==="sugg"&&<Suggestions K={K} mob={mob} db={db} me={{uid,nom:uData.nom,mail:uData.mail,role:"apprenant"}}/>}
     {vue==="apropos"&&<Apropos K={K} mob={mob} onGo={sV} services/>}
     {vue==="msg"&&<MessagerieApprenant uid={uid} uNom={uData.nom}/>}
@@ -3082,6 +3088,7 @@ function PsychoPage({uid,u}){
 
   if(carte)return <div style={{padding:mob?"12px":"22px 0"}}>{carte.jeu==="ou"
     ?<OuSeTrouve K={K} mob={mob} niveauId={carte.niveau} onFin={enregistrerCarte} onQuitter={()=>sCarte(null)}/>
+    :carte.jeu==="parcs"?<OuParcs K={K} mob={mob} niveauId={carte.niveau} onFin={enregistrerCarte} onQuitter={()=>sCarte(null)}/>
     :<PuzzleCarte K={K} mob={mob} niveauId={carte.niveau} onFin={enregistrerCarte} onQuitter={()=>sCarte(null)}/>}</div>;
 
   // ── ÉCRAN : CHOIX DU NIVEAU (tuiles) ──
@@ -3111,9 +3118,10 @@ function PsychoPage({uid,u}){
       <i className="ti ti-map-2" style={{position:"absolute",right:-10,bottom:-24,fontSize:140,opacity:.1}}/>
       <div style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:11.5,fontWeight:800,letterSpacing:.6,textTransform:"uppercase",background:"rgba(255,255,255,.15)",borderRadius:99,padding:"4px 10px"}}><i className="ti ti-map-2"/>Nouveau · Raisonnement spatial</div>
       <div style={{fontSize:mob?19:22,fontWeight:900,margin:"8px 0 4px"}}>La carte de la RDC</div>
-      <div style={{fontSize:13.5,opacity:.9,lineHeight:1.55,maxWidth:580,marginBottom:6}}>Deux jeux chronométrés sur les 26 provinces. Plus le niveau monte, moins il y a de repères sur la carte et moins vous avez de temps.</div>
+      <div style={{fontSize:13.5,opacity:.9,lineHeight:1.55,maxWidth:580,marginBottom:6}}>Trois jeux chronométrés : les 26 provinces, puis les parcs et sites protégés. Plus le niveau monte, moins il y a de repères sur la carte et moins vous avez de temps.</div>
       {[["puzzle","puzzle","Puzzle","Replacez les provinces à leur place sur la carte.",NIVEAUX_CARTE,n=>`${n.n} pièce${n.n>1?"s":""} · ${libelleDuree(n)}`],
-        ["ou","map-search","Où se trouve… ?","Une province est demandée : touchez-la avant la fin du minuteur.",NIVEAUX_OU,n=>`${n.n} provinces · ${libelleDuree(n)}`]].map(([jeu,ico,titre,d,niveaux,info])=><div key={jeu} style={{marginTop:12,position:"relative"}}>
+        ["ou","map-search","Où se trouve… ?","Une province est demandée : touchez-la avant la fin du minuteur.",NIVEAUX_OU,n=>`${n.n} provinces · ${libelleDuree(n)}`],
+        ["parcs","trees","Parcs et sites protégés","Situez les parcs nationaux, la Réserve à okapis et les sites Ramsar et UNESCO.",NIVEAUX_PARCS,n=>`${n.n} sites · ${n.parQ} s par site`]].map(([jeu,ico,titre,d,niveaux,info])=><div key={jeu} style={{marginTop:12,position:"relative"}}>
         <div style={{fontWeight:800,fontSize:15,display:"flex",alignItems:"center",gap:6}}><i className={`ti ti-${ico}`}/>{titre}</div>
         <div style={{fontSize:12.5,opacity:.82,marginTop:2}}>{d}</div>
         <div style={{display:"grid",gridTemplateColumns:mob?"1fr 1fr":"repeat(4,1fr)",gap:8,marginTop:7}}>
@@ -4670,6 +4678,7 @@ function AA({onOut}){
           {k:"syc",ico:"building-community",label:"SYCEBNL",     col:"#0F766E"},
           {k:"banq",ico:"building-bank",label:"Comptabilité bancaire",col:"#0A2A5C"},
           {k:"eduf",ico:"pig-money",    label:"Éducation financière",col:"#15803D"},
+          {k:"parcs",ico:"trees",       label:"Parcs de la RDC",col:"#15803D"},
           {k:"ac",ico:"ticket",         label:"Tarifs et codes offerts",col:"#0D7A6B"},
           {k:"att",ico:"certificate",   label:"Attestations",   col:"#B7791F"},
           {k:"obs",ico:"eye",           label:"Accès lecture",  col:"#1E4FA3"},
@@ -5347,6 +5356,7 @@ function AA({onOut}){
     {tab==="syc"&&<Sycebnl K={K} mob={mob} apercu/>}
     {tab==="banq"&&<Banque K={K} mob={mob} apercu/>}
     {tab==="eduf"&&<Eduf K={K} mob={mob} apercu/>}
+    {tab==="parcs"&&<ParcsRdc K={K} mob={mob} apercu/>}
     {tab==="obs"&&<Observateurs K={K} mob={mob} db={db} users={users}/>}
     {tab==="pl"&&(()=>{
       const apprs=users.filter(u=>u.role!=="formateur"&&u.mail!==ADM_EMAIL);

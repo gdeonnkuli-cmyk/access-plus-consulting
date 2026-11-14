@@ -14,7 +14,7 @@ export const GROUPES_APPRENANT = [
   ] },
   { k: "apprendre", ico: "tools", label: "Ressources", vues: [
     ["ef", "report-money", "Atelier États financiers"], ["cpt", "books", "Guide des comptes"], ["audio", "headphones", "Écouter les cours"],
-    ["pres", "presentation", "Présentations"], ["videos", "video", "Vidéos"],
+    ["pres", "presentation", "Présentations"], ["videos", "video", "Vidéos"], ["parcs", "trees", "Parcs et sites de la RDC"],
   ] },
   { k: "resultats", ico: "trophy", label: "Mes résultats", court: "Résultats", vues: [["res", "trophy", "Mes résultats"]] },
   { k: "carriere", ico: "briefcase", label: "Carrière", vues: [["stages", "briefcase", "Stages"], ["psycho", "brain", "Tests psychotechniques"]] },
@@ -41,6 +41,7 @@ export const GROUPES_ADMIN = [
   { k: "parc", ico: "route", label: "Parcours métier", court: "Parcours", vues: [
     ["ef", "report-money", "États financiers"], ["fisc", "receipt-tax", "Code des impôts"], ["fin", "chart-pie", "Finance d'entreprise"],
     ["syc", "building-community", "SYCEBNL"], ["banq", "building-bank", "Comptabilité bancaire"], ["eduf", "pig-money", "Éducation financière"],
+    ["parcs", "trees", "Parcs de la RDC"],
   ] },
   { k: "ech", ico: "message-circle", label: "Échanges", vues: [
     ["msg", "message-circle", "Messages"], ["sg", "bulb", "Suggestions"], ["dm", "building", "Demandes de services"],
