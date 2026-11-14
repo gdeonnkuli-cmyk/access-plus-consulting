@@ -1,5 +1,5 @@
 import { PROVINCES, PAYS, LARGEUR, HAUTEUR } from "./carteRdc";
-import { NIVEAUX_CARTE, dansProvince, distanceProvince, provinceEn, bienPlacee, tirage, scoreCarte, cadre, chemin } from "./puzzle";
+import { NIVEAUX_CARTE, NIVEAUX_OU, tirageOu, libelleDuree, dansProvince, distanceProvince, provinceEn, bienPlacee, tirage, scoreCarte, cadre, chemin } from "./puzzle";
 
 test("les 26 provinces de 2015, chacune avec son chef-lieu, dans le cadre de la carte", () => {
   expect(PROVINCES).toHaveLength(26);
@@ -39,7 +39,17 @@ test("une pièce posée sur une province éloignée est refusée ; la tolérance
 });
 
 test("niveaux, tirage et score", () => {
-  expect(NIVEAUX_CARTE.map(n => n.id)).toEqual(["facile", "moyen", "difficile", "expert"]);
+  const ids = ["facile", "moyen", "difficile", "tresdiff"];
+  expect(NIVEAUX_CARTE.map(n => n.id)).toEqual(ids);
+  expect(NIVEAUX_OU.map(n => n.id)).toEqual(ids);
+  expect(NIVEAUX_CARTE.map(n => n.label)).toEqual(["Facile", "Moyen", "Difficile", "Très difficile"]);
+  // minuteur : moins de temps à mesure que le niveau monte (à nombre de pièces égal) ; « Où se trouve » : par province
+  expect(NIVEAUX_CARTE.slice(1).map(n => n.dur)).toEqual([...NIVEAUX_CARTE.slice(1).map(n => n.dur)].sort((a, b) => b - a));
+  expect(NIVEAUX_OU.map(n => n.parQ)).toEqual([20, 15, 10, 8]);
+  expect([libelleDuree(NIVEAUX_CARTE[0]), libelleDuree(NIVEAUX_OU[3])]).toEqual(["4 min", "8 s par province"]);
+  const q = tirageOu(NIVEAUX_OU[3]);
+  expect(new Set(q).size).toBe(26);
+  expect(tirageOu(NIVEAUX_OU[0])).toHaveLength(10);
   let s = 1; const alea = () => (s = (s * 16807) % 2147483647) / 2147483647;
   const t = tirage(NIVEAUX_CARTE[0], alea);
   expect(t.aPlacer).toHaveLength(8); expect(t.dejaPosees).toHaveLength(18);

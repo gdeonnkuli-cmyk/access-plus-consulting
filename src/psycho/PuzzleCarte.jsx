@@ -1,18 +1,13 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
-import{PROVINCES,PAYS,LARGEUR,HAUTEUR,SOURCE_CARTE}from"./carteRdc";
-import{NIVEAUX_CARTE,bienPlacee,provinceEn,cadre,chemin,tirage,scoreCarte}from"./puzzle";
+import{PROVINCES,LARGEUR,HAUTEUR,SOURCE_CARTE}from"./carteRdc";
+import{NIVEAUX_CARTE,bienPlacee,provinceEn,cadre,tirage,scoreCarte,COL,PAR_NOM,CHEMIN,CHEMIN_PAYS,fmtDuree}from"./puzzle";
 
 // ══════════════════ TEST PSYCHOTECHNIQUE : PUZZLE DE LA CARTE DE LA RDC ══════════════════
 // Placer les provinces sur la carte (raisonnement spatial et connaissance du pays), chronométré.
 // Téléphone : toucher une pièce, puis son emplacement sur la carte. Ordinateur : toucher ou glisser-déposer.
 // Score : pièces bien placées, pénalisées par les erreurs (scoreCarte) ; enregistré par la page des tests (onFin).
 
-const COULEURS=["#1E4FA3","#0D7A6B","#B7791F","#A3122A","#7C3AED","#0E7490","#15803D","#C2410C"];
-const COL=Object.fromEntries(PROVINCES.map((p,i)=>[p.nom,COULEURS[i%COULEURS.length]]));
-const PAR_NOM=Object.fromEntries(PROVINCES.map(p=>[p.nom,p]));
-const CHEMIN=Object.fromEntries(PROVINCES.map(p=>[p.nom,chemin(p)]));
-const CHEMIN_PAYS=PAYS.map(r=>"M"+r.reduce((s,v,i)=>s+(i%2?","+v:(i?"L":"")+v),"")+"Z").join("");
-const fmt=s=>`${Math.floor(s/60)}:${String(Math.max(0,s%60)).padStart(2,"0")}`;
+const fmt=fmtDuree;
 
 function Miniature({nom,col,taille=54}){
   const c=cadre(PAR_NOM[nom]),m=Math.max(c.w,c.h)*.08;
@@ -36,7 +31,7 @@ export default function PuzzleCarte({K,mob,niveauId,onFin,onQuitter}){
   const terminer=useCallback((placees,errs)=>{
     if(finRef.current)return;finRef.current=true;sFin(true);sSel(null);
     const duree=Math.round((Date.now()-debut.current)/1000);
-    onFin&&onFin({niveau:niveau.id,niveauLabel:`Puzzle carte RDC · ${niveau.label}`,score:placees,total,erreurs:errs,pct:scoreCarte(placees,total,errs),duree});
+    onFin&&onFin({cle:`carte-${niveau.id}`,niveauLabel:`Puzzle carte RDC · ${niveau.label}`,score:placees,total,erreurs:errs,pct:scoreCarte(placees,total,errs),duree});
   },[niveau,total,onFin]);
 
   useEffect(()=>{
@@ -137,6 +132,7 @@ export default function PuzzleCarte({K,mob,niveauId,onFin,onQuitter}){
       <div style={{display:"flex",alignItems:"center",gap:6,background:low?K.rdBg:K.c2,border:`1px solid ${low?K.rdBd:K.b0}`,borderRadius:10,padding:"7px 11px"}}>
         <i className="ti ti-clock" style={{fontSize:14,color:low?K.rd:K.t2}}/><span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:700,color:low?K.rd:K.t1}}>{fmt(tLeft)}</span></div>
     </div>
+    <div style={{height:6,background:K.c2,borderRadius:99,overflow:"hidden",marginBottom:10}} aria-label="Temps restant"><div style={{width:`${Math.max(0,tLeft)/niveau.dur*100}%`,height:"100%",background:low?K.rd:niveau.col,transition:"width 1s linear"}}/></div>
 
     <div style={{display:"grid",gridTemplateColumns:mob?"minmax(0,1fr)":"minmax(0,1.45fr) minmax(0,1fr)",gap:12,alignItems:"start"}}>
       <div style={{...carte,padding:mob?6:10}}>{dessinCarte(false)}</div>
