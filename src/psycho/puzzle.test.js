@@ -16,6 +16,14 @@ test("les 26 provinces de 2015, chacune avec son chef-lieu, dans le cadre de la 
   expect(PAYS.length).toBeGreaterThanOrEqual(1);
 });
 
+test("chaque chef-lieu est placé à l'intérieur de sa province, à un endroit unique", () => {
+  for (const p of PROVINCES) {
+    expect([p.chef, dansProvince(p, ...p.c)]).toEqual([p.chef, true]);
+    expect(provinceEn(...p.c).nom).toBe(p.nom);
+  }
+  expect(new Set(PROVINCES.map(p => p.c.join(","))).size).toBe(26);
+});
+
 test("le point d'étiquette de chaque province est dans cette province et dans aucune autre", () => {
   for (const p of PROVINCES) {
     const [x, y] = p.l;

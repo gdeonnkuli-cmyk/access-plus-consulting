@@ -1,5 +1,6 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
 import{PROVINCES,LARGEUR,HAUTEUR,SOURCE_CARTE}from"./carteRdc";
+import{PointsChefsLieux,ChoixNoms}from"./ChefsLieux";
 import{NIVEAUX_OU,bienPlacee,provinceEn,tirageOu,COL,PAR_NOM,CHEMIN,CHEMIN_PAYS,fmtDuree}from"./puzzle";
 
 // ══════════════════ TEST PSYCHOTECHNIQUE : « OÙ SE TROUVE… ? » (CARTE DE LA RDC) ══════════════════
@@ -12,7 +13,7 @@ const VERT="#16A34A",ROUGE="#DC2626"; // affichage du corrigé avant la question
 
 export default function OuSeTrouve({K,mob,niveauId,onFin,onQuitter}){
   const niveau=NIVEAUX_OU.find(n=>n.id===niveauId)||NIVEAUX_OU[0];
-  const[partie,sPartie]=useState(0);
+  const[partie,sPartie]=useState(0),[noms,sNoms]=useState("prov"); // noms sur la carte finale : provinces ou chefs-lieux
   const questions=useMemo(()=>tirageOu(niveau),[niveau,partie]);
   const[i,sI]=useState(0),[rep,sRep]=useState([]),[tQ,sTQ]=useState(niveau.parQ),[corrige,sCorrige]=useState(null),[fin,sFin]=useState(false);
   const svgRef=useRef(null),finRef=useRef(false),debut=useRef(Date.now()),debutQ=useRef(Date.now());
@@ -68,8 +69,10 @@ export default function OuSeTrouve({K,mob,niveauId,onFin,onQuitter}){
     {!complete&&corrige&&corrige.touchee&&!corrige.ok&&<path d={CHEMIN[corrige.touchee]} fill={`${ROUGE}55`} stroke={ROUGE} strokeWidth={3}/>}
     {!complete&&corrige&&<path d={CHEMIN[corrige.nom]} fill={`${VERT}${corrige.ok?"CC":"99"}`} stroke={VERT} strokeWidth={4} style={{animation:corrige.ok?"none":"ouClig .5s ease-in-out 2"}}/>}
     <path d={CHEMIN_PAYS} fill="none" stroke="#0A2A5C" strokeWidth={4} strokeLinejoin="round"/>
-    {complete&&PROVINCES.map(p=><text key={p.nom} x={p.l[0]} y={p.l[1]} textAnchor="middle" dominantBaseline="middle" fontSize={mob?24:17} fontWeight={700} fill="#fff" stroke="rgba(0,0,0,.45)" strokeWidth={mob?5:4} paintOrder="stroke" style={{pointerEvents:"none",fontFamily:"'Outfit',sans-serif"}}>{p.nom}</text>)}
+    {complete&&noms==="prov"&&PROVINCES.map(p=><text key={p.nom} x={p.l[0]} y={p.l[1]} textAnchor="middle" dominantBaseline="middle" fontSize={mob?24:17} fontWeight={700} fill="#fff" stroke="rgba(0,0,0,.45)" strokeWidth={mob?5:4} paintOrder="stroke" style={{pointerEvents:"none",fontFamily:"'Outfit',sans-serif"}}>{p.nom}</text>)}
+    {complete&&<PointsChefsLieux mob={mob} noms={PROVINCES.map(p=>p.nom)} etiquettes={noms==="chef"}/>}
     {!complete&&corrige&&(()=>{const p=PAR_NOM[corrige.nom];return <text x={p.l[0]} y={p.l[1]} textAnchor="middle" dominantBaseline="middle" fontSize={mob?30:22} fontWeight={800} fill="#fff" stroke="rgba(0,0,0,.55)" strokeWidth={6} paintOrder="stroke" style={{pointerEvents:"none",fontFamily:"'Outfit',sans-serif"}}>{p.nom}</text>;})()}
+    {!complete&&corrige&&<PointsChefsLieux mob={mob} noms={[corrige.nom]} etiquettes/>}
   </svg>;
 
   // ── Fin de partie ──
@@ -88,7 +91,7 @@ export default function OuSeTrouve({K,mob,niveauId,onFin,onQuitter}){
         </div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:mob?"minmax(0,1fr)":"minmax(0,1.3fr) minmax(0,1fr)",gap:14,alignItems:"start"}}>
-        <div style={{...carte,padding:10}}>{dessin(true)}</div>
+        <div style={{...carte,padding:10}}><div style={{display:"flex",justifyContent:"center",marginBottom:8}}><ChoixNoms K={K} valeur={noms} onChange={sNoms}/></div>{dessin(true)}</div>
         <div style={{...carte,padding:"12px 14px"}}>
           <div style={{fontWeight:800,fontSize:14.5,color:K.t1,marginBottom:8}}><i className="ti ti-map-pin" style={{marginRight:6,color:ratees.length?K.wa:K.em}}/>{ratees.length?`À revoir (${ratees.length})`:"Aucune erreur : bravo !"}</div>
           {ratees.map((r,k)=><div key={k} style={{fontSize:13.5,padding:"6px 0",borderBottom:`1px solid ${K.b0}`,lineHeight:1.45}}>
