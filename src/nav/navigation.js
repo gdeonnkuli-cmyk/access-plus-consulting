@@ -21,7 +21,8 @@ export const GROUPES_APPRENANT = [
   { k: "echanges", ico: "message-circle", label: "Échanges", vues: [["msg", "message-circle", "Messages"], ["sugg", "bulb", "Suggestions"]] },
 ];
 // Accessibles par le profil (Paramètres) et la page À propos, hors menu
-export const HORS_MENU_APPRENANT = ["param", "apropos", "services"];
+// « tdb » : tableau de bord en lecture seule, ouvert depuis l'accueil des observateurs désignés par l'administrateur
+export const HORS_MENU_APPRENANT = ["param", "apropos", "services", "tdb"];
 // Anciennes adresses (?vue=prog) et liens des notifications déjà envoyées
 export const ALIAS_APPRENANT = { prog: "res" };
 
@@ -45,7 +46,7 @@ export const GROUPES_ADMIN = [
     ["msg", "message-circle", "Messages"], ["sg", "bulb", "Suggestions"], ["dm", "building", "Demandes de services"],
   ] },
   { k: "com", ico: "speakerphone", label: "Communication", vues: [["an", "speakerphone", "Annonces"], ["nt", "bell", "Notifications et bannière"]] },
-  { k: "acc", ico: "ticket", label: "Accès et attestations", court: "Accès", vues: [["ac", "ticket", "Tarifs et codes offerts"], ["att", "certificate", "Attestations"]] },
+  { k: "acc", ico: "ticket", label: "Accès et attestations", court: "Accès", vues: [["ac", "ticket", "Tarifs et codes offerts"], ["att", "certificate", "Attestations"], ["obs", "eye", "Accès lecture au tableau de bord"]] },
   { k: "pil", ico: "chart-bar", label: "Pilotage", vues: [["s", "chart-bar", "Statistiques"], ["au", "shield-check", "Audit"]] },
 ];
 export const HORS_MENU_ADMIN = ["param"];
