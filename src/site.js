@@ -4,7 +4,7 @@
 // Les pages statiques de public/ (confidentialité, suppression de compte) sont mises à jour en même temps (docs/domaine.md).
 // CommonJS : lu aussi par les tâches serveur (functions/taches.js) pour les liens des notifications.
 const DOMAINE = "ecocampus-rdc.com";
-const BASCULE = false;
+const BASCULE = true;
 const SITE_URL = BASCULE ? `https://${DOMAINE}` : "https://eco-campus-rdc.vercel.app";
 const SITE_LABEL = SITE_URL.replace(/^https:\/\//, "");
 const CONTACT_EMAIL = BASCULE ? `contact@${DOMAINE}` : "gnkuli@outlook.fr";

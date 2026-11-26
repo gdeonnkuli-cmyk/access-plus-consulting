@@ -17,7 +17,9 @@ service jusqu'à la fin.
 | B. Organisation **eco-campus-rdc** (2 propriétaires : ecocampusrdc-coder, gdeonnkuli-cmyk) et dépôt **eco-campus-rdc/eco-campus** | Fait |
 | B. Applications GitHub **Claude** et **Vercel** installées sur l'organisation ; organisation rattachée à l'équipe Vercel (Team Settings › Git › Connect) et projet relié à eco-campus-rdc/eco-campus | Fait |
 | D. Compte de service `ecocampus-deploy`, secret `FIREBASE_DEPLOY_KEY`, premier déploiement | Fait : https://access-plus-consulting.web.app (site, API et 4 tâches planifiées, Node.js 22) |
-| C et E. Domaine ecocampus-rdc.com, puis bascule | À faire |
+| C. Domaine **ecocampus-rdc.com** acheté chez Cloudflare (compte ecocampus.rdc@gmail.com, renouvellement automatique) | Fait |
+| E. Firebase Hosting : domaine ajouté, DNS saisis (A 199.36.158.100 et TXT, nuage gris) | En attente de détection et du certificat HTTPS |
+| F. Bascule dans le code (adresse, contact, pages légales, redirection Vercel, Android 1.1.0) | Prête, à publier quand https://ecocampus-rdc.com répond et que contact@ reçoit les e-mails |
 
 ## Ce qui est déjà prêt dans le code
 
@@ -90,6 +92,7 @@ service jusqu'à la fin.
    attestations déjà imprimées continuent de fonctionner).
 3. Application Android : `android/app/build.gradle` › `siteHost = "ecocampus-rdc.com"`, nouvelle version à envoyer au Play Store.
 4. Visuels, vidéos, messages de partage et catalogue PDF régénérés avec la nouvelle adresse.
+   Modèles EmailJS (`docs/emails/`) : recopier dans EmailJS les versions à jour (logo et bouton vers ecocampus-rdc.com).
 5. Après quelques semaines sans trafic sur Vercel : suppression du projet Vercel (votre compte personnel n'héberge plus rien).
 
 ## Ce qui ne change pas

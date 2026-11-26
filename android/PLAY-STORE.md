@@ -1,6 +1,6 @@
 # Publication de l'application Android « Éco-Campus RDC » sur Google Play
 
-L'application est une **Trusted Web Activity** (TWA) : elle ouvre https://eco-campus-rdc.vercel.app en plein écran, sans barre de navigateur, avec la bibliothèque officielle Google `androidbrowserhelper`. Toute mise à jour du site est immédiatement disponible dans l'application ; une nouvelle version Android n'est nécessaire que pour changer l'icône, le nom ou la configuration.
+L'application est une **Trusted Web Activity** (TWA) : elle ouvre https://ecocampus-rdc.com en plein écran, sans barre de navigateur, avec la bibliothèque officielle Google `androidbrowserhelper`. Toute mise à jour du site est immédiatement disponible dans l'application ; une nouvelle version Android n'est nécessaire que pour changer l'icône, le nom ou la configuration.
 
 | Élément | Valeur |
 |---|---|
@@ -55,8 +55,8 @@ Sans cette étape, l'application installée depuis le Play Store affiche une bar
 > L'accès aux contenus de formation est réservé aux apprenants disposant d'un abonnement actif, délivré par Éco-Campus RDC.
 
 - **Catégorie** : Enseignement · **Tags** : formation, comptabilité, finance
-- **Coordonnées** : gnkuli@outlook.fr · WhatsApp +243 979 075 970
-- **Règles de confidentialité** : https://eco-campus-rdc.vercel.app/confidentialite.html
+- **Coordonnées** : contact@ecocampus-rdc.com · WhatsApp +243 979 075 970
+- **Règles de confidentialité** : https://ecocampus-rdc.com/confidentialite.html
 - **Graphiques** (dossier `android/store/`) : icône `icone-512.png` (512×512), bannière `banniere-1024x500.png`, captures `capture-1-accueil.png`, `capture-2-formations.png`, `capture-3-services.png` (1082×1922). Ajouter de préférence 2 ou 3 captures prises dans l'application (tableau de bord, cours, atelier États financiers).
 
 ## 5. Questionnaires de la Play Console (réponses proposées)
@@ -68,7 +68,7 @@ Sans cette étape, l'application installée depuis le Play Store affiche une bar
   - Données collectées : nom, adresse e-mail (informations personnelles) ; activité dans l'application (progression, scores) ; messages ; contenus créés par l'utilisateur (dossiers d'états financiers).
   - Finalités : fonctionnement de l'application, gestion du compte, communications avec l'utilisateur.
   - Aucune donnée partagée avec des tiers ; données chiffrées en transit (HTTPS) ; collecte obligatoire pour utiliser le service.
-  - Suppression des données : https://eco-campus-rdc.vercel.app/suppression-compte.html
+  - Suppression des données : https://ecocampus-rdc.com/suppression-compte.html
 - **Application gouvernementale / financière** : non (application éducative ; elle n'effectue aucune opération financière).
 
 ## 5 bis. Paiements : version sans tarifs ni Mobile Money

@@ -1,4 +1,5 @@
 import { etatEssai, lireConfigEssai, dateEnMs, parrainDepuisUrl, lienParrainage, prolonger, bilanParrainage, texteParrainage } from "./essai";
+import { SITE_URL } from "../site";
 
 const J = 86400000, t0 = Date.UTC(2026, 10, 20, 10);
 const C = { depuis: "2026-01-01T00:00:00Z" }; // essai en service depuis le début de l'année (comptes de test)
@@ -36,7 +37,7 @@ test("configuration bornée et dates", () => {
 
 test("lien de parrainage, lecture sécurisée, texte à partager, prolongation", () => {
   const uid = "aB3dE6fG9hJ2kL5mN8pQ";
-  expect(lienParrainage(uid)).toBe(`https://eco-campus-rdc.vercel.app/?parrain=${uid}`);
+  expect(lienParrainage(uid)).toBe(`${SITE_URL}/?parrain=${uid}`);
   expect(parrainDepuisUrl(`?parrain=${uid}`)).toBe(uid);
   expect(parrainDepuisUrl("?parrain=<script>")).toBeNull();
   expect(parrainDepuisUrl("?vue=home")).toBeNull();

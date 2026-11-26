@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    {
+      "source": "/((?!\\.well-known/).*)",
+      "has": [{ "type": "host", "value": "eco-campus-rdc.vercel.app" }],
+      "destination": "https://ecocampus-rdc.com/$1",
+      "permanent": true
+    }
+  ]
+}

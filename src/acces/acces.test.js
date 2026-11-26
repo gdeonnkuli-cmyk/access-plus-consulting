@@ -1,5 +1,6 @@
 import { OFFRES, offresAvecPrix, parMois, nouveauCodeOffert, estCodeOffert, numerosRenseignes, utiliserCodeOffert } from "./acces";
 import { texteInvitation } from "./AdminAcces";
+import { SITE_URL } from "../site";
 
 test("les trois offres et leurs prix par défaut (5, 12, 40 USD)", () => {
   expect(OFFRES.map(o => [o.id, o.dureeId, o.prix])).toEqual([["m", "1m", 5], ["t", "3m", 12], ["a", "1a", 40]]);
@@ -33,5 +34,5 @@ test("le message d'invitation contient le code, la durée et le lien", () => {
   const t = texteInvitation("OF-ABCDEFGH", "3 mois");
   expect(t).toContain("OF-ABCDEFGH");
   expect(t).toContain("3 mois");
-  expect(t).toContain("https://eco-campus-rdc.vercel.app");
+  expect(t).toContain(SITE_URL);
 });
